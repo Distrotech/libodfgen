@@ -35,18 +35,9 @@
 #include <minmax.h>
 #endif
 
-TableCellStyle::TableCellStyle(const float fLeftBorderThickness, const float fRightBorderThickness, 
-				const float fTopBorderThickness, const float fBottomBorderThickness, 
-				const UTF8String &sColor, const UTF8String &sBorderColor,
-				const WPXVerticalAlignment cellVerticalAlignment, const char *psName) :
+TableCellStyle::TableCellStyle(const WPXPropertyList &xPropList, const char *psName) :
 	Style(psName),
-	mfLeftBorderThickness(fLeftBorderThickness),
-	mfRightBorderThickness(fRightBorderThickness),
-	mfTopBorderThickness(fTopBorderThickness),
-	mfBottomBorderThickness(fBottomBorderThickness),
-	mCellVerticalAlignment(cellVerticalAlignment),	
-	msColor(sColor),
-	msBorderColor(sBorderColor)
+        mPropList(xPropList)
 {
 }
 
@@ -57,50 +48,25 @@ void TableCellStyle::write(DocumentHandler &xHandler) const
 	styleOpen.addAttribute("style:family", "table-cell");
 	styleOpen.write(xHandler);
 
-	TagOpenElement stylePropertiesOpen("style:properties");
-	switch (mCellVerticalAlignment)
-	{
-	case TOP:
-		stylePropertiesOpen.addAttribute("fo:vertical-align", "top");
-		break;
-	case MIDDLE:
-		stylePropertiesOpen.addAttribute("fo:vertical-align", "middle");
-		break;
-	case BOTTOM:
-		stylePropertiesOpen.addAttribute("fo:vertical-align", "bottom");
-		break;
-	case FULL: // OOo does not have the full vertical alignment
-		break;
-	default:
-		break;
-	}
-	
-	stylePropertiesOpen.addAttribute("fo:background-color", msColor.getUTF8());
-	stylePropertiesOpen.addAttribute("fo:padding", "0.0382inch");
-	
-	UTF8String sBorderLeft;
-	sBorderLeft.sprintf("%finch solid %s", mfLeftBorderThickness, msBorderColor.getUTF8());
-	stylePropertiesOpen.addAttribute("fo:border-left", sBorderLeft.getUTF8());
-	UTF8String sBorderRight;
-	sBorderRight.sprintf("%finch solid %s", mfRightBorderThickness, msBorderColor.getUTF8());
-	stylePropertiesOpen.addAttribute("fo:border-right", sBorderRight.getUTF8());
-	UTF8String sBorderTop;
-	sBorderTop.sprintf("%finch solid %s", mfTopBorderThickness, msBorderColor.getUTF8());
-	stylePropertiesOpen.addAttribute("fo:border-top", sBorderTop.getUTF8());
-	UTF8String sBorderBottom;
-	sBorderBottom.sprintf("%finch solid %s", mfBottomBorderThickness, msBorderColor.getUTF8());
-	stylePropertiesOpen.addAttribute("fo:border-bottom", sBorderBottom.getUTF8());
-	stylePropertiesOpen.write(xHandler);
+        // WLACH_REFACTORING: Only temporary.. a much better solution is to
+        // generalize this sort of thing into the "Style" superclass
+        WPXPropertyList stylePropList;
+        WPXPropertyList::Iter i(mPropList);
+        for (i.rewind(); i.next();)
+        {
+                if (i.key().length() > 2 && strncmp(i.key().c_str(), "fo", 2) == 0)
+                        stylePropList.insert(i.key(), i()->clone());
+        }
+        stylePropList.insert("fo:padding", "0.0382inch");
+        xHandler.startElement("style:properties", stylePropList);
 	xHandler.endElement("style:properties");
 
 	xHandler.endElement("style:style");	
 }
 
-TableRowStyle::TableRowStyle(const float fHeight, const bool bIsMinimumHeight, const bool bIsHeaderRow, const char *psName):
+TableRowStyle::TableRowStyle(const WPXPropertyList &propList, const char *psName) :
 	Style(psName),
-	mfHeight(fHeight),
-	mbIsMinimumHeight(bIsMinimumHeight),
-	mbIsHeaderRow(bIsHeaderRow)
+        mPropList(propList)
 {
 }
 
@@ -111,41 +77,22 @@ void TableRowStyle::write(DocumentHandler &xHandler) const
 	styleOpen.addAttribute("style:family", "table-row");
 	styleOpen.write(xHandler);
 	
-	if ((mfHeight != 0.0f) || (!mbIsMinimumHeight))
-	{
-		TagOpenElement stylePropertiesOpen("style:properties");
-		UTF8String sRowHeight;
-		sRowHeight.sprintf("%finch", mfHeight);
-		if (mbIsMinimumHeight)
-			stylePropertiesOpen.addAttribute("style:min-row-height", sRowHeight.getUTF8());
-		else
-			stylePropertiesOpen.addAttribute("style:row-height", sRowHeight.getUTF8());
-		stylePropertiesOpen.write(xHandler);
-		xHandler.endElement("style:properties");
-	}
+        TagOpenElement stylePropertiesOpen("style:properties");
+        if (mPropList["style:min-row-height"])
+                stylePropertiesOpen.addAttribute("style:min-row-height", mPropList["style:min-row-height"]->getStr());
+        else if (mPropList["style:row-height"])
+                stylePropertiesOpen.addAttribute("style:row-height", mPropList["style:row-height"]->getStr());
+        stylePropertiesOpen.write(xHandler);
+        xHandler.endElement("style:properties");
 	
-	xHandler.endElement("style:style");
-		
+	xHandler.endElement("style:style");		
 }
 	
 
-TableStyle::TableStyle(const float fDocumentMarginLeft, const float fDocumentMarginRight, 
-		       const float fMarginLeftOffset, const float fMarginRightOffset,
-		       const uint8_t iTablePositionBits, const float fLeftOffset,
-		       const vector < WPXColumnDefinition > &columns, const char *psName) : 
+TableStyle::TableStyle(const WPXPropertyList &xPropList, const vector < WPXColumnDefinition > &columns, const char *psName) : 
 	Style(psName),
-	mfDocumentMarginLeft(fDocumentMarginLeft),
-	mfDocumentMarginRight(fDocumentMarginRight),
-	mfMarginLeftOffset(fMarginLeftOffset),
-	mfMarginRightOffset(fMarginRightOffset),
-	miTablePositionBits(iTablePositionBits),
-	mfLeftOffset(fLeftOffset),
-	miNumColumns(columns.size())
-
+        mPropList(xPropList)
 {
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Created a new set of table props with this no. of columns repeated: %i and this name: %s\n",
-	       (int)miNumColumns, getName().getUTF8()));
-
 	typedef vector<WPXColumnDefinition>::const_iterator CDVIter;
 	for (CDVIter iterColumns = columns.begin() ; iterColumns != columns.end(); iterColumns++)
 	{
@@ -171,45 +118,14 @@ void TableStyle::write(DocumentHandler &xHandler) const
 	styleOpen.write(xHandler);
 
 	TagOpenElement stylePropertiesOpen("style:properties");
-
-	UTF8String sTableMarginLeft;
-	UTF8String sTableMarginRight;
-	UTF8String sTableAlignment;
-	char *pTableAlignment = NULL;
-	if (miTablePositionBits == WPX_TABLE_POSITION_ALIGN_WITH_LEFT_MARGIN) {
-		sTableAlignment.sprintf("left");
-		sTableMarginLeft.sprintf("0inch");
-	}
-	else if (miTablePositionBits == WPX_TABLE_POSITION_ALIGN_WITH_RIGHT_MARGIN) {
-		sTableAlignment.sprintf("right");
-	}
-	else if (miTablePositionBits == WPX_TABLE_POSITION_CENTER_BETWEEN_MARGINS) {
-		sTableAlignment.sprintf("center");
-	}
- 	else if (miTablePositionBits == WPX_TABLE_POSITION_ABSOLUTE_FROM_LEFT_MARGIN) {
-		sTableAlignment.sprintf("left");
-		sTableMarginLeft.sprintf("%finch", (mfLeftOffset-mfDocumentMarginLeft+mfMarginLeftOffset));
- 	}
-	else if (miTablePositionBits == WPX_TABLE_POSITION_FULL) {
-		sTableAlignment.sprintf("margins");
-		sTableMarginLeft.sprintf("%finch", mfMarginLeftOffset);
-		sTableMarginRight.sprintf("%finch", mfMarginRightOffset);
-	}		
-	stylePropertiesOpen.addAttribute("table:align", sTableAlignment.getUTF8());
-	if (sTableMarginLeft.getUTF8())
-		stylePropertiesOpen.addAttribute("fo:margin-left", sTableMarginLeft.getUTF8());
-	if (sTableMarginRight.getUTF8())
-		stylePropertiesOpen.addAttribute("fo:margin-right", sTableMarginRight.getUTF8());
-
- 	float fTableWidth = 0;
- 	typedef vector<WPXColumnDefinition>::const_iterator CDVIter;
- 	for (CDVIter iterColumns2 = mColumns.begin() ; iterColumns2 != mColumns.end(); iterColumns2++)
- 	{
- 		fTableWidth += (*iterColumns2).m_width;
- 	}
-	UTF8String sTableWidth;
-	sTableWidth.sprintf("%finch", fTableWidth);
-	stylePropertiesOpen.addAttribute("style:width", sTableWidth.getUTF8());
+        if (mPropList["table:align"])
+                stylePropertiesOpen.addAttribute("table:align", mPropList["table:align"]->getStr());
+	if (mPropList["fo:margin-left"])
+		stylePropertiesOpen.addAttribute("fo:margin-left", mPropList["fo:margin-left"]->getStr());
+	if (mPropList["fo:margin-right"])
+		stylePropertiesOpen.addAttribute("fo:margin-right", mPropList["fo:margin-right"]->getStr());
+	if (mPropList["style:width"])
+		stylePropertiesOpen.addAttribute("style:width", mPropList["style:width"]->getStr());
 	stylePropertiesOpen.write(xHandler);
 
 	xHandler.endElement("style:properties");

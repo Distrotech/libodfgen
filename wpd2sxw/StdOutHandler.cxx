@@ -20,5 +20,6 @@ void StdOutHandler::endElement(const char *psName)
 
 void StdOutHandler::characters(const UTF8String &sCharacters)
 {
-	printf("%s", sCharacters.getUTF8());
+        UTF8String sEscapedCharacters(sCharacters, true);
+	printf("%s", sEscapedCharacters.getUTF8());
 }

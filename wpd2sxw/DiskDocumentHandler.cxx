@@ -25,5 +25,6 @@ void DiskDocumentHandler::endElement(const char *psName)
 
 void DiskDocumentHandler::characters(const UTF8String &sCharacters)
 {
-	gsf_output_printf(mpOutput, "%s", sCharacters.getUTF8());
+        UTF8String sEscapedCharacters(sCharacters, true);
+	gsf_output_printf(mpOutput, "%s", sEscapedCharacters.getUTF8());
 }

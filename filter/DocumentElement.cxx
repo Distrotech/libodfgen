@@ -66,7 +66,7 @@ void CharDataElement::write(DocumentHandler &xHandler) const
 }
 
 TextElement::TextElement(const UTF8String & sTextBuf) :
-	msTextBuf(sTextBuf, true)
+	msTextBuf(sTextBuf, false)
 {
 }
 

@@ -56,7 +56,6 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandl
         mpHandler(pHandler),
 	mbUsed(false),
 	mfSectionSpaceAfter(0.0f),
-	miNumTables(0),
 	miNumListStyles(0),
 	mpCurrentContentElements(&mBodyElements),
 	mpCurrentPageSpan(NULL),
@@ -588,22 +587,22 @@ void WordPerfectCollector::closeSpan()
 
 void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propList)
 {
-	WRITER_DEBUG_MSG(("Define ordered list level (listid: %i)\n", propList["id"]->getInt()));
+	WRITER_DEBUG_MSG(("Define ordered list level (listid: %i)\n", propList["libwpd:id"]->getInt()));
  	OrderedListStyle *pOrderedListStyle = NULL;
-	if (mpCurrentListStyle && mpCurrentListStyle->getListID() == propList["id"]->getInt())
+	if (mpCurrentListStyle && mpCurrentListStyle->getListID() == propList["libwpd:id"]->getInt())
 		pOrderedListStyle = static_cast<OrderedListStyle *>(mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
 	// this rather appalling conditional makes sure we only start a new list (rather than continue an old
 	// one) iff: (1) we have no prior list OR (2) the prior list is actually definitively different
 	// from the list that is just being defined (listIDs differ) OR (3) we can tell that the user actually
 	// is starting a new list at level 1 (and only level 1)
-	if (pOrderedListStyle == NULL || pOrderedListStyle->getListID() != propList["id"]->getInt() ||
-	    (propList["level"]->getInt()==1 && (propList["starting-number"]->getInt() != (miLastListNumber+1))))
+	if (pOrderedListStyle == NULL || pOrderedListStyle->getListID() != propList["libwpd:id"]->getInt() ||
+	    (propList["libwpd:level"]->getInt()==1 && (propList["starting-number"]->getInt() != (miLastListNumber+1))))
 	{
 		WRITER_DEBUG_MSG(("Attempting to create a new ordered list style (listid: %i)\n"));
 		UTF8String sName;
 		sName.sprintf("OL%i", miNumListStyles);
 		miNumListStyles++;
-		pOrderedListStyle = new OrderedListStyle(sName.getUTF8(), propList["id"]->getInt());
+		pOrderedListStyle = new OrderedListStyle(sName.getUTF8(), propList["libwpd:id"]->getInt());
 		mListStyles.push_back(static_cast<ListStyle *>(pOrderedListStyle));
 		mpCurrentListStyle = static_cast<ListStyle *>(pOrderedListStyle);
 		mbListContinueNumbering = false;
@@ -612,32 +611,31 @@ void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propLis
 	else
 		mbListContinueNumbering = true;
 
-	pOrderedListStyle->updateListLevel(miCurrentListLevel, (WPXNumberingType)propList["type"]->getInt(), 
-					   propList["text-before-number"]->getStr(), propList["text-after-number"]->getStr(), propList["starting-number"]->getInt());
+	pOrderedListStyle->updateListLevel(miCurrentListLevel, propList);
 }
 
 void WordPerfectCollector::defineUnorderedListLevel(const WPXPropertyList &propList)
 {
-	WRITER_DEBUG_MSG(("Define unordered list level (listid: %i)\n", propList["id"]->getInt()));
+	WRITER_DEBUG_MSG(("Define unordered list level (listid: %i)\n", propList["libwpd:id"]->getInt()));
 
  	UnorderedListStyle *pUnorderedListStyle = NULL;
-	if (mpCurrentListStyle && mpCurrentListStyle->getListID() == propList["id"]->getInt())
+	if (mpCurrentListStyle && mpCurrentListStyle->getListID() == propList["libwpd:id"]->getInt())
 		pUnorderedListStyle = static_cast<UnorderedListStyle *>(mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
 
 	if (pUnorderedListStyle == NULL) {
-		WRITER_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", propList["id"]->getInt()));
+		WRITER_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", propList["libwpd:id"]->getInt()));
 		UTF8String sName;
 		sName.sprintf("UL%i", miNumListStyles);
-		pUnorderedListStyle = new UnorderedListStyle(sName(), propList["id"]->getInt());
+		pUnorderedListStyle = new UnorderedListStyle(sName(), propList["libwpd:id"]->getInt());
 		mListStyles.push_back(static_cast<ListStyle *>(pUnorderedListStyle));
 		mpCurrentListStyle = static_cast<ListStyle *>(pUnorderedListStyle);
 	}
-	pUnorderedListStyle->updateListLevel(miCurrentListLevel, propList["bullet"]->getStr());
+	pUnorderedListStyle->updateListLevel(miCurrentListLevel, propList);
 }
 
 void WordPerfectCollector::openOrderedListLevel(const WPXPropertyList &propList)
 {
-	WRITER_DEBUG_MSG(("Open ordered list level (listid: %i)\n", propList["id"]->getInt()));
+	WRITER_DEBUG_MSG(("Open ordered list level (listid: %i)\n", propList["libwpd:id"]->getInt()));
 	miCurrentListLevel++;
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:ordered-list");
 	_openListLevel(pListLevelOpenElement);
@@ -651,7 +649,7 @@ void WordPerfectCollector::openOrderedListLevel(const WPXPropertyList &propList)
 
 void WordPerfectCollector::openUnorderedListLevel(const WPXPropertyList &propList)
 {
-	WRITER_DEBUG_MSG(("Open unordered list level (listid: %i)\n", propList["id"]->getInt()));
+	WRITER_DEBUG_MSG(("Open unordered list level (listid: %i)\n", propList["libwpd:id"]->getInt()));
 	miCurrentListLevel++;
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:unordered-list");
 	_openListLevel(pListLevelOpenElement);
@@ -771,7 +769,8 @@ void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote")));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-citation")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new CharDataElement(propList["number"]->getStr().getUTF8())));
+        if (propList["libwpd:number"])
+                mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new CharDataElement(propList["libwpd:number"]->getStr().getUTF8())));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote-citation")));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-body")));
@@ -790,7 +789,8 @@ void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote")));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote-citation")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new CharDataElement(propList["number"]->getStr().getUTF8())));
+        if (propList["libwpd:number"])
+                mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new CharDataElement(propList["libwpd:number"]->getStr().getUTF8())));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote-citation")));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote-body")));
@@ -805,15 +805,14 @@ void WordPerfectCollector::closeEndnote()
 
 void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vector < WPXColumnDefinition > &columns)
 {
-	miNumTables++;
-
 	UTF8String sTableName;
-	sTableName.sprintf("Table%i", miNumTables);
+	sTableName.sprintf("Table%i", mTableStyles.size());
 	WRITER_DEBUG_MSG(("WriterWordPerfect:  New Table: %s\n", sTableName.getUTF8()));
 
 	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
 	// state which is transmitted inside the page. could this lead to unacceptable behaviour?
-	TableStyle *pTableStyle = new TableStyle(mpCurrentPageSpan->getMarginLeft(), mpCurrentPageSpan->getMarginRight(), propList["margin-left"]->getFloat(), propList["margin-right"]->getFloat(), propList["alignment"]->getInt(), propList["left-offset"]->getFloat(), columns, sTableName.getUTF8());
+        // WLACH_REFACTORING: characterize this behaviour, probably should nip it at the bud within libwpd
+	TableStyle *pTableStyle = new TableStyle(propList, columns, sTableName.getUTF8());
 
 	if (mWriterDocumentState.mbFirstElement && mpCurrentContentElements == &mBodyElements)
 	{
@@ -854,8 +853,7 @@ void WordPerfectCollector::openTableRow(const WPXPropertyList &propList)
 
 	UTF8String sTableRowStyleName;
 	sTableRowStyleName.sprintf("%s.Row%i", mpCurrentTableStyle->getName()(), mpCurrentTableStyle->getNumTableRowStyles());
-	TableRowStyle *pTableRowStyle = new TableRowStyle(propList["height"]->getFloat(), propList["is-minimum-height"]->getInt(), 
-							  propList["is-header-row"]->getInt(), sTableRowStyleName());
+	TableRowStyle *pTableRowStyle = new TableRowStyle(propList, sTableRowStyleName());
 	mpCurrentTableStyle->addTableRowStyle(pTableRowStyle);
 	
 	TagOpenElement *pTableRowOpenElement = new TagOpenElement("table:table-row");
@@ -875,24 +873,19 @@ void WordPerfectCollector::closeTableRow()
 
 void WordPerfectCollector::openTableCell(const WPXPropertyList &propList)
 {
-	float fLeftBorderThickness = (propList["border-bits"]->getInt() & WPX_TABLE_CELL_LEFT_BORDER_OFF) ? 0.0f : 0.0007f;
-	float fRightBorderThickness = (propList["border-bits"]->getInt() & WPX_TABLE_CELL_RIGHT_BORDER_OFF) ? 0.0f : 0.0007f;
-	float fTopBorderThickness = (propList["border-bits"]->getInt() & WPX_TABLE_CELL_TOP_BORDER_OFF) ? 0.0f : 0.0007f;
-	float fBottomBorderThickness = (propList["border-bits"]->getInt() & WPX_TABLE_CELL_BOTTOM_BORDER_OFF) ? 0.0f : 0.0007f;
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Borderbits=%d\n", propList["border-bits"]->getInt()));
-
-	UTF8String sTableCellStyleName; 
+	UTF8String sTableCellStyleName;
 	sTableCellStyleName.sprintf( "%s.Cell%i", mpCurrentTableStyle->getName()(), mpCurrentTableStyle->getNumTableCellStyles());
-	TableCellStyle *pTableCellStyle = new TableCellStyle(fLeftBorderThickness, fRightBorderThickness, fTopBorderThickness, fBottomBorderThickness,
-							     propList["color"]->getStr(), propList["border-color"]->getStr(), 
-							     (WPXVerticalAlignment)propList["vertical-alignment"]->getInt(),
-							     sTableCellStyleName.getUTF8());
+	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.getUTF8());
 	mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
 
 	TagOpenElement *pTableCellOpenElement = new TagOpenElement("table:table-cell");
 	pTableCellOpenElement->addAttribute("table:style-name", sTableCellStyleName);
-	pTableCellOpenElement->addAttribute("table:number-columns-spanned", propList["col-span"]->getStr().getUTF8());
-	pTableCellOpenElement->addAttribute("table:number-rows-spanned", propList["row-span"]->getStr().getUTF8());
+	if (propList["table:number-columns-spanned"])
+                pTableCellOpenElement->addAttribute("table:number-columns-spanned", 
+                                                    propList["table:number-columns-spanned"]->getStr().getUTF8());
+        if (propList["table:number-rows-spanned"])
+                pTableCellOpenElement->addAttribute("table:number-rows-spanned",
+                                                    propList["table:number-rows-spanned"]->getStr().getUTF8());
 	pTableCellOpenElement->addAttribute("table:value-type", "string");
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pTableCellOpenElement));
 

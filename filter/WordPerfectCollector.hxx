@@ -162,7 +162,6 @@ private:
 	float mfSectionSpaceAfter;
 
 	// table styles
-	unsigned int miNumTables;
 	vector<TableStyle *> mTableStyles;
 
 	// list styles

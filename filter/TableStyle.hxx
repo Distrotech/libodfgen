@@ -39,55 +39,36 @@ class DocumentHandler;
 class TableCellStyle : public Style
 {
 public:
-	TableCellStyle(const float fLeftBorderThickness, const float fRightBorderThickness, 
-		       const float fTopBorderThickness, const float fBottomBorderThickness, 
-		       const UTF8String &sColor, const UTF8String &sBorderColor,
-		       const WPXVerticalAlignment cellVerticalAlignment, const char *psName);
+	TableCellStyle(const WPXPropertyList &xPropList, const char *psName);
 	virtual void write(DocumentHandler &xHandler) const;
 private:
-	float mfLeftBorderThickness;
-	float mfRightBorderThickness;
-	float mfTopBorderThickness;
-	float mfBottomBorderThickness;
-	WPXVerticalAlignment mCellVerticalAlignment;
-	UTF8String msColor;
-	UTF8String msBorderColor;
+        WPXPropertyList mPropList;
 };
 
 class TableRowStyle : public Style
 {
 public:
-	TableRowStyle(const float fHeight, const bool bIsMinimumHeight, const bool bIsHeaderRow, const char *psName);
+	TableRowStyle(const WPXPropertyList &propList, const char *psName);
 	virtual void write(DocumentHandler &xHandler) const;
 private:
-	bool mbIsHeaderRow, mbIsMinimumHeight;
-	float mfHeight;
+        WPXPropertyList mPropList;
 };
 
 class TableStyle : public Style, public TopLevelElementStyle
 {
- public:
-	TableStyle(const float fDocumentMarginLeft, const float fDocumentMarginRight, 
-		   const float fMarginLeftOffset, const float fMarginRightOffset,
-		   const uint8_t iTablePositionBits, const float fLeftOffset, 
-		   const vector < WPXColumnDefinition > &columns, 
-		   const char *psName);
+public:
+	TableStyle(const WPXPropertyList &xPropList, const vector < WPXColumnDefinition > &columns, const char *psName);
 	~TableStyle();
 	virtual void write(DocumentHandler &xHandler) const;
-	const int getNumColumns() const { return miNumColumns; }
+	const int getNumColumns() const { return mColumns.size(); }
 	void addTableCellStyle(TableCellStyle *pTableCellStyle) { mTableCellStyles.push_back(pTableCellStyle); }
 	int getNumTableCellStyles() { return mTableCellStyles.size(); }
 	void addTableRowStyle(TableRowStyle *pTableRowStyle) { mTableRowStyles.push_back(pTableRowStyle); }
 	int getNumTableRowStyles() { return mTableRowStyles.size(); }
 private:	
-	float mfDocumentMarginLeft, mfDocumentMarginRight;
-	float mfMarginLeftOffset, mfMarginRightOffset;
+        WPXPropertyList mPropList;
 	vector< WPXColumnDefinition > mColumns;
-	unsigned int miTablePositionBits;
-	float mfLeftOffset;
 	vector<TableCellStyle *> mTableCellStyles;
 	vector<TableRowStyle *> mTableRowStyles;
-	int miNumColumns;
 };
-
 #endif

@@ -38,32 +38,25 @@ class DocumentElement;
 class ListLevelStyle
 {
 public:
-	virtual void write(DocumentHandler &xHandler, int level) const = 0;
+	virtual void write(DocumentHandler &xHandler, int iLevel) const = 0;
 };
 
 class OrderedListLevelStyle : public ListLevelStyle
 {
 public:
-	OrderedListLevelStyle(const WPXNumberingType listType, 
-			      const UTF8String &sTextBeforeNumber, const UTF8String &sTextAfterNumber, 
-			      const float fSpaceBefore, const int iStartingNumber);
-	virtual void write(DocumentHandler &xHandler, int level) const;
+	OrderedListLevelStyle(const WPXPropertyList &xPropList);
+	virtual void write(DocumentHandler &xHandler, int iLevel) const;
 private:
-	UTF8String msTextBeforeNumber;
-	UTF8String msTextAfterNumber;
-	float mfSpaceBefore;
-	int miStartingNumber;
-	WPXNumberingType mlistType;
+        WPXPropertyList mPropList;
 };
 
 class UnorderedListLevelStyle : public ListLevelStyle
 {
 public:
-	UnorderedListLevelStyle(const UTF8String &sBullet, const float fSpaceBefore);
+	UnorderedListLevelStyle(const WPXPropertyList &xPropList);
 	virtual void write(DocumentHandler &xHandler, int iLevel) const;
 private:
-	UTF8String msBullet;
-	float mfSpaceBefore;
+        WPXPropertyList mPropList;
 };
 
 class ListStyle : public Style
@@ -88,15 +81,13 @@ class OrderedListStyle : public ListStyle
 {
 public:
 	OrderedListStyle(const char *psName, const int iListID) : ListStyle(psName, iListID) {}
-	void updateListLevel(const int iLevel, const WPXNumberingType listType, 
-			     const UTF8String &sTextBeforeNumber, const UTF8String &sTextAfterNumber,
-			     const int iStartingNumber);
+	void updateListLevel(const int iLevel, const WPXPropertyList &xPropList);
 };
 
 class UnorderedListStyle : public ListStyle
 {
 public:
 	UnorderedListStyle(const char *psName, const int iListID) : ListStyle(psName, iListID) {}
-	void updateListLevel(const int iLevel, const UTF8String &sBullet);
+	void updateListLevel(const int iLevel, const WPXPropertyList &xPropList);
 };
 #endif
