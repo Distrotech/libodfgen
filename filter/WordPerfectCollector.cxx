@@ -94,37 +94,37 @@ bool WordPerfectCollector::filter()
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Cleaning up our mess..\n"));
 
 	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
-	for (vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++) {
+	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++) {
 		delete((*iterBody));
 		(*iterBody) = NULL;
 	}
 
 	WRITER_DEBUG_MSG(("Destroying the styles elements\n"));
-	for (vector<DocumentElement *>::iterator iterStyles = mStylesElements.begin(); iterStyles != mStylesElements.end(); iterStyles++) {
+	for (std::vector<DocumentElement *>::iterator iterStyles = mStylesElements.begin(); iterStyles != mStylesElements.end(); iterStyles++) {
  		delete (*iterStyles);
 		(*iterStyles) = NULL; // we may pass over the same element again (in the case of headers/footers spanning multiple pages)
 				      // so make sure we don't do a double del
 	}
 
 	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
-	for (map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
+	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
 		delete(iterTextStyle->second);
 	}
-	for (map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
+	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		delete(iterFont->second);
 	}
 
-	for (vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
+	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
 		delete((*iterListStyles));
 	}
-	for (vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
+	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
 		delete((*iterSectionStyles));
 	}
-	for (vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
+	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
 		delete((*iterTableStyles));
 	}
 
-	for (vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin(); iterPageSpans != mPageSpans.end(); iterPageSpans++) {
+	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin(); iterPageSpans != mPageSpans.end(); iterPageSpans++) {
 		delete((*iterPageSpans));
 	}
 
@@ -259,7 +259,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 
 	// write out the font styles
 	mpHandler->startElement("office:font-decls", xBlankAttrList);
-	for (map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
+	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		iterFont->second->write(*mpHandler);
 	}
 	TagOpenElement symbolFontOpen("style:font-decl");
@@ -279,7 +279,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 
 	mpHandler->startElement("office:automatic-styles", xBlankAttrList);
 
-	for (map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
+	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
              iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
         {
 		// writing out the paragraph styles
@@ -291,24 +291,24 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 	}
 
         // span styles..
-	for (map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); 
+	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); 
              iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) 
         {
                 (iterSpanStyle->second)->write(xHandler);
 	}
 
  	// writing out the sections styles
-	for (vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
+	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
 		(*iterSectionStyles)->write(xHandler);
 	}
 
 	// writing out the lists styles
-	for (vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
+	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
 		(*iterListStyles)->write(xHandler);
 	}
 
  	// writing out the table styles
-	for (vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
+	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
 		(*iterTableStyles)->write(xHandler);
 	}
 
@@ -324,7 +324,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
  	// writing out the document
 	xHandler.startElement("office:body", xBlankAttrList);
 
-	for (vector<DocumentElement *>::iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
+	for (std::vector<DocumentElement *>::iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
 		(*iterBodyElements)->write(xHandler);
 	}
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Finished writing all doc els..\n"));
@@ -387,7 +387,7 @@ void WordPerfectCollector::openPageSpan(const WPXPropertyList &propList)
 
 void WordPerfectCollector::openHeader(const WPXPropertyList &propList)
 {
-	vector<DocumentElement *> * pHeaderFooterContentElements = new vector<DocumentElement *>;
+	std::vector<DocumentElement *> * pHeaderFooterContentElements = new std::vector<DocumentElement *>;
 
 	if (propList["libwpd:occurence"]->getStr() == "even")
                 mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
@@ -404,7 +404,7 @@ void WordPerfectCollector::closeHeader()
 
 void WordPerfectCollector::openFooter(const WPXPropertyList &propList)
 {
-	vector<DocumentElement *> * pHeaderFooterContentElements = new vector<DocumentElement *>;
+	std::vector<DocumentElement *> * pHeaderFooterContentElements = new std::vector<DocumentElement *>;
 
 	if (propList["libwpd:occurence"]->getStr() == "even")
                 mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);
@@ -815,7 +815,7 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXP
 
 void WordPerfectCollector::openTableRow(const WPXPropertyList &propList)
 {
-	if (propList["is-header-row"]->getInt())
+	if (propList["is-header-row"] && (propList["is-header-row"]->getInt()))
 	{
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("table:table-header-rows")));
 		mWriterDocumentState.mbHeaderRow = true;

@@ -37,8 +37,6 @@
 #include <map>
 #include <stack>
 
-using namespace std;
-
 class DocumentElement;
 class DocumentHandler;
 class TagOpenElement;
@@ -149,33 +147,33 @@ private:
 	WriterDocumentState mWriterDocumentState;
 
 	// paragraph styles
-	map<WPXString, ParagraphStyle *, ltstr> mTextStyleHash;
+	std::map<WPXString, ParagraphStyle *, ltstr> mTextStyleHash;
 
         // span styles
-        map<WPXString, SpanStyle *, ltstr> mSpanStyleHash;
+        std::map<WPXString, SpanStyle *, ltstr> mSpanStyleHash;
 
 	// font styles
-	map<WPXString, FontStyle *, ltstr> mFontHash;
+	std::map<WPXString, FontStyle *, ltstr> mFontHash;
 
 	// section styles
-	vector<SectionStyle *> mSectionStyles;
+	std::vector<SectionStyle *> mSectionStyles;
 	float mfSectionSpaceAfter;
 
 	// table styles
-	vector<TableStyle *> mTableStyles;
+	std::vector<TableStyle *> mTableStyles;
 
 	// list styles
 	unsigned int miNumListStyles;
 
 	// style elements
-	vector<DocumentElement *> mStylesElements;
+	std::vector<DocumentElement *> mStylesElements;
 	// content elements
-	vector<DocumentElement *> mBodyElements;
+	std::vector<DocumentElement *> mBodyElements;
 	// the current set of elements that we're writing to
-	vector<DocumentElement *> * mpCurrentContentElements;
+	std::vector<DocumentElement *> * mpCurrentContentElements;
 
 	// page state
-	vector<PageSpan *> mPageSpans;
+	std::vector<PageSpan *> mPageSpans;
 	PageSpan *mpCurrentPageSpan;
 	int miNumPageStyles;
 
@@ -184,7 +182,7 @@ private:
 	unsigned int miCurrentListLevel;
 	unsigned int miLastListLevel;
 	unsigned int miLastListNumber;
-	vector<ListStyle *> mListStyles;
+	std::vector<ListStyle *> mListStyles;
 	bool mbListContinueNumbering;
 	bool mbListElementOpened;
 	bool mbListElementParagraphOpened;

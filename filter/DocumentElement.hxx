@@ -34,8 +34,6 @@
 
 #include "DocumentHandler.hxx"
 
-using namespace std;
-
 class DocumentElement
 {
 public:	

@@ -29,8 +29,6 @@
 #include <libwpd/libwpd.h>
 #include <vector>
 
-using namespace std;
-
 class DocumentElement;
 class DocumentHandler;
 
@@ -50,19 +48,19 @@ public:
 	float getMarginLeft() const;
 	float getMarginRight() const;
 
-	const vector<DocumentElement *> * getHeaderContent() const { return mpHeaderContent; }
-	void setHeaderContent(vector<DocumentElement *> * pHeaderContent) { mpHeaderContent = pHeaderContent; }
-	void setFooterContent(vector<DocumentElement *> * pFooterContent) { mpFooterContent = pFooterContent; }
-	void setHeaderLeftContent(vector<DocumentElement *> * pHeaderContent) { mpHeaderLeftContent = pHeaderContent; }
-	void setFooterLeftContent(vector<DocumentElement *> * pFooterContent) { mpFooterLeftContent = pFooterContent; }
+	const std::vector<DocumentElement *> * getHeaderContent() const { return mpHeaderContent; }
+	void setHeaderContent(std::vector<DocumentElement *> * pHeaderContent) { mpHeaderContent = pHeaderContent; }
+	void setFooterContent(std::vector<DocumentElement *> * pFooterContent) { mpFooterContent = pFooterContent; }
+	void setHeaderLeftContent(std::vector<DocumentElement *> * pHeaderContent) { mpHeaderLeftContent = pHeaderContent; }
+	void setFooterLeftContent(std::vector<DocumentElement *> * pFooterContent) { mpFooterLeftContent = pFooterContent; }
 protected:
-	void _writeHeaderFooter(const char *headerFooterTagName, const vector<DocumentElement *> & headerFooterContent,
+	void _writeHeaderFooter(const char *headerFooterTagName, const std::vector<DocumentElement *> & headerFooterContent,
 				DocumentHandler &xHandler) const;
 private:
         WPXPropertyList mxPropList;
-	vector<DocumentElement *> * mpHeaderContent;
-	vector<DocumentElement *> * mpFooterContent;
-	vector<DocumentElement *> * mpHeaderLeftContent;
-	vector<DocumentElement *> * mpFooterLeftContent;
+	std::vector<DocumentElement *> * mpHeaderContent;
+	std::vector<DocumentElement *> * mpFooterContent;
+	std::vector<DocumentElement *> * mpHeaderLeftContent;
+	std::vector<DocumentElement *> * mpFooterLeftContent;
 };
 #endif

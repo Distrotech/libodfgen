@@ -68,7 +68,7 @@ public:
 private:	
         WPXPropertyList mPropList;
 	WPXPropertyListVector mColumns;
-	vector<TableCellStyle *> mTableCellStyles;
-	vector<TableRowStyle *> mTableRowStyles;
+	std::vector<TableCellStyle *> mTableCellStyles;
+	std::vector<TableRowStyle *> mTableRowStyles;
 };
 #endif

@@ -141,12 +141,12 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 }
 
 void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
-				  const vector<DocumentElement *> & headerFooterContent,
+				  const std::vector<DocumentElement *> & headerFooterContent,
 				  DocumentHandler &xHandler) const
 {
 	TagOpenElement headerFooterOpen(headerFooterTagName);
 	headerFooterOpen.write(xHandler);
-	for (vector<DocumentElement *>::const_iterator iter = headerFooterContent.begin();
+	for (std::vector<DocumentElement *>::const_iterator iter = headerFooterContent.begin();
 	     iter != headerFooterContent.end();
 	     iter++) {
 		(*iter)->write(xHandler);
