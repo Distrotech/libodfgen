@@ -1,0 +1,110 @@
+AC_INIT(filter/WordPerfectCollector.cxx)
+
+AM_CONFIG_HEADER(config.h)
+
+WRITERPERFECT_MAJOR_VERSION=0
+WRITERPERFECT_MINOR_VERSION=1
+WRITERPERFECT_MICRO_VERSION=0
+
+LIBWPD_REQUIRED_VERSION=0.8.0
+
+WRITERPERFECT_VERSION="$WRITERPERFECT_MAJOR_VERSION.$WRITERPERFECT_MINOR_VERSION.$WRITERPERFECT_MICRO_VERSION"
+
+AC_SUBST(WRITERPERFECT_MAJOR_VERSION)
+AC_SUBST(WRITERPERFECT_MINOR_VERSION)
+AC_SUBST(WRITERPERFECT_MICRO_VERSION)
+AC_SUBST(WRITERPERFECT_VERSION)
+
+LT_CURRENT=`expr 10 '*' $WRITERPERFECT_MAJOR_VERSION + $WRITERPERFECT_MINOR_VERSION`
+LT_REVISION=$WRITERPERFECT_MICRO_VERSION
+# For 1.0.0 comment the first line and uncomment the second
+LT_AGE=0
+# LT_AGE=$WRITERPERFECT_MINOR_VERSION
+LT_CURRENT_MINUS_AGE=`expr $LT_CURRENT - $LT_AGE`
+AC_SUBST(LT_CURRENT)
+AC_SUBST(LT_REVISION)
+AC_SUBST(LT_AGE)
+AC_SUBST(LT_CURRENT_MINUS_AGE)
+
+AM_INIT_AUTOMAKE(writerperfect, $WRITERPERFECT_VERSION)
+
+AC_PROG_CC
+
+AC_PROG_CXX
+
+AC_PROG_INSTALL
+
+AC_PROG_LIBTOOL
+
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+
+PKG_CHECK_MODULES(WRITERPERFECT,[
+libwpd-1 >= $LIBWPD_REQUIRED_VERSION
+])
+
+PKG_CHECK_MODULES(WPD2SXW,[
+libwpd-1 >= $LIBWPD_REQUIRED_VERSION
+libwpd-stream-1 >= $LIBWPD_REQUIRED_VERSION
+])
+
+
+dnl AC_MSG_CHECKING([for native Win32])
+dnl case "$host" in
+dnl   *-*-mingw*)
+dnl     native_win32=yes
+dnl     WRITERPERFECT_WIN32_RESOURCE=wpd2sxw-win32res.lo
+dnl     ;;
+dnl   *)
+dnl     native_win32=no
+dnl     WRITERPERFECT_WIN32_RESOURCE=
+dnl     ;;
+dnl esac
+dnl AC_MSG_RESULT([$native_win32])
+dnl AM_CONDITIONAL(OS_WIN32, test "$native_win32" = yes)
+dnl AC_SUBST(WRITERPERFECT_WIN32_RESOURCE)
+
+dnl AC_MSG_CHECKING([for Win32 platform in general])
+dnl case "$host" in
+dnl   *-*-mingw*|*-*-cygwin*)
+dnl     platform_win32=yes
+dnl     ;;
+dnl   *)
+dnl     platform_win32=no
+dnl     ;;
+dnl esac
+dnl AC_MSG_RESULT($platform_win32)
+dnl AM_CONDITIONAL(PLATFORM_WIN32, test "$platform_win32" = yes)
+
+
+AC_ARG_ENABLE(debug,[  --enable-debug    Turn on debugging],[
+	case "${enableval}" in
+	   yes)	debug=true ;
+		DEBUG_CXXFLAGS="-DDEBUG -g" ;;
+	    no)	debug=false ;
+		DEBUG_CXXFLAGS="-DNDEBUG" ;;
+	     *)	AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+	esac
+],[	debug=false
+	DEBUG_CXXFLAGS="-DNDEBUG" 
+])
+
+WRITERPERFECT_CXXFLAGS="$WRITERPERFECT_CFLAGS"
+WPD2SXW_CXXFLAGS="$WPD2SXW_CFLAGS"
+
+AC_SUBST(WRITERPERFECT_CXXFLAGS)
+AC_SUBST(WRITERPERFECT_LIBS)
+AC_SUBST(WPD2SXW_CXXFLAGS)
+AC_SUBST(WPD2SXW_LIBS)
+AC_SUBST(DEBUG_CXXFLAGS)
+
+AC_OUTPUT([
+Makefile
+wpd2sxw/Makefile
+filter/Makefile
+])
+
+case "$debug" in
+     "true" )
+        AC_MSG_RESULT([Configured with debugging symbols.]) ;;
+esac
+

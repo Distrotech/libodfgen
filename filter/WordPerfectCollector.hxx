@@ -1,0 +1,197 @@
+/* WordPerfectCollector: Collects sections and runs of text from a
+ * wordperfect file (and styles to go along with them) and writes them
+ * to a target file
+ *
+ * Copyright (C) 2002-2004 William Lachance (william.lachance@sympatico.ca)
+ * Copyright (C) 2003-2004 Net Integration Technologies (http://www.net-itech.com)
+ * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ *
+ * For further information visit http://libwpd.sourceforge.net
+ *
+ */
+
+/* "This product is not manufactured, approved, or supported by
+ * Corel Corporation or Corel Corporation Limited."
+ */
+
+#ifndef _WORDPERFECTCOLLECTOR_H
+#define _WORDPERFECTCOLLECTOR_H
+#include "SectionStyle.hxx"
+
+#include <libwpd/libwpd.h>
+#include <vector>
+#include <map>
+#include <stack>
+
+using namespace std;
+
+class DocumentElement;
+class DocumentHandler;
+class TagOpenElement;
+class FontStyle;
+class ListStyle;
+
+class ParagraphStyle;
+class SpanStyle;
+class TableStyle;
+class PageSpan;
+
+// the state we use for writing the final document
+typedef struct _WriterDocumentState WriterDocumentState;
+struct _WriterDocumentState
+{
+	_WriterDocumentState();
+		
+	bool mbFirstElement;
+	bool mbInFakeSection;
+	bool mbListElementOpenedAtCurrentLevel;
+	bool mbTableCellOpened;
+	bool mbHeaderRow;
+};
+
+enum WriterListType { unordered, ordered };
+
+struct ltstr
+{
+  bool operator()(const UTF8String & s1, const UTF8String & s2) const
+  {
+    return strcmp(s1.getUTF8(), s2.getUTF8()) < 0;
+  }
+};
+
+class WordPerfectCollector : public WPXHLListenerImpl
+{
+public:
+	WordPerfectCollector();
+	virtual ~WordPerfectCollector() {}
+	bool filter(WPXInputStream &input, DocumentHandler &xHandler);
+
+ 	virtual void setDocumentMetaData(const WPXPropertyList &propList) {}
+	virtual void startDocument() {}
+	virtual void endDocument() {}
+
+	virtual void openPageSpan(const WPXPropertyList &propList);
+	virtual void closePageSpan() {}
+
+	virtual void openSection(const WPXPropertyList &propList, const vector <WPXColumnDefinition> &columns);
+	virtual void closeSection();
+
+	virtual void openHeader(const WPXPropertyList &propList);
+	virtual void closeHeader();
+	virtual void openFooter(const WPXPropertyList &propList);
+	virtual void closeFooter();
+
+	virtual void openParagraph(const WPXPropertyList &propList, const vector<WPXTabStop> &tabStops);
+	virtual void closeParagraph();
+	
+	virtual void openSpan(const WPXPropertyList &propList);
+	virtual void closeSpan();
+
+
+	virtual void insertTab();
+	virtual void insertText(const UTF8String &text);
+ 	virtual void insertLineBreak();
+
+	virtual void defineOrderedListLevel(const WPXPropertyList &propList);
+	virtual void defineUnorderedListLevel(const WPXPropertyList &propList);	
+	virtual void openOrderedListLevel(const WPXPropertyList &propList);
+	virtual void openUnorderedListLevel(const WPXPropertyList &propList);
+	virtual void closeOrderedListLevel();
+	virtual void closeUnorderedListLevel();
+	virtual void openListElement(const WPXPropertyList &propList, const vector<WPXTabStop> &tabStops);
+	virtual void closeListElement();       
+
+	virtual void openFootnote(const WPXPropertyList &propList);
+	virtual void closeFootnote();
+	virtual void openEndnote(const WPXPropertyList &propList);
+	virtual void closeEndnote();
+
+ 	virtual void openTable(const WPXPropertyList &propList, const vector < WPXColumnDefinition > &columns);
+ 	virtual void openTableRow(const WPXPropertyList &propList);
+	virtual void closeTableRow();
+ 	virtual void openTableCell(const WPXPropertyList &propList);
+	virtual void closeTableCell();
+	virtual void insertCoveredTableCell(const WPXPropertyList &propList);
+ 	virtual void closeTable();
+
+protected:
+	void _resetDocumentState();
+	bool _parseSourceDocument(WPXInputStream &input);
+	bool _writeTargetDocument(DocumentHandler &xHandler);
+	void _writeContentPreamble(DocumentHandler &xHandler);
+	void _writeDefaultStyles(DocumentHandler &xHandler);
+	void _writeMasterPages(DocumentHandler &xHandler);
+	void _writePageMasters(DocumentHandler &xHandler);
+	void _allocateFontName(const UTF8String &);
+
+private:
+	void _openListLevel(TagOpenElement *pListLevelOpenElement);
+	void _closeListLevel(const char *szListType);
+
+	bool mbUsed; // whether or not it has been before (you can only use me once!)
+
+	WriterDocumentState mWriterDocumentState;
+
+	// paragraph styles
+	map<UTF8String, ParagraphStyle *, ltstr> mTextStyleHash;
+
+        // span styles
+        map<UTF8String, SpanStyle *, ltstr> mSpanStyleHash;
+
+	// font styles
+	map<UTF8String, FontStyle *, ltstr> mFontHash;
+
+	// section styles
+	unsigned int miNumSections;
+	vector<SectionStyle *> mSectionStyles;
+	int miCurrentNumColumns;
+	vector<WPXColumnDefinition> mColumns;
+	float mfSectionSpaceAfter;
+
+	// table styles
+	unsigned int miNumTables;
+	vector<TableStyle *> mTableStyles;
+
+	// list styles
+	unsigned int miNumListStyles;
+
+	// style elements
+	vector<DocumentElement *> mStylesElements;
+	// content elements
+	vector<DocumentElement *> mBodyElements;
+	// the current set of elements that we're writing to
+	vector<DocumentElement *> * mpCurrentContentElements;
+
+	// page state
+	vector<PageSpan *> mPageSpans;
+	PageSpan *mpCurrentPageSpan;
+	int miNumPageStyles;
+
+	// list styles / state
+	ListStyle *mpCurrentListStyle;
+	unsigned int miCurrentListLevel;
+	unsigned int miLastListLevel;
+	unsigned int miLastListNumber;
+	vector<ListStyle *> mListStyles;
+	bool mbListContinueNumbering;
+	bool mbListElementOpened;
+	bool mbListElementParagraphOpened;
+
+	// table state
+	TableStyle *mpCurrentTableStyle;
+};
+#endif
