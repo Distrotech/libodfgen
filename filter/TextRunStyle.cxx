@@ -62,7 +62,7 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 
         propList.clear();
 	WPXPropertyList::Iter i((*mpPropList));
-	for (i; i.next(); )
+	for (i.rewind(); i.next(); )
 	{
                 if (i.key() == "style:list-style-name")
                         propList.insert("style:list-style-name", i()->getStr());
@@ -79,7 +79,7 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 		if (i.key() == "fo:line-height")
 			propList.insert("fo:line-height", i()->getStr());
 		if (i.key() == "fo:break-before") 
-			propList.insert("fo:break-before", i()->getStr());
+                        propList.insert("fo:break-before", i()->getStr());
 		if (i.key() == "fo:text-align") 
 			propList.insert("fo:text-align", i()->getStr());
                 if (i.key() == "fo:text-align-last")
