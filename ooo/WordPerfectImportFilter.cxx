@@ -177,25 +177,25 @@ OUString SAL_CALL WordPerfectImportFilter::detect( com::sun::star::uno::Sequence
 {
 	WRITER_DEBUG_MSG(("WordPerfectImportFilter::detect: Got here!\n"));
 	
-	WPDConfidence confidence;
+	WPDConfidence confidence = WPD_CONFIDENCE_NONE;
 	OUString sTypeName = OUString( RTL_CONSTASCII_USTRINGPARAM ( "" ) );
 	sal_Int32 nLength = Descriptor.getLength();
+	sal_Int32 location = nLength;
 	OUString sURL;
 	const PropertyValue * pValue = Descriptor.getConstArray();
 	Reference < XInputStream > xInputStream;
 	for ( sal_Int32 i = 0 ; i < nLength; i++)
 	{
-	    if ( pValue[i].Name.equalsAsciiL ( RTL_CONSTASCII_STRINGPARAM ( "InputStream" ) ) )
-		pValue[i].Value >>= xInputStream;
+		if ( pValue[i].Name.equalsAsciiL ( RTL_CONSTASCII_STRINGPARAM ( "TypeName" ) ) )
+			location=i;
+		else if ( pValue[i].Name.equalsAsciiL ( RTL_CONSTASCII_STRINGPARAM ( "InputStream" ) ) )
+			pValue[i].Value >>= xInputStream;
 		else if ( pValue[i].Name.equalsAsciiL ( RTL_CONSTASCII_STRINGPARAM ( "URL" ) ) )
-		pValue[i].Value >>= sURL;
+			pValue[i].Value >>= sURL;
 
 	    rtl_TextEncoding encoding = RTL_TEXTENCODING_INFO_ASCII;
 	}
 
-	gsf_init();
-	
-	GsfInput *pGsfInput;
         Reference< com::sun::star::ucb::XCommandEnvironment > xEnv;
         if (!xInputStream.is())
         {
@@ -205,6 +205,9 @@ OUString SAL_CALL WordPerfectImportFilter::detect( com::sun::star::uno::Sequence
                         return sTypeName;
         }
 		
+	gsf_init();
+	
+	GsfInput *pGsfInput;
 	pGsfInput = GSF_INPUT(gsf_input_oo_new (xInputStream, NULL));
 
 	if (pGsfInput != NULL)
@@ -212,13 +215,23 @@ OUString SAL_CALL WordPerfectImportFilter::detect( com::sun::star::uno::Sequence
 		GSFInputStream input(pGsfInput);
 
 		confidence = WPDocument::isFileFormatSupported(&input, false);
-	
-		if (confidence == WPD_CONFIDENCE_EXCELLENT)
-			sTypeName = OUString( RTL_CONSTASCII_USTRINGPARAM ( "writer_WordPerfect_Document" ) );
 	}
-
+	
 	gsf_shutdown();
 
+	if (confidence == WPD_CONFIDENCE_EXCELLENT)
+		sTypeName = OUString( RTL_CONSTASCII_USTRINGPARAM ( "writer_WordPerfect_Document" ) );
+
+        if (!sTypeName.equalsAscii(""))
+	{
+		if ( location == Descriptor.getLength() )
+		{
+			Descriptor.realloc(nLength+1);
+			Descriptor[location].Name = ::rtl::OUString::createFromAscii( "TypeName" );
+		}
+
+        	Descriptor[location].Value <<=sTypeName;
+        }
 	return sTypeName;	
 	
 }
