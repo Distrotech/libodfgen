@@ -49,7 +49,7 @@ void TagOpenElement::print() const
 
 void TagOpenElement::addAttribute(const char *szAttributeName, const UTF8String &sAttributeValue)
 {
-        maAttrList.insert(szAttributeName, WPXPropertyFactory::newStringProp(sAttributeValue));
+        maAttrList.insert(szAttributeName, sAttributeValue);
 }
 
 void TagCloseElement::write(DocumentHandler &xHandler) const

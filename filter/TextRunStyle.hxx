@@ -37,57 +37,6 @@ class TagOpenElement;
 class DocumentElement;
 class DocumentHandler;
 
-class SpanStyle : public Style
-{
-public:
-	SpanStyle(const uint32_t iTextAttributeBits, const char *pFontName, const float fFontSize, const char *pFontColor,
-		  const char *pBackgroundColor, const char *psName);
-	virtual void write(DocumentHandler &xHandler) const;
-	const int getTextAttributeBits() const { return miTextAttributeBits; }
-	const UTF8String & getFontName() const { return msFontName; }
-	const float getFontSize() const { return mfFontSize; }
-
-	void _addTextProperties(TagOpenElement *pStylePropertiesOpenElement) const;
-
-private:
-	int miTextAttributeBits;
-	UTF8String msFontName;
-	float mfFontSize;
-	UTF8String msFontColor;
-	UTF8String msHighlightColor;
-};
-#if 0
-class ParagraphStyle : public Style, public TopLevelElementStyle
-{
-public:
-	ParagraphStyle(const uint8_t iParagraphJustification,
-			const float fMarginLeft, const float fMarginRight, const float fTextIndent, const float fLineSpacing,
-			const float fSpacingBeforeParagraph, const float fSpacingAfterParagraph, const vector<WPXTabStop> &tabStops, 
-			const bool bColumnBreak, const bool bPageBreak, const char *psName, const char *psParentName);
-
-	virtual ~ParagraphStyle();
-
-	void setListStyleName(UTF8String &sListStyleName) { delete mpsListStyleName ; mpsListStyleName = new UTF8String(sListStyleName); }
-	virtual void write(DocumentHandler &xHandler) const;
-	const virtual bool isParagraphStyle() const { return true; }
-
-private:
-	UTF8String msParentName;
-	UTF8String *mpsListStyleName;
-	float mfMarginLeft;
-	float mfMarginRight;
-	float mfTextIndent;
-	float mfLineSpacing;
-	float mfSpacingBeforeParagraph;
-	float mfSpacingAfterParagraph;
-	uint8_t miParagraphJustification;
-	vector<WPXTabStop> mTabStops;
-	int miNumTabStops;
-	bool mbColumnBreak;
-	bool mbPageBreak;
-};
-#endif
-
 class ParagraphStyle
 {
 public:
@@ -99,5 +48,16 @@ private:
 	WPXPropertyList *mpPropList;
 	vector<WPXTabStop> mxTabStops;
 	UTF8String msName;
+};
+
+
+class SpanStyle : public Style
+{
+public:
+	SpanStyle(const char *psName, const WPXPropertyList &xPropList);
+	virtual void write(DocumentHandler &xHandler) const;
+
+private:
+        WPXPropertyList mPropList;
 };
 #endif

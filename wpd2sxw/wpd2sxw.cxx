@@ -74,7 +74,6 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
  	}
 	input.seek(0, WPX_SEEK_SET);
 
-        WordPerfectCollector collector;
         DocumentHandler *pHandler;
         GsfOutput *pContentChild = NULL;
         if (pOutfile)
@@ -84,7 +83,9 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
         }
         else
                 pHandler = new StdOutHandler();
-	bool bRetVal = collector.filter(input, *pHandler);
+
+        WordPerfectCollector collector(&input, pHandler);
+	bool bRetVal = collector.filter();
 
         if (pContentChild)
         {

@@ -42,11 +42,8 @@ const float fDefaultPageHeight = 11.0f; // inches
 SectionStyle::SectionStyle(const int iNumColumns, const vector<WPXColumnDefinition> &columns, const char *psName) : Style(psName),
 	miNumColumns(iNumColumns)
 {
-
 	for (int i=0; i<columns.size(); i++)
 		mColumns.push_back(columns[i]);
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Created a new set of section props with this no. of columns: %i and this name: %s\n", 
-	       (int)miNumColumns, (const char *)getName()));	
 }
 
 void SectionStyle::write(DocumentHandler &xHandler) const
@@ -56,7 +53,7 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 	styleOpen.addAttribute("style:family", "section");
 	styleOpen.write(xHandler);
 
-	// if miNumColumns <= 1, we will never come here. This is only additional check
+	// if miNumColumns <= 1, we will never come here. This is only an additional check
 	if (miNumColumns > 1)
 	{		
 		// style properties
@@ -68,7 +65,7 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 		TagOpenElement columnsOpen("style:columns");
 		UTF8String sColumnCount;
 		sColumnCount.sprintf("%i", miNumColumns);
-		columnsOpen.addAttribute("fo:column-count", sColumnCount.getUTF8());
+		columnsOpen.addAttribute("fo:column-count", sColumnCount());
 		columnsOpen.write(xHandler);
 	
 		UTF8String sRelWidth, sMarginLeft, sMarginRight;

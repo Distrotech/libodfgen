@@ -76,9 +76,9 @@ struct ltstr
 class WordPerfectCollector : public WPXHLListenerImpl
 {
 public:
-	WordPerfectCollector();
+	WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler);
 	virtual ~WordPerfectCollector();
-	bool filter(WPXInputStream &input, DocumentHandler &xHandler);
+	bool filter();
 
  	virtual void setDocumentMetaData(const WPXPropertyList &propList) {}
 	virtual void startDocument() {}
@@ -132,7 +132,7 @@ protected:
 	void _resetDocumentState();
 	bool _parseSourceDocument(WPXInputStream &input);
 	bool _writeTargetDocument(DocumentHandler &xHandler);
-	void _writeContentPreamble(DocumentHandler &xHandler);
+	void _writeBegin();
 	void _writeDefaultStyles(DocumentHandler &xHandler);
 	void _writeMasterPages(DocumentHandler &xHandler);
 	void _writePageMasters(DocumentHandler &xHandler);
@@ -142,6 +142,8 @@ private:
 	void _openListLevel(TagOpenElement *pListLevelOpenElement);
 	void _closeListLevel(const char *szListType);
 
+        WPXInputStream *mpInput;
+        DocumentHandler *mpHandler;
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
 
 	WriterDocumentState mWriterDocumentState;
@@ -156,10 +158,7 @@ private:
 	map<UTF8String, FontStyle *, ltstr> mFontHash;
 
 	// section styles
-	unsigned int miNumSections;
 	vector<SectionStyle *> mSectionStyles;
-	int miCurrentNumColumns;
-	vector<WPXColumnDefinition> mColumns;
 	float mfSectionSpaceAfter;
 
 	// table styles

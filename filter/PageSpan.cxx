@@ -91,8 +91,8 @@ void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
         
 	UTF8String sPageMasterName; 
         sPageMasterName.sprintf("PM%i", iNum);
-        propList.insert("style:name", WPXPropertyFactory::newStringProp(sPageMasterName.getUTF8()));
-	propList.insert("style:name", WPXPropertyFactory::newStringProp(sPageMasterName.getUTF8()));
+        propList.insert("style:name", sPageMasterName);
+	propList.insert("style:name", sPageMasterName);
 	xHandler.startElement("style:page-master", propList);
 
         xHandler.startElement("style:properties", mxPropList);
@@ -116,13 +116,13 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 		sMasterPageName.sprintf("Page Style %i", i);
 		UTF8String sPageMasterName;
 		sPageMasterName.sprintf("PM%i", iPageMasterNum);
-                propList.insert("style:name", WPXPropertyFactory::newStringProp(sMasterPageName.getUTF8()));
-		propList.insert("style:page-master-name", WPXPropertyFactory::newStringProp(sPageMasterName.getUTF8()));
+                propList.insert("style:name", sMasterPageName);
+		propList.insert("style:page-master-name", sPageMasterName);
 		if (!bLastPageSpan)
 		{
 			UTF8String sNextMasterPageName;
 			sNextMasterPageName.sprintf("Page Style %i", (i+1));
-                        propList.insert("style:next-style-name", WPXPropertyFactory::newStringProp(sNextMasterPageName.getUTF8()));
+                        propList.insert("style:next-style-name", sNextMasterPageName);
 		}
                 xHandler.startElement("style:master-page", propList);
 

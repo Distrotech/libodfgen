@@ -51,10 +51,10 @@ _WriterDocumentState::_WriterDocumentState() :
 {
 }
 
-WordPerfectCollector::WordPerfectCollector() :
+WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler) :
+        mpInput(pInput),
+        mpHandler(pHandler),
 	mbUsed(false),
-	miNumSections(0),
-	miCurrentNumColumns(1),
 	mfSectionSpaceAfter(0.0f),
 	miNumTables(0),
 	miNumListStyles(0),
@@ -75,7 +75,7 @@ WordPerfectCollector::~WordPerfectCollector()
 {
 }
 
-bool WordPerfectCollector::filter(WPXInputStream &input, DocumentHandler &xHandler)
+bool WordPerfectCollector::filter()
 {
 	// The contract for WordPerfectCollector is that it will only be used once after it is
 	// instantiated
@@ -85,9 +85,10 @@ bool WordPerfectCollector::filter(WPXInputStream &input, DocumentHandler &xHandl
 	mbUsed = true;
 
 	// parse & write
- 	if (!_parseSourceDocument(input))
+        // WLACH_REFACTORING: Remove these args..
+ 	if (!_parseSourceDocument(*mpInput))
 		return false;
-	if (!_writeTargetDocument(xHandler))
+	if (!_writeTargetDocument(*mpHandler))
 		return false;
 
  	// clean up the mess we made
@@ -109,9 +110,6 @@ bool WordPerfectCollector::filter(WPXInputStream &input, DocumentHandler &xHandl
 	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
 	for (map<UTF8String, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
 		delete(iterTextStyle->second);
-	}
-	for (map<UTF8String, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) {
-		delete(iterSpanStyle->second);
 	}
 	for (map<UTF8String, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		delete(iterFont->second);
@@ -136,8 +134,6 @@ bool WordPerfectCollector::filter(WPXInputStream &input, DocumentHandler &xHandl
 
 bool WordPerfectCollector::_parseSourceDocument(WPXInputStream &input)
 {
-	// create a header for the preamble + add some default settings to it
-
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Attempting to process state\n"));
 	bool bRetVal = true;
 	try {
@@ -211,26 +207,9 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler &xHandler)
 
 }
 
-void WordPerfectCollector::_writeContentPreamble(DocumentHandler &xHandler)
+// writes everything up to the automatic styles declarations..
+void WordPerfectCollector::_writeBegin()
 {
-	TagOpenElement documentContentOpenElement("office:document-content");
-	documentContentOpenElement.addAttribute("xmlns:office", "http://openoffice.org/2000/office");
-	documentContentOpenElement.addAttribute("xmlns:style", "http://openoffice.org/2000/style");
-	documentContentOpenElement.addAttribute("xmlns:text", "http://openoffice.org/2000/text");
-	documentContentOpenElement.addAttribute("xmlns:table", "http://openoffice.org/2000/table");
-	documentContentOpenElement.addAttribute("xmlns:draw", "http://openoffice.org/2000/draw");
-	documentContentOpenElement.addAttribute("xmlns:fo", "http://www.w3.org/1999/XSL/Format");
-	documentContentOpenElement.addAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
-	documentContentOpenElement.addAttribute("xmlns:number", "http://openoffice.org/2000/datastyle");
-	documentContentOpenElement.addAttribute("xmlns:svg", "http://www.w3.org/2000/svg");
-	documentContentOpenElement.addAttribute("xmlns:chart", "http://openoffice.org/2000/chart");
-	documentContentOpenElement.addAttribute("xmlns:dr3d", "http://openoffice.org/2000/dr3d");
-	documentContentOpenElement.addAttribute("xmlns:math", "http://www.w3.org/1998/Math/MathML");
-	documentContentOpenElement.addAttribute("xmlns:form", "http://openoffice.org/2000/form");
-	documentContentOpenElement.addAttribute("xmlns:script", "http://openoffice.org/2000/script");
-	documentContentOpenElement.addAttribute("office:class", "text");
-	documentContentOpenElement.addAttribute("office:version", "1.0");
-	documentContentOpenElement.write(xHandler);
 }
 
 void WordPerfectCollector::_writeMasterPages(DocumentHandler &xHandler)
@@ -259,38 +238,55 @@ void WordPerfectCollector::_writePageMasters(DocumentHandler &xHandler)
 }
 
 bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
-{
+{        
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Printing out the header stuff..\n"));
 	WPXPropertyList xBlankAttrList;
 
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Start Document\n"));
-	xHandler.startDocument();
+	mpHandler->startDocument();
 
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: preamble\n"));
-	_writeContentPreamble(xHandler);
-
- 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the styles..\n"));
+        WPXPropertyList docContentPropList;
+	docContentPropList.insert("xmlns:office", "http://openoffice.org/2000/office");
+	docContentPropList.insert("xmlns:style", "http://openoffice.org/2000/style");
+	docContentPropList.insert("xmlns:text", "http://openoffice.org/2000/text");
+	docContentPropList.insert("xmlns:table", "http://openoffice.org/2000/table");
+	docContentPropList.insert("xmlns:draw", "http://openoffice.org/2000/draw");
+	docContentPropList.insert("xmlns:fo", "http://www.w3.org/1999/XSL/Format");
+	docContentPropList.insert("xmlns:xlink", "http://www.w3.org/1999/xlink");
+	docContentPropList.insert("xmlns:number", "http://openoffice.org/2000/datastyle");
+	docContentPropList.insert("xmlns:svg", "http://www.w3.org/2000/svg");
+	docContentPropList.insert("xmlns:chart", "http://openoffice.org/2000/chart");
+	docContentPropList.insert("xmlns:dr3d", "http://openoffice.org/2000/dr3d");
+	docContentPropList.insert("xmlns:math", "http://www.w3.org/1998/Math/MathML");
+	docContentPropList.insert("xmlns:form", "http://openoffice.org/2000/form");
+	docContentPropList.insert("xmlns:script", "http://openoffice.org/2000/script");
+	docContentPropList.insert("office:class", "text");
+	docContentPropList.insert("office:version", "1.0");
+        mpHandler->startElement("office:document-content", docContentPropList);
 
 	// write out the font styles
-	xHandler.startElement("office:font-decls", xBlankAttrList);
+	mpHandler->startElement("office:font-decls", xBlankAttrList);
 	for (map<UTF8String, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
-		iterFont->second->write(xHandler);
+		iterFont->second->write(*mpHandler);
 	}
 	TagOpenElement symbolFontOpen("style:font-decl");
 	symbolFontOpen.addAttribute("style:name", "StarSymbol");
 	symbolFontOpen.addAttribute("fo:font-family", "StarSymbol");
 	symbolFontOpen.addAttribute("style:font-charset", "x-symbol");
-	symbolFontOpen.write(xHandler);
-	TagCloseElement symbolFontClose("style:font-decl");
-	symbolFontClose.write(xHandler);
+	symbolFontOpen.write(*mpHandler);
+        mpHandler->endElement("style:font-decl");
 
-	xHandler.endElement("office:font-decls");
+	mpHandler->endElement("office:font-decls");
+
+
+ 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the styles..\n"));
 
 	// write default styles
-	_writeDefaultStyles(xHandler);
+	_writeDefaultStyles(*mpHandler);
 
-	// write automatic styles: which encompasses quite a bit
-	xHandler.startElement("office:automatic-styles", xBlankAttrList);
+	mpHandler->startElement("office:automatic-styles", xBlankAttrList);
+
 	for (map<UTF8String, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
              iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
         {
@@ -302,12 +298,12 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 		}
 	}
 
+        // span styles..
 	for (map<UTF8String, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); 
              iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) 
         {
                 (iterSpanStyle->second)->write(xHandler);
 	}
-
 
  	// writing out the sections styles
 	for (vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
@@ -326,6 +322,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 
 	// writing out the page masters
 	_writePageMasters(xHandler);
+
 
 	xHandler.endElement("office:automatic-styles");
 
@@ -349,7 +346,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 }
 
 
-UTF8String getParagraphStyleKey(const WPXPropertyList & xPropList, const vector<WPXTabStop> & xTabStops)
+UTF8String propListToStyleKey(const WPXPropertyList & xPropList)
 {
         UTF8String sKey;
         WPXPropertyList::Iter i(xPropList);
@@ -359,6 +356,13 @@ UTF8String getParagraphStyleKey(const WPXPropertyList & xPropList, const vector<
                 sProp.sprintf("[%s:%s]", i.key().c_str(), i()->getStr().getUTF8());
                 sKey.append(sProp);
         }
+
+        return sKey;
+}
+
+UTF8String getParagraphStyleKey(const WPXPropertyList & xPropList, const vector<WPXTabStop> & xTabStops)
+{
+        UTF8String sKey = propListToStyleKey(xPropList);
         
         UTF8String sTabStops;
         sTabStops.sprintf("[num-tab-stops:%i]", xTabStops.size());
@@ -443,18 +447,17 @@ void WordPerfectCollector::closeFooter()
 
 void WordPerfectCollector::openSection(const WPXPropertyList &propList, const vector <WPXColumnDefinition> &columns)
 {
-	miCurrentNumColumns = propList["num-columns"]->getInt();
-	mColumns = columns;
+        int iNumColumns = 1;
+	if (propList["fo:column-count"] && propList["fo:column-count"]->getInt() > 1)
+                iNumColumns = propList["fo:column-count"]->getInt();
 
-	if (miCurrentNumColumns > 1)
+	if (iNumColumns > 1)
 	{
-		miNumSections++;
-		mfSectionSpaceAfter = propList["margin-bottom"]->getFloat();
+		mfSectionSpaceAfter = propList["fo:margin-bottom"]->getFloat();
 		UTF8String sSectionName;
-		sSectionName.sprintf("Section%i", miNumSections);
-		WRITER_DEBUG_MSG(("WriterWordPerfect:  New Section: %s\n", sSectionName.getUTF8()));
+		sSectionName.sprintf("Section%i", mSectionStyles.size());
 		
-		SectionStyle *pSectionStyle = new SectionStyle(miCurrentNumColumns, mColumns, sSectionName.getUTF8());
+		SectionStyle *pSectionStyle = new SectionStyle(iNumColumns, columns, sSectionName());
 		mSectionStyles.push_back(pSectionStyle);
 		
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
@@ -503,7 +506,7 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		//in that case)
 		pPersistPropList->insert("style:parent-style-name", "Standard");
 		UTF8String sName;
-		sName.sprintf("FS"); 
+		sName.sprintf("FS");
 
 		UTF8String sParagraphHashKey("P|FS");
 		pPersistPropList->insert("style:master-page-name", "Page Style 1");
@@ -513,13 +516,6 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
  	}
 	else
 	{
-		if (mWriterDocumentState.mbTableCellOpened || miCurrentNumColumns > 1)
-		{
-			pPersistPropList->remove("margin-left");
-			pPersistPropList->remove("margin-right");
-			pPersistPropList->remove("text-indent");
-		}
-
 		if (mWriterDocumentState.mbTableCellOpened)
 		{
 			if (mWriterDocumentState.mbHeaderRow)
@@ -559,34 +555,29 @@ void WordPerfectCollector::closeParagraph()
 
 void WordPerfectCollector::openSpan(const WPXPropertyList &propList)
 {
-	_allocateFontName(propList["font-name"]->getStr());
-	UTF8String sSpanHashKey;
-	sSpanHashKey.sprintf("S|%i|%s|%f|%s|%s", propList["text-attribute-bits"]->getInt(), propList["font-name"]->getStr().getUTF8(),
-			     propList["font-size"]->getFloat(), propList["color"]->getStr().getUTF8(), 
-                             propList["text-background-color"]->getStr().getUTF8());
+        if (propList["style:font-name"])
+                _allocateFontName(propList["style:font-name"]->getStr());
+	UTF8String sSpanHashKey = propListToStyleKey(propList);
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Span Hash Key: %s\n", sSpanHashKey.getUTF8()));
 
 	// Get the style
-	SpanStyle * pStyle = NULL;
+        UTF8String sName;
 	if (mSpanStyleHash.find(sSpanHashKey) == mSpanStyleHash.end())
         {
 		// allocate a new paragraph style
-		UTF8String sName;
-		sName.sprintf("S%i", mSpanStyleHash.size());
-		pStyle = new SpanStyle(propList["text-attribute-bits"]->getInt(), propList["font-name"]->getStr().getUTF8(),
-                                       propList["font-size"]->getFloat(), propList["color"]->getStr().getUTF8(),
-                                       propList["text-background-color"]->getStr().getUTF8(), sName.getUTF8());
+		sName.sprintf("Span%i", mSpanStyleHash.size());
+		SpanStyle *pStyle = new SpanStyle(sName(), propList);                
 
 		mSpanStyleHash[sSpanHashKey] = pStyle;
 	}
 	else 
         {
-		pStyle = mSpanStyleHash.find(sSpanHashKey)->second; // yes, this could be optimized (see dup call above)
+		sName.sprintf("%s", mSpanStyleHash.find(sSpanHashKey)->second->getName()());
 	}
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
-	pSpanOpenElement->addAttribute("text:style-name", pStyle->getName());
+	pSpanOpenElement->addAttribute("text:style-name", sName());
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pSpanOpenElement));
 }
 

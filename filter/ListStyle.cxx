@@ -78,18 +78,18 @@ void OrderedListLevelStyle::write(DocumentHandler &xHandler, int iLevel) const
 	sStartValue.sprintf("%i", miStartingNumber);
 
 	TagOpenElement listLevelStyleOpen("text:list-level-style-number");
-	listLevelStyleOpen.addAttribute("text:level", sLevel.getUTF8());
+	listLevelStyleOpen.addAttribute("text:level", sLevel);
 	listLevelStyleOpen.addAttribute("text:style-name", "Numbering Symbols");
-	listLevelStyleOpen.addAttribute("style:num-prefix", sTextBeforeNumber.getUTF8());
-	listLevelStyleOpen.addAttribute("style:num-suffix", sTextAfterNumber.getUTF8());
-	listLevelStyleOpen.addAttribute("style:num-format", sListTypeSymbol.getUTF8());
-	listLevelStyleOpen.addAttribute("text:start-value", sStartValue.getUTF8());
+	listLevelStyleOpen.addAttribute("style:num-prefix", sTextBeforeNumber);
+	listLevelStyleOpen.addAttribute("style:num-suffix", sTextAfterNumber);
+	listLevelStyleOpen.addAttribute("style:num-format", sListTypeSymbol);
+	listLevelStyleOpen.addAttribute("text:start-value", sStartValue);
 	listLevelStyleOpen.write(xHandler);
 
 	UTF8String sSpaceBefore;
 	sSpaceBefore.sprintf("%fcm", mfSpaceBefore);	
 	TagOpenElement stylePropertiesOpen("style:properties");
-	stylePropertiesOpen.addAttribute("text:space-before", sSpaceBefore.getUTF8());
+	stylePropertiesOpen.addAttribute("text:space-before", sSpaceBefore);
 	stylePropertiesOpen.addAttribute("text:min-label-width", "0.499cm");
 	stylePropertiesOpen.write(xHandler);
 
@@ -114,16 +114,16 @@ void UnorderedListLevelStyle::write(DocumentHandler &xHandler, int iLevel) const
 	UTF8String sLevel;
 	sLevel.sprintf("%i", (iLevel+1));
 	TagOpenElement listLevelStyleOpen("text:list-level-style-bullet");
-	listLevelStyleOpen.addAttribute("text:level", sLevel.getUTF8());
+	listLevelStyleOpen.addAttribute("text:level", sLevel);
 	listLevelStyleOpen.addAttribute("text:style-name", "Bullet Symbols");
 	listLevelStyleOpen.addAttribute("style:num-suffice", ".");
-	listLevelStyleOpen.addAttribute("text:bullet-char", msBullet.getUTF8());
+	listLevelStyleOpen.addAttribute("text:bullet-char", msBullet);
 	listLevelStyleOpen.write(xHandler);
 
 	UTF8String sSpaceBefore;
 	sSpaceBefore.sprintf("%fcm", mfSpaceBefore);
 	TagOpenElement stylePropertiesOpen("style:properties");
-	stylePropertiesOpen.addAttribute("text:space-before", sSpaceBefore.getUTF8());
+	stylePropertiesOpen.addAttribute("text:space-before", sSpaceBefore);
 	stylePropertiesOpen.addAttribute("text:min-label-width", "0.499cm");
 	stylePropertiesOpen.addAttribute("style:font-name", "StarSymbol");	
 	stylePropertiesOpen.write(xHandler);
