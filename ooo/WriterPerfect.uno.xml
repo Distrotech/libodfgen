@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module-description PUBLIC "-//StarOffice//DTD ComponentDescription 1.0//EN" "module-description.dtd">
+<module-description xmlns:xlink="http://www.w3.org/1999/xlink">
+    <module-name> writerperfect </module-name>
+    <component-description>
+        <author> William Lachance </author>
+        <name> com.sun.star.comp.Writer.WordPerfectImportFilter </name>
+        <description>
+	This component provides a UNO component for importing Corel WordPerfect files.
+	</description>
+        <loader-name>	com.sun.star.loader.SharedLibrary	</loader-name>
+        <language>	c++	</language>
+        <status value="final"/>
+        <supported-service> com.sun.star.document.ImportFilter </supported-service>
+	<type> com.sun.star.uno.XWeak  </type>
+	<type> com.sun.star.uno.XNamingService  </type>
+	<type> com.sun.star.uno.XComponentContext  </type>
+	<type> com.sun.star.uno.XAggregation  </type>
+	<type> com.sun.star.util.XCloneable  </type>
+	<type> com.sun.star.lang.XServiceInfo  </type>
+	<type> com.sun.star.lang.XSingleServiceFactory  </type>
+	<type> com.sun.star.lang.XMultiServiceFactory  </type>
+	<type> com.sun.star.lang.XSingleComponentFactory  </type>
+	<type> com.sun.star.lang.XTypeProvider  </type>
+	<type> com.sun.star.lang.XUnoTunnel  </type>
+	<type> com.sun.star.registry.XSimpleRegistry  </type>
+	<type> com.sun.star.document.XFilter </type>
+ 	<type> com.sun.star.document.XImporter </type>
+	<type> com.sun.star.lang.XInitialization </type>
+	<type> com.sun.star.io.XInputStream </type>
+	<type> com.sun.star.io.XSeekable </type>
+	<type> com.sun.star.xml.sax.XDocumentHandler </type>
+	<type> com.sun.star.xml.sax.InputSource </type>
+	<type> com.sun.star.xml.sax.XParser </type>
+	<type> com.sun.star.xml.sax.InputSource </type>
+	<type> com.sun.star.xml.sax.XParser </type>
+	<type> com.sun.star.xml.sax.SAXParseException </type>
+	<type> com.sun.star.xml.sax.XExtendedDocumentHandler </type>
+    </component-description>
+    <project-build-dependency>	cppuhelper	</project-build-dependency>
+    <project-build-dependency>	cppu		</project-build-dependency>
+    <project-build-dependency>	sal			</project-build-dependency>
+    <runtime-module-dependency>	cppuhelper$(UDK_MAJOR)$(COM) 	</runtime-module-dependency>
+    <runtime-module-dependency>	salhelper$(UDK_MAJOR)$(COM)	</runtime-module-dependency>
+    <runtime-module-dependency>	cppu$(UDK_MAJOR)	</runtime-module-dependency>
+    <runtime-module-dependency>	reg$(UDK_MAJOR)		</runtime-module-dependency>
+    <runtime-module-dependency>	store$(UDK_MAJOR)	</runtime-module-dependency>
+    <runtime-module-dependency>	sal$(UDK_MAJOR)		</runtime-module-dependency>
+</module-description>

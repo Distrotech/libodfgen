@@ -32,8 +32,10 @@
 const float fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
 const float fDefaultPageHeight = 11.0f; // inches
 
-PageSpan::PageSpan(const int iSpan, const float fFormLength, const float fFormWidth, const WPXFormOrientation fFormOrientation,
-			 const float fLeftMargin, const float fRightMargin, const float fTopMargin, const float fBottomMargin):
+PageSpan::PageSpan(const WPXPropertyList &xPropList) :
+#if 0
+const int iSpan, const float fFormLength, const float fFormWidth, const WPXFormOrientation fFormOrientation,
+                   const float fLeftMargin, const float fRightMargin, const float fTopMargin, const float fBottomMargin):
 	miSpan(iSpan),
 	mfFormLength(fFormLength),
 	mfFormWidth(fFormWidth),
@@ -42,6 +44,8 @@ PageSpan::PageSpan(const int iSpan, const float fFormLength, const float fFormWi
 	mfMarginRight(fRightMargin),
 	mfMarginTop(fTopMargin),
 	mfMarginBottom(fBottomMargin),
+#endif
+        mxPropList(xPropList),
 	mpHeaderContent(NULL),
 	mpFooterContent(NULL),
 	mpHeaderLeftContent(NULL),
@@ -57,53 +61,53 @@ PageSpan::~PageSpan()
 	delete mpFooterLeftContent;
 }
 
-void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
-{
-	TagOpenElement pageMasterOpen("style:page-master");
-	UTF8String sPageMasterName;
-	sPageMasterName.sprintf("PM%i", iNum);
-	pageMasterOpen.addAttribute("style:name", sPageMasterName.getUTF8());
-	pageMasterOpen.write(xHandler);
+int PageSpan::getSpan() const
+{ 
+        if (mxPropList["libwpd:num-pages"]) 
+                return mxPropList["libwpd:num-pages"]->getInt(); 
 
-	TagOpenElement pageMasterPropertiesOpen("style:properties");
-	UTF8String sMarginTop;
-	sMarginTop.sprintf("%.4finch", mfMarginTop);
-	UTF8String sMarginBottom;
-	sMarginBottom.sprintf("%.4finch", mfMarginBottom);
-	UTF8String sMarginLeft;
-	sMarginLeft.sprintf("%.4finch", mfMarginLeft);
-	UTF8String sMarginRight;
-	sMarginRight.sprintf("%.4finch", mfMarginRight);
-	UTF8String sPageWidth;
-	sPageWidth.sprintf("%.4finch", mfFormWidth);
-	UTF8String sPageHeight;
-	sPageHeight.sprintf("%.4finch", mfFormLength);
-	if (mfFormOrientation == LANDSCAPE)
-	{
-		pageMasterPropertiesOpen.addAttribute("style:print-orientation", "landscape");
-	}
-	else
-	{
-		pageMasterPropertiesOpen.addAttribute("style:print-orientation", "portrait");
-	}
-	pageMasterPropertiesOpen.addAttribute("fo:page-width", sPageWidth.getUTF8());
-	pageMasterPropertiesOpen.addAttribute("fo:page-height", sPageHeight.getUTF8());
-	pageMasterPropertiesOpen.addAttribute("fo:margin-top", sMarginTop.getUTF8());
-	pageMasterPropertiesOpen.addAttribute("fo:margin-bottom", sMarginBottom.getUTF8());
-	pageMasterPropertiesOpen.addAttribute("fo:margin-left", sMarginLeft.getUTF8());
-	pageMasterPropertiesOpen.addAttribute("fo:margin-right", sMarginRight.getUTF8());
-	pageMasterPropertiesOpen.write(xHandler);
-	TagCloseElement pageMasterPropertiesClose("style:properties");
-	pageMasterPropertiesClose.write(xHandler);
-
-	TagCloseElement pageMasterClose("style:page-master");
-	pageMasterClose.write(xHandler);
+        return 0; // should never happen
 }
 
-void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, DocumentHandler &xHandler) const
+float PageSpan::getMarginLeft() const
+{ 
+        if (mxPropList["fo:margin-left"])
+                return mxPropList["fo:margin-left"]->getFloat();
+
+         return 0.0f; 
+}
+
+float PageSpan::getMarginRight() const
+{ 
+        if (mxPropList["fo:margin-right"])
+                return mxPropList["fo:margin-right"]->getFloat();
+
+         return 0.0f; 
+}
+
+void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
 {
+        WPXPropertyList propList;
+        
+	UTF8String sPageMasterName; 
+        sPageMasterName.sprintf("PM%i", iNum);
+        propList.insert("style:name", WPXPropertyFactory::newStringProp(sPageMasterName.getUTF8()));
+	propList.insert("style:name", WPXPropertyFactory::newStringProp(sPageMasterName.getUTF8()));
+	xHandler.startElement("style:page-master", propList);
+
+        xHandler.startElement("style:properties", mxPropList);
+
+        xHandler.endElement("style:properties");
+        xHandler.endElement("style:page-master");
+}
+
+void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, 
+                                DocumentHandler &xHandler) const
+{
+        WPXPropertyList propList; // scratch space
+
 	int iSpan = 0;
-	(bLastPageSpan) ? iSpan = 1 : iSpan = miSpan;
+	(bLastPageSpan) ? iSpan = 1 : iSpan = getSpan();
 
 	for (int i=iStartingNum; i<(iStartingNum+iSpan); i++)
 	{
@@ -112,15 +116,15 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 		sMasterPageName.sprintf("Page Style %i", i);
 		UTF8String sPageMasterName;
 		sPageMasterName.sprintf("PM%i", iPageMasterNum);
-		masterPageOpen.addAttribute("style:name", sMasterPageName.getUTF8());
-		masterPageOpen.addAttribute("style:page-master-name", sPageMasterName.getUTF8());
+                propList.insert("style:name", WPXPropertyFactory::newStringProp(sMasterPageName.getUTF8()));
+		propList.insert("style:page-master-name", WPXPropertyFactory::newStringProp(sPageMasterName.getUTF8()));
 		if (!bLastPageSpan)
 		{
 			UTF8String sNextMasterPageName;
 			sNextMasterPageName.sprintf("Page Style %i", (i+1));
-			masterPageOpen.addAttribute("style:next-style-name", sNextMasterPageName.getUTF8());
+                        propList.insert("style:next-style-name", WPXPropertyFactory::newStringProp(sNextMasterPageName.getUTF8()));
 		}
-		masterPageOpen.write(xHandler);
+                xHandler.startElement("style:master-page", propList);
 
 		if (mpHeaderContent)
 			_writeHeaderFooter("style:header", *mpHeaderContent, xHandler);
@@ -131,8 +135,7 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 		if (mpFooterLeftContent)
 			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, xHandler);
 
-		TagCloseElement masterPageClose("style:master-page");
-		masterPageClose.write(xHandler);
+                xHandler.endElement("style:master-page");
 	}
 
 }

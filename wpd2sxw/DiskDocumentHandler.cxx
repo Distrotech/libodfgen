@@ -5,20 +5,22 @@ DiskDocumentHandler::DiskDocumentHandler(GsfOutput *pOutput) :
 {
 }
 
-void DiskDocumentHandler::startElement(const UTF8String &sName, const WPXPropertyList &xPropList)
+void DiskDocumentHandler::startElement(const char *psName, const WPXPropertyList &xPropList)
 {
-	gsf_output_printf(mpOutput, "<%s", sName.getUTF8());
+	gsf_output_printf(mpOutput, "<%s", psName);
         WPXPropertyList::Iter i(xPropList);
         for (i.rewind(); i.next(); )
         {
-		gsf_output_printf(mpOutput, " %s=\"%s\"", i.key().c_str(), i()->getStr().getUTF8());
+                // filter out libwpd elements
+                if (strlen(i.key().c_str()) > 6 && strcmp(i.key().c_str(), "libwpd") != 0)
+                        gsf_output_printf(mpOutput, " %s=\"%s\"", i.key().c_str(), i()->getStr().getUTF8());
         }
 	gsf_output_printf(mpOutput, ">");
 }
 
-void DiskDocumentHandler::endElement(const UTF8String &sName)
+void DiskDocumentHandler::endElement(const char *psName)
 {
-	gsf_output_printf(mpOutput, "</%s>", sName.getUTF8());
+	gsf_output_printf(mpOutput, "</%s>", psName);
 }
 
 void DiskDocumentHandler::characters(const UTF8String &sCharacters)

@@ -26,6 +26,7 @@
  */
 
 #include "DocumentElement.hxx"
+#include "DocumentHandler.hxx"
 #include "FilterInternal.hxx"
 #include <string.h>
 
@@ -38,7 +39,7 @@ void TagElement::print() const
 
 void TagOpenElement::write(DocumentHandler &xHandler) const
 {
-	xHandler.startElement(UTF8String::createFromAscii(getTagName().getUTF8()), maAttrList);
+	xHandler.startElement(getTagName().getUTF8(), maAttrList);
 }
 
 void TagOpenElement::print() const
@@ -55,7 +56,7 @@ void TagCloseElement::write(DocumentHandler &xHandler) const
 {
 	WRITER_DEBUG_MSG(("TagCloseElement: write (%s)\n", getTagName().getUTF8()));
 
-	xHandler.endElement(UTF8String::createFromAscii(getTagName().getUTF8()));
+	xHandler.endElement(getTagName().getUTF8());
 }
 
 void CharDataElement::write(DocumentHandler &xHandler) const
@@ -91,8 +92,8 @@ void TextElement::write(DocumentHandler &xHandler) const
 				xHandler.characters(sTemp);
 				sTemp = UTF8String::createFromAscii("");
 			}
-			xHandler.startElement(UTF8String::createFromAscii("text:s"), xBlankAttrList);
-			xHandler.endElement(UTF8String::createFromAscii("text:s"));
+			xHandler.startElement("text:s", xBlankAttrList);
+			xHandler.endElement("text:s");
 		}
 		else {
                         sTemp.append(i());

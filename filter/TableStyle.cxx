@@ -91,9 +91,9 @@ void TableCellStyle::write(DocumentHandler &xHandler) const
 	sBorderBottom.sprintf("%finch solid %s", mfBottomBorderThickness, msBorderColor.getUTF8());
 	stylePropertiesOpen.addAttribute("fo:border-bottom", sBorderBottom.getUTF8());
 	stylePropertiesOpen.write(xHandler);
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
+	xHandler.endElement("style:properties");
 
-	xHandler.endElement(UTF8String::createFromAscii("style:style"));	
+	xHandler.endElement("style:style");	
 }
 
 TableRowStyle::TableRowStyle(const float fHeight, const bool bIsMinimumHeight, const bool bIsHeaderRow, const char *psName):
@@ -121,10 +121,10 @@ void TableRowStyle::write(DocumentHandler &xHandler) const
 		else
 			stylePropertiesOpen.addAttribute("style:row-height", sRowHeight.getUTF8());
 		stylePropertiesOpen.write(xHandler);
-		xHandler.endElement(UTF8String::createFromAscii("style:properties"));
+		xHandler.endElement("style:properties");
 	}
 	
-	xHandler.endElement(UTF8String::createFromAscii("style:style"));
+	xHandler.endElement("style:style");
 		
 }
 	
@@ -212,9 +212,9 @@ void TableStyle::write(DocumentHandler &xHandler) const
 	stylePropertiesOpen.addAttribute("style:width", sTableWidth.getUTF8());
 	stylePropertiesOpen.write(xHandler);
 
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
+	xHandler.endElement("style:properties");
 
-	xHandler.endElement(UTF8String::createFromAscii("style:style"));
+	xHandler.endElement("style:style");
 		
 	int i=1;
 	typedef vector<WPXColumnDefinition>::const_iterator CDVIter;
@@ -232,9 +232,9 @@ void TableStyle::write(DocumentHandler &xHandler) const
 		sColumnWidth.sprintf("%finch", (*iterColumns).m_width);
 		stylePropertiesOpen.addAttribute("style:column-width", sColumnWidth.getUTF8());
 		stylePropertiesOpen.write(xHandler);
-		xHandler.endElement(UTF8String::createFromAscii("style:properties"));
+		xHandler.endElement("style:properties");
 
-		xHandler.endElement(UTF8String::createFromAscii("style:style"));
+		xHandler.endElement("style:style");
 
 		i++;
 	}

@@ -50,43 +50,42 @@ ParagraphStyle::~ParagraphStyle()
 void ParagraphStyle::write(DocumentHandler &xHandler) const
 {
 	WRITER_DEBUG_MSG(("Writing a paragraph style..\n"));
-	TagOpenElement styleOpen("style:style");
-	styleOpen.addAttribute("style:name", msName.getUTF8());
-	styleOpen.addAttribute("style:family", "paragraph");
-	styleOpen.addAttribute("style:parent-style-name", (*mpPropList)["parent-style-name"]->getStr().getUTF8());
-#if 0
-	if (getMasterPageName())
-		styleOpen.addAttribute("style:master-page-name", getMasterPageName()->getUTF8());
-#endif
-	styleOpen.write(xHandler);
 
-	TagOpenElement stylePropertiesOpen("style:properties");
+        WPXPropertyList propList;
+	propList.insert("style:name", msName.getUTF8());
+	propList.insert("style:family", "paragraph");
+	propList.insert("style:parent-style-name", (*mpPropList)["style:parent-style-name"]->getStr());
+	if ((*mpPropList)["style:master-page-name"])
+		propList.insert("style:master-page-name", (*mpPropList)["style:master-page-name"]->getStr());
+        xHandler.startElement("style:style", propList);
+
+        propList.clear();
 	WPXPropertyList::Iter i((*mpPropList));
 	for (i; i.next(); )
 	{
                 if (i.key() == "list-style-name")
-                        stylePropertiesOpen.addAttribute("style:list-style-name", i()->getStr().getUTF8());
+                        propList.insert("style:list-style-name", i()->getStr().getUTF8());
 
 		if (i.key() == "margin-left")
-			stylePropertiesOpen.addAttribute("fo:margin-left", i()->getStr().getUTF8());
+			propList.insert("fo:margin-left", i()->getStr().getUTF8());
 		if (i.key() == "margin-right")
-			stylePropertiesOpen.addAttribute("fo:margin-right", i()->getStr().getUTF8());
+			propList.insert("fo:margin-right", i()->getStr().getUTF8());
 		if (i.key() == "text-indent")
-			stylePropertiesOpen.addAttribute("fo:text-indent", i()->getStr().getUTF8());
+			propList.insert("fo:text-indent", i()->getStr().getUTF8());
 		if (i.key() == "margin-top")
-			stylePropertiesOpen.addAttribute("fo:margin-top", i()->getStr().getUTF8());
+			propList.insert("fo:margin-top", i()->getStr().getUTF8());
 		if (i.key() == "margin-bottom")
-			stylePropertiesOpen.addAttribute("fo:margin-bottom", i()->getStr().getUTF8());
+			propList.insert("fo:margin-bottom", i()->getStr().getUTF8());
 		if (i.key() == "line-spacing")
 		{
 			UTF8String sLineSpacing;
 			sLineSpacing.sprintf("%.2f%%", i()->getFloat()*100.0f);
-			stylePropertiesOpen.addAttribute("fo:line-height", sLineSpacing.getUTF8());
+			propList.insert("fo:line-height", sLineSpacing.getUTF8());
 		}
 		if (i.key() == "column-break" && i()->getInt()) 
-			stylePropertiesOpen.addAttribute("fo:break-before", "column");	
+			propList.insert("fo:break-before", "column");	
 		if (i.key() == "page-break" && i()->getInt()) 
-			stylePropertiesOpen.addAttribute("fo:break-before", "page");
+			propList.insert("fo:break-before", "page");
 		
 		if (i.key() == "justification") 
 		{
@@ -94,30 +93,28 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 			{
 			case WPX_PARAGRAPH_JUSTIFICATION_LEFT:
 				// doesn't require a paragraph prop - it is the default, but, like, whatever
-				stylePropertiesOpen.addAttribute("fo:text-align", "left");
+				propList.insert("fo:text-align", "left");
 				break;
 			case WPX_PARAGRAPH_JUSTIFICATION_CENTER:
-				stylePropertiesOpen.addAttribute("fo:text-align", "center");
+				propList.insert("fo:text-align", "center");
 				break;
 			case WPX_PARAGRAPH_JUSTIFICATION_RIGHT:
-				stylePropertiesOpen.addAttribute("fo:text-align", "end");
+				propList.insert("fo:text-align", "end");
 				break;
 			case WPX_PARAGRAPH_JUSTIFICATION_FULL:
-				stylePropertiesOpen.addAttribute("fo:text-align", "justify");
+				propList.insert("fo:text-align", "justify");
 				break;
 			case WPX_PARAGRAPH_JUSTIFICATION_FULL_ALL_LINES:
-				stylePropertiesOpen.addAttribute("fo:text-align", "justify");
-				stylePropertiesOpen.addAttribute("fo:text-align-last", "justify");
+				propList.insert("fo:text-align", "justify");
+				propList.insert("fo:text-align-last", "justify");
 				break;
 			}
 		}
 	}
 	
+	propList.insert("style:justify-single-word", "false");
+	xHandler.startElement("style:properties", propList);
 
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Adding justification style props: %i\n", miParagraphJustification));
-	stylePropertiesOpen.addAttribute("style:justify-single-word", "false");
-	stylePropertiesOpen.write(xHandler);
-	WRITER_DEBUG_MSG(("Writing %i tab stops\n", miNumTabStops));
 	if (mxTabStops.size() > 0)
 	{
 		TagOpenElement tabListOpen("style:tab-stops");
@@ -152,14 +149,14 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 				tabStopOpen.addAttribute("style:leader-char", sTempLeader()); 
 			}
 			tabStopOpen.write(xHandler);
-			xHandler.endElement(UTF8String::createFromAscii("style:tab-stop"));
+			xHandler.endElement("style:tab-stop");
 			
 		}
-		xHandler.endElement(UTF8String::createFromAscii("style:tab-stops"));
+		xHandler.endElement("style:tab-stops");
 	}
 
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
-	xHandler.endElement(UTF8String::createFromAscii("style:style"));
+	xHandler.endElement("style:properties");
+	xHandler.endElement("style:style");
 }
 
 
@@ -216,32 +213,32 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 		sMarginRight.sprintf("%finch", mfMarginRight);
 		UTF8String sTextIndent;
 		sTextIndent.sprintf("%finch", mfTextIndent);
-		stylePropertiesOpen.addAttribute("fo:margin-left", sMarginLeft.getUTF8());
-		stylePropertiesOpen.addAttribute("fo:margin-right", sMarginRight.getUTF8());
-		stylePropertiesOpen.addAttribute("fo:text-indent", sTextIndent.getUTF8());
+		propList.insert("fo:margin-left", sMarginLeft.getUTF8());
+		propList.insert("fo:margin-right", sMarginRight.getUTF8());
+		propList.insert("fo:text-indent", sTextIndent.getUTF8());
 	}
 	// line spacing
 	if (mfLineSpacing != 1.0f) {
 		UTF8String sLineSpacing;
 		sLineSpacing.sprintf("%.2f%%", mfLineSpacing*100.0f);
-		stylePropertiesOpen.addAttribute("fo:line-height", sLineSpacing.getUTF8());
+		propList.insert("fo:line-height", sLineSpacing.getUTF8());
 	}
 	if (mfSpacingAfterParagraph != 0.0f || mfSpacingBeforeParagraph != 0.0f) {
 		UTF8String sSpacingAfterParagraph;
 		sSpacingAfterParagraph.sprintf("%finch", mfSpacingAfterParagraph);
 		UTF8String sSpacingBeforeParagraph;
 		sSpacingBeforeParagraph.sprintf("%finch", mfSpacingBeforeParagraph);
-		stylePropertiesOpen.addAttribute("fo:margin-top", sSpacingBeforeParagraph.getUTF8());
-		stylePropertiesOpen.addAttribute("fo:margin-bottom", sSpacingAfterParagraph.getUTF8());
+		propList.insert("fo:margin-top", sSpacingBeforeParagraph.getUTF8());
+		propList.insert("fo:margin-bottom", sSpacingAfterParagraph.getUTF8());
 	}
 
 	// column break
 	if (mbColumnBreak) {
-		stylePropertiesOpen.addAttribute("fo:break-before", "column");
+		propList.insert("fo:break-before", "column");
 	}
 
 	if (mbPageBreak) {
-		stylePropertiesOpen.addAttribute("fo:break-before", "page");
+		propList.insert("fo:break-before", "page");
 	}
 
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Adding justification style props: %i\n", miParagraphJustification));
@@ -249,23 +246,23 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 		{
 		case WPX_PARAGRAPH_JUSTIFICATION_LEFT:
 			// doesn't require a paragraph prop - it is the default, but, like, whatever
-			stylePropertiesOpen.addAttribute("fo:text-align", "left");
+			propList.insert("fo:text-align", "left");
 			break;
 		case WPX_PARAGRAPH_JUSTIFICATION_CENTER:
-			stylePropertiesOpen.addAttribute("fo:text-align", "center");
+			propList.insert("fo:text-align", "center");
 			break;
 		case WPX_PARAGRAPH_JUSTIFICATION_RIGHT:
-			stylePropertiesOpen.addAttribute("fo:text-align", "end");
+			propList.insert("fo:text-align", "end");
 			break;
 		case WPX_PARAGRAPH_JUSTIFICATION_FULL:
-			stylePropertiesOpen.addAttribute("fo:text-align", "justify");
+			propList.insert("fo:text-align", "justify");
 			break;
 		case WPX_PARAGRAPH_JUSTIFICATION_FULL_ALL_LINES:
-			stylePropertiesOpen.addAttribute("fo:text-align", "justify");
-			stylePropertiesOpen.addAttribute("fo:text-align-last", "justify");
+			propList.insert("fo:text-align", "justify");
+			propList.insert("fo:text-align-last", "justify");
 			break;
 	}
-	stylePropertiesOpen.addAttribute("style:justify-single-word", "false");
+	propList.insert("style:justify-single-word", "false");
 	stylePropertiesOpen.write(xHandler);
 	WRITER_DEBUG_MSG(("Writing %i tab stops\n", miNumTabStops));
 	if (miNumTabStops > 0)
@@ -303,14 +300,14 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 				tabStopOpen.addAttribute("style:leader-char", leaderCharacter.getUTF8()); 
 			}
 			tabStopOpen.write(xHandler);
-			xHandler.endElement(UTF8String::createFromAscii("style:tab-stop"));
+			xHandler.endElement("style:tab-stop");
 			
 		}
-		xHandler.endElement(UTF8String::createFromAscii("style:tab-stops"));
+		xHandler.endElement("style:tab-stops");
 	}
 
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
-	xHandler.endElement(UTF8String::createFromAscii("style:style"));
+	xHandler.endElement("style:properties");
+	xHandler.endElement("style:style");
 }
 #endif
 SpanStyle::SpanStyle(const uint32_t iTextAttributeBits, const char *pFontName, const float fFontSize,
@@ -336,8 +333,8 @@ void SpanStyle::write(DocumentHandler &xHandler) const
  	_addTextProperties(&stylePropertiesOpen);
 	stylePropertiesOpen.write(xHandler);
 
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
-	xHandler.endElement(UTF8String::createFromAscii("style:style"));
+	xHandler.endElement("style:properties");
+	xHandler.endElement("style:style");
 }
 
 void SpanStyle::_addTextProperties(TagOpenElement *pStylePropertiesOpenElement) const

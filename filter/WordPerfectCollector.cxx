@@ -237,7 +237,7 @@ void WordPerfectCollector::_writeMasterPages(DocumentHandler &xHandler)
 {
         WPXPropertyList xBlankAttrList;
 
-	xHandler.startElement(UTF8String::createFromAscii("office:master-styles"), xBlankAttrList);
+	xHandler.startElement("office:master-styles", xBlankAttrList);
 	int pageNumber = 1;
 	for (int i=0; i<mPageSpans.size(); i++)
 	{
@@ -246,7 +246,7 @@ void WordPerfectCollector::_writeMasterPages(DocumentHandler &xHandler)
 		mPageSpans[i]->writeMasterPages(pageNumber, i, bLastPage, xHandler);
 		pageNumber += mPageSpans[i]->getSpan();
 	}
-	xHandler.endElement(UTF8String::createFromAscii("office:master-styles"));
+	xHandler.endElement("office:master-styles");
 }
 
 void WordPerfectCollector::_writePageMasters(DocumentHandler &xHandler)
@@ -272,7 +272,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the styles..\n"));
 
 	// write out the font styles
-	xHandler.startElement(UTF8String::createFromAscii("office:font-decls"), xBlankAttrList);
+	xHandler.startElement("office:font-decls", xBlankAttrList);
 	for (map<UTF8String, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		iterFont->second->write(xHandler);
 	}
@@ -284,13 +284,13 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 	TagCloseElement symbolFontClose("style:font-decl");
 	symbolFontClose.write(xHandler);
 
-	xHandler.endElement(UTF8String::createFromAscii("office:font-decls"));
+	xHandler.endElement("office:font-decls");
 
 	// write default styles
 	_writeDefaultStyles(xHandler);
 
 	// write automatic styles: which encompasses quite a bit
-	xHandler.startElement(UTF8String::createFromAscii("office:automatic-styles"), xBlankAttrList);
+	xHandler.startElement("office:automatic-styles", xBlankAttrList);
 	for (map<UTF8String, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
              iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
         {
@@ -327,21 +327,21 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 	// writing out the page masters
 	_writePageMasters(xHandler);
 
-	xHandler.endElement(UTF8String::createFromAscii("office:automatic-styles"));
+	xHandler.endElement("office:automatic-styles");
 
 	_writeMasterPages(xHandler);
 
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the document..\n"));
  	// writing out the document
-	xHandler.startElement(UTF8String::createFromAscii("office:body"), xBlankAttrList);
+	xHandler.startElement("office:body", xBlankAttrList);
 
 	for (vector<DocumentElement *>::iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
 		(*iterBodyElements)->write(xHandler);
 	}
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Finished writing all doc els..\n"));
 
-	xHandler.endElement(UTF8String::createFromAscii("office:body"));
-	xHandler.endElement(UTF8String::createFromAscii("office:document-content"));
+	xHandler.endElement("office:body");
+	xHandler.endElement("office:document-content");
 
 	xHandler.endDocument();
 
@@ -386,9 +386,7 @@ void WordPerfectCollector::_allocateFontName(const UTF8String & sFontName)
 
 void WordPerfectCollector::openPageSpan(const WPXPropertyList &propList)
 {
-	PageSpan *pPageSpan = new PageSpan(propList["num-pages"]->getInt(), propList["page-height"]->getFloat(), propList["page-width"]->getFloat(), 
-					   (WPXFormOrientation)propList["print-orientation"]->getInt(), propList["margin-left"]->getFloat(), propList["margin-right"]->getFloat(),
-					   propList["margin-top"]->getFloat(), propList["margin-bottom"]->getFloat());
+	PageSpan *pPageSpan = new PageSpan(propList);
 	mPageSpans.push_back(pPageSpan);
 	mpCurrentPageSpan = pPageSpan;
 }
@@ -503,12 +501,12 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		// are singular. Neither do we have to determine what our parent style is-- we can't
 		// be inside a table in this case (the table would be the first document element 
 		//in that case)
-		pPersistPropList->insert("parent-style-name", WPXPropertyFactory::newStringProp("Standard"));
+		pPersistPropList->insert("style:parent-style-name", "Standard");
 		UTF8String sName;
 		sName.sprintf("FS"); 
 
 		UTF8String sParagraphHashKey("P|FS");
-		pPersistPropList->insert("master-page-name", WPXPropertyFactory::newStringProp("Page Style 1"));
+		pPersistPropList->insert("style:master-page-name", "Page Style 1");
                 pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
 		mTextStyleHash[sParagraphHashKey] = pStyle;
 		mWriterDocumentState.mbFirstElement = false;
@@ -525,12 +523,12 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		if (mWriterDocumentState.mbTableCellOpened)
 		{
 			if (mWriterDocumentState.mbHeaderRow)
-				pPersistPropList->insert("parent-style-name", WPXPropertyFactory::newStringProp("Table Heading"));
+				pPersistPropList->insert("style:parent-style-name", WPXPropertyFactory::newStringProp("Table Heading"));
 			else
-				pPersistPropList->insert("parent-style-name", WPXPropertyFactory::newStringProp("Table Contents"));
+				pPersistPropList->insert("style:parent-style-name", WPXPropertyFactory::newStringProp("Table Contents"));
 		}
 		else
-			pPersistPropList->insert("parent-style-name", WPXPropertyFactory::newStringProp("Standard"));
+			pPersistPropList->insert("style:parent-style-name", WPXPropertyFactory::newStringProp("Standard"));
 
                 UTF8String sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
 

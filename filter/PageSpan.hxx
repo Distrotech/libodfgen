@@ -34,17 +34,18 @@ class DocumentHandler;
 class PageSpan
 {
 public:
-	PageSpan(const int iSpan, const float fFormLength, const float fFormWidth, const WPXFormOrientation fFormOrientation,
-			 const float fLeftMargin, const float fRightMargin, const float fTopMargin, const float fBottomMargin);
+	PageSpan(const WPXPropertyList &xPropList);
 	virtual ~PageSpan();
 	void writePageMaster(const int iNum, DocumentHandler &xHandler) const;
 	void writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, DocumentHandler &xHandler) const;
-	const int getSpan() const { return miSpan; }
+	int getSpan() const;
+#if 0
 	float getFormLength() { return mfFormLength; }
 	float getFormWidth() { return mfFormWidth; }
 	WPXFormOrientation getFormOrientation() { return mfFormOrientation; }
-	float getMarginLeft() { return mfMarginLeft; }
-	float getMarginRight() { return mfMarginRight; }
+#endif
+	float getMarginLeft() const;
+	float getMarginRight() const;
 
 	const vector<DocumentElement *> * getHeaderContent() const { return mpHeaderContent; }
 	void setHeaderContent(vector<DocumentElement *> * pHeaderContent) { mpHeaderContent = pHeaderContent; }
@@ -55,9 +56,7 @@ protected:
 	void _writeHeaderFooter(const char *headerFooterTagName, const vector<DocumentElement *> & headerFooterContent,
 				DocumentHandler &xHandler) const;
 private:
-	int miSpan;
-	float mfFormLength, mfFormWidth, mfMarginLeft, mfMarginRight, mfMarginTop, mfMarginBottom;
-	WPXFormOrientation mfFormOrientation;
+        WPXPropertyList mxPropList;
 	vector<DocumentElement *> * mpHeaderContent;
 	vector<DocumentElement *> * mpFooterContent;
 	vector<DocumentElement *> * mpHeaderLeftContent;

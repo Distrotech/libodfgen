@@ -1,19 +1,21 @@
 #include "StdOutHandler.hxx"
 
-void StdOutHandler::startElement(const UTF8String &sName, const WPXPropertyList &xPropList)
+void StdOutHandler::startElement(const char *psName, const WPXPropertyList &xPropList)
 {
-	printf("<%s", sName.getUTF8());
+	printf("<%s", psName);
         WPXPropertyList::Iter i(xPropList);
         for (i.rewind(); i.next(); )
         {
-		printf(" %s=\"%s\"", i.key().c_str(), i()->getStr().getUTF8());
+                // filter out libwpd elements
+                if (strlen(i.key().c_str()) > 6 && strncmp(i.key().c_str(), "libwpd", 6) != 0)
+                        printf(" %s=\"%s\"", i.key().c_str(), i()->getStr().getUTF8());
         }
 	printf(">\n");
 }
 
-void StdOutHandler::endElement(const UTF8String &sName)
+void StdOutHandler::endElement(const char *psName)
 {
-	printf("</%s>\n", sName.getUTF8());
+	printf("</%s>\n", psName);
 }
 
 void StdOutHandler::characters(const UTF8String &sCharacters)

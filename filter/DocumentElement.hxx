@@ -32,17 +32,9 @@
 #include <libwpd/libwpd_support.h>
 #include <vector>
 
-using namespace std;
+#include "DocumentHandler.hxx"
 
-class DocumentHandler
-{
-public:
-        virtual void startDocument() = 0;
-        virtual void endDocument() = 0;
-        virtual void startElement(const UTF8String &sName, const WPXPropertyList &xPropList) = 0;
-        virtual void endElement(const UTF8String &sName) = 0;
-        virtual void characters(const UTF8String &sCharacters) = 0;
-};
+using namespace std;
 
 class DocumentElement
 {

@@ -93,8 +93,8 @@ void OrderedListLevelStyle::write(DocumentHandler &xHandler, int iLevel) const
 	stylePropertiesOpen.addAttribute("text:min-label-width", "0.499cm");
 	stylePropertiesOpen.write(xHandler);
 
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
-	xHandler.endElement(UTF8String::createFromAscii("text:list-level-style-number"));
+	xHandler.endElement("style:properties");
+	xHandler.endElement("text:list-level-style-number");
 }
 
 UnorderedListLevelStyle::UnorderedListLevelStyle(const UTF8String &sBullet, const float fSpaceBefore)
@@ -128,8 +128,8 @@ void UnorderedListLevelStyle::write(DocumentHandler &xHandler, int iLevel) const
 	stylePropertiesOpen.addAttribute("style:font-name", "StarSymbol");	
 	stylePropertiesOpen.write(xHandler);
 
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
-	xHandler.endElement(UTF8String::createFromAscii("text:list-level-style-bullet"));
+	xHandler.endElement("style:properties");
+	xHandler.endElement("text:list-level-style-bullet");
 }
 
 ListStyle::ListStyle(const char *psName, const int iListID) :
@@ -178,5 +178,5 @@ void ListStyle::write(DocumentHandler &xHandler) const
 			mppListLevels[i]->write(xHandler, i);		
 	}
 
-	xHandler.endElement(UTF8String::createFromAscii("text:list-style"));
+	xHandler.endElement("text:list-style");
 }

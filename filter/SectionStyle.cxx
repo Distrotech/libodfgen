@@ -89,7 +89,7 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 		}
 	}
 
-	xHandler.endElement(UTF8String::createFromAscii("style:columns"));
-	xHandler.endElement(UTF8String::createFromAscii("style:properties"));
-	xHandler.endElement(UTF8String::createFromAscii("style:style"));
+	xHandler.endElement("style:columns");
+	xHandler.endElement("style:properties");
+	xHandler.endElement("style:style");
 }

@@ -8,8 +8,8 @@ class StdOutHandler : public DocumentHandler
   public:
         virtual void startDocument() {}
         virtual void endDocument() {}
-        virtual void startElement(const UTF8String &sName, const WPXPropertyList &xPropList);
-        virtual void endElement(const UTF8String &sName);
+        virtual void startElement(const char *psName, const WPXPropertyList &xPropList);
+        virtual void endElement(const char *psName);
         virtual void characters(const UTF8String &sCharacters);
 };
 #endif

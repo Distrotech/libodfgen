@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oor:component-data xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" oor:name="TypeDetection" oor:package="org.openoffice.Office">
+ <node oor:name="Types">
+  <node oor:name="writer_WordPerfect_Document" oor:op="replace">
+   <prop oor:name="Data" oor:type="xs:string">
+    <value>1,application/wpwin,WordPerfect%20Document,,wp;wpd,0</value>
+   </prop>
+   <prop oor:name="UIName" oor:type="xs:string">
+    <value xml:lang="en-US">WordPerfect Document</value>
+   </prop>
+  </node>
+ </node>
+ <node oor:name="Filters">
+  <node oor:name="WordPerfect Document" oor:op="replace">
+   <prop oor:name="Data" oor:type="xs:string">
+    <value>0,writer_WordPerfect_Document,com.sun.star.text.TextDocument,com.sun.star.comp.Writer.WordPerfectImportFilter,268959809,,0,,</value>
+   </prop>
+   <prop oor:name="Installed" oor:type="xs:boolean">
+    <value>true</value>
+   </prop>
+   <prop oor:name="UIName" oor:type="xs:string">
+    <value xml:lang="en-US">WordPerfect Document</value>
+   </prop>
+  </node>
+ </node>
+</oor:component-data>
+
