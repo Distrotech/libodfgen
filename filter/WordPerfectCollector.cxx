@@ -70,6 +70,11 @@ WordPerfectCollector::WordPerfectCollector() :
 	mbListElementOpened(false)
 {
 }
+
+WordPerfectCollector::~WordPerfectCollector()
+{
+}
+
 bool WordPerfectCollector::filter(WPXInputStream &input, DocumentHandler &xHandler)
 {
 	// The contract for WordPerfectCollector is that it will only be used once after it is

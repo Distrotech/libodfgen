@@ -28,6 +28,7 @@
 #ifndef _DOCUMENTELEMENT_H
 #define _DOCUMENTELEMENT_H
 #include <libwpd/libwpd.h>
+#include <libwpd/WPXProperty.h>
 #include <libwpd/libwpd_support.h>
 #include <vector>
 

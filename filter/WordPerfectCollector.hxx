@@ -77,7 +77,7 @@ class WordPerfectCollector : public WPXHLListenerImpl
 {
 public:
 	WordPerfectCollector();
-	virtual ~WordPerfectCollector() {}
+	virtual ~WordPerfectCollector();
 	bool filter(WPXInputStream &input, DocumentHandler &xHandler);
 
  	virtual void setDocumentMetaData(const WPXPropertyList &propList) {}

@@ -24,9 +24,9 @@ libwriterperfect_1_include_HEADERS = WordPerfectCollector.hxx DocumentElement.hx
 
 AM_CXXFLAGS = $(WRITERPERFECT_CXXFLAGS) $(DEBUG_CXXFLAGS)
 
-libwriterperfect_1_la_LIBADD  = @LIBWRITERPERFECT_WIN32_RESOURCE@
+libwriterperfect_1_la_LIBADD  = $(WRITERPERFECT_LIBS) @LIBWRITERPERFECT_WIN32_RESOURCE@
 libwriterperfect_1_la_DEPENDENCIES = @LIBWRITERPERFECT_WIN32_RESOURCE@
-libwriterperfect_1_la_LDFLAGS = $(version_info) -export-dynamic $(no_undefined)
+libwriterperfect_1_la_LDFLAGS = $(version_info) -export-dynamic $(no_undefined) -
 libwriterperfect_1_la_SOURCES =				\
 	FilterInternal.hxx		\
 	FontStyle.hxx			\

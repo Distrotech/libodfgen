@@ -31,7 +31,11 @@
 #include "DocumentElement.hxx"
 #include <math.h>
 
-const float fDefaultSideMargin = 1.0f; // inches 
+#ifdef _MSC_VER
+double rint(double x);
+#endif /* _WIN32 */
+
+const float fDefaultSideMargin = 1.0f; // inches
 const float fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
 const float fDefaultPageHeight = 11.0f; // inches
 
