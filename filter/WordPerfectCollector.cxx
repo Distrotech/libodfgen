@@ -352,13 +352,13 @@ WPXString propListToStyleKey(const WPXPropertyList & xPropList)
         return sKey;
 }
 
-WPXString getParagraphStyleKey(const WPXPropertyList & xPropList, const WPXVector<WPXPropertyList> & xTabStops)
+WPXString getParagraphStyleKey(const WPXPropertyList & xPropList, const WPXPropertyListVector & xTabStops)
 {
         WPXString sKey = propListToStyleKey(xPropList);
         
         WPXString sTabStops;
         sTabStops.sprintf("[num-tab-stops:%i]", xTabStops.count());
-        WPXVector<WPXPropertyList>::Iter i(xTabStops);
+        WPXPropertyListVector::Iter i(xTabStops);
         for (i.rewind(); i.next();)
         {
                 sTabStops.append(propListToStyleKey(i()));
@@ -419,7 +419,7 @@ void WordPerfectCollector::closeFooter()
 	mpCurrentContentElements = &mBodyElements;
 }
 
-void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WPXVector <WPXPropertyList> &columns)
+void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
 {
         int iNumColumns = columns.count();
 
@@ -460,7 +460,7 @@ void WordPerfectCollector::closeSection()
 	mfSectionSpaceAfter = 0.0f;
 }
 
-void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const WPXVector<WPXPropertyList> &tabStops)
+void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops)
 {
 	// FIXMENOW: What happens if we open a footnote inside a table? do we then inherit the footnote's style
 	// from "Table Contents"
@@ -678,7 +678,7 @@ void WordPerfectCollector::_closeListLevel(const char *szListType)
 	mbListElementOpened = false;
 }
 
-void WordPerfectCollector::openListElement(const WPXPropertyList &propList, const WPXVector<WPXPropertyList> &tabStops)
+void WordPerfectCollector::openListElement(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops)
 {
 	miLastListLevel = miCurrentListLevel;
 	if (miCurrentListLevel == 1)
@@ -773,7 +773,7 @@ void WordPerfectCollector::closeEndnote()
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote")));
 }
 
-void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXVector<WPXPropertyList> &columns)
+void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
 {
 	WPXString sTableName;
 	sTableName.sprintf("Table%i", mTableStyles.size());

@@ -36,7 +36,7 @@
 #include <minmax.h>
 #endif
 
-ParagraphStyle::ParagraphStyle(WPXPropertyList *pPropList, const WPXVector<WPXPropertyList> &xTabStops, const WPXString &sName) :
+ParagraphStyle::ParagraphStyle(WPXPropertyList *pPropList, const WPXPropertyListVector &xTabStops, const WPXString &sName) :
 	mpPropList(pPropList),
 	mxTabStops(xTabStops),
 	msName(sName)
@@ -93,7 +93,7 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
         {
                 TagOpenElement tabListOpen("style:tab-stops");
                 tabListOpen.write(xHandler);
-                WPXVector<WPXPropertyList>::Iter i(mxTabStops);
+                WPXPropertyListVector::Iter i(mxTabStops);
                 for (i.rewind(); i.next();)
                 {
                         TagOpenElement tabStopOpen("style:tab-stop");

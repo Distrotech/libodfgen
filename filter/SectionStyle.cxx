@@ -40,7 +40,7 @@ const float fDefaultPageWidth = 8.5f; // inches (OOo required default: we will h
 const float fDefaultPageHeight = 11.0f; // inches
 
 SectionStyle::SectionStyle(const WPXPropertyList &xPropList, 
-                           const WPXVector<WPXPropertyList> &xColumns, 
+                           const WPXPropertyListVector &xColumns, 
                            const char *psName) : 
         Style(psName),
         mPropList(xPropList),
@@ -66,7 +66,7 @@ void SectionStyle::write(DocumentHandler &xHandler) const
                 columnProps.insert("fo:column-count", (int)mColumns.count());
                 xHandler.startElement("style:columns", columnProps);
 	
-                WPXVector<WPXPropertyList>::Iter i(mColumns);
+                WPXPropertyListVector::Iter i(mColumns);
                 for (i.rewind(); i.next();)
 		{
                         xHandler.startElement("style:column", i());

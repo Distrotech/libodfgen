@@ -89,7 +89,7 @@ void TableRowStyle::write(DocumentHandler &xHandler) const
 }
 	
 
-TableStyle::TableStyle(const WPXPropertyList &xPropList, const WPXVector<WPXPropertyList> &columns, const char *psName) : 
+TableStyle::TableStyle(const WPXPropertyList &xPropList, const WPXPropertyListVector &columns, const char *psName) : 
 	Style(psName),
         mPropList(xPropList),
         mColumns(columns)
@@ -129,7 +129,7 @@ void TableStyle::write(DocumentHandler &xHandler) const
 	xHandler.endElement("style:style");
 		
 	int i=1;
-        WPXVector<WPXPropertyList>::Iter j(mColumns);
+        WPXPropertyListVector::Iter j(mColumns);
 	for (j.rewind(); j.next();)
 	{
 		TagOpenElement styleOpen("style:style");
