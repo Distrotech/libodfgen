@@ -59,10 +59,10 @@ void OODocumentHandler::startElement(const char *psName, const WPXPropertyList &
 	{
                 // filter out libwpd elements
                 if (strlen(i.key().c_str()) > 6 && strcmp(i.key().c_str(), "libwpd") != 0)
-                        pAttrList->AddAttribute(OUString::createFromAscii(i.key().c_str()), 
-                                                OUString::createFromAscii(i()->getStr()()));
+                        pAttrList->AddAttribute(OUString::createFromAscii(i.key().c_str()),
+                                                OUString::createFromAscii(i()->getStr().cstr()));
         }
-        
+
         mxHandler->startElement(OUString::createFromAscii(psName), xAttrList);
 }
 
@@ -73,6 +73,6 @@ void OODocumentHandler::endElement(const char *psName)
 
 void OODocumentHandler::characters(const UTF8String &sCharacters)
 {
-        OUString sCharU16(sCharacters(), strlen(sCharacters()), RTL_TEXTENCODING_UTF8);
+        OUString sCharU16(sCharacters.cstr(), strlen(sCharacters.cstr()), RTL_TEXTENCODING_UTF8);
         mxHandler->characters(sCharU16);
 }

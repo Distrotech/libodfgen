@@ -5,6 +5,7 @@ EXTRA_DIST = \
 	diagnose.hxx \
 	exports.dxp \
 	genericfilter.cxx \
+	iucbhelper.lib \
 	macros.hxx \
 	object.hxx \
 	OODocumentHandler.cxx \

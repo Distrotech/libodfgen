@@ -45,6 +45,7 @@ include $(SETTINGS)/dk.mk
 # Redefine OUT to something more sensible
 OUT=.\$(OS).out
 COMPONENT_PACKAGE_DIR=$(OUT_BIN)
+UCBHELPERLIB=.\ooo\iucbhelper.lib
  
 # Define non-platform/compiler specific settings
 COMPONENT_NAME=WriterPerfect
@@ -112,7 +113,7 @@ $(SHAREDLIB_OUT)/%.$(SHAREDLIB_EXT) : $(SLOFILES) $(OUT_COMP_GEN)/%.def
 	-OUT:$(subst /,\,$@) -MAP:$(subst /,\,$(OUT_COMP_GEN)/$(subst $(SHAREDLIB_EXT),map,$(@F))) \
 	-DEF:$(subst /,\,$(OUT_COMP_GEN)/$(subst $(SHAREDLIB_EXT),def,$(@F))) \
 	$(subst /,\,$(SLOFILES)) $(CPPUHELPERLIB) $(CPPULIB) $(SALLIB) $(STLPORTLIB)\
-	$(DEP_LIBS) msvcprt.lib msvcrt.lib kernel32.lib
+	$(UCBHELPERLIB) $(DEP_LIBS) msvcprt.lib msvcrt.lib kernel32.lib
 
 
 $(OUT_BIN)/%.zip : $(SHAREDLIB_OUT)/%.$(SHAREDLIB_EXT) ooo/TypeDetection.xcu
