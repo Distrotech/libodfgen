@@ -29,7 +29,7 @@
 #define _DOCUMENTELEMENT_H
 #include <libwpd/libwpd.h>
 #include <libwpd/WPXProperty.h>
-#include <libwpd/libwpd_support.h>
+#include <libwpd/WPXString.h>
 #include <vector>
 
 #include "DocumentHandler.hxx"
