@@ -73,7 +73,6 @@ TextElement::TextElement(const UTF8String & sTextBuf) :
 // elements
 void TextElement::write(DocumentHandler &xHandler) const
 {
-	WRITER_DEBUG_MSG(("TextElement: write\n"));
 	WPXPropertyList xBlankAttrList;
         
 	UTF8String sTemp;
@@ -95,8 +94,9 @@ void TextElement::write(DocumentHandler &xHandler) const
 			xHandler.startElement(UTF8String::createFromAscii("text:s"), xBlankAttrList);
 			xHandler.endElement(UTF8String::createFromAscii("text:s"));
 		}
-		else 
+		else {
                         sTemp.append(i());
+		}
 	}
 	xHandler.characters(sTemp);
 }
