@@ -34,11 +34,11 @@
 class SectionStyle : public Style
 {
 public:
-	SectionStyle(const int iNumColumns, const vector<WPXColumnDefinition> &columns, const char *psName);
+	SectionStyle(const WPXPropertyList &xPropList, const vector<WPXPropertyList> &xColumns, const char *psName);
 	virtual void write(DocumentHandler &xHandler) const;
 
 private:
-	int miNumColumns;
-	vector <WPXColumnDefinition> mColumns;
+        WPXPropertyList mPropList;
+	vector <WPXPropertyList> mColumns;
 };
 #endif

@@ -89,15 +89,11 @@ void TableRowStyle::write(DocumentHandler &xHandler) const
 }
 	
 
-TableStyle::TableStyle(const WPXPropertyList &xPropList, const vector < WPXColumnDefinition > &columns, const char *psName) : 
+TableStyle::TableStyle(const WPXPropertyList &xPropList, const vector<WPXPropertyList> &columns, const char *psName) : 
 	Style(psName),
-        mPropList(xPropList)
+        mPropList(xPropList),
+        mColumns(columns)
 {
-	typedef vector<WPXColumnDefinition>::const_iterator CDVIter;
-	for (CDVIter iterColumns = columns.begin() ; iterColumns != columns.end(); iterColumns++)
-	{
-		mColumns.push_back((*iterColumns));
-	}
 }
 
 TableStyle::~TableStyle()
@@ -133,8 +129,8 @@ void TableStyle::write(DocumentHandler &xHandler) const
 	xHandler.endElement("style:style");
 		
 	int i=1;
-	typedef vector<WPXColumnDefinition>::const_iterator CDVIter;
-	for (CDVIter iterColumns = mColumns.begin() ; iterColumns != mColumns.end(); iterColumns++)
+	typedef vector<WPXPropertyList>::const_iterator PLIter;
+	for (PLIter j = mColumns.begin() ; j != mColumns.end(); j++)
 	{
 		TagOpenElement styleOpen("style:style");
 		UTF8String sColumnName;
@@ -143,11 +139,7 @@ void TableStyle::write(DocumentHandler &xHandler) const
 		styleOpen.addAttribute("style:family", "table-column");
 		styleOpen.write(xHandler);
 
-		TagOpenElement stylePropertiesOpen("style:properties");
-		UTF8String sColumnWidth;
-		sColumnWidth.sprintf("%finch", (*iterColumns).m_width);
-		stylePropertiesOpen.addAttribute("style:column-width", sColumnWidth.cstr());
-		stylePropertiesOpen.write(xHandler);
+                xHandler.startElement("style:properties", (*j));
 		xHandler.endElement("style:properties");
 
 		xHandler.endElement("style:style");

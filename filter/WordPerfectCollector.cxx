@@ -133,7 +133,6 @@ bool WordPerfectCollector::filter()
 
 bool WordPerfectCollector::_parseSourceDocument(WPXInputStream &input)
 {
- 	WRITER_DEBUG_MSG(("WriterWordPerfect: Attempting to process state\n"));
 	bool bRetVal = true;
 	try {
 		WPDocument::parse(&input, static_cast<WPXHLListenerImpl *>(this));
@@ -441,11 +440,9 @@ void WordPerfectCollector::closeFooter()
 	mpCurrentContentElements = &mBodyElements;
 }
 
-void WordPerfectCollector::openSection(const WPXPropertyList &propList, const vector <WPXColumnDefinition> &columns)
+void WordPerfectCollector::openSection(const WPXPropertyList &propList, const vector <WPXPropertyList> &columns)
 {
-        int iNumColumns = 1;
-	if (propList["fo:column-count"] && propList["fo:column-count"]->getInt() > 1)
-                iNumColumns = propList["fo:column-count"]->getInt();
+        int iNumColumns = columns.size();
 
 	if (iNumColumns > 1)
 	{
@@ -453,7 +450,7 @@ void WordPerfectCollector::openSection(const WPXPropertyList &propList, const ve
 		UTF8String sSectionName;
 		sSectionName.sprintf("Section%i", mSectionStyles.size());
 		
-		SectionStyle *pSectionStyle = new SectionStyle(iNumColumns, columns, sSectionName.cstr());
+		SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
 		mSectionStyles.push_back(pSectionStyle);
 		
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
@@ -494,7 +491,6 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 
 	if (mWriterDocumentState.mbFirstElement && mpCurrentContentElements == &mBodyElements)
 	{
-		WRITER_DEBUG_MSG(("WriterWordPerfect: If.. (mbFirstElement=%i)", mWriterDocumentState.mbFirstElement));
 		// we don't have to go through the fuss of determining if the paragraph style is 
 		// unique in this case, because if we are the first document element, then we
 		// are singular. Neither do we have to determine what our parent style is-- we can't
@@ -750,8 +746,6 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 
 void WordPerfectCollector::closeListElement()
 {
-	WRITER_DEBUG_MSG(("close list element\n"));
-
 	// this code is kind of tricky, because we don't actually close the list element (because this list element
 	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
 	// code (or when we open another list element)
@@ -765,7 +759,6 @@ void WordPerfectCollector::closeListElement()
 
 void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 {
-	WRITER_DEBUG_MSG(("open footnote\n"));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote")));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-citation")));
@@ -779,7 +772,6 @@ void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 
 void WordPerfectCollector::closeFootnote()
 {
-	WRITER_DEBUG_MSG(("close footnote\n"));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote-body")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote")));
 }
@@ -798,16 +790,14 @@ void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
 }
 void WordPerfectCollector::closeEndnote()
 {
-	WRITER_DEBUG_MSG(("close endnote\n"));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote-body")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote")));
 }
 
-void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vector < WPXColumnDefinition > &columns)
+void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vector<WPXPropertyList> &columns)
 {
 	UTF8String sTableName;
 	sTableName.sprintf("Table%i", mTableStyles.size());
-	WRITER_DEBUG_MSG(("WriterWordPerfect:  New Table: %s\n", sTableName.cstr()));
 
 	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
 	// state which is transmitted inside the page. could this lead to unacceptable behaviour?
@@ -831,7 +821,8 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vect
 	pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pTableOpenElement));
 
-	for (int i=0; i<pTableStyle->getNumColumns(); i++) {
+	for (int i=0; i<pTableStyle->getNumColumns(); i++) 
+        {
 		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
 		UTF8String sColumnStyleName;
 		sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
@@ -906,29 +897,24 @@ void WordPerfectCollector::insertCoveredTableCell(const WPXPropertyList &propLis
 
 void WordPerfectCollector::closeTable()
 {
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Closing Table\n"));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table")));
 }
 
 
 void WordPerfectCollector::insertTab()
 {
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Insert Tab\n"));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:tab-stop")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:tab-stop")));
 }
 
 void WordPerfectCollector::insertLineBreak()
 {
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Insert Line Break\n"));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:line-break")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:line-break")));
 }
 
 void WordPerfectCollector::insertText(const UTF8String &text)
 {
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Insert Text\n"));
-
 	DocumentElement *pText = new TextElement(text);
 	mpCurrentContentElements->push_back(pText);
 }

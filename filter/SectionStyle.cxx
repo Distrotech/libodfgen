@@ -39,11 +39,13 @@ const float fDefaultSideMargin = 1.0f; // inches
 const float fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
 const float fDefaultPageHeight = 11.0f; // inches
 
-SectionStyle::SectionStyle(const int iNumColumns, const vector<WPXColumnDefinition> &columns, const char *psName) : Style(psName),
-	miNumColumns(iNumColumns)
+SectionStyle::SectionStyle(const WPXPropertyList &xPropList, 
+                           const vector<WPXPropertyList> &xColumns, 
+                           const char *psName) : 
+        Style(psName),
+        mPropList(xPropList),
+        mColumns(xColumns)
 {
-	for (int i=0; i<columns.size(); i++)
-		mColumns.push_back(columns[i]);
 }
 
 void SectionStyle::write(DocumentHandler &xHandler) const
@@ -53,40 +55,26 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 	styleOpen.addAttribute("style:family", "section");
 	styleOpen.write(xHandler);
 
-	// if miNumColumns <= 1, we will never come here. This is only an additional check
-	if (miNumColumns > 1)
+	// if the number of columns is <= 1, we will never come here. This is only an additional check
+	if (mColumns.size() > 1)
 	{		
 		// style properties
-		TagOpenElement stylePropertiesOpen("style:properties");
-		stylePropertiesOpen.addAttribute("text:dont-balance-text-columns", "false");
-		stylePropertiesOpen.write(xHandler);
+                xHandler.startElement("style:properties", mPropList);
 
 		// column properties
-		TagOpenElement columnsOpen("style:columns");
-		UTF8String sColumnCount;
-		sColumnCount.sprintf("%i", miNumColumns);
-		columnsOpen.addAttribute("fo:column-count", sColumnCount.cstr());
-		columnsOpen.write(xHandler);
+                WPXPropertyList columnProps;
+                columnProps.insert("fo:column-count", mColumns.size());
+                xHandler.startElement("style:columns", columnProps);
 	
-		UTF8String sRelWidth, sMarginLeft, sMarginRight;
-		for (int i=0; i<miNumColumns; i++)
+		for (int i=0; i<mColumns.size(); i++)
 		{
-			TagOpenElement columnOpen("style:column");
-			// The "style:rel-width" is expressed in twips (1440 twips per inch) and includes the left and right Gutter
-			sRelWidth.sprintf("%i*", (int)rint(mColumns[i].m_width * 1440.0f));
-			columnOpen.addAttribute("style:rel-width", sRelWidth.cstr());
-			sMarginLeft.sprintf("%.4finch", mColumns[i].m_leftGutter);
-			columnOpen.addAttribute("fo:margin-left", sMarginLeft.cstr());
-			sMarginRight.sprintf("%.4finch", mColumns[i].m_rightGutter);
-			columnOpen.addAttribute("fo:margin-right", sMarginRight.cstr());
-			columnOpen.write(xHandler);
-			
-			TagCloseElement columnClose("style:column");
-			columnClose.write(xHandler);
+                        xHandler.startElement("style:column", mColumns[i]);
+                        xHandler.endElement("style:column");
 		}
+
+                xHandler.endElement("style:columns");
+                xHandler.endElement("style:properties");
 	}
 
-	xHandler.endElement("style:columns");
-	xHandler.endElement("style:properties");
 	xHandler.endElement("style:style");
 }

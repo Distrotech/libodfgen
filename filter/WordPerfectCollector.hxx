@@ -87,7 +87,7 @@ public:
 	virtual void openPageSpan(const WPXPropertyList &propList);
 	virtual void closePageSpan() {}
 
-	virtual void openSection(const WPXPropertyList &propList, const vector <WPXColumnDefinition> &columns);
+	virtual void openSection(const WPXPropertyList &propList, const vector <WPXPropertyList> &columns);
 	virtual void closeSection();
 
 	virtual void openHeader(const WPXPropertyList &propList);
@@ -120,7 +120,7 @@ public:
 	virtual void openEndnote(const WPXPropertyList &propList);
 	virtual void closeEndnote();
 
- 	virtual void openTable(const WPXPropertyList &propList, const vector < WPXColumnDefinition > &columns);
+ 	virtual void openTable(const WPXPropertyList &propList, const vector <WPXPropertyList> &columns);
  	virtual void openTableRow(const WPXPropertyList &propList);
 	virtual void closeTableRow();
  	virtual void openTableCell(const WPXPropertyList &propList);
