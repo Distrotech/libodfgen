@@ -63,7 +63,7 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 	WPXPropertyList::Iter i((*mpPropList));
 	for (i; i.next(); )
 	{
-                if (i.key() == "list-style-name")
+                if (i.key() == "style:list-style-name")
                         propList.insert("style:list-style-name", i()->getStr().getUTF8());
 
 		if (i.key() == "margin-left")

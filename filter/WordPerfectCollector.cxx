@@ -523,12 +523,12 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		if (mWriterDocumentState.mbTableCellOpened)
 		{
 			if (mWriterDocumentState.mbHeaderRow)
-				pPersistPropList->insert("style:parent-style-name", WPXPropertyFactory::newStringProp("Table Heading"));
+				pPersistPropList->insert("style:parent-style-name", "Table Heading");
 			else
-				pPersistPropList->insert("style:parent-style-name", WPXPropertyFactory::newStringProp("Table Contents"));
+				pPersistPropList->insert("style:parent-style-name", "Table Contents");
 		}
 		else
-			pPersistPropList->insert("style:parent-style-name", WPXPropertyFactory::newStringProp("Standard"));
+			pPersistPropList->insert("style:parent-style-name", "Standard");
 
                 UTF8String sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
 
@@ -727,8 +727,8 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 	ParagraphStyle *pStyle = NULL;
 
 	WPXPropertyList *pPersistPropList = new WPXPropertyList(propList);
-	pPersistPropList->insert("list-style-name", WPXPropertyFactory::newStringProp(mpCurrentListStyle->getName()));
-	pPersistPropList->insert("parent-style-name", WPXPropertyFactory::newStringProp("Standard"));
+	pPersistPropList->insert("style:list-style-name", mpCurrentListStyle->getName());
+	pPersistPropList->insert("style:parent-style-name", "Standard");
 
         UTF8String sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
 
