@@ -63,7 +63,7 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 
 		// column properties
                 WPXPropertyList columnProps;
-                columnProps.insert("fo:column-count", mColumns.size());
+                columnProps.insert("fo:column-count", (int)mColumns.size());
                 xHandler.startElement("style:columns", columnProps);
 	
 		for (int i=0; i<mColumns.size(); i++)
