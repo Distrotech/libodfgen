@@ -58,8 +58,8 @@ void OODocumentHandler::startElement(const char *psName, const WPXPropertyList &
 	for (i.rewind(); i.next(); )
 	{
                 // filter out libwpd elements
-                if (strlen(i.key().c_str()) > 6 && strcmp(i.key().c_str(), "libwpd") != 0)
-                        pAttrList->AddAttribute(OUString::createFromAscii(i.key().c_str()),
+                if (strlen(i.key()) > 6 && strcmp(i.key(), "libwpd") != 0)
+                        pAttrList->AddAttribute(OUString::createFromAscii(i.key()),
                                                 OUString::createFromAscii(i()->getStr().cstr()));
         }
 

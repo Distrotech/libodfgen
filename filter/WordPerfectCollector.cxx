@@ -345,7 +345,7 @@ WPXString propListToStyleKey(const WPXPropertyList & xPropList)
         for (i.rewind(); i.next(); )
         {
                 WPXString sProp;
-                sProp.sprintf("[%s:%s]", i.key().c_str(), i()->getStr().cstr());
+                sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
                 sKey.append(sProp);
         }
 

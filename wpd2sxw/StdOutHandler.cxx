@@ -7,8 +7,8 @@ void StdOutHandler::startElement(const char *psName, const WPXPropertyList &xPro
         for (i.rewind(); i.next(); )
         {
                 // filter out libwpd elements
-                if (strlen(i.key().c_str()) > 6 && strncmp(i.key().c_str(), "libwpd", 6) != 0)
-                        printf(" %s=\"%s\"", i.key().c_str(), i()->getStr().cstr());
+                if (strlen(i.key()) > 6 && strncmp(i.key(), "libwpd", 6) != 0)
+                        printf(" %s=\"%s\"", i.key(), i()->getStr().cstr());
         }
 	printf(">\n");
 }

@@ -54,7 +54,7 @@ void TableCellStyle::write(DocumentHandler &xHandler) const
         WPXPropertyList::Iter i(mPropList);
         for (i.rewind(); i.next();)
         {
-                if (i.key().length() > 2 && strncmp(i.key().c_str(), "fo", 2) == 0)
+                if (strlen(i.key()) > 2 && strncmp(i.key(), "fo", 2) == 0)
                         stylePropList.insert(i.key(), i()->clone());
         }
         stylePropList.insert("fo:padding", "0.0382inch");
