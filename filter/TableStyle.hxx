@@ -57,17 +57,17 @@ private:
 class TableStyle : public Style, public TopLevelElementStyle
 {
 public:
-	TableStyle(const WPXPropertyList &xPropList, const vector<WPXPropertyList> &columns, const char *psName);
+	TableStyle(const WPXPropertyList &xPropList, const WPXVector<WPXPropertyList> &columns, const char *psName);
 	~TableStyle();
 	virtual void write(DocumentHandler &xHandler) const;
-	const int getNumColumns() const { return mColumns.size(); }
+	const int getNumColumns() const { return mColumns.count(); }
 	void addTableCellStyle(TableCellStyle *pTableCellStyle) { mTableCellStyles.push_back(pTableCellStyle); }
 	int getNumTableCellStyles() { return mTableCellStyles.size(); }
 	void addTableRowStyle(TableRowStyle *pTableRowStyle) { mTableRowStyles.push_back(pTableRowStyle); }
 	int getNumTableRowStyles() { return mTableRowStyles.size(); }
 private:	
         WPXPropertyList mPropList;
-	vector<WPXPropertyList> mColumns;
+	WPXVector<WPXPropertyList> mColumns;
 	vector<TableCellStyle *> mTableCellStyles;
 	vector<TableRowStyle *> mTableRowStyles;
 };

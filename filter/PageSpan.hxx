@@ -27,6 +27,7 @@
 #ifndef _PAGESPAN_H
 #define _PAGESPAN_H
 #include <libwpd/libwpd.h>
+#include <vector>
 
 using namespace std;
 

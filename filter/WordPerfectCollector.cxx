@@ -352,15 +352,16 @@ WPXString propListToStyleKey(const WPXPropertyList & xPropList)
         return sKey;
 }
 
-WPXString getParagraphStyleKey(const WPXPropertyList & xPropList, const vector<WPXPropertyList> & xTabStops)
+WPXString getParagraphStyleKey(const WPXPropertyList & xPropList, const WPXVector<WPXPropertyList> & xTabStops)
 {
         WPXString sKey = propListToStyleKey(xPropList);
         
         WPXString sTabStops;
-        sTabStops.sprintf("[num-tab-stops:%i]", xTabStops.size());
-        for (vector<WPXPropertyList>::const_iterator j = xTabStops.begin(); j != xTabStops.end(); j++)
+        sTabStops.sprintf("[num-tab-stops:%i]", xTabStops.count());
+        WPXVector<WPXPropertyList>::Iter i(xTabStops);
+        for (i.rewind(); i.next();)
         {
-                sTabStops.append(propListToStyleKey((*j)));
+                sTabStops.append(propListToStyleKey(i()));
         }
         sKey.append(sTabStops);
 
@@ -418,9 +419,9 @@ void WordPerfectCollector::closeFooter()
 	mpCurrentContentElements = &mBodyElements;
 }
 
-void WordPerfectCollector::openSection(const WPXPropertyList &propList, const vector <WPXPropertyList> &columns)
+void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WPXVector <WPXPropertyList> &columns)
 {
-        int iNumColumns = columns.size();
+        int iNumColumns = columns.count();
 
 	if (iNumColumns > 1)
 	{
@@ -459,7 +460,7 @@ void WordPerfectCollector::closeSection()
 	mfSectionSpaceAfter = 0.0f;
 }
 
-void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const vector<WPXPropertyList> &tabStops)
+void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const WPXVector<WPXPropertyList> &tabStops)
 {
 	// FIXMENOW: What happens if we open a footnote inside a table? do we then inherit the footnote's style
 	// from "Table Contents"
@@ -677,7 +678,7 @@ void WordPerfectCollector::_closeListLevel(const char *szListType)
 	mbListElementOpened = false;
 }
 
-void WordPerfectCollector::openListElement(const WPXPropertyList &propList, const vector<WPXPropertyList> &tabStops)
+void WordPerfectCollector::openListElement(const WPXPropertyList &propList, const WPXVector<WPXPropertyList> &tabStops)
 {
 	miLastListLevel = miCurrentListLevel;
 	if (miCurrentListLevel == 1)
@@ -772,7 +773,7 @@ void WordPerfectCollector::closeEndnote()
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote")));
 }
 
-void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vector<WPXPropertyList> &columns)
+void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXVector<WPXPropertyList> &columns)
 {
 	WPXString sTableName;
 	sTableName.sprintf("Table%i", mTableStyles.size());

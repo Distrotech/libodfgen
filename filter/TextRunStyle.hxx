@@ -40,13 +40,13 @@ class DocumentHandler;
 class ParagraphStyle
 {
 public:
-	ParagraphStyle(WPXPropertyList *propList, const vector<WPXPropertyList> &tabStops, const WPXString &sName);
+	ParagraphStyle(WPXPropertyList *propList, const WPXVector<WPXPropertyList> &tabStops, const WPXString &sName);
 	virtual ~ParagraphStyle();
 	virtual void write(DocumentHandler &xHandler) const;
 	WPXString getName() const { return msName; }
 private:
 	WPXPropertyList *mpPropList;
-	vector<WPXPropertyList> mxTabStops;
+	WPXVector<WPXPropertyList> mxTabStops;
 	WPXString msName;
 };
 

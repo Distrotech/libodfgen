@@ -36,7 +36,7 @@
 #include <minmax.h>
 #endif
 
-ParagraphStyle::ParagraphStyle(WPXPropertyList *pPropList, const vector<WPXPropertyList> &xTabStops, const WPXString &sName) :
+ParagraphStyle::ParagraphStyle(WPXPropertyList *pPropList, const WPXVector<WPXPropertyList> &xTabStops, const WPXString &sName) :
 	mpPropList(pPropList),
 	mxTabStops(xTabStops),
 	msName(sName)
@@ -89,15 +89,16 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 	propList.insert("style:justify-single-word", "false");
 	xHandler.startElement("style:properties", propList);
 
-        if (mxTabStops.size() > 0) 
+        if (mxTabStops.count() > 0) 
         {
                 TagOpenElement tabListOpen("style:tab-stops");
                 tabListOpen.write(xHandler);
-                for (vector<WPXPropertyList>::const_iterator i = mxTabStops.begin(); i != mxTabStops.end(); i++)
+                WPXVector<WPXPropertyList>::Iter i(mxTabStops);
+                for (i.rewind(); i.next();)
                 {
                         TagOpenElement tabStopOpen("style:tab-stop");
                         
-                        WPXPropertyList::Iter j((*i));
+                        WPXPropertyList::Iter j(i());
                         for (j.rewind(); j.next(); )
                         {
                                 tabStopOpen.addAttribute(j.key(), j()->getStr().cstr());			
