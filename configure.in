@@ -91,6 +91,9 @@ filter/Makefile
 ooo/Makefile
 wpd2sxw/Makefile
 wpd2sxw/wpd2sxw.rc
+packaging/Makefile
+packaging/NSIS/Makefile
+packaging/NSIS/WriterPerfect.nsi
 ])
 
 case "$debug" in

@@ -1,0 +1,209 @@
+  !define MUI_PRODUCT "WriterPerfect"
+  !define MUI_FILE "savefile"
+  !define MUI_VERSION "@WRITERPERFECT_VERSION@"
+  !define MUI_BRANDINGTEXT "${MUI_PRODUCT} ${MUI_VERSION}"
+  CRCCheck On
+
+  !define MUI_ICON "ooo-wp.ico"
+  !define MUI_UNICON "ooo-wp.ico"
+  !define MUI_WELCOMEFINISHPAGE_BITMAP "writerperfect_splash.bmp"
+
+  !include "${NSISDIR}\Contrib\Modern UI\System.nsh"
+
+
+;--------------------------------
+;General
+
+  OutFile "${MUI_PRODUCT}-${MUI_VERSION}-setup.exe"
+  ShowInstDetails "show"
+  ShowUninstDetails "show"
+  ;SetCompressor "bzip2"
+  Name "${MUI_PRODUCT} ${MUI_VERSION}"
+  Caption "${MUI_PRODUCT} ${MUI_VERSION} Setup"
+
+;--------------------------------
+;Folder selection page
+
+;--------------------------------
+;Modern UI Configuration
+  !define MUI_ABORTWARNING
+
+  !define MUI_WELCOMEPAGE_TITLE "Welcome to ${MUI_PRODUCT} ${MUI_VERSION} Setup Wizard"
+  !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the installation of ${MUI_PRODUCT} ${MUI_VERSION}\
+  , a WordPerfect® import filter for OpenOffice.org Writer.\r\n\r\nThis product is not manufactured, approved, or supported by Corel \ 
+  Corporation or Corel Corporation Limited.\r\n\r\nFor more information and support, visit http://libwpd.sf.net\r\n\r\n\r\n\r\n\r\n$_CLICK"
+  !insertmacro MUI_PAGE_WELCOME
+  
+  !insertmacro MUI_PAGE_LICENSE "..\..\LICENSE"
+  Page custom GetOOoDir
+  !insertmacro MUI_PAGE_DIRECTORY
+
+  !insertmacro MUI_PAGE_INSTFILES
+  
+;--------------------------------
+;Language
+
+  !insertmacro MUI_LANGUAGE "English"
+
+
+;--------------------------------
+;Data
+
+  LicenseData "..\..\LICENSE"
+
+
+;-------------------------------- 
+;Installer Sections     
+Section "install"
+  ;Can this user install programs?
+  ClearErrors
+  UserInfo::GetName
+  IfErrors enough_rights # Win9x - no need to care about admin or not admin
+  Pop $0
+  UserInfo::GetAccountType
+  Pop $1
+  StrCmp $1 "Admin" enough_rights
+  StrCmp $1 "Guest" not_enough_rights
+  StrCmp $1 "User" not_enough_rights
+  StrCmp $1 "Power" enough_rights
+  MessageBox MB_OK "Unknown error.$\r$\nThe installation of ${MUI_PRODUCT} ${MUI_VERSION} will abort."
+  Abort "${MUI_PRODUCT} ${MUI_VERSION} installation aborted"
+ not_enough_rights:
+  MessageBox MB_OK "User $0 does not have enough rights$\r$\nto install programs on this computer."
+  Abort "${MUI_PRODUCT} ${MUI_VERSION} installation aborted"
+ enough_rights:
+  	# The installation can continue
+
+  ;Check whether it is a valid OOo installation
+  IfFileExists $INSTDIR\soffice.exe ooo_valid
+  MessageBox MB_OK "The directory '$INSTDIR' does not contain an OpenOffice.org installation.$\r$\nThe installation of ${MUI_PRODUCT} ${MUI_VERSION} will abort."
+  Abort "${MUI_PRODUCT} ${MUI_VERSION} installation aborted"
+ ooo_valid:
+  ;Check whether pkgchk.exe is present
+  IfFileExists $INSTDIR\pkgchk.exe pkgchk_exists
+  MessageBox MB_OK "The directory '$INSTDIR' does not contain the OpenOffice.org deployment tool.$\r$\nThe installation of ${MUI_PRODUCT} ${MUI_VERSION} will abort."
+  Abort "${MUI_PRODUCT} ${MUI_VERSION} installation aborted"
+
+  pkgchk_exists:
+
+  SetOutPath "$INSTDIR"
+
+;Remove the alpha WriterPerfect
+  IfFileExists "$INSTDIR\..\share\uno_packages\WordPerfectFilter.uno.zip" alpha_was alpha_no
+  
+  alpha_was:
+  DetailPrint "Removing package installed by an alpha installer"
+  Delete "$INSTDIR\..\share\uno_packages\WordPerfectFilter.uno.zip"
+
+  alpha_no:
+  
+;Add files
+  File "WriterPerfect.uno.zip"
+  File "libglib-2.0-0.dll"
+  File "libgobject-2.0-0.dll"
+  File "intl.dll"
+  File "iconv.dll"
+  
+;Register the UNO package
+  DetailPrint "Registering the package WriterPerfect.uno.zip ..."
+  nsExec::ExecToStack '"$INSTDIR\pkgchk.exe" -f -s -v -r "$INSTDIR\WriterPerfect.uno.zip"'
+  Pop $2 # return value/error/timeout
+  StrCmp $2 "0" registration_successful
+  
+;Registration failed
+  DetailPrint "... FAILED with error $2"
+;Delete the files that were already copied
+  DetailPrint ""
+  DetailPrint "Make sure that no instance of OpenOffice.org is running!"
+  DetailPrint ""
+  DetailPrint "Uninstalling already installed files"
+  Delete "$INSTDIR\WriterPerfect.uno.zip"
+  Delete "$INSTDIR\libglib-2.0-0.dll"
+  Delete "$INSTDIR\libgobject-2.0-0.dll"
+  Delete "$INSTDIR\intl.dll"
+  Delete "$INSTDIR\iconv.dll"
+  Abort "Could not install ${MUI_PRODUCT} ${MUI_VERSION}"
+
+registration_successful:  
+  DetailPrint "... Success"
+
+
+;Delete the uno package from the instdir 
+  Delete "$INSTDIR\WriterPerfect.uno.zip"
+ 
+;write uninstall information to the registry
+  DetailPrint "Creating uninstaller registry entries"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${MUI_PRODUCT}" "DisplayName" "${MUI_PRODUCT} (${MUI_VERSION}) (remove only)"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${MUI_PRODUCT}" "DisplayIcon" "$INSTDIR\WriPerfUninst.exe"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${MUI_PRODUCT}" "UninstallString" "$INSTDIR\WriPerfUninst.exe"
+ 
+  WriteUninstaller "$INSTDIR\WriPerfUninst.exe"
+
+  
+SectionEnd
+
+;--------------------------------
+;Functions
+Function GetOOoDir
+  ClearErrors
+  ReadRegStr $R0 HKCR "CLSID\{63542C48-9552-494A-84F7-73AA6A7C99C1}\InProcServer32\" ""
+  IfErrors registry_no registry_yes
+ registry_yes:
+  StrLen $4 $R0
+  IntOp $5 $4 - 13
+  StrCpy $6 $R0 $5
+  IfErrors registry_no registry_end
+ registry_no:
+  StrCpy $6 "$PROGRAMFILES\OpenOffice.org\program"
+ registry_end:
+  StrCpy $INSTDIR $6
+FunctionEnd
+
+Function un.onGUIInit
+  MessageBox MB_YESNO "Do you want to remove WriterFilter and all its components" IDYES uninstall_cont
+  Abort
+ uninstall_cont:
+FunctionEnd
+
+;--------------------------------
+;Uninstaller Section  
+Section "Uninstall"
+
+;Remove the uno package
+  SetOutPath "$INSTDIR"
+  Delete "$INSTDIR\..\share\uno_packages\WriterPerfect.uno.zip"
+  
+;Run pkgchk.exe again
+  DetailPrint "Unregistering the package WriterPerfect.uno.zip ..."
+  nsExec::ExecToStack '"$INSTDIR\pkgchk.exe" -f -s -v -r'
+  Pop $3 # return value/error/timeout
+  StrCmp $3 "0" unregistered
+  
+;Registration failed
+  DetailPrint "... FAILED with error $3"
+  DetailPrint ""
+  DetailPrint "Make sure that no instance of OpenOffice.org is running"
+  DetailPrint "or  that you have enough rights  to uninstall programs!"
+  DetailPrint ""
+  Abort "Could not remove ${MUI_PRODUCT} ${MUI_VERSION}"
+
+unregistered:
+  DetailPrint "... Success" 
+  
+;Delete Files
+  Delete "$INSTDIR\libglib-2.0-0.dll"
+  Delete "$INSTDIR\libgobject-2.0-0.dll"
+  Delete "$INSTDIR\intl.dll"
+  Delete "$INSTDIR\iconv.dll"
+  
+;Delete Unistall Registry Entries
+  DetailPrint "Deleting unistaller registry entries"
+  DeleteRegKey HKEY_LOCAL_MACHINE "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\${MUI_PRODUCT}"  
+  
+;Delete Uninstaller
+  Delete "$INSTDIR\WriPerfUninst.exe"
+  
+SectionEnd
+
+
+;eof

@@ -1,0 +1,5 @@
+*.dll
+WriterPerfect.uno.zip
+WriterPerfect-*-setup.exe
+Makefile
+Makefile.in

@@ -1,4 +1,4 @@
-SUBDIRS = build filter ooo wpd2sxw
+SUBDIRS = build filter ooo packaging wpd2sxw
 
 EXTRA_DIST =	\
 	wpd2sxw.spec.in			\
