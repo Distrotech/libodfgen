@@ -21,6 +21,7 @@
  */
 #include "OODocumentHandler.hxx"
 #include "attrlist.hxx"
+#include <string.h>
 
 #ifndef _COM_SUN_STAR_XML_SAX_XDOCUMENTHANDLER_HPP_
 #include <com/sun/star/xml/sax/XDocumentHandler.hpp>
