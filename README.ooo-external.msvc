@@ -1,0 +1,55 @@
+BUILD INSTRUCTIONS FOR WRITERPERFECT ON WINDOWS
+
+I. Which compiler to use ?
+WriterPerfect must be built with Microsoft Visual Studio (I used MSVC6 SP5). The
+OpenOffice.org 1.1 SDK doesn't support anything else, unfortunately.
+
+II. How to set the build environment ?
+
+(1) OOo_1.1.0_Win32Intel_sdk.zip and unzip it in some sensible place.
+(2) Java SDK. I used j2sdk-1_4_2_03-windows-i586-p.exe from java.sun.com.
+    Install it into some sensible place again.
+(3) MSys from www.mingw.org. I would advice to download and install the whole
+    MinGW distribution from their page (First MinGW and then MSys, not the opposite),
+    but MSys alone would be enough since it provides a GNU Make needed by the OOo SDK.
+(4) Install all the dependencies in one empty directory:
+    (a) Get Windows binaries of GNU libiconv, gettext-runtime, gettext-tools, glib,
+        glib-dev from http://www.gimp.org/win32/downloads.html
+    (b) Build zlib from sources available from http://www.gzip.org/zlib
+    (c) Get libxml2 binaries from http://www.zlatkovic.com/libxml.en.html (ATTENTION !!!
+        The libxml2-{version}.win32.zip package contains one supplementary directory:
+        libxml2-{version}.win32. Be sure that you strip this directory and unpack "include"
+        into "<dependencies_prefix>\include", etc.)
+    (d) Build libgsf.lib using the MSVC project files available from their CVS. Maybe you
+    	will need to patch them. For further help, ask me at libwpd-devel@lists.sourceforge.net
+    (e) Build libwpd-1.lib and libwpd-stream-1.lib using the MSVC project files available
+    	in the "libwpd" source tarball.
+(5) download the "writerperfect" source tarball.
+
+III. How to build ?
+
+(1) In the writerfilter directory copy the file Makefile.msvc.in into Makefile.msvc.
+    In Makefile.msvc set the DEP_PREFIX variable to the directory where you installed
+    your dependencies. Eventually, set LIBWPD_DEBUG variable to -DDEBUG if you wish so.
+(2) Patch the OpenOffice.org SDK with OOoSDK.win32.diff
+(3) Open a DOS window. "CD" into the OOo SDK directory. Run the configureWindowsNT.bat
+    script and answer correctly all the questions. (Do not use automatic deployment.
+    If all DLLs that the component uses are not  accessible while deploying, pkgchk.exe will
+    fail to register it.)
+(4) Launch setsdkenv_windows.bat script. It will set the necessary environment variables.
+(5) "CD" into the "writerperfect" directory and run "make --win32 -f Makefile.ooo-external.msvc".
+(6) That should be it. The resulting UNO package (WordPerfectFilter.uno.zip) will be in 
+    your writerfilter directory in subdirectory WIN.out\bin. In order to register the package,
+    put the DLLs libglib-2.0-0.dll, libgobject-2.0-0.dll, iconv.dll and intl.dll into your 
+    OpenOffice.org "program" directory. Run
+    <OOo_install_dir>\program\pkgchk.exe -s -f <writerfilter_dir>\WIN.out\bin\WriterPerfect.uno.zip.
+(7) Enjoy WriterPerfect!
+
+IV. How to report problems ?
+
+All problems should be reported to libwpd-devel@lists.sourceforge.net and/or dev@wp.openoffice.org.
+Browse the archives before you post. Your problem might have already a known solution. :-)
+
+Cheers
+
+Fridrich

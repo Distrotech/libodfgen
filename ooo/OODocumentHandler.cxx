@@ -73,6 +73,6 @@ void OODocumentHandler::endElement(const char *psName)
 
 void OODocumentHandler::characters(const UTF8String &sCharacters)
 {
-        OUString sCharU16(sCharacters(), sCharacters.getLen(), RTL_TEXTENCODING_UTF8);
+        OUString sCharU16(sCharacters(), strlen(sCharacters()), RTL_TEXTENCODING_UTF8);
         mxHandler->characters(sCharU16);
 }
