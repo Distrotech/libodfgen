@@ -1,0 +1,9 @@
+Makefile
+Makefile.in
+Debug
+Release
+*.dep
+*.mak
+*.ncb
+*.opt
+*.plg
