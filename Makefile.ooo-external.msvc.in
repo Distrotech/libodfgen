@@ -22,12 +22,11 @@ DEP_PREFIX=
 
 DEP_INCLUDES= -I.\filter -I$(DEP_PREFIX)\include \
 	-I$(DEP_PREFIX)\include\libgsf-1 \
-	-I$(DEP_PREFIX)\include\libwpd-1 \
-	-I$(DEP_PREFIX)\include\libwpd-stream-1 \
+	-I$(DEP_PREFIX)\include\libwpd-0.8 \
 	-I$(DEP_PREFIX)\include\libxml2 \
 	-I$(DEP_PREFIX)\include\glib-2.0 \
 	-I$(DEP_PREFIX)\lib\glib-2.0\include 
-DEP_LIBS=$(DEP_PREFIX)\lib\libwpd-1.lib $(DEP_PREFIX)\lib\libwpd-stream-1.lib \
+DEP_LIBS=$(DEP_PREFIX)\lib\libwpd-0.8.lib $(DEP_PREFIX)\lib\libwpd-stream-0.8.lib \
 	$(DEP_PREFIX)\lib\libgsf.lib \
 	$(DEP_PREFIX)\lib\zlib.lib $(DEP_PREFIX)\lib\libxml2_a.lib \
 	$(DEP_PREFIX)\lib\glib-2.0.lib $(DEP_PREFIX)\lib\gobject-2.0.lib \

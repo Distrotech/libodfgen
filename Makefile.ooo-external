@@ -2,9 +2,9 @@
 #
 #  $RCSfile: Makefile.ooo-external,v $
 #
-#  $Revision: 1.2 $
+#  $Revision: 1.3 $
 #
-#  last change: $Author: strbafridrich $ $Date: 2005/01/28 16:25:54 $
+#  last change: $Author: strbafridrich $ $Date: 2005/02/08 16:08:06 $
 #
 #  The Contents of this file are made available subject to the terms of
 #  the BSD license.
@@ -109,25 +109,10 @@ $(OUT_COMP_SLO)/%.$(OBJ_EXT) : %.cxx $(COMPONENT_TYPEFLAG)
 	$(CC) $(CC_FLAGS) $(CC_INCLUDES) -I../ -I$(OUT_COMP_INC) $(CC_DEFINES) $(CC_OUTPUT_SWITCH)$(subst /,$(PS),$@) $(LOCAL_INCLUDE) \
 $(LIBWPD_DEBUG) $<
 
-$(OUT_COMP_GEN)/%.def : ooo/exports.dxp
-ifeq "$(OS)" "WIN"
-	-$(MKDIR) $(subst /,$(PS),$(@D))
-	@echo EXPORTS > $@
-	$(CAT) ooo/exports.dxp >> $@
-endif
-
-ifeq "$(OS)" "WIN"
-$(SHAREDLIB_OUT)/%.$(SHAREDLIB_EXT) : $(SLOFILES) $(OUT_COMP_GEN)/%.def
-	-$(MKDIR) $(subst /,$(PS),$(@D))
-	$(LINK) $(LIBRARY_LINK_FLAGS) /OUT:$@ /MAP:$(OUT_COMP_GEN)/$(subst $(SHAREDLIB_EXT),map,$(@F)) \
-	/DEF:$(OUT_COMP_GEN)/$(subst $(SHAREDLIB_EXT),def,$(@F)) $(SLOFILES) \
-	$(CPPUHELPERLIB) $(CPPULIB) $(SALLIB) $(STLPORTLIB) msvcrt.lib kernel32.lib
-else
 $(SHAREDLIB_OUT)/%.$(SHAREDLIB_EXT) : $(SLOFILES)
 	-$(MKDIR) $(subst /,$(PS),$(@D))
 	$(LINK) $(LIBRARY_LINK_FLAGS) $(LINK_LIBS) -o $@ $^\
 	$(CPPUHELPERLIB) $(CPPULIB) $(SALLIB) $(STLPORTLIB) $(STC++LIB) $(LOCAL_LINK) 
-endif	
 
 $(OUT_BIN)/%.zip : $(SHAREDLIB_OUT)/%.$(SHAREDLIB_EXT) ooo/TypeDetection.xcu
 	-$(MKDIR) $(subst /,$(PS),$(@D))
