@@ -815,7 +815,7 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXP
 
 void WordPerfectCollector::openTableRow(const WPXPropertyList &propList)
 {
-	if (propList["is-header-row"] && (propList["is-header-row"]->getInt()))
+	if (propList["libwpd:is-header-row"] && (propList["libwpd:is-header-row"]->getInt()))
 	{
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("table:table-header-rows")));
 		mWriterDocumentState.mbHeaderRow = true;

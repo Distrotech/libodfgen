@@ -62,7 +62,7 @@ void TagCloseElement::write(DocumentHandler &xHandler) const
 void CharDataElement::write(DocumentHandler &xHandler) const
 {
 	WRITER_DEBUG_MSG(("TextElement: write\n"));
-	xHandler.characters(WPXString::createFromAscii(msData.cstr()) );
+	xHandler.characters(msData);
 }
 
 TextElement::TextElement(const WPXString & sTextBuf) :
@@ -90,7 +90,7 @@ void TextElement::write(DocumentHandler &xHandler) const
 		if (iNumConsecutiveSpaces > 1) {
 			if (sTemp.len() > 0) {
 				xHandler.characters(sTemp);
-				sTemp = WPXString::createFromAscii("");
+				sTemp.clear();
 			}
 			xHandler.startElement("text:s", xBlankAttrList);
 			xHandler.endElement("text:s");
