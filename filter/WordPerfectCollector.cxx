@@ -388,18 +388,10 @@ void WordPerfectCollector::openHeader(const WPXPropertyList &propList)
 {
 	vector<DocumentElement *> * pHeaderFooterContentElements = new vector<DocumentElement *>;
 
-	switch (propList["occurence"]->getInt())
-		{
-		case 2: // ALL
-		case 0: // ODD
-			WRITER_DEBUG_MSG(("WriterWordPerfect: Opening h_all or h_odd\n"));
-			mpCurrentPageSpan->setHeaderContent(pHeaderFooterContentElements);
-			break;
-		case 1: // EVEN
-			WRITER_DEBUG_MSG(("WriterWordPerfect: Opening h_even\n"));
-			mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
-			break;
-		}
+	if (propList["libwpd:occurence"]->getStr() == "even")
+                mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
+        else
+                mpCurrentPageSpan->setHeaderContent(pHeaderFooterContentElements);
 
 	mpCurrentContentElements = pHeaderFooterContentElements;
 }
@@ -413,18 +405,10 @@ void WordPerfectCollector::openFooter(const WPXPropertyList &propList)
 {
 	vector<DocumentElement *> * pHeaderFooterContentElements = new vector<DocumentElement *>;
 
-	switch (propList["occurence"]->getInt())
-		{
-		case 2: // ALL
-		case 0: // ODD
-			WRITER_DEBUG_MSG(("WriterWordPerfect: Opening f_all or f_odd\n"));
-			mpCurrentPageSpan->setFooterContent(pHeaderFooterContentElements);
-			break;
-		case 1: // EVEN
-			WRITER_DEBUG_MSG(("WriterWordPerfect: Opening f_even\n"));
-			mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);
-			break;
-		}
+	if (propList["libwpd:occurence"]->getStr() == "even")
+                mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);
+        else
+                mpCurrentPageSpan->setFooterContent(pHeaderFooterContentElements);
 
 	mpCurrentContentElements = pHeaderFooterContentElements;
 }
