@@ -26,9 +26,13 @@
 	<type> com.sun.star.registry.XSimpleRegistry  </type>
 	<type> com.sun.star.document.XFilter </type>
  	<type> com.sun.star.document.XImporter </type>
+	<type> com.sun.star.document.XExtendedFilterDetection </type>
 	<type> com.sun.star.lang.XInitialization </type>
 	<type> com.sun.star.io.XInputStream </type>
 	<type> com.sun.star.io.XSeekable </type>
+	<type> com.sun.star.ucb.XCommandEnvironment </type>
+	<type> com.sun.star.ucb.ContentCreationException </type>
+	<type> com.sun.star.ucb.CommandAbortedException </type>
 	<type> com.sun.star.xml.sax.XDocumentHandler </type>
 	<type> com.sun.star.xml.sax.InputSource </type>
 	<type> com.sun.star.xml.sax.XParser </type>

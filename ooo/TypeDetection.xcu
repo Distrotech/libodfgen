@@ -23,5 +23,12 @@
    </prop>
   </node>
  </node>
+ <node oor:name="DetectServices">
+  <node oor:name="com.sun.star.comp.Writer.WordPerfectImportFilter" oor:op="replace">
+   <prop oor:name="Types">
+    <value>writer_WordPerfect_Document</value>
+   </prop>
+  </node>
+ </node>
 </oor:component-data>
 

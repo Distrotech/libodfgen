@@ -144,7 +144,7 @@ TableStyle::TableStyle(const float fDocumentMarginLeft, const float fDocumentMar
 
 {
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Created a new set of table props with this no. of columns repeated: %i and this name: %s\n",
-	       (int)miNumColumns, (const char *)getName()));
+	       (int)miNumColumns, getName().getUTF8()));
 
 	typedef vector<WPXColumnDefinition>::const_iterator CDVIter;
 	for (CDVIter iterColumns = columns.begin() ; iterColumns != columns.end(); iterColumns++)

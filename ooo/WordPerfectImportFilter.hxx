@@ -2,6 +2,7 @@
  * Copyright (C) 2000 by Sun Microsystems, Inc.
  * Copyright (C) 2002-2004 William Lachance (wlach@interlog.com)
  * Copyright (C) 2004 Net Integration Technologies (http://www.net-itech.com)
+ * Copyright (C) 2004 Fridrich Strba <fridrich.strba@bluewin.ch>
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -34,6 +35,9 @@
 #ifndef _COM_SUN_STAR_DOCUMENT_XIMPORTER_HPP_
 #include <com/sun/star/document/XImporter.hpp>
 #endif
+#ifndef _COM_SUN_STAR_DOCUMENT_XEXTENDEDFILTERDETECTION_HPP_
+#include <com/sun/star/document/XExtendedFilterDetection.hpp>
+#endif
 #ifndef _COM_SUN_STAR_LANG_XINITIALIZATION_HPP_
 #include <com/sun/star/lang/XInitialization.hpp>
 #endif
@@ -44,7 +48,7 @@
 #include <com/sun/star/xml/sax/XDocumentHandler.hpp>
 #endif
 #ifndef _CPPUHELPER_IMPLBASE5_HXX_
-#include <cppuhelper/implbase4.hxx>
+#include <cppuhelper/implbase5.hxx>
 #endif
 
 enum FilterType 
@@ -55,10 +59,11 @@ enum FilterType
 /* This component will be instantiated for both import or export. Whether it calls
  * setSourceDocument or setTargetDocument determines which Impl function the filter
  * member calls */
-class WordPerfectImportFilter : public cppu::WeakImplHelper4 
+class WordPerfectImportFilter : public cppu::WeakImplHelper5 
 < 
 	com::sun::star::document::XFilter,
 	com::sun::star::document::XImporter,
+	com::sun::star::document::XExtendedFilterDetection,
 	com::sun::star::lang::XInitialization,
 	com::sun::star::lang::XServiceInfo
 >
@@ -88,7 +93,11 @@ public:
 
 	// XImporter
         virtual void SAL_CALL setTargetDocument( const ::com::sun::star::uno::Reference< ::com::sun::star::lang::XComponent >& xDoc ) 
-            throw (::com::sun::star::lang::IllegalArgumentException, ::com::sun::star::uno::RuntimeException);
+		throw (::com::sun::star::lang::IllegalArgumentException, ::com::sun::star::uno::RuntimeException);
+
+ 	//XExtendedFilterDetection
+	virtual ::rtl::OUString SAL_CALL detect( com::sun::star::uno::Sequence< com::sun::star::beans::PropertyValue >& Descriptor ) 
+		throw( com::sun::star::uno::RuntimeException );
 
 	// XInitialization
         virtual void SAL_CALL initialize( const ::com::sun::star::uno::Sequence< ::com::sun::star::uno::Any >& aArguments ) 
