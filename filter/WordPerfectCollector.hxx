@@ -67,7 +67,7 @@ enum WriterListType { unordered, ordered };
 
 struct ltstr
 {
-  bool operator()(const UTF8String & s1, const UTF8String & s2) const
+  bool operator()(const WPXString & s1, const WPXString & s2) const
   {
     return strcmp(s1.cstr(), s2.cstr()) < 0;
   }
@@ -103,7 +103,7 @@ public:
 
 
 	virtual void insertTab();
-	virtual void insertText(const UTF8String &text);
+	virtual void insertText(const WPXString &text);
  	virtual void insertLineBreak();
 
 	virtual void defineOrderedListLevel(const WPXPropertyList &propList);
@@ -136,7 +136,7 @@ protected:
 	void _writeDefaultStyles(DocumentHandler &xHandler);
 	void _writeMasterPages(DocumentHandler &xHandler);
 	void _writePageMasters(DocumentHandler &xHandler);
-	void _allocateFontName(const UTF8String &);
+	void _allocateFontName(const WPXString &);
 
 private:
 	void _openListLevel(TagOpenElement *pListLevelOpenElement);
@@ -149,13 +149,13 @@ private:
 	WriterDocumentState mWriterDocumentState;
 
 	// paragraph styles
-	map<UTF8String, ParagraphStyle *, ltstr> mTextStyleHash;
+	map<WPXString, ParagraphStyle *, ltstr> mTextStyleHash;
 
         // span styles
-        map<UTF8String, SpanStyle *, ltstr> mSpanStyleHash;
+        map<WPXString, SpanStyle *, ltstr> mSpanStyleHash;
 
 	// font styles
-	map<UTF8String, FontStyle *, ltstr> mFontHash;
+	map<WPXString, FontStyle *, ltstr> mFontHash;
 
 	// section styles
 	vector<SectionStyle *> mSectionStyles;

@@ -71,7 +71,7 @@ void OODocumentHandler::endElement(const char *psName)
         mxHandler->endElement(OUString::createFromAscii(psName));
 }
 
-void OODocumentHandler::characters(const UTF8String &sCharacters)
+void OODocumentHandler::characters(const WPXString &sCharacters)
 {
         OUString sCharU16(sCharacters.cstr(), strlen(sCharacters.cstr()), RTL_TEXTENCODING_UTF8);
         mxHandler->characters(sCharU16);

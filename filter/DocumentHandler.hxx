@@ -37,6 +37,6 @@ public:
         virtual void endDocument() = 0;
         virtual void startElement(const char *psName, const WPXPropertyList &xPropList) = 0;
         virtual void endElement(const char *psName) = 0;
-        virtual void characters(const UTF8String &sCharacters) = 0;
+        virtual void characters(const WPXString &sCharacters) = 0;
 };
 #endif

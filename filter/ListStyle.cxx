@@ -41,7 +41,7 @@ void OrderedListStyle::updateListLevel(const int iLevel, const WPXPropertyList &
 
 void OrderedListLevelStyle::write(DocumentHandler &xHandler, int iLevel) const
 {
-	UTF8String sLevel;
+	WPXString sLevel;
 	sLevel.sprintf("%i", (iLevel+1));
 
 	TagOpenElement listLevelStyleOpen("text:list-level-style-number");
@@ -80,7 +80,7 @@ void UnorderedListStyle::updateListLevel(const int iLevel, const WPXPropertyList
 
 void UnorderedListLevelStyle::write(DocumentHandler &xHandler, int iLevel) const
 {
-	UTF8String sLevel;
+	WPXString sLevel;
 	sLevel.sprintf("%i", (iLevel+1));
 	TagOpenElement listLevelStyleOpen("text:list-level-style-bullet");
 	listLevelStyleOpen.addAttribute("text:level", sLevel);

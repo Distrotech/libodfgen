@@ -23,8 +23,8 @@ void DiskDocumentHandler::endElement(const char *psName)
 	gsf_output_printf(mpOutput, "</%s>", psName);
 }
 
-void DiskDocumentHandler::characters(const UTF8String &sCharacters)
+void DiskDocumentHandler::characters(const WPXString &sCharacters)
 {
-        UTF8String sEscapedCharacters(sCharacters, true);
+        WPXString sEscapedCharacters(sCharacters, true);
 	gsf_output_printf(mpOutput, "%s", sEscapedCharacters.cstr());
 }

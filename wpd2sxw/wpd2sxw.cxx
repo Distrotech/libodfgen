@@ -69,7 +69,7 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 	WPDConfidence confidence = WPDocument::isFileFormatSupported(&input, false);
  	if (confidence == WPD_CONFIDENCE_NONE)
  	{
- 		printf("ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
+ 		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
  		return false;
  	}
 	input.seek(0, WPX_SEEK_SET);
@@ -108,12 +108,12 @@ main (int argc, char *argv[])
 
 	if (argc != 3) 
         {
-		fprintf (stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", argv[0]);
-		fprintf (stderr, "USAGE : Where <infile> is the WordPerfect source document\n");
-		fprintf (stderr, "USAGE : and [outfile] is the sxw target document. Alternately,\n");
-		fprintf (stderr, "USAGE : pass '--stdout' to pipe the resultant document to\n");
-		fprintf (stderr, "USAGE : standard output\n");
-		fprintf (stderr, "USAGE : \n");
+		fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", argv[0]);
+		fprintf(stderr, "USAGE : Where <infile> is the WordPerfect source document\n");
+		fprintf(stderr, "USAGE : and [outfile] is the sxw target document. Alternately,\n");
+		fprintf(stderr, "USAGE : pass '--stdout' to pipe the resultant document to\n");
+		fprintf(stderr, "USAGE : standard output\n");
+		fprintf(stderr, "USAGE : \n");
 		return 1;
 	}
 
@@ -149,17 +149,17 @@ main (int argc, char *argv[])
         }
         if (!writeContent(szInputFile, pOutfile)) 
         {
-                fprintf (stderr, "ERROR : Couldn't write document content\n");
+                fprintf(stderr, "ERROR : Couldn't write document content\n");
                 return 1;
         }
 
 	if (pOutfile && !writeChildFile(pOutfile, "mimetype", mimetypeStr)) {
-		fprintf (stderr, "ERROR : Couldn't write mimetype\n");
+		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
 		return 1;
 	}
 
 	if (pOutfile && !gsf_output_close ((GsfOutput *) pOutfile)) {
-		fprintf (stderr, "ERROR : Couldn't close outfile\n");
+		fprintf(stderr, "ERROR : Couldn't close outfile\n");
 		return 1;
 	}
 

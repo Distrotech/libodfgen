@@ -107,10 +107,10 @@ bool WordPerfectCollector::filter()
 	}
 
 	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
-	for (map<UTF8String, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
+	for (map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
 		delete(iterTextStyle->second);
 	}
-	for (map<UTF8String, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
+	for (map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		delete(iterFont->second);
 	}
 
@@ -133,17 +133,11 @@ bool WordPerfectCollector::filter()
 
 bool WordPerfectCollector::_parseSourceDocument(WPXInputStream &input)
 {
-	bool bRetVal = true;
-	try {
-		WPDocument::parse(&input, static_cast<WPXHLListenerImpl *>(this));
-	}
-	catch (FileException)
-        {
-                WRITER_DEBUG_MSG(("Caught a file exception..\n"));
-                bRetVal = false;
-        }
+        WPDResult result = WPDocument::parse(&input, static_cast<WPXHLListenerImpl *>(this));
+        if (result != WPD_OK)
+                return false;
 
-	return bRetVal;
+	return true;
 }
 
 void WordPerfectCollector::_writeDefaultStyles(DocumentHandler &xHandler)
@@ -265,7 +259,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 
 	// write out the font styles
 	mpHandler->startElement("office:font-decls", xBlankAttrList);
-	for (map<UTF8String, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
+	for (map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		iterFont->second->write(*mpHandler);
 	}
 	TagOpenElement symbolFontOpen("style:font-decl");
@@ -285,7 +279,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 
 	mpHandler->startElement("office:automatic-styles", xBlankAttrList);
 
-	for (map<UTF8String, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
+	for (map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
              iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
         {
 		// writing out the paragraph styles
@@ -297,7 +291,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 	}
 
         // span styles..
-	for (map<UTF8String, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); 
+	for (map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); 
              iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) 
         {
                 (iterSpanStyle->second)->write(xHandler);
@@ -344,13 +338,13 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler &xHandler)
 }
 
 
-UTF8String propListToStyleKey(const WPXPropertyList & xPropList)
+WPXString propListToStyleKey(const WPXPropertyList & xPropList)
 {
-        UTF8String sKey;
+        WPXString sKey;
         WPXPropertyList::Iter i(xPropList);
         for (i.rewind(); i.next(); )
         {
-                UTF8String sProp;
+                WPXString sProp;
                 sProp.sprintf("[%s:%s]", i.key().c_str(), i()->getStr().cstr());
                 sKey.append(sProp);
         }
@@ -358,11 +352,11 @@ UTF8String propListToStyleKey(const WPXPropertyList & xPropList)
         return sKey;
 }
 
-UTF8String getParagraphStyleKey(const WPXPropertyList & xPropList, const vector<WPXPropertyList> & xTabStops)
+WPXString getParagraphStyleKey(const WPXPropertyList & xPropList, const vector<WPXPropertyList> & xTabStops)
 {
-        UTF8String sKey = propListToStyleKey(xPropList);
+        WPXString sKey = propListToStyleKey(xPropList);
         
-        UTF8String sTabStops;
+        WPXString sTabStops;
         sTabStops.sprintf("[num-tab-stops:%i]", xTabStops.size());
         for (vector<WPXPropertyList>::const_iterator j = xTabStops.begin(); j != xTabStops.end(); j++)
         {
@@ -374,7 +368,7 @@ UTF8String getParagraphStyleKey(const WPXPropertyList & xPropList, const vector<
 }
 
 // _allocateFontName: add a (potentially mapped) font style to the hash if it's not already there, do nothing otherwise
-void WordPerfectCollector::_allocateFontName(const UTF8String & sFontName)
+void WordPerfectCollector::_allocateFontName(const WPXString & sFontName)
 {
 	if (mFontHash.find(sFontName) == mFontHash.end())
 	{
@@ -447,7 +441,7 @@ void WordPerfectCollector::openSection(const WPXPropertyList &propList, const ve
 	if (iNumColumns > 1)
 	{
 		mfSectionSpaceAfter = propList["fo:margin-bottom"]->getFloat();
-		UTF8String sSectionName;
+		WPXString sSectionName;
 		sSectionName.sprintf("Section%i", mSectionStyles.size());
 		
 		SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
@@ -497,10 +491,10 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		// be inside a table in this case (the table would be the first document element 
 		//in that case)
 		pPersistPropList->insert("style:parent-style-name", "Standard");
-		UTF8String sName;
+		WPXString sName;
 		sName.sprintf("FS");
 
-		UTF8String sParagraphHashKey("P|FS");
+		WPXString sParagraphHashKey("P|FS");
 		pPersistPropList->insert("style:master-page-name", "Page Style 1");
                 pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
 		mTextStyleHash[sParagraphHashKey] = pStyle;
@@ -518,10 +512,10 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		else
 			pPersistPropList->insert("style:parent-style-name", "Standard");
 
-                UTF8String sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
+                WPXString sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
 
 		if (mTextStyleHash.find(sKey) == mTextStyleHash.end()) {
-			UTF8String sName;
+			WPXString sName;
 			sName.sprintf("S%i", mTextStyleHash.size()); 
 			
 			pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
@@ -549,11 +543,11 @@ void WordPerfectCollector::openSpan(const WPXPropertyList &propList)
 {
         if (propList["style:font-name"])
                 _allocateFontName(propList["style:font-name"]->getStr());
-	UTF8String sSpanHashKey = propListToStyleKey(propList);
+	WPXString sSpanHashKey = propListToStyleKey(propList);
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Span Hash Key: %s\n", sSpanHashKey.cstr()));
 
 	// Get the style
-        UTF8String sName;
+        WPXString sName;
 	if (mSpanStyleHash.find(sSpanHashKey) == mSpanStyleHash.end())
         {
 		// allocate a new paragraph style
@@ -596,7 +590,7 @@ void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propLis
              (propList["text:start-value"] && propList["text:start-value"]->getInt() != (miLastListNumber+1))))
 	{
 		WRITER_DEBUG_MSG(("Attempting to create a new ordered list style (listid: %i)\n", id));
-		UTF8String sName;
+		WPXString sName;
 		sName.sprintf("OL%i", miNumListStyles);
 		miNumListStyles++;
 		pOrderedListStyle = new OrderedListStyle(sName.cstr(), propList["libwpd:id"]->getInt());
@@ -623,7 +617,7 @@ void WordPerfectCollector::defineUnorderedListLevel(const WPXPropertyList &propL
 
 	if (pUnorderedListStyle == NULL) {
 		WRITER_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", id));
-		UTF8String sName;
+		WPXString sName;
 		sName.sprintf("UL%i", miNumListStyles);
 		pUnorderedListStyle = new UnorderedListStyle(sName.cstr(), id);
 		mListStyles.push_back(static_cast<ListStyle *>(pUnorderedListStyle));
@@ -690,7 +684,7 @@ void WordPerfectCollector::_closeListLevel(const char *szListType)
 
 	miCurrentListLevel--;
 
-	UTF8String sCloseElement;
+	WPXString sCloseElement;
 	sCloseElement.sprintf("text:%s", szListType);
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement(sCloseElement.cstr())));
 
@@ -714,11 +708,11 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 	pPersistPropList->insert("style:list-style-name", mpCurrentListStyle->getName());
 	pPersistPropList->insert("style:parent-style-name", "Standard");
 
-        UTF8String sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
+        WPXString sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
 
         if (mTextStyleHash.find(sKey) == mTextStyleHash.end()) 
         {
-                UTF8String sName;
+                WPXString sName;
                 sName.sprintf("S%i", mTextStyleHash.size()); 
 		
                 pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
@@ -796,7 +790,7 @@ void WordPerfectCollector::closeEndnote()
 
 void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vector<WPXPropertyList> &columns)
 {
-	UTF8String sTableName;
+	WPXString sTableName;
 	sTableName.sprintf("Table%i", mTableStyles.size());
 
 	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
@@ -806,7 +800,7 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vect
 
 	if (mWriterDocumentState.mbFirstElement && mpCurrentContentElements == &mBodyElements)
 	{
-		UTF8String sMasterPageName("Page Style 1");
+		WPXString sMasterPageName("Page Style 1");
 		pTableStyle->setMasterPageName(sMasterPageName);
 		mWriterDocumentState.mbFirstElement = false;
 	}
@@ -824,7 +818,7 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const vect
 	for (int i=0; i<pTableStyle->getNumColumns(); i++) 
         {
 		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
-		UTF8String sColumnStyleName;
+		WPXString sColumnStyleName;
 		sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
 		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
 		mpCurrentContentElements->push_back(pTableColumnOpenElement);
@@ -842,7 +836,7 @@ void WordPerfectCollector::openTableRow(const WPXPropertyList &propList)
 		mWriterDocumentState.mbHeaderRow = true;
 	}
 
-	UTF8String sTableRowStyleName;
+	WPXString sTableRowStyleName;
 	sTableRowStyleName.sprintf("%s.Row%i", mpCurrentTableStyle->getName().cstr(), mpCurrentTableStyle->getNumTableRowStyles());
 	TableRowStyle *pTableRowStyle = new TableRowStyle(propList, sTableRowStyleName.cstr());
 	mpCurrentTableStyle->addTableRowStyle(pTableRowStyle);
@@ -864,7 +858,7 @@ void WordPerfectCollector::closeTableRow()
 
 void WordPerfectCollector::openTableCell(const WPXPropertyList &propList)
 {
-	UTF8String sTableCellStyleName;
+	WPXString sTableCellStyleName;
 	sTableCellStyleName.sprintf( "%s.Cell%i", mpCurrentTableStyle->getName().cstr(), mpCurrentTableStyle->getNumTableCellStyles());
 	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
 	mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
@@ -913,7 +907,7 @@ void WordPerfectCollector::insertLineBreak()
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:line-break")));
 }
 
-void WordPerfectCollector::insertText(const UTF8String &text)
+void WordPerfectCollector::insertText(const WPXString &text)
 {
 	DocumentElement *pText = new TextElement(text);
 	mpCurrentContentElements->push_back(pText);

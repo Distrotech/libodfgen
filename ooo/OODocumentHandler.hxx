@@ -15,7 +15,7 @@ public:
         virtual void endDocument();
         virtual void startElement(const char *psName, const WPXPropertyList &xPropList);
         virtual void endElement(const char *psName);
-        virtual void characters(const UTF8String &sCharacters);
+        virtual void characters(const WPXString &sCharacters);
 
 private:
         Reference < XDocumentHandler > mxHandler;

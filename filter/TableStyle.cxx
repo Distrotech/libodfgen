@@ -133,7 +133,7 @@ void TableStyle::write(DocumentHandler &xHandler) const
 	for (PLIter j = mColumns.begin() ; j != mColumns.end(); j++)
 	{
 		TagOpenElement styleOpen("style:style");
-		UTF8String sColumnName;
+		WPXString sColumnName;
 		sColumnName.sprintf("%s.Column%i", getName().cstr(), i);
 		styleOpen.addAttribute("style:name", sColumnName);
 		styleOpen.addAttribute("style:family", "table-column");

@@ -47,7 +47,7 @@ void TagOpenElement::print() const
 	TagElement::print(); 	
 }
 
-void TagOpenElement::addAttribute(const char *szAttributeName, const UTF8String &sAttributeValue)
+void TagOpenElement::addAttribute(const char *szAttributeName, const WPXString &sAttributeValue)
 {
         maAttrList.insert(szAttributeName, sAttributeValue);
 }
@@ -62,10 +62,10 @@ void TagCloseElement::write(DocumentHandler &xHandler) const
 void CharDataElement::write(DocumentHandler &xHandler) const
 {
 	WRITER_DEBUG_MSG(("TextElement: write\n"));
-	xHandler.characters(UTF8String::createFromAscii(msData.cstr()) );
+	xHandler.characters(WPXString::createFromAscii(msData.cstr()) );
 }
 
-TextElement::TextElement(const UTF8String & sTextBuf) :
+TextElement::TextElement(const WPXString & sTextBuf) :
 	msTextBuf(sTextBuf, false)
 {
 }
@@ -76,10 +76,10 @@ void TextElement::write(DocumentHandler &xHandler) const
 {
 	WPXPropertyList xBlankAttrList;
         
-	UTF8String sTemp;
+	WPXString sTemp;
 
 	int iNumConsecutiveSpaces = 0;
-        UTF8String::Iter i(msTextBuf);
+        WPXString::Iter i(msTextBuf);
 	for (i.rewind(); i.next();) 
         {
 		if (*(i()) == ASCII_SPACE)
@@ -90,7 +90,7 @@ void TextElement::write(DocumentHandler &xHandler) const
 		if (iNumConsecutiveSpaces > 1) {
 			if (sTemp.len() > 0) {
 				xHandler.characters(sTemp);
-				sTemp = UTF8String::createFromAscii("");
+				sTemp = WPXString::createFromAscii("");
 			}
 			xHandler.startElement("text:s", xBlankAttrList);
 			xHandler.endElement("text:s");

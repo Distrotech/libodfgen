@@ -89,7 +89,7 @@ void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
 {
         WPXPropertyList propList;
         
-	UTF8String sPageMasterName; 
+	WPXString sPageMasterName; 
         sPageMasterName.sprintf("PM%i", iNum);
         propList.insert("style:name", sPageMasterName);
 	propList.insert("style:name", sPageMasterName);
@@ -112,15 +112,15 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 	for (int i=iStartingNum; i<(iStartingNum+iSpan); i++)
 	{
 		TagOpenElement masterPageOpen("style:master-page");
-		UTF8String sMasterPageName;
+		WPXString sMasterPageName;
 		sMasterPageName.sprintf("Page Style %i", i);
-		UTF8String sPageMasterName;
+		WPXString sPageMasterName;
 		sPageMasterName.sprintf("PM%i", iPageMasterNum);
                 propList.insert("style:name", sMasterPageName);
 		propList.insert("style:page-master-name", sPageMasterName);
 		if (!bLastPageSpan)
 		{
-			UTF8String sNextMasterPageName;
+			WPXString sNextMasterPageName;
 			sNextMasterPageName.sprintf("Page Style %i", (i+1));
                         propList.insert("style:next-style-name", sNextMasterPageName);
 		}

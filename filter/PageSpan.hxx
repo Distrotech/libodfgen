@@ -28,6 +28,8 @@
 #define _PAGESPAN_H
 #include <libwpd/libwpd.h>
 
+using namespace std;
+
 class DocumentElement;
 class DocumentHandler;
 

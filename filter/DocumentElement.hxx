@@ -48,10 +48,10 @@ class TagElement : public DocumentElement
 {
 public:
 	TagElement(const char *szTagName) : msTagName(szTagName) {}
-	const UTF8String & getTagName() const { return msTagName; }
+	const WPXString & getTagName() const { return msTagName; }
 	virtual void print() const;
 private:
-	UTF8String msTagName;
+	WPXString msTagName;
 };
 
 class TagOpenElement : public TagElement
@@ -59,7 +59,7 @@ class TagOpenElement : public TagElement
 public:
 	TagOpenElement(const char *szTagName) : TagElement(szTagName) {}
 	~TagOpenElement() {}
-	void addAttribute(const char *szAttributeName, const UTF8String &sAttributeValue);
+	void addAttribute(const char *szAttributeName, const WPXString &sAttributeValue);
 	virtual void write(DocumentHandler &xHandler) const;
 	virtual void print () const;
 private:
@@ -79,17 +79,17 @@ public:
 	CharDataElement(const char *sData) : DocumentElement(), msData(sData) {}
 	virtual void write(DocumentHandler &xHandler) const;
 private:
-	UTF8String msData;
+	WPXString msData;
 };
 
 class TextElement : public DocumentElement
 {
 public:
-	TextElement(const UTF8String & sTextBuf);
+	TextElement(const WPXString & sTextBuf);
 	virtual void write(DocumentHandler &xHandler) const;
 
 private:
-	UTF8String msTextBuf;
+	WPXString msTextBuf;
 };
  
 #endif

@@ -18,8 +18,8 @@ void StdOutHandler::endElement(const char *psName)
 	printf("</%s>\n", psName);
 }
 
-void StdOutHandler::characters(const UTF8String &sCharacters)
+void StdOutHandler::characters(const WPXString &sCharacters)
 {
-        UTF8String sEscapedCharacters(sCharacters, true);
+        WPXString sEscapedCharacters(sCharacters, true);
 	printf("%s", sEscapedCharacters.cstr());
 }
