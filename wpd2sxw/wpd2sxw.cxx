@@ -37,6 +37,15 @@
 
 const char *mimetypeStr = "application/vnd.sun.xml.writer";
 
+
+const char *manifestStr ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<!DOCTYPE manifest:manifest PUBLIC \"-//OpenOffice.org//DTD Manifest 1.0//EN\" \"Manifest.dtd\">\n\
+<manifest:manifest xmlns:manifest=\"http://openoffice.org/2001/manifest\">\n\
+ <manifest:file-entry manifest:media-type=\"application/vnd.sun.xml.writer\" manifest:full-path=\"/\"/>\n\
+ <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>\n\
+</manifest:manifest>\n";
+
+
 static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str)
 {
 	GsfOutput  *child = gsf_outfile_new_child  (outfile, fileName, FALSE);
@@ -147,16 +156,21 @@ main (int argc, char *argv[])
                 }
                 g_object_unref (G_OBJECT (pOutput));
         }
+	if (pOutfile && !writeChildFile(pOutfile, "mimetype", mimetypeStr)) {
+		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
+		return 1;
+	}
+	
+	if (pOutfile && !writeChildFile(pOutfile, "META-INF/manifest.xml", manifestStr)) {
+		fprintf(stderr, "ERROR : Couldn't write manifest\n");
+		return 1;
+	}
+
         if (!writeContent(szInputFile, pOutfile)) 
         {
                 fprintf(stderr, "ERROR : Couldn't write document content\n");
                 return 1;
         }
-
-	if (pOutfile && !writeChildFile(pOutfile, "mimetype", mimetypeStr)) {
-		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
-		return 1;
-	}
 
 	if (pOutfile && !gsf_output_close ((GsfOutput *) pOutfile)) {
 		fprintf(stderr, "ERROR : Couldn't close outfile\n");
