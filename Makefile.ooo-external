@@ -2,9 +2,9 @@
 #
 #  $RCSfile: Makefile.ooo-external,v $
 #
-#  $Revision: 1.1 $
+#  $Revision: 1.2 $
 #
-#  last change: $Author: lachancew $ $Date: 2004/11/25 07:54:55 $
+#  last change: $Author: strbafridrich $ $Date: 2005/01/28 16:25:54 $
 #
 #  The Contents of this file are made available subject to the terms of
 #  the BSD license.
@@ -62,8 +62,8 @@ COMPONENT_XML=ooo/$(COMPONENT_NAME).uno.xml
 COMPONENT_PACKAGE = $(OUT_BIN)/$(COMPONENT_NAME).uno.zip
 COMPONENT_PACKAGE_URL = $(subst \\,\,"$(COMPONENT_PACKAGE_DIR)$(PS)$(COMPONENT_NAME).uno.zip")
 # Define non-platform/compiler specific settings (libwpd/writerperfect specific)
-LOCAL_INCLUDE=`pkg-config --cflags libwpd-1 libwpd-stream-1` -I./filter
-LOCAL_LINK=`pkg-config --libs libwpd-1 libwpd-stream-1`
+LOCAL_INCLUDE=`pkg-config --cflags libwpd-0.8 libwpd-stream-0.8` -I./filter
+LOCAL_LINK=`pkg-config --libs libwpd-0.8 libwpd-stream-0.8`
 
 REGISTERFLAG = $(OUT_MISC)/$(COMPONENT_NAME)_register_component.flag
 COMPONENT_TYPEFLAG = $(OUT_MISC)/$(COMPONENT_NAME)_types.flag
