@@ -7,7 +7,7 @@ EXTRA_DIST =	\
 	Makefile.ooo-external		\
 	Makefile.ooo-external.msvc.in	\
 	CHANGES README \
-	README.win32 \
+	README.ooo-external.msvc \
 	OOoSDK.win32.diff
 
 distclean-local:
