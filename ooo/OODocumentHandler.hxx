@@ -14,7 +14,7 @@ public:
         virtual void startDocument();
         virtual void endDocument();
         virtual void startElement(const char *psName, const WPXPropertyList &xPropList);
-        virtual void endElement(const UTF8String &sName);
+        virtual void endElement(const char *psName);
         virtual void characters(const UTF8String &sCharacters);
 
 private:

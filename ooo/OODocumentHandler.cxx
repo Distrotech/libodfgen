@@ -63,12 +63,12 @@ void OODocumentHandler::startElement(const char *psName, const WPXPropertyList &
                                                 OUString::createFromAscii(i()->getStr()()));
         }
         
-        mxHandler->startElement(OUString::createFromAscii(sName()), xAttrList);
+        mxHandler->startElement(OUString::createFromAscii(psName), xAttrList);
 }
 
-void OODocumentHandler::endElement(const UTF8String &sName)
+void OODocumentHandler::endElement(const char *psName)
 {
-        mxHandler->endElement(OUString::createFromAscii(sName()));
+        mxHandler->endElement(OUString::createFromAscii(psName));
 }
 
 void OODocumentHandler::characters(const UTF8String &sCharacters)
