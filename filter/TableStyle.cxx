@@ -114,7 +114,7 @@ void TableStyle::write(DocumentHandler &xHandler) const
 	styleOpen.addAttribute("style:name", getName());
 	styleOpen.addAttribute("style:family", "table");
 	if (getMasterPageName())
-		styleOpen.addAttribute("style:master-page-name", getMasterPageName()->getUTF8());
+		styleOpen.addAttribute("style:master-page-name", getMasterPageName()->cstr());
 	styleOpen.write(xHandler);
 
 	TagOpenElement stylePropertiesOpen("style:properties");
@@ -138,7 +138,7 @@ void TableStyle::write(DocumentHandler &xHandler) const
 	{
 		TagOpenElement styleOpen("style:style");
 		UTF8String sColumnName;
-		sColumnName.sprintf("%s.Column%i", getName()(), i);
+		sColumnName.sprintf("%s.Column%i", getName().cstr(), i);
 		styleOpen.addAttribute("style:name", sColumnName);
 		styleOpen.addAttribute("style:family", "table-column");
 		styleOpen.write(xHandler);
@@ -146,7 +146,7 @@ void TableStyle::write(DocumentHandler &xHandler) const
 		TagOpenElement stylePropertiesOpen("style:properties");
 		UTF8String sColumnWidth;
 		sColumnWidth.sprintf("%finch", (*iterColumns).m_width);
-		stylePropertiesOpen.addAttribute("style:column-width", sColumnWidth.getUTF8());
+		stylePropertiesOpen.addAttribute("style:column-width", sColumnWidth.cstr());
 		stylePropertiesOpen.write(xHandler);
 		xHandler.endElement("style:properties");
 

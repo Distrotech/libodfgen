@@ -8,7 +8,7 @@ void StdOutHandler::startElement(const char *psName, const WPXPropertyList &xPro
         {
                 // filter out libwpd elements
                 if (strlen(i.key().c_str()) > 6 && strncmp(i.key().c_str(), "libwpd", 6) != 0)
-                        printf(" %s=\"%s\"", i.key().c_str(), i()->getStr().getUTF8());
+                        printf(" %s=\"%s\"", i.key().c_str(), i()->getStr().cstr());
         }
 	printf(">\n");
 }
@@ -21,5 +21,5 @@ void StdOutHandler::endElement(const char *psName)
 void StdOutHandler::characters(const UTF8String &sCharacters)
 {
         UTF8String sEscapedCharacters(sCharacters, true);
-	printf("%s", sEscapedCharacters.getUTF8());
+	printf("%s", sEscapedCharacters.cstr());
 }

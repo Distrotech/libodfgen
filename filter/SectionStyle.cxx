@@ -65,7 +65,7 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 		TagOpenElement columnsOpen("style:columns");
 		UTF8String sColumnCount;
 		sColumnCount.sprintf("%i", miNumColumns);
-		columnsOpen.addAttribute("fo:column-count", sColumnCount());
+		columnsOpen.addAttribute("fo:column-count", sColumnCount.cstr());
 		columnsOpen.write(xHandler);
 	
 		UTF8String sRelWidth, sMarginLeft, sMarginRight;
@@ -74,11 +74,11 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 			TagOpenElement columnOpen("style:column");
 			// The "style:rel-width" is expressed in twips (1440 twips per inch) and includes the left and right Gutter
 			sRelWidth.sprintf("%i*", (int)rint(mColumns[i].m_width * 1440.0f));
-			columnOpen.addAttribute("style:rel-width", sRelWidth.getUTF8());
+			columnOpen.addAttribute("style:rel-width", sRelWidth.cstr());
 			sMarginLeft.sprintf("%.4finch", mColumns[i].m_leftGutter);
-			columnOpen.addAttribute("fo:margin-left", sMarginLeft.getUTF8());
+			columnOpen.addAttribute("fo:margin-left", sMarginLeft.cstr());
 			sMarginRight.sprintf("%.4finch", mColumns[i].m_rightGutter);
-			columnOpen.addAttribute("fo:margin-right", sMarginRight.getUTF8());
+			columnOpen.addAttribute("fo:margin-right", sMarginRight.cstr());
 			columnOpen.write(xHandler);
 			
 			TagCloseElement columnClose("style:column");

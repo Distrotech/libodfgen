@@ -69,7 +69,7 @@ struct ltstr
 {
   bool operator()(const UTF8String & s1, const UTF8String & s2) const
   {
-    return strcmp(s1.getUTF8(), s2.getUTF8()) < 0;
+    return strcmp(s1.cstr(), s2.cstr()) < 0;
   }
 };
 
@@ -95,7 +95,7 @@ public:
 	virtual void openFooter(const WPXPropertyList &propList);
 	virtual void closeFooter();
 
-	virtual void openParagraph(const WPXPropertyList &propList, const vector<WPXTabStop> &tabStops);
+	virtual void openParagraph(const WPXPropertyList &propList, const vector<WPXPropertyList> &tabStops);
 	virtual void closeParagraph();
 	
 	virtual void openSpan(const WPXPropertyList &propList);
@@ -112,7 +112,7 @@ public:
 	virtual void openUnorderedListLevel(const WPXPropertyList &propList);
 	virtual void closeOrderedListLevel();
 	virtual void closeUnorderedListLevel();
-	virtual void openListElement(const WPXPropertyList &propList, const vector<WPXTabStop> &tabStops);
+	virtual void openListElement(const WPXPropertyList &propList, const vector<WPXPropertyList> &tabStops);
 	virtual void closeListElement();       
 
 	virtual void openFootnote(const WPXPropertyList &propList);

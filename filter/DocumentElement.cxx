@@ -34,12 +34,12 @@
 
 void TagElement::print() const
 {
-	WRITER_DEBUG_MSG(("%s\n", msTagName.getUTF8()));
+	WRITER_DEBUG_MSG(("%s\n", msTagName.cstr()));
 }
 
 void TagOpenElement::write(DocumentHandler &xHandler) const
 {
-	xHandler.startElement(getTagName().getUTF8(), maAttrList);
+	xHandler.startElement(getTagName().cstr(), maAttrList);
 }
 
 void TagOpenElement::print() const
@@ -54,15 +54,15 @@ void TagOpenElement::addAttribute(const char *szAttributeName, const UTF8String 
 
 void TagCloseElement::write(DocumentHandler &xHandler) const
 {
-	WRITER_DEBUG_MSG(("TagCloseElement: write (%s)\n", getTagName().getUTF8()));
+	WRITER_DEBUG_MSG(("TagCloseElement: write (%s)\n", getTagName().cstr()));
 
-	xHandler.endElement(getTagName().getUTF8());
+	xHandler.endElement(getTagName().cstr());
 }
 
 void CharDataElement::write(DocumentHandler &xHandler) const
 {
 	WRITER_DEBUG_MSG(("TextElement: write\n"));
-	xHandler.characters(UTF8String::createFromAscii(msData.getUTF8()) );
+	xHandler.characters(UTF8String::createFromAscii(msData.cstr()) );
 }
 
 TextElement::TextElement(const UTF8String & sTextBuf) :
@@ -88,7 +88,7 @@ void TextElement::write(DocumentHandler &xHandler) const
 			iNumConsecutiveSpaces = 0;
 
 		if (iNumConsecutiveSpaces > 1) {
-			if (sTemp.getLen() > 0) {
+			if (sTemp.len() > 0) {
 				xHandler.characters(sTemp);
 				sTemp = UTF8String::createFromAscii("");
 			}

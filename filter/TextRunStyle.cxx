@@ -2,7 +2,8 @@
  * (e.g.: a paragraph might be bold) that is needed at the head of an OO
  * document.
  *
- * Copyright (C) 2002-2003 William Lachance (william.lachance@sympatico.ca)
+ * Copyright (C) 2002-2004 William Lachance (william.lachance@sympatico.ca)
+ * Copyright (C) 2004 Net Integration Technologies, Inc. (http://www.net-itech.com)
  * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
  *
  * This program is free software; you can redistribute it and/or
@@ -35,7 +36,7 @@
 #include <minmax.h>
 #endif
 
-ParagraphStyle::ParagraphStyle(WPXPropertyList *pPropList, const vector<WPXTabStop> &xTabStops, const UTF8String &sName) :
+ParagraphStyle::ParagraphStyle(WPXPropertyList *pPropList, const vector<WPXPropertyList> &xTabStops, const UTF8String &sName) :
 	mpPropList(pPropList),
 	mxTabStops(xTabStops),
 	msName(sName)
@@ -52,7 +53,7 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 	WRITER_DEBUG_MSG(("Writing a paragraph style..\n"));
 
         WPXPropertyList propList;
-	propList.insert("style:name", msName.getUTF8());
+	propList.insert("style:name", msName.cstr());
 	propList.insert("style:family", "paragraph");
 	propList.insert("style:parent-style-name", (*mpPropList)["style:parent-style-name"]->getStr());
 	if ((*mpPropList)["style:master-page-name"])
@@ -88,45 +89,24 @@ void ParagraphStyle::write(DocumentHandler &xHandler) const
 	propList.insert("style:justify-single-word", "false");
 	xHandler.startElement("style:properties", propList);
 
-	if (mxTabStops.size() > 0)
-	{
-		TagOpenElement tabListOpen("style:tab-stops");
-		tabListOpen.write(xHandler);
-		for (int i=0; i<mxTabStops.size(); i++)
-		{
-			TagOpenElement tabStopOpen("style:tab-stop");
-			UTF8String sPosition;
-			sPosition.sprintf("%.4finch", mxTabStops[i].m_position);
-			tabStopOpen.addAttribute("style:position", sPosition.getUTF8());
-			WRITER_DEBUG_MSG(("Writing tab stops %s\n", sPosition.getUTF8()));
-			switch (mxTabStops[i].m_alignment)
-			{
-			case RIGHT:
-				tabStopOpen.addAttribute("style:type", "right");
-				break;
-			case CENTER:
-				tabStopOpen.addAttribute("style:type", "center");
-				break;
-			case DECIMAL:
-				tabStopOpen.addAttribute("style:type", "char");
-				tabStopOpen.addAttribute("style:char", "."); // Assume a decimal point for the while
-				break;
-			default:  // Left alignment is the default one and BAR is not handled in OOo
-				break;
-			}
-
-			if (mxTabStops[i].m_leaderCharacter != 0x0000)
-			{
-                                UTF8String sTempLeader;
-                                sTempLeader.append(mxTabStops[i].m_leaderCharacter);
-				tabStopOpen.addAttribute("style:leader-char", sTempLeader()); 
-			}
-			tabStopOpen.write(xHandler);
-			xHandler.endElement("style:tab-stop");
-			
-		}
-		xHandler.endElement("style:tab-stops");
-	}
+        if (mxTabStops.size() > 0) 
+        {
+                TagOpenElement tabListOpen("style:tab-stops");
+                tabListOpen.write(xHandler);
+                for (vector<WPXPropertyList>::const_iterator i = mxTabStops.begin(); i != mxTabStops.end(); i++)
+                {
+                        TagOpenElement tabStopOpen("style:tab-stop");
+                        
+                        WPXPropertyList::Iter j((*i));
+                        for (j.rewind(); j.next(); )
+                        {
+                                tabStopOpen.addAttribute(j.key().c_str(), j()->getStr().cstr());			
+                        }
+                        tabStopOpen.write(xHandler);
+                        xHandler.endElement("style:tab-stop");
+                }
+                xHandler.endElement("style:tab-stops");
+        }
 
 	xHandler.endElement("style:properties");
 	xHandler.endElement("style:style");
