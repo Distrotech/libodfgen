@@ -199,9 +199,17 @@ OUString SAL_CALL WordPerfectImportFilter::detect( com::sun::star::uno::Sequence
         Reference< com::sun::star::ucb::XCommandEnvironment > xEnv;
         if (!xInputStream.is())
         {
-		::ucb::Content aContent(sURL, xEnv);
-                xInputStream = aContent.openStream();
-                if (!xInputStream.is())
+		try
+		{
+			::ucb::Content aContent(sURL, xEnv);
+	                xInputStream = aContent.openStream();
+		}
+		catch ( ... )
+		{
+			return ::rtl::OUString();
+		}
+		
+		if (!xInputStream.is())
                         return sTypeName;
         }
 		

@@ -160,7 +160,7 @@ Function GetOOoDir
 FunctionEnd
 
 Function un.onGUIInit
-  MessageBox MB_YESNO "Do you want to remove WriterFilter and all its components" IDYES uninstall_cont
+  MessageBox MB_YESNO "Do you want to remove WriterPerfect and all its components" IDYES uninstall_cont
   Abort
  uninstall_cont:
 FunctionEnd
