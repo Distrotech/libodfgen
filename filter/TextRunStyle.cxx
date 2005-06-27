@@ -127,7 +127,27 @@ void SpanStyle::write(DocumentHandler &xHandler) const
 	styleOpenList.insert("style:family", "text");
         xHandler.startElement("style:style", styleOpenList);
 
-        xHandler.startElement("style:properties", mPropList);
+        WPXPropertyList propList(mPropList);    
+
+	if (mPropList["style:font-name"])
+	{
+		propList.insert("style:font-name-asian", mPropList["style:font-name"]->getStr());
+		propList.insert("style:font-name-complex", mPropList["style:font-name"]->getStr());
+	}
+
+	if (mPropList["fo:font-size"])
+	{
+		propList.insert("style:font-size-asian", mPropList["fo:font-size"]->getStr());
+		propList.insert("style:font-size-complex", mPropList["fo:font-size"]->getStr());
+	}
+	
+	if (mPropList["fo:font-weight"])
+	{
+		propList.insert("style:font-weight-asian", mPropList["fo:font-weight"]->getStr());
+		propList.insert("style:font-weight-complex", mPropList["fo:font-weight"]->getStr());
+	}
+
+        xHandler.startElement("style:properties", propList);
 
 	xHandler.endElement("style:properties");
 	xHandler.endElement("style:style");
