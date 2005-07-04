@@ -70,6 +70,28 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandl
 {
 }
 
+#include <fribidi/fribidi.h>
+
+WPXString _reorderVisualToLogical(const WPXString &str)
+{
+	int len = str.len();
+	FriBidiChar visualUCS4String[len+1];
+	FriBidiChar logicalUCS4String[len+1];
+	len = strlen(str.cstr());
+	char logicalUTF8String[len+1];
+
+	FriBidiCharType base = FRIBIDI_TYPE_LTR;
+	
+	len = fribidi_charset_to_unicode(FRIBIDI_CHARSET_UTF8, (char *)str.cstr(), len, visualUCS4String);
+	// Do the reordering, and if there is an error, return the unordered string
+	if (!fribidi_log2vis(visualUCS4String, len, &base, logicalUCS4String, NULL, NULL, NULL))
+		return str; 
+	len = fribidi_remove_bidi_marks(logicalUCS4String, len, NULL, NULL, NULL);
+	len = fribidi_unicode_to_charset(FRIBIDI_CHARSET_UTF8, logicalUCS4String, len, logicalUTF8String);
+	
+	return WPXString(logicalUTF8String);	
+}
+
 WordPerfectCollector::~WordPerfectCollector()
 {
 }
@@ -894,6 +916,6 @@ void WordPerfectCollector::insertLineBreak()
 
 void WordPerfectCollector::insertText(const WPXString &text)
 {
-	DocumentElement *pText = new TextElement(text);
+	DocumentElement *pText = new TextElement(_reorderVisualToLogical(text));
 	mpCurrentContentElements->push_back(pText);
 }

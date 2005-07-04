@@ -1,6 +1,9 @@
 CHANGES:
+0.7.0 -> 0.7.1
+- Use fribidi to reorder strings so that they are displayed correctly
+  in OOo (Fridrich Strba)
 
-0.6.1 -> 0.7.x
+0.6.1 -> 0.7.0
 - Removed span properties from paragraph style (William Lachance)
 - Paragraph and span properties defined in the table cell function,
   colour of the border of the table cell and vertical alignment of the
