@@ -74,6 +74,10 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandl
 
 WPXString _reorderVisualToLogical(const WPXString &str)
 {
+#ifndef FRIBIDI_CHARSET_UTF8
+#define FRIBIDI_CHARSET_UTF8 fribidi_parse_charset("UTF-8")
+#endif
+
 	int len = str.len();
 	FriBidiChar visualUCS4String[len+1];
 	FriBidiChar logicalUCS4String[len+1];
