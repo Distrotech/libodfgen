@@ -147,6 +147,12 @@ void SpanStyle::write(DocumentHandler &xHandler) const
 		propList.insert("style:font-weight-complex", mPropList["fo:font-weight"]->getStr());
 	}
 
+	if (mPropList["fo:font-style"])
+	{
+		propList.insert("style:font-style-asian", mPropList["fo:font-style"]->getStr());
+		propList.insert("style:font-style-complex", mPropList["fo:font-style"]->getStr());
+	}
+
         xHandler.startElement("style:properties", propList);
 
 	xHandler.endElement("style:properties");
