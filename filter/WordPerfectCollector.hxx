@@ -59,6 +59,7 @@ struct _WriterDocumentState
 	bool mbListElementOpenedAtCurrentLevel;
 	bool mbTableCellOpened;
 	bool mbHeaderRow;
+	bool mbInNote;
 };
 
 enum WriterListType { unordered, ordered };
