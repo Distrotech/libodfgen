@@ -139,13 +139,15 @@ sal_Bool SAL_CALL WordPerfectImportFilter::importImpl( const Sequence< ::com::su
         OODocumentHandler xHandler(xInternalHandler);
 
 	gsf_init();
-	GsfInput *pGsfInput = GSF_INPUT(gsf_input_oo_new (xInputStream, NULL));
+	GsfInput *pGsfInput;
+	pGsfInput = static_cast<GsfInput *>(gsf_input_oo_new (xInputStream, NULL));
 	GSFInputStream input(pGsfInput);
+	g_object_unref(G_OBJECT(pGsfInput));
 
 	WordPerfectCollector collector(&input, &xHandler);
 	collector.filter();
 
-	gsf_shutdown();
+//	gsf_shutdown();
 	
 	return true; 
 }
@@ -216,16 +218,19 @@ OUString SAL_CALL WordPerfectImportFilter::detect( com::sun::star::uno::Sequence
 	gsf_init();
 	
 	GsfInput *pGsfInput;
-	pGsfInput = GSF_INPUT(gsf_input_oo_new (xInputStream, NULL));
+	pGsfInput = static_cast<GsfInput *>(gsf_input_oo_new (xInputStream, NULL));
 
 	if (pGsfInput != NULL)
 	{
 		GSFInputStream input(pGsfInput);
+		
+		g_object_unref(G_OBJECT(pGsfInput));
 
 		confidence = WPDocument::isFileFormatSupported(&input, false);
+		
 	}
 	
-	gsf_shutdown();
+//	gsf_shutdown();
 
 	if (confidence == WPD_CONFIDENCE_EXCELLENT)
 		sTypeName = OUString( RTL_CONSTASCII_USTRINGPARAM ( "writer_WordPerfect_Document" ) );
