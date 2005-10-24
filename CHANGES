@@ -1,7 +1,11 @@
 CHANGES:
 0.7.0 -> 0.7.1
-- Use fribidi to reorder strings so that they are displayed correctly
-  in OOo (Fridrich Strba)
+- Convert table in foot/endnote into normal text because OOo is not
+  supporting tables in foot/endnotes (Fridrich Strba)
+- Improved lists conversion. Use additional information output by
+  libwpd-0.8.3 (Fridrich Strba)
+- Unreference g_objects that should be unreferenced in our add-on
+  UNO component (Jody Goldberg)
 
 0.6.1 -> 0.7.0
 - Removed span properties from paragraph style (William Lachance)
