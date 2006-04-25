@@ -753,7 +753,14 @@ void WordPerfectCollector::closeListElement()
 
 void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 {
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote")));
+	TagOpenElement *pOpenFootNote = new TagOpenElement("text:footnote");
+	if (propList["libwpd:number"])
+	{
+		WPXString tmpString("ftn");
+		tmpString.append(propList["libwpd:number"]->getStr());
+		pOpenFootNote->addAttribute("text:id", tmpString);
+	}
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenFootNote));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-citation")));
         if (propList["libwpd:number"])
@@ -775,7 +782,14 @@ void WordPerfectCollector::closeFootnote()
 
 void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
 {
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote")));
+	TagOpenElement *pOpenEndNote = new TagOpenElement("text:endnote");
+	if (propList["libwpd:number"])
+	{
+		WPXString tmpString("edn");
+		tmpString.append(propList["libwpd:number"]->getStr());
+		pOpenEndNote->addAttribute("text:id", tmpString);
+	}
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenEndNote));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote-citation")));
         if (propList["libwpd:number"])
