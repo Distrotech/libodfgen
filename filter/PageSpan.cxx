@@ -90,13 +90,27 @@ void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
         WPXPropertyList propList;
         
 	WPXString sPageMasterName; 
-        sPageMasterName.sprintf("PM%i", iNum);
+        sPageMasterName.sprintf("PM%i", iNum+2);
         propList.insert("style:name", sPageMasterName);
-	propList.insert("style:name", sPageMasterName);
 	xHandler.startElement("style:page-master", propList);
 
-        xHandler.startElement("style:properties", mxPropList);
-
+	WPXPropertyList tempPropList = mxPropList;
+	if (!tempPropList["style:writing-mode"])
+		tempPropList.insert("style:writing-mode", WPXString("lr-tb"));
+	if (!tempPropList["style:footnote-max-height"])
+		tempPropList.insert("style:footnote-max-height", WPXString("0inch"));
+        xHandler.startElement("style:properties", tempPropList);
+	
+	WPXPropertyList footnoteSepPropList;
+	footnoteSepPropList.insert("style:width", WPXString("0.0071inch"));
+	footnoteSepPropList.insert("style:distance-before-sep", WPXString("0.0398inch"));
+	footnoteSepPropList.insert("style:distance-after-sep", WPXString("0.0398inch"));
+	footnoteSepPropList.insert("style:adjustment", WPXString("left"));
+	footnoteSepPropList.insert("style:rel-width", WPXString("25\%"));
+	footnoteSepPropList.insert("style:color", WPXString("#000000"));
+	xHandler.startElement("style:footnote-sep", footnoteSepPropList);
+	
+	xHandler.endElement("style:footnote-sep");
         xHandler.endElement("style:properties");
         xHandler.endElement("style:page-master");
 }
@@ -115,7 +129,7 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 		WPXString sMasterPageName;
 		sMasterPageName.sprintf("Page Style %i", i);
 		WPXString sPageMasterName;
-		sPageMasterName.sprintf("PM%i", iPageMasterNum);
+		sPageMasterName.sprintf("PM%i", iPageMasterNum+2);
                 propList.insert("style:name", sMasterPageName);
 		propList.insert("style:page-master-name", sPageMasterName);
 		if (!bLastPageSpan)

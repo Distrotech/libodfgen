@@ -43,7 +43,74 @@ const char *manifestStr ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <manifest:manifest xmlns:manifest=\"http://openoffice.org/2001/manifest\">\n\
  <manifest:file-entry manifest:media-type=\"application/vnd.sun.xml.writer\" manifest:full-path=\"/\"/>\n\
  <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>\n\
+ <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>\n\
 </manifest:manifest>\n";
+
+const char *stylesStr ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
+<!DOCTYPE office:document-styles PUBLIC \"-//OpenOffice.org//DTD OfficeDocument 1.0//EN\" \"office.dtd\">\
+<office:document-styles xmlns:office=\"http://openoffice.org/2000/office\" xmlns:style=\"http://openoffice.org/2000/style\"\
+ xmlns:text=\"http://openoffice.org/2000/text\" xmlns:table=\"http://openoffice.org/2000/table\"\
+ xmlns:draw=\"http://openoffice.org/2000/drawing\" xmlns:fo=\"http://www.w3.org/1999/XSL/Format\"\
+ xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:number=\"http://openoffice.org/2000/datastyle\"\
+ xmlns:svg=\"http://www.w3.org/2000/svg\" xmlns:chart=\"http://openoffice.org/2000/chart\" xmlns:dr3d=\"http://openoffice.org/2000/dr3d\"\
+ xmlns:math=\"http://www.w3.org/1998/Math/MathML\" xmlns:form=\"http://openoffice.org/2000/form\"\
+ xmlns:script=\"http://openoffice.org/2000/script\" office:version=\"1.0\">\
+<office:styles>\
+<style:default-style style:family=\"paragraph\">\
+<style:properties style:use-window-font-color=\"true\" style:text-autospace=\"ideograph-alpha\"\
+ style:punctuation-wrap=\"hanging\" style:line-break=\"strict\" style:writing-mode=\"page\"/>\
+</style:default-style>\
+<style:default-style style:family=\"table\"/>\
+<style:default-style style:family=\"table-row\"/>\
+<style:default-style style:family=\"table-column\"/>\
+<style:style style:name=\"Standard\" style:family=\"paragraph\" style:class=\"text\"/>\
+<style:style style:name=\"Text body\" style:family=\"paragraph\" style:parent-style-name=\"Standard\" style:class=\"text\"/>\
+<style:style style:name=\"List\" style:family=\"paragraph\" style:parent-style-name=\"Text body\" style:class=\"list\"/>\
+<style:style style:name=\"Header\" style:family=\"paragraph\" style:parent-style-name=\"Standard\" style:class=\"extra\"/>\
+<style:style style:name=\"Footer\" style:family=\"paragraph\" style:parent-style-name=\"Standard\" style:class=\"extra\"/>\
+<style:style style:name=\"Caption\" style:family=\"paragraph\" style:parent-style-name=\"Standard\" style:class=\"extra\"/>\
+<style:style style:name=\"Footnote\" style:family=\"paragraph\" style:parent-style-name=\"Standard\" style:class=\"extra\"/>\
+<style:style style:name=\"Endnote\" style:family=\"paragraph\" style:parent-style-name=\"Standard\" style:class=\"extra\"/>\
+<style:style style:name=\"Index\" style:family=\"paragraph\" style:parent-style-name=\"Standard\" style:class=\"index\"/>\
+<style:style style:name=\"Footnote Symbol\" style:family=\"text\">\
+<style:properties style:text-position=\"super 58%\"/>\
+</style:style>\
+<style:style style:name=\"Endnote Symbol\" style:family=\"text\">\
+<style:properties style:text-position=\"super 58%\"/>\
+</style:style>\
+<style:style style:name=\"Footnote anchor\" style:family=\"text\">\
+<style:properties style:text-position=\"super 58%\"/>\
+</style:style>\
+<style:style style:name=\"Endnote anchor\" style:family=\"text\">\
+<style:properties style:text-position=\"super 58%\"/>\
+</style:style>\
+<text:footnotes-configuration text:citation-style-name=\"Footnote Symbol\" text:citation-body-style-name=\"Footnote anchor\"\
+ style:num-format=\"1\" text:start-value=\"0\" text:footnotes-position=\"page\" text:start-numbering-at=\"document\"/>\
+<text:endnotes-configuration text:citation-style-name=\"Endnote Symbol\" text:citation-body-style-name=\"Endnote anchor\"\
+ text:master-page-name=\"Endnote\" style:num-format=\"i\" text:start-value=\"0\"/>\
+<text:linenumbering-configuration text:number-lines=\"false\" text:offset=\"0.1965inch\" style:num-format=\"1\"\
+ text:number-position=\"left\" text:increment=\"5\"/>\
+</office:styles>\
+<office:automatic-styles>\
+<style:page-master style:name=\"PM0\">\
+<style:properties fo:margin-bottom=\"1.0000inch\" fo:margin-left=\"1.0000inch\" fo:margin-right=\"1.0000inch\" fo:margin-top=\"1.0000inch\"\
+ fo:page-height=\"11.0000inch\" fo:page-width=\"8.5000inch\" style:print-orientation=\"portrait\">\
+<style:footnote-sep style:adjustment=\"left\" style:color=\"#000000\" style:distance-after-sep=\"0.0398inch\"\
+ style:distance-before-sep=\"0.0398inch\" style:rel-width=\"25%\" style:width=\"0.0071inch\"/>\
+</style:properties>\
+</style:page-master>\
+<style:page-master style:name=\"PM1\">\
+<style:properties fo:margin-bottom=\"1.0000inch\" fo:margin-left=\"1.0000inch\" fo:margin-right=\"1.0000inch\" fo:margin-top=\"1.0000inch\"\
+ fo:page-height=\"11.0000inch\" fo:page-width=\"8.5000inch\" style:print-orientation=\"portrait\">\
+<style:footnote-sep style:adjustment=\"left\" style:color=\"#000000\" style:rel-width=\"25%\"/>\
+</style:properties>\
+</style:page-master>\
+</office:automatic-styles>\
+<office:master-styles>\
+<style:master-page style:name=\"Standard\" style:page-master-name=\"PM0\"/>\
+<style:master-page style:name=\"Endnote\" style:page-master-name=\"PM1\"/>\
+</office:master-styles>\
+</office:document-styles>";
 
 
 static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str)
@@ -163,6 +230,11 @@ main (int argc, char *argv[])
 	
 	if (pOutfile && !writeChildFile(pOutfile, "META-INF/manifest.xml", manifestStr)) {
 		fprintf(stderr, "ERROR : Couldn't write manifest\n");
+		return 1;
+	}
+	
+	if (pOutfile && !writeChildFile(pOutfile, "styles.xml", stylesStr)) {
+		fprintf(stderr, "ERROR : Couldn't write styles\n");
 		return 1;
 	}
 

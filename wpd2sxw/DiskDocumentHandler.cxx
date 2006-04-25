@@ -12,7 +12,7 @@ void DiskDocumentHandler::startElement(const char *psName, const WPXPropertyList
         for (i.rewind(); i.next(); )
         {
                 // filter out libwpd elements
-                if (strlen(i.key()) > 6 && strcmp(i.key(), "libwpd") != 0)
+                if (strlen(i.key()) > 6 && strncmp(i.key(), "libwpd", 6) != 0)
                         gsf_output_printf(mpOutput, " %s=\"%s\"", i.key(), i()->getStr().cstr());
 
         }
