@@ -44,7 +44,6 @@
 
 _WriterDocumentState::_WriterDocumentState() :
 	mbFirstElement(true),
-	mbInFakeSection(false),
 	mbListElementOpenedAtCurrentLevel(false),
 	mbTableCellOpened(false),
 	mbHeaderRow(false),
@@ -422,32 +421,24 @@ void WordPerfectCollector::closeFooter()
 
 void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
 {
-        int iNumColumns = columns.count();
+//        int iNumColumns = columns.count();
 
-	if (iNumColumns > 1)
-	{
-		mfSectionSpaceAfter = propList["fo:margin-bottom"]->getFloat();
-		WPXString sSectionName;
-		sSectionName.sprintf("Section%i", mSectionStyles.size());
-		
-		SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
-		mSectionStyles.push_back(pSectionStyle);
-		
-		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
-		pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
-		pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pSectionOpenElement));
-	}
-	else
-		mWriterDocumentState.mbInFakeSection = true;
+	mfSectionSpaceAfter = propList["fo:margin-bottom"]->getFloat();
+	WPXString sSectionName;
+	sSectionName.sprintf("Section%i", mSectionStyles.size());
+	
+	SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
+	mSectionStyles.push_back(pSectionStyle);
+	
+	TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
+	pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
+	pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pSectionOpenElement));
 }
 
 void WordPerfectCollector::closeSection()
 {
-	if (!mWriterDocumentState.mbInFakeSection)
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:section")));
-	else
-		mWriterDocumentState.mbInFakeSection = false;
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:section")));
 
 	// open as many paragraphs as needed to simulate section space after
 	// WLACH_REFACTORING: disable this for now..
