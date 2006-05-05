@@ -44,6 +44,7 @@
 
 _WriterDocumentState::_WriterDocumentState() :
 	mbFirstElement(true),
+	mbInFakeSection(false),
 	mbListElementOpenedAtCurrentLevel(false),
 	mbTableCellOpened(false),
 	mbHeaderRow(false),
@@ -421,24 +422,38 @@ void WordPerfectCollector::closeFooter()
 
 void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
 {
-//        int iNumColumns = columns.count();
+        int iNumColumns = columns.count();
+	float fSectionMarginLeft = 0.0f;
+	float fSectionMarginRight = 0.0f;
+	if (propList["fo:margin-left"])
+		fSectionMarginLeft = propList["fo:margin-left"]->getFloat();
+	if (propList["fo:margin-right"])
+		fSectionMarginRight = propList["fo:margin-right"]->getFloat();
 
-	mfSectionSpaceAfter = propList["fo:margin-bottom"]->getFloat();
-	WPXString sSectionName;
-	sSectionName.sprintf("Section%i", mSectionStyles.size());
-	
-	SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
-	mSectionStyles.push_back(pSectionStyle);
-	
-	TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
-	pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
-	pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pSectionOpenElement));
+	if (iNumColumns > 1 || fSectionMarginLeft != 0 || fSectionMarginRight != 0)
+	{
+		mfSectionSpaceAfter = propList["fo:margin-bottom"]->getFloat();
+		WPXString sSectionName;
+		sSectionName.sprintf("Section%i", mSectionStyles.size());
+		
+		SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
+		mSectionStyles.push_back(pSectionStyle);
+		
+		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
+		pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
+		pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pSectionOpenElement));
+	}
+	else
+		mWriterDocumentState.mbInFakeSection = true;
 }
 
 void WordPerfectCollector::closeSection()
 {
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:section")));
+	if (!mWriterDocumentState.mbInFakeSection)
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:section")));
+	else
+		mWriterDocumentState.mbInFakeSection = false;
 
 	// open as many paragraphs as needed to simulate section space after
 	// WLACH_REFACTORING: disable this for now..

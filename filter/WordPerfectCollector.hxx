@@ -55,6 +55,7 @@ struct _WriterDocumentState
 	_WriterDocumentState();
 		
 	bool mbFirstElement;
+	bool mbInFakeSection;
 	bool mbListElementOpenedAtCurrentLevel;
 	bool mbTableCellOpened;
 	bool mbHeaderRow;
