@@ -29,9 +29,6 @@
 #include "PageSpan.hxx"
 #include "DocumentElement.hxx"
 
-const float fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
-const float fDefaultPageHeight = 11.0f; // inches
-
 PageSpan::PageSpan(const WPXPropertyList &xPropList) :
 #if 0
 const int iSpan, const float fFormLength, const float fFormWidth, const WPXFormOrientation fFormOrientation,

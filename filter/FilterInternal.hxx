@@ -26,6 +26,10 @@
 #define WRITER_DEBUG_MSG(M)
 #endif
 
+const float fDefaultSideMargin = 1.0f; // inches
+const float fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
+const float fDefaultPageHeight = 11.0f; // inches
+
 #if 0
 #include <rtl/string.hxx>
 inline rtl::OString utf8_itoa(int i)

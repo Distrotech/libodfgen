@@ -35,10 +35,6 @@
 double rint(double x);
 #endif /* _WIN32 */
 
-const float fDefaultSideMargin = 1.0f; // inches
-const float fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
-const float fDefaultPageHeight = 11.0f; // inches
-
 SectionStyle::SectionStyle(const WPXPropertyList &xPropList, 
                            const WPXPropertyListVector &xColumns, 
                            const char *psName) : 
