@@ -30,18 +30,6 @@
 #include "DocumentElement.hxx"
 
 PageSpan::PageSpan(const WPXPropertyList &xPropList) :
-#if 0
-const int iSpan, const float fFormLength, const float fFormWidth, const WPXFormOrientation fFormOrientation,
-                   const float fLeftMargin, const float fRightMargin, const float fTopMargin, const float fBottomMargin):
-	miSpan(iSpan),
-	mfFormLength(fFormLength),
-	mfFormWidth(fFormWidth),
-	mfFormOrientation(fFormOrientation),
-	mfMarginLeft(fLeftMargin),
-	mfMarginRight(fRightMargin),
-	mfMarginTop(fTopMargin),
-	mfMarginBottom(fBottomMargin),
-#endif
         mxPropList(xPropList),
 	mpHeaderContent(NULL),
 	mpFooterContent(NULL),

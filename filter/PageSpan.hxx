@@ -40,11 +40,6 @@ public:
 	void writePageMaster(const int iNum, DocumentHandler &xHandler) const;
 	void writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, DocumentHandler &xHandler) const;
 	int getSpan() const;
-#if 0
-	float getFormLength() { return mfFormLength; }
-	float getFormWidth() { return mfFormWidth; }
-	WPXFormOrientation getFormOrientation() { return mfFormOrientation; }
-#endif
 	float getMarginLeft() const;
 	float getMarginRight() const;
 
