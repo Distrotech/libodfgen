@@ -2,7 +2,7 @@
  * break needs a new section) that is needed at the head of an OO document and
  * is referenced throughout the entire document
  *
- * Copyright (C) 2002-2003 William Lachance (william.lachance@sympatico.ca)
+ * Copyright (C) 2002-2003 William Lachance (wrlach@gmail.com)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

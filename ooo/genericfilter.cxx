@@ -1,7 +1,7 @@
 /* genericfilter: mostly generic code for registering the filter
  *
  * Copyright 2000 by Sun Microsystems, Inc.
- * Copyright (C) 2002-2004 William Lachance (william.lachance@sympatico.ca
+ * Copyright (C) 2002-2004 William Lachance (wrlach@gmail.com
  * Copyright (C) 2004 Net Integration Technologies (http://www.net-itech.com)
  * 
  * This program is free software; you can redistribute it and/or

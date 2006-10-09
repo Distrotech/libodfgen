@@ -1,7 +1,7 @@
 /* TableStyle: Stores (and writes) table-based information that is 
  * needed at the head of an OO document.
  *
- * Copyright (C) 2002-2003 William Lachance (william.lachance@sympatico.ca)
+ * Copyright (C) 2002-2003 William Lachance (wrlach@gmail.com)
  * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
  * 
  * This program is free software; you can redistribute it and/or

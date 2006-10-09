@@ -1,7 +1,7 @@
 /* wpd2sxw:
  *
  * Copyright (C) 2002 Jon K Hellan (hellan@acm.org)
- * Copyright (C) 2002-2004 William Lachance (william.lachance@sympatico.ca)
+ * Copyright (C) 2002-2004 William Lachance (wrlach@gmail.com)
  * Copyright (C) 2003-2004 Net Integration Technologies (http://www.net-itech.com)
  * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
  *
