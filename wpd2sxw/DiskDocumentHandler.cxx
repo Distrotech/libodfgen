@@ -57,7 +57,8 @@ void DiskDocumentHandler::characters(const WPXString &sCharacters)
 		mbIsTagOpened = false;
 	}
         WPXString sEscapedCharacters(sCharacters, true);
-	gsf_output_printf(mpOutput, "%s", sEscapedCharacters.cstr());
+	if (sEscapedCharacters.len() >= 0)
+		gsf_output_printf(mpOutput, "%s", sEscapedCharacters.cstr());
 }
 
 void DiskDocumentHandler::endDocument()
