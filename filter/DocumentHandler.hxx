@@ -33,6 +33,9 @@
 class DocumentHandler
 {
 public:
+	DocumentHandler() {};
+	virtual ~DocumentHandler() {};
+	
         virtual void startDocument() = 0;
         virtual void endDocument() = 0;
         virtual void startElement(const char *psName, const WPXPropertyList &xPropList) = 0;

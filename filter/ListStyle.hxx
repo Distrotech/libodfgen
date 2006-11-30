@@ -38,6 +38,7 @@ class DocumentElement;
 class ListLevelStyle
 {
 public:
+	virtual ~ListLevelStyle() {};
 	virtual void write(DocumentHandler &xHandler, int iLevel) const = 0;
 };
 

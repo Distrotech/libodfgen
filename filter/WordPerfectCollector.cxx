@@ -66,8 +66,8 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandl
 	miLastListLevel(0),
 	miLastListNumber(0),
 	mbListContinueNumbering(false),
-	mbListElementParagraphOpened(false),
-	mbListElementOpened(false)
+	mbListElementOpened(false),
+	mbListElementParagraphOpened(false)
 {
 }
 
@@ -111,6 +111,10 @@ bool WordPerfectCollector::filter()
 	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
 		delete(iterTextStyle->second);
 	}
+	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) {
+		delete(iterSpanStyle->second);
+	}
+	
 	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		delete(iterFont->second);
 	}

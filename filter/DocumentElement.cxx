@@ -74,6 +74,8 @@ TextElement::TextElement(const WPXString & sTextBuf) :
 // elements
 void TextElement::write(DocumentHandler &xHandler) const
 {
+	if (msTextBuf.len() <= 0)
+		return;
 	WPXPropertyList xBlankAttrList;
         
 	WPXString sTemp;

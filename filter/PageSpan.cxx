@@ -91,7 +91,7 @@ void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
 	footnoteSepPropList.insert("style:distance-before-sep", WPXString("0.0398inch"));
 	footnoteSepPropList.insert("style:distance-after-sep", WPXString("0.0398inch"));
 	footnoteSepPropList.insert("style:adjustment", WPXString("left"));
-	footnoteSepPropList.insert("style:rel-width", WPXString("25\%"));
+	footnoteSepPropList.insert("style:rel-width", WPXString("25%"));
 	footnoteSepPropList.insert("style:color", WPXString("#000000"));
 	xHandler.startElement("style:footnote-sep", footnoteSepPropList);
 	
