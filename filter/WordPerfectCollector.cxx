@@ -58,8 +58,7 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandl
 	mbUsed(false),
 	mfSectionSpaceAfter(0.0f),
 	miNumListStyles(0),
-	mBodyElements(),
-	mCurrentContentElements(mBodyElements),
+	mpCurrentContentElements(&mBodyElements),
 	mpCurrentPageSpan(NULL),
 	miNumPageStyles(0),
 	mpCurrentListStyle(NULL),
@@ -97,7 +96,7 @@ bool WordPerfectCollector::filter()
 
 	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
 	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++) {
-		delete((*iterBody));
+		delete (*iterBody);
 		(*iterBody) = NULL;
 	}
 
@@ -110,7 +109,7 @@ bool WordPerfectCollector::filter()
 
 	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
 	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
-		delete(iterTextStyle->second);
+		delete (iterTextStyle->second);
 	}
 	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) {
 		delete(iterSpanStyle->second);
@@ -121,17 +120,17 @@ bool WordPerfectCollector::filter()
 	}
 
 	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
-		delete((*iterListStyles));
+		delete(*iterListStyles);
 	}
 	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
-		delete((*iterSectionStyles));
+		delete(*iterSectionStyles);
 	}
 	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
 		delete((*iterTableStyles));
 	}
 
 	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin(); iterPageSpans != mPageSpans.end(); iterPageSpans++) {
-		delete((*iterPageSpans));
+		delete(*iterPageSpans);
 	}
 
  	return true;
@@ -400,12 +399,12 @@ void WordPerfectCollector::openHeader(const WPXPropertyList &propList)
         else
                 mpCurrentPageSpan->setHeaderContent(pHeaderFooterContentElements);
 
-	mCurrentContentElements = *pHeaderFooterContentElements;
+	mpCurrentContentElements = pHeaderFooterContentElements;
 }
 
 void WordPerfectCollector::closeHeader()
 {
-	mCurrentContentElements = mBodyElements;
+	mpCurrentContentElements = &mBodyElements;
 }
 
 void WordPerfectCollector::openFooter(const WPXPropertyList &propList)
@@ -417,12 +416,12 @@ void WordPerfectCollector::openFooter(const WPXPropertyList &propList)
         else
                 mpCurrentPageSpan->setFooterContent(pHeaderFooterContentElements);
 
-	mCurrentContentElements = *pHeaderFooterContentElements;
+	mpCurrentContentElements = pHeaderFooterContentElements;
 }
 
 void WordPerfectCollector::closeFooter()
 {
-	mCurrentContentElements = mBodyElements;
+	mpCurrentContentElements = &mBodyElements;
 }
 
 void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
@@ -447,7 +446,7 @@ void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WP
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
 		pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
 		pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(pSectionOpenElement));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pSectionOpenElement));
 	}
 	else
 		mWriterDocumentState.mbInFakeSection = true;
@@ -456,7 +455,7 @@ void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WP
 void WordPerfectCollector::closeSection()
 {
 	if (!mWriterDocumentState.mbInFakeSection)
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:section")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:section")));
 	else
 		mWriterDocumentState.mbInFakeSection = false;
 
@@ -480,7 +479,7 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 	WPXPropertyList *pPersistPropList = new WPXPropertyList(propList);
 	ParagraphStyle *pStyle = NULL;
 
-	if (mWriterDocumentState.mbFirstElement && mCurrentContentElements == mBodyElements)
+	if (mWriterDocumentState.mbFirstElement && mpCurrentContentElements == &mBodyElements)
 	{
 		// we don't have to go through the fuss of determining if the paragraph style is 
 		// unique in this case, because if we are the first document element, then we
@@ -528,12 +527,12 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
 	pParagraphOpenElement->addAttribute("text:style-name", pStyle->getName());
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pParagraphOpenElement));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pParagraphOpenElement));
 }
 
 void WordPerfectCollector::closeParagraph()
 {
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 }
 
 void WordPerfectCollector::openSpan(const WPXPropertyList &propList)
@@ -561,12 +560,12 @@ void WordPerfectCollector::openSpan(const WPXPropertyList &propList)
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
 	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pSpanOpenElement));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pSpanOpenElement));
 }
 
 void WordPerfectCollector::closeSpan()
 {
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:span")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:span")));
 }
 
 void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propList)
@@ -647,7 +646,7 @@ void WordPerfectCollector::openOrderedListLevel(const WPXPropertyList &propList)
 		pListLevelOpenElement->addAttribute("text:continue-numbering", "true");
 	}
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pListLevelOpenElement));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pListLevelOpenElement));
 }
 
 void WordPerfectCollector::openUnorderedListLevel(const WPXPropertyList &propList)
@@ -656,18 +655,18 @@ void WordPerfectCollector::openUnorderedListLevel(const WPXPropertyList &propLis
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:unordered-list");
 	_openListLevel(pListLevelOpenElement);
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pListLevelOpenElement));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pListLevelOpenElement));
 }
 
 void WordPerfectCollector::_openListLevel(TagOpenElement *pListLevelOpenElement)
 {
   	if (!mbListElementOpened && miCurrentListLevel > 1)
   	{
-  		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("text:list-item")));
+  		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:list-item")));
   	}
 	else if (mbListElementParagraphOpened)
 	{
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 		mbListElementParagraphOpened = false;
 	}
 
@@ -691,16 +690,16 @@ void WordPerfectCollector::closeUnorderedListLevel()
 void WordPerfectCollector::_closeListLevel(const char *szListType)
 {
 	if (mbListElementOpened)
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
 
 	miCurrentListLevel--;
 
 	WPXString sCloseElement;
 	sCloseElement.sprintf("text:%s", szListType);
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement(sCloseElement.cstr())));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement(sCloseElement.cstr())));
 
 	if (miCurrentListLevel > 0)
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
 	mbListElementOpened = false;
 }
 
@@ -711,7 +710,7 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 		miLastListNumber++;
 
 	if (mbListElementOpened)
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
 
 	ParagraphStyle *pStyle = NULL;
 
@@ -741,8 +740,8 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 
 	pOpenListElementParagraph->addAttribute("text:style-name", pStyle->getName());
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pOpenListElement));
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pOpenListElementParagraph));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenListElement));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenListElementParagraph));
 		
 	mbListElementOpened = true;
 	mbListElementParagraphOpened = true;
@@ -757,7 +756,7 @@ void WordPerfectCollector::closeListElement()
 
 	if (mbListElementParagraphOpened)
 	{
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 		mbListElementParagraphOpened = false;
 	}
 }
@@ -771,14 +770,14 @@ void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 		tmpString.append(propList["libwpd:number"]->getStr());
 		pOpenFootNote->addAttribute("text:id", tmpString);
 	}
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pOpenFootNote));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenFootNote));
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-citation")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-citation")));
         if (propList["libwpd:number"])
-                mCurrentContentElements.push_back(static_cast<DocumentElement *>(new CharDataElement(propList["libwpd:number"]->getStr().cstr())));
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote-citation")));
+                mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new CharDataElement(propList["libwpd:number"]->getStr().cstr())));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote-citation")));
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-body")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:footnote-body")));
 	
 	mWriterDocumentState.mbInNote = true;
 }
@@ -787,8 +786,8 @@ void WordPerfectCollector::closeFootnote()
 {
 	mWriterDocumentState.mbInNote = false;
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote-body")));
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote-body")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:footnote")));
 }
 
 void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
@@ -800,14 +799,14 @@ void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
 		tmpString.append(propList["libwpd:number"]->getStr());
 		pOpenEndNote->addAttribute("text:id", tmpString);
 	}
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(pOpenEndNote));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenEndNote));
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote-citation")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote-citation")));
         if (propList["libwpd:number"])
-                mCurrentContentElements.push_back(static_cast<DocumentElement *>(new CharDataElement(propList["libwpd:number"]->getStr().cstr())));
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote-citation")));
+                mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new CharDataElement(propList["libwpd:number"]->getStr().cstr())));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote-citation")));
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote-body")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:endnote-body")));
 	
 	mWriterDocumentState.mbInNote = true;
 }
@@ -816,8 +815,8 @@ void WordPerfectCollector::closeEndnote()
 {
 	mWriterDocumentState.mbInNote = false;
 
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote-body")));
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote-body")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:endnote")));
 }
 
 void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
@@ -832,7 +831,7 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXP
         	// WLACH_REFACTORING: characterize this behaviour, probably should nip it at the bud within libwpd
 		TableStyle *pTableStyle = new TableStyle(propList, columns, sTableName.cstr());
 
-		if (mWriterDocumentState.mbFirstElement && mCurrentContentElements == mBodyElements)
+		if (mWriterDocumentState.mbFirstElement && mpCurrentContentElements == &mBodyElements)
 		{
 			WPXString sMasterPageName("Page Style 1");
 			pTableStyle->setMasterPageName(sMasterPageName);
@@ -847,7 +846,7 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXP
 
 		pTableOpenElement->addAttribute("table:name", sTableName.cstr());
 		pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(pTableOpenElement));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pTableOpenElement));
 
 		for (int i=0; i<pTableStyle->getNumColumns(); i++) 
         	{
@@ -855,10 +854,10 @@ void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXP
 			WPXString sColumnStyleName;
 			sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
 			pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
-			mCurrentContentElements.push_back(pTableColumnOpenElement);
+			mpCurrentContentElements->push_back(pTableColumnOpenElement);
 
 			TagCloseElement *pTableColumnCloseElement = new TagCloseElement("table:table-column");
-			mCurrentContentElements.push_back(pTableColumnCloseElement);
+			mpCurrentContentElements->push_back(pTableColumnCloseElement);
 		}
 	}
 }
@@ -869,7 +868,7 @@ void WordPerfectCollector::openTableRow(const WPXPropertyList &propList)
 	{
 		if (propList["libwpd:is-header-row"] && (propList["libwpd:is-header-row"]->getInt()))
 		{
-			mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("table:table-header-rows")));
+			mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("table:table-header-rows")));
 			mWriterDocumentState.mbHeaderRow = true;
 		}
 
@@ -880,7 +879,7 @@ void WordPerfectCollector::openTableRow(const WPXPropertyList &propList)
 
 		TagOpenElement *pTableRowOpenElement = new TagOpenElement("table:table-row");
 		pTableRowOpenElement->addAttribute("table:style-name", sTableRowStyleName);
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(pTableRowOpenElement));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pTableRowOpenElement));
 	}
 }
 
@@ -888,10 +887,10 @@ void WordPerfectCollector::closeTableRow()
 {
 	if (!mWriterDocumentState.mbInNote)
 	{
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table-row")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table-row")));
 		if (mWriterDocumentState.mbHeaderRow)
 		{
-			mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table-header-rows")));
+			mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table-header-rows")));
 			mWriterDocumentState.mbHeaderRow = false;
 		}
 	}
@@ -915,7 +914,7 @@ void WordPerfectCollector::openTableCell(const WPXPropertyList &propList)
         	        pTableCellOpenElement->addAttribute("table:number-rows-spanned",
                 	                                    propList["table:number-rows-spanned"]->getStr().cstr());
 		pTableCellOpenElement->addAttribute("table:value-type", "string");
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(pTableCellOpenElement));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pTableCellOpenElement));
 
 		mWriterDocumentState.mbTableCellOpened = true;
 	}
@@ -925,7 +924,7 @@ void WordPerfectCollector::closeTableCell()
 {
 	if (!mWriterDocumentState.mbInNote)
 	{
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table-cell")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table-cell")));
 		mWriterDocumentState.mbTableCellOpened = false;
 	}
 }
@@ -934,8 +933,8 @@ void WordPerfectCollector::insertCoveredTableCell(const WPXPropertyList &propLis
 {
 	if (!mWriterDocumentState.mbInNote)
 	{
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("table:covered-table-cell")));
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("table:covered-table-cell")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("table:covered-table-cell")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("table:covered-table-cell")));
 	}
 }
 
@@ -943,25 +942,25 @@ void WordPerfectCollector::closeTable()
 {
 	if (!mWriterDocumentState.mbInNote)
 	{
-		mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table")));
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("table:table")));
 	}
 }
 
 
 void WordPerfectCollector::insertTab()
 {
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("text:tab-stop")));
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:tab-stop")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:tab-stop")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:tab-stop")));
 }
 
 void WordPerfectCollector::insertLineBreak()
 {
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("text:line-break")));
-	mCurrentContentElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("text:line-break")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:line-break")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:line-break")));
 }
 
 void WordPerfectCollector::insertText(const WPXString &text)
 {
 	DocumentElement *pText = new TextElement(text);
-	mCurrentContentElements.push_back(pText);
+	mpCurrentContentElements->push_back(pText);
 }

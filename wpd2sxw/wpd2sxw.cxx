@@ -37,7 +37,6 @@
 
 const char *mimetypeStr = "application/vnd.sun.xml.writer";
 
-
 const char *manifestStr ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <!DOCTYPE manifest:manifest PUBLIC \"-//OpenOffice.org//DTD Manifest 1.0//EN\" \"Manifest.dtd\">\n\
 <manifest:manifest xmlns:manifest=\"http://openoffice.org/2001/manifest\">\n\
@@ -112,27 +111,17 @@ const char *stylesStr ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 </office:master-styles>\
 </office:document-styles>";
 
-
 static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str)
 {
-	GsfOutput  *child = gsf_outfile_new_child  (outfile, fileName, FALSE);
-	if (!child)
-		return false;
-
-	if (child && !gsf_output_write (child, strlen (str), (uint8_t *)str))
+	GsfOutput  *child;
+	if (NULL != (child = gsf_outfile_new_child  (outfile, fileName, FALSE)))
 	{
+		bool res = gsf_output_write (child, strlen (str), (uint8_t *)str) &&
+			gsf_output_close (child);
 		g_object_unref (child);
-		return false;
+		 return res;
 	}
-	if (child && !gsf_output_close ((GsfOutput *) child))
-	{
-		g_object_unref (child);
-		return false;
-	}
-
-	g_object_unref (child);
-
-	return true;
+	return false;
 }
 
 static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)

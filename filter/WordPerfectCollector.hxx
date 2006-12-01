@@ -171,7 +171,7 @@ private:
 	// content elements
 	std::vector<DocumentElement *> mBodyElements;
 	// the current set of elements that we're writing to
-	std::vector<DocumentElement *> &mCurrentContentElements;
+	std::vector<DocumentElement *> * mpCurrentContentElements;
 
 	// page state
 	std::vector<PageSpan *> mPageSpans;
