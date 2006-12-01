@@ -40,10 +40,43 @@ PageSpan::PageSpan(const WPXPropertyList &xPropList) :
 
 PageSpan::~PageSpan()
 {
-	delete mpHeaderContent;
-	delete mpHeaderLeftContent;
-	delete mpFooterContent;
-	delete mpFooterLeftContent;
+	typedef std::vector<DocumentElement *>::iterator DEVIter;
+
+	if (mpHeaderContent)
+	{
+		for (DEVIter iterHeaderContent = mpHeaderContent->begin();
+			iterHeaderContent != mpHeaderContent->end();
+			iterHeaderContent++)
+				delete(*iterHeaderContent);
+		delete mpHeaderContent;
+	}
+
+	if (mpHeaderLeftContent)
+	{
+		for (DEVIter iterHeaderLeftContent = mpHeaderLeftContent->begin();
+			iterHeaderLeftContent != mpHeaderLeftContent->end();
+			iterHeaderLeftContent++)
+				delete(*iterHeaderLeftContent);
+		delete mpHeaderLeftContent;
+	}
+
+	if (mpFooterContent)
+	{
+		for (DEVIter iterFooterContent = mpFooterContent->begin();
+			iterFooterContent != mpFooterContent->end();
+			iterFooterContent++)
+				delete(*iterFooterContent);
+		delete mpFooterContent;
+	}
+
+	if (mpFooterLeftContent)
+	{
+		for (DEVIter iterFooterLeftContent = mpFooterLeftContent->begin();
+			iterFooterLeftContent != mpFooterLeftContent->end();
+			iterFooterLeftContent++)
+				delete(*iterFooterLeftContent);
+		delete mpFooterLeftContent;
+	}
 }
 
 int PageSpan::getSpan() const
@@ -70,21 +103,21 @@ float PageSpan::getMarginRight() const
          return 0.0f; 
 }
 
-void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
+void PageSpan::writePageMaster(const int iNum, DocumentHandler *pHandler) const
 {
         WPXPropertyList propList;
         
 	WPXString sPageMasterName; 
         sPageMasterName.sprintf("PM%i", iNum+2);
         propList.insert("style:name", sPageMasterName);
-	xHandler.startElement("style:page-master", propList);
+	pHandler->startElement("style:page-master", propList);
 
 	WPXPropertyList tempPropList = mxPropList;
 	if (!tempPropList["style:writing-mode"])
 		tempPropList.insert("style:writing-mode", WPXString("lr-tb"));
 	if (!tempPropList["style:footnote-max-height"])
 		tempPropList.insert("style:footnote-max-height", WPXString("0inch"));
-        xHandler.startElement("style:properties", tempPropList);
+        pHandler->startElement("style:properties", tempPropList);
 	
 	WPXPropertyList footnoteSepPropList;
 	footnoteSepPropList.insert("style:width", WPXString("0.0071inch"));
@@ -93,15 +126,15 @@ void PageSpan::writePageMaster(const int iNum, DocumentHandler &xHandler) const
 	footnoteSepPropList.insert("style:adjustment", WPXString("left"));
 	footnoteSepPropList.insert("style:rel-width", WPXString("25%"));
 	footnoteSepPropList.insert("style:color", WPXString("#000000"));
-	xHandler.startElement("style:footnote-sep", footnoteSepPropList);
+	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
 	
-	xHandler.endElement("style:footnote-sep");
-        xHandler.endElement("style:properties");
-        xHandler.endElement("style:page-master");
+	pHandler->endElement("style:footnote-sep");
+        pHandler->endElement("style:properties");
+        pHandler->endElement("style:page-master");
 }
 
 void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, 
-                                DocumentHandler &xHandler) const
+                                DocumentHandler *pHandler) const
 {
         WPXPropertyList propList; // scratch space
 
@@ -123,34 +156,34 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 			sNextMasterPageName.sprintf("Page Style %i", (i+1));
                         propList.insert("style:next-style-name", sNextMasterPageName);
 		}
-                xHandler.startElement("style:master-page", propList);
+                pHandler->startElement("style:master-page", propList);
 
 		if (mpHeaderContent)
-			_writeHeaderFooter("style:header", *mpHeaderContent, xHandler);
+			_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
 		if (mpHeaderLeftContent)
-			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, xHandler);
+			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
 		if (mpFooterContent)
-			_writeHeaderFooter("style:footer", *mpFooterContent, xHandler);
+			_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
 		if (mpFooterLeftContent)
-			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, xHandler);
+			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
 
-                xHandler.endElement("style:master-page");
+                pHandler->endElement("style:master-page");
 	}
 
 }
 
 void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
 				  const std::vector<DocumentElement *> & headerFooterContent,
-				  DocumentHandler &xHandler) const
+				  DocumentHandler *pHandler) const
 {
 	TagOpenElement headerFooterOpen(headerFooterTagName);
-	headerFooterOpen.write(xHandler);
+	headerFooterOpen.write(pHandler);
 	for (std::vector<DocumentElement *>::const_iterator iter = headerFooterContent.begin();
 	     iter != headerFooterContent.end();
 	     iter++) {
-		(*iter)->write(xHandler);
+		(*iter)->write(pHandler);
 	}
 	TagCloseElement headerFooterClose(headerFooterTagName);
-	headerFooterClose.write(xHandler);
+	headerFooterClose.write(pHandler);
 }
 

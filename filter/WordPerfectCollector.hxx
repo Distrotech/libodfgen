@@ -130,11 +130,11 @@ public:
 protected:
 	void _resetDocumentState();
 	bool _parseSourceDocument(WPXInputStream &input);
-	bool _writeTargetDocument(DocumentHandler &xHandler);
+	bool _writeTargetDocument(DocumentHandler *pHandler);
 	void _writeBegin();
-	void _writeDefaultStyles(DocumentHandler &xHandler);
-	void _writeMasterPages(DocumentHandler &xHandler);
-	void _writePageMasters(DocumentHandler &xHandler);
+	void _writeDefaultStyles(DocumentHandler *pHandler);
+	void _writeMasterPages(DocumentHandler *pHandler);
+	void _writePageMasters(DocumentHandler *pHandler);
 	void _allocateFontName(const WPXString &);
 
 private:
@@ -171,7 +171,7 @@ private:
 	// content elements
 	std::vector<DocumentElement *> mBodyElements;
 	// the current set of elements that we're writing to
-	std::vector<DocumentElement *> * mpCurrentContentElements;
+	std::vector<DocumentElement *> &mCurrentContentElements;
 
 	// page state
 	std::vector<PageSpan *> mPageSpans;

@@ -116,11 +116,19 @@ const char *stylesStr ="<?xml version=\"1.0\" encoding=\"UTF-8\"?>\
 static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str)
 {
 	GsfOutput  *child = gsf_outfile_new_child  (outfile, fileName, FALSE);
+	if (!child)
+		return false;
 
-	if (!gsf_output_write (child, strlen (str), (uint8_t *)str))
+	if (child && !gsf_output_write (child, strlen (str), (uint8_t *)str))
+	{
+		g_object_unref (child);
 		return false;
-	if (!gsf_output_close ((GsfOutput *) child))
+	}
+	if (child && !gsf_output_close ((GsfOutput *) child))
+	{
+		g_object_unref (child);
 		return false;
+	}
 
 	g_object_unref (child);
 
@@ -129,23 +137,27 @@ static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char
 
 static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 {
-	GError *err;
-	GsfInput *pGsfInput;
-	pGsfInput = GSF_INPUT(gsf_input_stdio_new (pInFileName, &err));
-	if (pGsfInput == NULL) 
+	GError *err = NULL;
+	GsfInput *pGsfInput = NULL;
+	if (!(pGsfInput = GSF_INPUT(gsf_input_stdio_new (pInFileName, &err)))) 
 	{
 		g_return_val_if_fail (err != NULL, 1);
 		
 		g_warning ("'%s' error: %s", pInFileName, err->message);
-		g_error_free (err);
+		if (err)
+			g_error_free (err);
+		g_object_unref(G_OBJECT(pGsfInput));
 		return false;
 	}
+	if (err)
+		g_error_free(err);
 	GSFInputStream input(pGsfInput);
 
 	WPDConfidence confidence = WPDocument::isFileFormatSupported(&input, false);
  	if (confidence != WPD_CONFIDENCE_EXCELLENT)
  	{
  		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
+		g_object_unref(G_OBJECT(pGsfInput));
  		return false;
  	}
 	input.seek(0, WPX_SEEK_SET);
@@ -170,6 +182,8 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
         }
         delete pHandler;
 
+	g_object_unref(G_OBJECT(pGsfInput));
+
 	return bRetVal;
 }
 
@@ -178,7 +192,7 @@ main (int argc, char *argv[])
 {
 	GsfOutput  *pOutput = NULL;
 	GsfOutfile *pOutfile = NULL;
-	GError   *err;
+	GError   *err = NULL;
 
 	gsf_init ();
 
@@ -190,6 +204,7 @@ main (int argc, char *argv[])
 		fprintf(stderr, "USAGE : pass '--stdout' to pipe the resultant document to\n");
 		fprintf(stderr, "USAGE : standard output\n");
 		fprintf(stderr, "USAGE : \n");
+		gsf_shutdown ();
 		return 1;
 	}
 
@@ -209,43 +224,64 @@ main (int argc, char *argv[])
                         g_return_val_if_fail (err != NULL, 1);
                         
                         g_warning ("'%s' error: %s", argv[2], err->message);
-                        g_error_free (err);
+			if (err)
+	                        g_error_free (err);
+			gsf_shutdown ();
                         return 1;
                 }
+		if (err)
+			g_error_free (err);
+		err = NULL;
                 pOutfile = GSF_OUTFILE(gsf_outfile_zip_new (pOutput, &err));
-                if (pOutput == NULL) {
+                if (pOutfile == NULL) {
                         g_return_val_if_fail (err != NULL, 1);
                         
                         g_warning ("'%s' error: %s",
                                    "gsf_outfile_zip_new", err->message);
-                        g_error_free (err);
+			if (err)
+	                        g_error_free (err);
+			gsf_shutdown ();
                         return 1;
                 }
+		if (err)
+			g_error_free (err);
+		err = NULL;
                 g_object_unref (G_OBJECT (pOutput));
         }
 	if (pOutfile && !writeChildFile(pOutfile, "mimetype", mimetypeStr)) {
 		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
+               	g_object_unref (G_OBJECT (pOutfile));
+		gsf_shutdown ();
 		return 1;
 	}
 	
 	if (pOutfile && !writeChildFile(pOutfile, "META-INF/manifest.xml", manifestStr)) {
 		fprintf(stderr, "ERROR : Couldn't write manifest\n");
+               	g_object_unref (G_OBJECT (pOutfile));
+		gsf_shutdown ();
 		return 1;
 	}
 	
 	if (pOutfile && !writeChildFile(pOutfile, "styles.xml", stylesStr)) {
 		fprintf(stderr, "ERROR : Couldn't write styles\n");
+               	g_object_unref (G_OBJECT (pOutfile));
+		gsf_shutdown ();
 		return 1;
 	}
 
         if (!writeContent(szInputFile, pOutfile)) 
         {
                 fprintf(stderr, "ERROR : Couldn't write document content\n");
+        	if (pOutfile)
+                	g_object_unref (G_OBJECT (pOutfile));
+		gsf_shutdown ();
                 return 1;
         }
 
 	if (pOutfile && !gsf_output_close ((GsfOutput *) pOutfile)) {
 		fprintf(stderr, "ERROR : Couldn't close outfile\n");
+               	g_object_unref (G_OBJECT (pOutfile));
+		gsf_shutdown ();
 		return 1;
 	}
 

@@ -37,8 +37,8 @@ class PageSpan
 public:
 	PageSpan(const WPXPropertyList &xPropList);
 	virtual ~PageSpan();
-	void writePageMaster(const int iNum, DocumentHandler &xHandler) const;
-	void writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, DocumentHandler &xHandler) const;
+	void writePageMaster(const int iNum, DocumentHandler *pHandler) const;
+	void writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, DocumentHandler *pHandler) const;
 	int getSpan() const;
 	float getMarginLeft() const;
 	float getMarginRight() const;
@@ -50,7 +50,7 @@ public:
 	void setFooterLeftContent(std::vector<DocumentElement *> * pFooterContent) { mpFooterLeftContent = pFooterContent; }
 protected:
 	void _writeHeaderFooter(const char *headerFooterTagName, const std::vector<DocumentElement *> & headerFooterContent,
-				DocumentHandler &xHandler) const;
+				DocumentHandler *pHandler) const;
 private:
         WPXPropertyList mxPropList;
 	std::vector<DocumentElement *> * mpHeaderContent;

@@ -39,14 +39,14 @@ class ListLevelStyle
 {
 public:
 	virtual ~ListLevelStyle() {};
-	virtual void write(DocumentHandler &xHandler, int iLevel) const = 0;
+	virtual void write(DocumentHandler *pHandler, int iLevel) const = 0;
 };
 
 class OrderedListLevelStyle : public ListLevelStyle
 {
 public:
 	OrderedListLevelStyle(const WPXPropertyList &xPropList);
-	virtual void write(DocumentHandler &xHandler, int iLevel) const;
+	virtual void write(DocumentHandler *pHandler, int iLevel) const;
 private:
         WPXPropertyList mPropList;
 };
@@ -55,7 +55,7 @@ class UnorderedListLevelStyle : public ListLevelStyle
 {
 public:
 	UnorderedListLevelStyle(const WPXPropertyList &xPropList);
-	virtual void write(DocumentHandler &xHandler, int iLevel) const;
+	virtual void write(DocumentHandler *pHandler, int iLevel) const;
 private:
         WPXPropertyList mPropList;
 };
@@ -66,7 +66,7 @@ public:
 	ListStyle(const char *psName, const int iListID);
 	virtual ~ListStyle();
 	virtual void updateListLevel(const int iLevel, const WPXPropertyList &xPropList) = 0;
-	virtual void write(DocumentHandler &xHandler) const;
+	virtual void write(DocumentHandler *pHandler) const;
 	const int getListID() { return miListID; }
 	const bool isListLevelDefined(int iLevel) const;
 

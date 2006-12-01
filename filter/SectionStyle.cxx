@@ -44,16 +44,16 @@ SectionStyle::SectionStyle(const WPXPropertyList &xPropList,
 {
 }
 
-void SectionStyle::write(DocumentHandler &xHandler) const
+void SectionStyle::write(DocumentHandler *pHandler) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
 	styleOpen.addAttribute("style:family", "section");
-	styleOpen.write(xHandler);
+	styleOpen.write(pHandler);
 
 	// if the number of columns is <= 1, we will never come here. This is only an additional check
 	// style properties
-	xHandler.startElement("style:properties", mPropList);
+	pHandler->startElement("style:properties", mPropList);
 
 	// column properties
 	WPXPropertyList columnProps;
@@ -61,26 +61,26 @@ void SectionStyle::write(DocumentHandler &xHandler) const
 	if (mColumns.count() > 1)
 	{		
 		columnProps.insert("fo:column-count", (int)mColumns.count());
- 		xHandler.startElement("style:columns", columnProps);
+ 		pHandler->startElement("style:columns", columnProps);
 	
                 WPXPropertyListVector::Iter i(mColumns);
                 for (i.rewind(); i.next();)
 		{
-                        xHandler.startElement("style:column", i());
-                        xHandler.endElement("style:column");
+                        pHandler->startElement("style:column", i());
+                        pHandler->endElement("style:column");
 		}
 	}
 	else
 	{
 		columnProps.insert("fo:column-count", 0);
 		columnProps.insert("fo:column-gap", 0.0f);
-		xHandler.startElement("style:columns", columnProps);
+		pHandler->startElement("style:columns", columnProps);
 	}
 
-	xHandler.endElement("style:columns");
+	pHandler->endElement("style:columns");
 
 		
-	xHandler.endElement("style:properties");
+	pHandler->endElement("style:properties");
 
-	xHandler.endElement("style:style");
+	pHandler->endElement("style:style");
 }
