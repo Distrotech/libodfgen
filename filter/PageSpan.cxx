@@ -136,8 +136,6 @@ void PageSpan::writePageMaster(const int iNum, DocumentHandler *pHandler) const
 void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, 
                                 DocumentHandler *pHandler) const
 {
-        WPXPropertyList propList; // scratch space
-
 	int iSpan = 0;
 	(bLastPageSpan) ? iSpan = 1 : iSpan = getSpan();
 
@@ -147,6 +145,7 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 		WPXString sMasterPageName;
 		sMasterPageName.sprintf("Page Style %i", i);
 		WPXString sPageMasterName;
+		WPXPropertyList propList;
 		sPageMasterName.sprintf("PM%i", iPageMasterNum+2);
                 propList.insert("style:name", sMasterPageName);
 		propList.insert("style:page-master-name", sPageMasterName);
@@ -169,7 +168,6 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 
                 pHandler->endElement("style:master-page");
 	}
-
 }
 
 void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
