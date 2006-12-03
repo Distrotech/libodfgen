@@ -215,7 +215,7 @@ void WordPerfectCollector::_writeMasterPages(DocumentHandler *pHandler)
 
 	pHandler->startElement("office:master-styles", xBlankAttrList);
 	int pageNumber = 1;
-	for (int i=0; i<mPageSpans.size(); i++)
+	for (unsigned int i=0; i<mPageSpans.size(); i++)
 	{
 		bool bLastPage;
 		(i == (mPageSpans.size() - 1)) ? bLastPage = true : bLastPage = false;
@@ -227,8 +227,7 @@ void WordPerfectCollector::_writeMasterPages(DocumentHandler *pHandler)
 
 void WordPerfectCollector::_writePageMasters(DocumentHandler *pHandler)
 {
-	int pageNumber = 1;
-	for (int i=0; i<mPageSpans.size(); i++)
+	for (unsigned int i=0; i<mPageSpans.size(); i++)
 	{
 		mPageSpans[i]->writePageMaster(i, pHandler);
 	}
