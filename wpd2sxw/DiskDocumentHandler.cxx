@@ -58,7 +58,7 @@ void DiskDocumentHandler::characters(const WPXString &sCharacters)
 	}
         WPXString sEscapedCharacters(sCharacters, true);
 	if (sEscapedCharacters.len() > 0)
-		gsf_output_printf(mpOutput, "%s", sEscapedCharacters.cstr());
+		gsf_output_puts(mpOutput, sEscapedCharacters.cstr());
 }
 
 void DiskDocumentHandler::endDocument()
