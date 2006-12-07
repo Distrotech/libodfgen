@@ -260,7 +260,7 @@ main (int argc, char *argv[])
 		return 1;
 	}
 
-	if (pOutfile && !writeContent(szInputFile, pOutfile)) 
+	if (!writeContent(szInputFile, pOutfile)) 
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
 	      	g_object_unref (pOutfile);
