@@ -3,7 +3,7 @@
  * Copyright (C) 2002 Jon K Hellan (hellan@acm.org)
  * Copyright (C) 2002-2004 William Lachance (wrlach@gmail.com)
  * Copyright (C) 2003-2004 Net Integration Technologies (http://www.net-itech.com)
- * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
+ * Copyright (C) 2004-2006 Fridrich Strba (fridrich.strba@bluewin.ch)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
@@ -117,7 +117,7 @@ static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char
 	GsfOutput *child;
 	if (NULL != (child = gsf_outfile_new_child  (outfile, fileName, FALSE)))
 	{
-		bool res = gsf_output_write (child, strlen (str), (uint8_t *)str) &&
+		bool res = gsf_output_puts (child, str) &&
 			gsf_output_close (child);
 		g_object_unref (child);
 		return res;
