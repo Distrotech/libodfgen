@@ -17,7 +17,7 @@ void StdOutHandler::startElement(const char *psName, const WPXPropertyList &xPro
         for (i.rewind(); i.next(); )
         {
                 // filter out libwpd elements
-                if (strlen(i.key()) > 6 && strncmp(i.key(), "libwpd", 6) != 0)
+                if (strncmp(i.key(), "libwpd", 6) != 0)
                         printf(" %s=\"%s\"", i.key(), i()->getStr().cstr());
         }
 	mbIsTagOpened = true;
