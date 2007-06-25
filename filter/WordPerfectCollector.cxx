@@ -139,7 +139,7 @@ bool WordPerfectCollector::filter()
 
 bool WordPerfectCollector::_parseSourceDocument(WPXInputStream &input)
 {
-	WPDResult result = WPDocument::parse(&input, static_cast<WPXHLListenerImpl *>(this));
+	WPDResult result = WPDocument::parse(&input, static_cast<WPXDocumentInterface *>(this));
 	if (result != WPD_OK)
 		return false;
 

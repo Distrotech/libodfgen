@@ -72,7 +72,7 @@ struct ltstr
   }
 };
 
-class WordPerfectCollector : public WPXHLListenerImpl
+class WordPerfectCollector : public WPXDocumentInterface
 {
 public:
 	WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML = false);
