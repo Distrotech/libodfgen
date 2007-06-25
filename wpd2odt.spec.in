@@ -1,4 +1,4 @@
-%define name wpd2sxw
+%define name wpd2odt
 %define sourcename writerperfect
 %define version @VERSION@
 %define  RELEASE 1

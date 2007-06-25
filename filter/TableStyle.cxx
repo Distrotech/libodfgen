@@ -57,9 +57,9 @@ void TableCellStyle::write(DocumentHandler *pHandler) const
                 if (strlen(i.key()) > 2 && strncmp(i.key(), "fo", 2) == 0)
                         stylePropList.insert(i.key(), i()->clone());
         }
-        stylePropList.insert("fo:padding", "0.0382inch");
-        pHandler->startElement("style:properties", stylePropList);
-	pHandler->endElement("style:properties");
+        stylePropList.insert("fo:padding", "0.0382in");
+        pHandler->startElement("style:table-cell-properties", stylePropList);
+	pHandler->endElement("style:table-cell-properties");
 
 	pHandler->endElement("style:style");	
 }
@@ -77,13 +77,13 @@ void TableRowStyle::write(DocumentHandler *pHandler) const
 	styleOpen.addAttribute("style:family", "table-row");
 	styleOpen.write(pHandler);
 	
-        TagOpenElement stylePropertiesOpen("style:properties");
+        TagOpenElement stylePropertiesOpen("style:table-row-properties");
         if (mPropList["style:min-row-height"])
                 stylePropertiesOpen.addAttribute("style:min-row-height", mPropList["style:min-row-height"]->getStr());
         else if (mPropList["style:row-height"])
                 stylePropertiesOpen.addAttribute("style:row-height", mPropList["style:row-height"]->getStr());
         stylePropertiesOpen.write(pHandler);
-        pHandler->endElement("style:properties");
+        pHandler->endElement("style:table-row-properties");
 	
 	pHandler->endElement("style:style");		
 }
@@ -115,7 +115,7 @@ void TableStyle::write(DocumentHandler *pHandler) const
 		styleOpen.addAttribute("style:master-page-name", getMasterPageName()->cstr());
 	styleOpen.write(pHandler);
 
-	TagOpenElement stylePropertiesOpen("style:properties");
+	TagOpenElement stylePropertiesOpen("style:table-properties");
         if (mPropList["table:align"])
                 stylePropertiesOpen.addAttribute("table:align", mPropList["table:align"]->getStr());
 	if (mPropList["fo:margin-left"])
@@ -128,7 +128,7 @@ void TableStyle::write(DocumentHandler *pHandler) const
 		stylePropertiesOpen.addAttribute("fo:break-before", mPropList["fo:break-before"]->getStr());
 	stylePropertiesOpen.write(pHandler);
 
-	pHandler->endElement("style:properties");
+	pHandler->endElement("style:table-properties");
 
 	pHandler->endElement("style:style");
 		
@@ -143,8 +143,8 @@ void TableStyle::write(DocumentHandler *pHandler) const
 		styleOpen.addAttribute("style:family", "table-column");
 		styleOpen.write(pHandler);
 
-                pHandler->startElement("style:properties", j());
-		pHandler->endElement("style:properties");
+                pHandler->startElement("style:table-column-properties", j());
+		pHandler->endElement("style:table-column-properties");
 
 		pHandler->endElement("style:style");
 

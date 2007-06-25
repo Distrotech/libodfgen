@@ -39,7 +39,7 @@ done
 ## do we have it?
 ##
 if [ "$AUTOCONFFOUND" = "0" -o "$AUTOHEADERFOUND" = "0" ]; then
-        echo "$0: need autoconf 2.53 or later to build wpd2sxw" >&2
+        echo "$0: need autoconf 2.53 or later to build wpd2odt" >&2
         exit 1
 fi
 

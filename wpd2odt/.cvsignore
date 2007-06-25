@@ -2,5 +2,5 @@ Makefile
 Makefile.in
 .deps
 .libs
-wpd2sxw
-wpd2sxw.rc
+wpd2odt
+wpd2odt.rc

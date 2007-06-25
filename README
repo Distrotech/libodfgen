@@ -9,15 +9,15 @@ Note that this assumes that you have development versions of glib (>= 2.0.0),
 libgsf (>= 1.6.0), and libwpd (0.6.1) installed. I also assume that
 you have pkgconfig installed.
 
-This will make + install a single executable: wpd2sxw. You may use it
+This will make + install a single executable: wpd2odt. You may use it
 on the command line as follows:
 
 USAGE:
 
-wpd2sxw <infile> <outfile>
+wpd2odt <infile> <outfile>
 
 Where <infile> is a WordPerfect(tm) 6 (or greater document) and
-<outfile> is the name of the target sxw document, which wpd2sxw will
+<outfile> is the name of the target odt document, which wpd2odt will
 create.
 
 TROUBLESHOOTING:

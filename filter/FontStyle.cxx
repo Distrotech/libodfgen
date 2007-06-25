@@ -40,11 +40,11 @@ FontStyle::~FontStyle()
 
 void FontStyle::write(DocumentHandler *pHandler) const
 {        
-	TagOpenElement styleOpen("style:font-decl");
+	TagOpenElement styleOpen("style:font-face");
 	styleOpen.addAttribute("style:name", getName());
-	styleOpen.addAttribute("fo:font-family", msFontFamily);
-	styleOpen.addAttribute("style:font-pitch", msFontPitch);
+	styleOpen.addAttribute("svg:font-family", msFontFamily);
+//	styleOpen.addAttribute("style:font-pitch", msFontPitch);
 	styleOpen.write(pHandler);
-	TagCloseElement styleClose("style:font-decl");
+	TagCloseElement styleClose("style:font-face");
 	styleClose.write(pHandler);
 }

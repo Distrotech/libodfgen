@@ -103,37 +103,37 @@ float PageSpan::getMarginRight() const
          return 0.0f; 
 }
 
-void PageSpan::writePageMaster(const int iNum, DocumentHandler *pHandler) const
+void PageSpan::writePageLayout(const int iNum, DocumentHandler *pHandler) const
 {
         WPXPropertyList propList;
         
-	WPXString sPageMasterName; 
-        sPageMasterName.sprintf("PM%i", iNum+2);
-        propList.insert("style:name", sPageMasterName);
-	pHandler->startElement("style:page-master", propList);
+	WPXString sPageLayoutName; 
+        sPageLayoutName.sprintf("PM%i", iNum+2);
+        propList.insert("style:name", sPageLayoutName);
+	pHandler->startElement("style:page-layout", propList);
 
 	WPXPropertyList tempPropList = mxPropList;
 	if (!tempPropList["style:writing-mode"])
 		tempPropList.insert("style:writing-mode", WPXString("lr-tb"));
 	if (!tempPropList["style:footnote-max-height"])
-		tempPropList.insert("style:footnote-max-height", WPXString("0inch"));
-        pHandler->startElement("style:properties", tempPropList);
+		tempPropList.insert("style:footnote-max-height", WPXString("0in"));
+        pHandler->startElement("style:page-layout-properties", tempPropList);
 	
 	WPXPropertyList footnoteSepPropList;
-	footnoteSepPropList.insert("style:width", WPXString("0.0071inch"));
-	footnoteSepPropList.insert("style:distance-before-sep", WPXString("0.0398inch"));
-	footnoteSepPropList.insert("style:distance-after-sep", WPXString("0.0398inch"));
+	footnoteSepPropList.insert("style:width", WPXString("0.0071in"));
+	footnoteSepPropList.insert("style:distance-before-sep", WPXString("0.0398in"));
+	footnoteSepPropList.insert("style:distance-after-sep", WPXString("0.0398in"));
 	footnoteSepPropList.insert("style:adjustment", WPXString("left"));
 	footnoteSepPropList.insert("style:rel-width", WPXString("25%"));
 	footnoteSepPropList.insert("style:color", WPXString("#000000"));
 	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
 	
 	pHandler->endElement("style:footnote-sep");
-        pHandler->endElement("style:properties");
-        pHandler->endElement("style:page-master");
+        pHandler->endElement("style:page-layout-properties");
+        pHandler->endElement("style:page-layout");
 }
 
-void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum, const bool bLastPageSpan, 
+void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, 
                                 DocumentHandler *pHandler) const
 {
 	int iSpan = 0;
@@ -142,17 +142,19 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageMasterNum
 	for (int i=iStartingNum; i<(iStartingNum+iSpan); i++)
 	{
 		TagOpenElement masterPageOpen("style:master-page");
-		WPXString sMasterPageName;
-		sMasterPageName.sprintf("Page Style %i", i);
-		WPXString sPageMasterName;
+		WPXString sMasterPageName, sMasterPageDisplayName;
+		sMasterPageName.sprintf("Page_Style_%i", i);
+		sMasterPageDisplayName.sprintf("Page Style %i", i);
+		WPXString sPageLayoutName;
 		WPXPropertyList propList;
-		sPageMasterName.sprintf("PM%i", iPageMasterNum+2);
+		sPageLayoutName.sprintf("PM%i", iPageLayoutNum+2);
                 propList.insert("style:name", sMasterPageName);
-		propList.insert("style:page-master-name", sPageMasterName);
+		propList.insert("style:display-name", sMasterPageDisplayName);
+		propList.insert("style:page-layout-name", sPageLayoutName);
 		if (!bLastPageSpan)
 		{
 			WPXString sNextMasterPageName;
-			sNextMasterPageName.sprintf("Page Style %i", (i+1));
+			sNextMasterPageName.sprintf("Page_Style_%i", (i+1));
                         propList.insert("style:next-style-name", sNextMasterPageName);
 		}
                 pHandler->startElement("style:master-page", propList);

@@ -3,10 +3,10 @@ AC_INIT(filter/WordPerfectCollector.cxx)
 AM_CONFIG_HEADER(config.h)
 
 WRITERPERFECT_MAJOR_VERSION=0
-WRITERPERFECT_MINOR_VERSION=7
-WRITERPERFECT_MICRO_VERSION=2
+WRITERPERFECT_MINOR_VERSION=8
+WRITERPERFECT_MICRO_VERSION=0
 
-LIBWPD_REQUIRED_VERSION=0.8.0
+LIBWPD_REQUIRED_VERSION=0.9.0
 
 WRITERPERFECT_VERSION="$WRITERPERFECT_MAJOR_VERSION.$WRITERPERFECT_MINOR_VERSION.$WRITERPERFECT_MICRO_VERSION"
 
@@ -31,15 +31,15 @@ AC_PROG_LIBTOOL
 AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
 PKG_CHECK_MODULES(WPD2SXW,[
-libwpd-0.8 >= $LIBWPD_REQUIRED_VERSION
-libwpd-stream-0.8 >= $LIBWPD_REQUIRED_VERSION
+libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
+libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
 ])
 
 AC_MSG_CHECKING([for native Win32])
 case "$host" in
   *-*-mingw*)
     native_win32=yes
-    WPD2SXW_WIN32_RESOURCE=wpd2sxw-win32res.lo
+    WPD2SXW_WIN32_RESOURCE=wpd2odt-win32res.lo
     ;;
    *)
     native_win32=no
@@ -83,13 +83,13 @@ AC_SUBST(DEBUG_CXXFLAGS)
 
 AC_OUTPUT([
 Makefile
-wpd2sxw.spec
+wpd2odt.spec
 build/Makefile
 build/win32/Makefile
 filter/Makefile
 ooo/Makefile
-wpd2sxw/Makefile
-wpd2sxw/wpd2sxw.rc
+wpd2odt/Makefile
+wpd2odt/wpd2odt.rc
 packaging/Makefile
 packaging/NSIS/Makefile
 packaging/NSIS/WriterPerfect.nsi

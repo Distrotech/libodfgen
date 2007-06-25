@@ -75,7 +75,7 @@ struct ltstr
 class WordPerfectCollector : public WPXHLListenerImpl
 {
 public:
-	WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler);
+	WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML = false);
 	virtual ~WordPerfectCollector();
 	bool filter();
 
@@ -134,7 +134,7 @@ protected:
 	void _writeBegin();
 	void _writeDefaultStyles(DocumentHandler *pHandler);
 	void _writeMasterPages(DocumentHandler *pHandler);
-	void _writePageMasters(DocumentHandler *pHandler);
+	void _writePageLayouts(DocumentHandler *pHandler);
 	void _allocateFontName(const WPXString &);
 
 private:
@@ -190,5 +190,7 @@ private:
 
 	// table state
 	TableStyle *mpCurrentTableStyle;
+	
+	const bool mbIsFlatXML;
 };
 #endif

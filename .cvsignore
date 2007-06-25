@@ -16,5 +16,5 @@ ltmain.sh
 missing
 mkinstalldirs
 stamp-h1
-wpd2sxw.spec
+wpd2odt.spec
 *.out

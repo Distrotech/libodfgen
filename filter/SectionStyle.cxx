@@ -53,7 +53,7 @@ void SectionStyle::write(DocumentHandler *pHandler) const
 
 	// if the number of columns is <= 1, we will never come here. This is only an additional check
 	// style properties
-	pHandler->startElement("style:properties", mPropList);
+	pHandler->startElement("style:section-properties", mPropList);
 
 	// column properties
 	WPXPropertyList columnProps;
@@ -80,7 +80,7 @@ void SectionStyle::write(DocumentHandler *pHandler) const
 	pHandler->endElement("style:columns");
 
 		
-	pHandler->endElement("style:properties");
+	pHandler->endElement("style:section-properties");
 
 	pHandler->endElement("style:style");
 }

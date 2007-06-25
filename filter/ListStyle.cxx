@@ -48,7 +48,7 @@ void OrderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 
 	TagOpenElement listLevelStyleOpen("text:list-level-style-number");
 	listLevelStyleOpen.addAttribute("text:level", sLevel);
-	listLevelStyleOpen.addAttribute("text:style-name", "Numbering Symbols");
+	listLevelStyleOpen.addAttribute("text:style-name", "Numbering_Symbols");
         if (mPropList["style:num-prefix"])
                 listLevelStyleOpen.addAttribute("style:num-prefix", mPropList["style:num-prefix"]->getStr());
         if (mPropList["style:num-suffix"])
@@ -59,7 +59,7 @@ void OrderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
                 listLevelStyleOpen.addAttribute("text:start-value", mPropList["text:start-value"]->getStr());
 	listLevelStyleOpen.write(pHandler);
 
-	TagOpenElement stylePropertiesOpen("style:properties");
+	TagOpenElement stylePropertiesOpen("style:list-level-properties");
         if (mPropList["text:space-before"])
                 stylePropertiesOpen.addAttribute("text:space-before", mPropList["text:space-before"]->getStr());
 	if (mPropList["text:min-label-width"])
@@ -68,7 +68,7 @@ void OrderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 		stylePropertiesOpen.addAttribute("text:min-label-distance", mPropList["text:min-label-distance"]->getStr());
 	stylePropertiesOpen.write(pHandler);
 
-	pHandler->endElement("style:properties");
+	pHandler->endElement("style:list-level-properties");
 	pHandler->endElement("text:list-level-style-number");
 }
 
@@ -91,13 +91,13 @@ void UnorderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 	sLevel.sprintf("%i", (iLevel+1));
 	TagOpenElement listLevelStyleOpen("text:list-level-style-bullet");
 	listLevelStyleOpen.addAttribute("text:level", sLevel);
-	listLevelStyleOpen.addAttribute("text:style-name", "Bullet Symbols");
-	listLevelStyleOpen.addAttribute("style:num-suffice", ".");
+	listLevelStyleOpen.addAttribute("text:style-name", "Bullet_Symbols");
+	listLevelStyleOpen.addAttribute("style:num-suffix", ".");
         if (mPropList["text:bullet-char"])
                 listLevelStyleOpen.addAttribute("text:bullet-char", mPropList["text:bullet-char"]->getStr());
 	listLevelStyleOpen.write(pHandler);
 
-	TagOpenElement stylePropertiesOpen("style:properties");
+	TagOpenElement stylePropertiesOpen("style:list-level-properties");
         if (mPropList["text:space-before"])
                 stylePropertiesOpen.addAttribute("text:space-before", mPropList["text:space-before"]->getStr());
 	if (mPropList["text:min-label-width"])
@@ -107,7 +107,7 @@ void UnorderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 	stylePropertiesOpen.addAttribute("style:font-name", "OpenSymbol");
 	stylePropertiesOpen.write(pHandler);
 
-	pHandler->endElement("style:properties");
+	pHandler->endElement("style:list-level-properties");
 	pHandler->endElement("text:list-level-style-bullet");
 }
 

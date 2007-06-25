@@ -1,8 +1,8 @@
-SUBDIRS = build filter ooo packaging wpd2sxw
+SUBDIRS = build filter ooo packaging wpd2odt
 
 EXTRA_DIST =	\
-	wpd2sxw.spec.in			\
-	wpd2sxw.spec			\
+	wpd2odt.spec.in			\
+	wpd2odt.spec			\
 	autogen.sh			\
 	Makefile.ooo-external		\
 	Makefile.ooo-external.msvc.in	\

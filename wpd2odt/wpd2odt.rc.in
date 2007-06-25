@@ -14,11 +14,11 @@ VS_VERSION_INFO VERSIONINFO
       BLOCK "040904B0"
       BEGIN
 	VALUE "CompanyName", "The libwpd developer community"
-	VALUE "FileDescription", "wpd2sxw"
+	VALUE "FileDescription", "wpd2odt"
 	VALUE "FileVersion", "@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.@WRITERPERFECT_MICRO_VERSION@.BUILDNUMBER"
-	VALUE "InternalName", "wpd2sxw"
+	VALUE "InternalName", "wpd2odt"
 	VALUE "LegalCopyright", "Copyright (C) 2002-2004 William Lachance, Marc Maurer, Fridrich Strba, other contributers"
-	VALUE "OriginalFilename", "wpd2sxw.exe"
+	VALUE "OriginalFilename", "wpd2odt.exe"
 	VALUE "ProductName", "writerperfect"
 	VALUE "ProductVersion", "@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.@WRITERPERFECT_MICRO_VERSION@"
       END
