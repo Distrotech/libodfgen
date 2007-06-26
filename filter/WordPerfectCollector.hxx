@@ -33,6 +33,7 @@
 #include "SectionStyle.hxx"
 
 #include <libwpd/libwpd.h>
+#include <libwpg/libwpg.h>
 #include <vector>
 #include <map>
 #include <stack>
@@ -66,19 +67,20 @@ enum WriterListType { unordered, ordered };
 
 struct ltstr
 {
-  bool operator()(const WPXString & s1, const WPXString & s2) const
-  {
-    return strcmp(s1.cstr(), s2.cstr()) < 0;
-  }
+	bool operator()(const WPXString & s1, const WPXString & s2) const
+	{
+		return strcmp(s1.cstr(), s2.cstr()) < 0;
+	}
 };
 
-class WordPerfectCollector : public WPXDocumentInterface
+class WordPerfectCollector : public WPXDocumentInterface, public libwpg::WPGPaintInterface
 {
 public:
 	WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML = false);
 	virtual ~WordPerfectCollector();
 	bool filter();
 
+	// WPXDocumentInterface's callbacks 
  	virtual void setDocumentMetaData(const WPXPropertyList &propList) {}
 	virtual void startDocument() {}
 	virtual void endDocument() {}
@@ -126,6 +128,20 @@ public:
 	virtual void closeTableCell();
 	virtual void insertCoveredTableCell(const WPXPropertyList &propList);
  	virtual void closeTable();
+
+	// WPGPaintInterface's callbacks
+	virtual void startGraphics(double width, double height) {}
+	virtual void setPen(const libwpg::WPGPen& pen) {}
+	virtual void setBrush(const libwpg::WPGBrush& brush) {}
+	virtual void setFillRule(FillRule rule) {}
+	virtual void startLayer(unsigned int id) {}
+	virtual void endLayer(unsigned int id) {}
+	virtual void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry) {}
+	virtual void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry) {}
+	virtual void drawPolygon(const libwpg::WPGPointArray& vertices) {}
+	virtual void drawPath(const libwpg::WPGPath& path) {}
+	virtual void drawBitmap(const libwpg::WPGBitmap& bitmap) {}
+	virtual void endGraphics() {}
 
 protected:
 	void _resetDocumentState();
