@@ -35,6 +35,7 @@
 #include "DocumentElement.hxx"
 #include "TextRunStyle.hxx"
 #include "FontStyle.hxx"
+#include "GraphicsStyle.hxx"
 #include "ListStyle.hxx"
 #include "PageSpan.hxx"
 #include "SectionStyle.hxx"
@@ -527,7 +528,8 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 
 		WPXString sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
 
-		if (mTextStyleHash.find(sKey) == mTextStyleHash.end()) {
+		if (mTextStyleHash.find(sKey) == mTextStyleHash.end())
+		{
 			WPXString sName;
 			sName.sprintf("S%i", mTextStyleHash.size()); 
 			
@@ -982,4 +984,52 @@ void WordPerfectCollector::insertText(const WPXString &text)
 {
 	DocumentElement *pText = new TextElement(text);
 	mpCurrentContentElements->push_back(pText);
+}
+
+void WordPerfectCollector::startGraphics(double width, double height)
+{
+}
+
+void WordPerfectCollector::setPen(const libwpg::WPGPen& pen)
+{
+}
+
+void WordPerfectCollector::setBrush(const libwpg::WPGBrush& brush)
+{
+}
+
+void WordPerfectCollector::setFillRule(FillRule rule)
+{
+}
+
+void WordPerfectCollector::startLayer(unsigned int id)
+{
+}
+
+void WordPerfectCollector::endLayer(unsigned int id)
+{
+}
+
+void WordPerfectCollector::drawRectangle(const libwpg::WPGRect& rect, double rx, double ry)
+{
+}
+
+void WordPerfectCollector::drawEllipse(const libwpg::WPGPoint& center, double rx, double ry)
+{
+}
+
+void WordPerfectCollector::drawPolygon(const libwpg::WPGPointArray& vertices)
+{
+}
+
+void WordPerfectCollector::drawPath(const libwpg::WPGPath& path)
+{
+}
+
+void WordPerfectCollector::drawBitmap(const libwpg::WPGBitmap& bitmap)
+{
+}
+
+void WordPerfectCollector::endGraphics()
+{
 }

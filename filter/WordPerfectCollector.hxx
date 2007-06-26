@@ -42,6 +42,7 @@ class DocumentElement;
 class DocumentHandler;
 class TagOpenElement;
 class FontStyle;
+class GraphicsStyle;
 class ListStyle;
 
 class ParagraphStyle;
@@ -130,18 +131,18 @@ public:
  	virtual void closeTable();
 
 	// WPGPaintInterface's callbacks
-	virtual void startGraphics(double width, double height) {}
-	virtual void setPen(const libwpg::WPGPen& pen) {}
-	virtual void setBrush(const libwpg::WPGBrush& brush) {}
-	virtual void setFillRule(FillRule rule) {}
-	virtual void startLayer(unsigned int id) {}
-	virtual void endLayer(unsigned int id) {}
-	virtual void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry) {}
-	virtual void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry) {}
-	virtual void drawPolygon(const libwpg::WPGPointArray& vertices) {}
-	virtual void drawPath(const libwpg::WPGPath& path) {}
-	virtual void drawBitmap(const libwpg::WPGBitmap& bitmap) {}
-	virtual void endGraphics() {}
+	virtual void startGraphics(double width, double height);
+	virtual void setPen(const libwpg::WPGPen& pen);
+	virtual void setBrush(const libwpg::WPGBrush& brush);
+	virtual void setFillRule(FillRule rule);
+	virtual void startLayer(unsigned int id);
+	virtual void endLayer(unsigned int id);
+	virtual void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry);
+	virtual void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry);
+	virtual void drawPolygon(const libwpg::WPGPointArray& vertices);
+	virtual void drawPath(const libwpg::WPGPath& path);
+	virtual void drawBitmap(const libwpg::WPGBitmap& bitmap);
+	virtual void endGraphics();
 
 protected:
 	void _resetDocumentState();
@@ -181,6 +182,9 @@ private:
 
 	// list styles
 	unsigned int miNumListStyles;
+	
+	// graphics styles
+	std::map<WPXString, GraphicsStyle *, ltstr> mGraphicsHash;
 
 	// style elements
 	std::vector<DocumentElement *> mStylesElements;

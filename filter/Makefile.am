@@ -12,6 +12,8 @@ libwriterperfect_1_la_SOURCES =		\
 	DocumentHandler.hxx		\
 	FontStyle.cxx			\
 	FontStyle.hxx			\
+	GraphicsStyle.cxx		\
+	GraphicsStyle.hxx		\
 	ListStyle.cxx			\
 	ListStyle.hxx			\
 	PageSpan.cxx			\
