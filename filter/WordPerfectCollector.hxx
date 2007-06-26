@@ -184,7 +184,7 @@ private:
 	unsigned int miNumListStyles;
 	
 	// graphics styles
-	std::map<WPXString, GraphicsStyle *, ltstr> mGraphicsHash;
+	std::vector<DocumentElement *> mGraphicsStyles;
 
 	// style elements
 	std::vector<DocumentElement *> mStylesElements;
@@ -210,6 +210,15 @@ private:
 
 	// table state
 	TableStyle *mpCurrentTableStyle;
+
+	libwpg::WPGPen mxPen;
+	libwpg::WPGBrush mxBrush;
+	FillRule mxFillRule;
+	int miGradientIndex;
+	int miDashIndex;
+	int miGraphicsStyleIndex;
+	void writeGraphicsStyle();
+	WPXString doubleToString(const double value);
 	
 	const bool mbIsFlatXML;
 };
