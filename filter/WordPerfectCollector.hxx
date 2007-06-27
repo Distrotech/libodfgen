@@ -129,6 +129,7 @@ public:
 	virtual void closeTableCell();
 	virtual void insertCoveredTableCell(const WPXPropertyList &propList);
  	virtual void closeTable();
+	virtual void insertGraphics(const WPXInputStream *graphicsData);
 
 	// WPGPaintInterface's callbacks
 	virtual void startGraphics(double width, double height);
@@ -184,7 +185,9 @@ private:
 	unsigned int miNumListStyles;
 	
 	// graphics styles
-	std::vector<DocumentElement *> mGraphicsStyles;
+	std::vector<DocumentElement *> mGraphicsStrokeDashStyles;
+	std::vector<DocumentElement *> mGraphicsGradientStyles;
+	std::vector<DocumentElement *> mGraphicsAutomaticStyles;
 
 	// style elements
 	std::vector<DocumentElement *> mStylesElements;
