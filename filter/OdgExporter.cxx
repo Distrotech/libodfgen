@@ -108,7 +108,7 @@ void OdgExporter::endDocument()
 		(*iterGraphicsGradientStyles)->write(mpHandler);
 	}
 	
-	TagCloseElement("office:styles").write(mpHandler);
+	mpHandler->endElement("office:styles");
 	
 	TagOpenElement("office:automatic-styles").write(mpHandler);
 
@@ -136,9 +136,9 @@ void OdgExporter::endDocument()
 	tmpStylePageLayoutPropertiesOpenElement.addAttribute("style:print-orientation", "portrait");
 	tmpStylePageLayoutPropertiesOpenElement.write(mpHandler);
 
-	TagCloseElement("style:page-layout-properties").write(mpHandler);
+	mpHandler->endElement("style:page-layout-properties");
 
-	TagCloseElement("style:page-layout").write(mpHandler);
+	mpHandler->endElement("style:page-layout");
 
 	TagOpenElement tmpStyleStyleOpenElement("style:style");
 	tmpStyleStyleOpenElement.addAttribute("style:name", "dp1");
@@ -150,11 +150,12 @@ void OdgExporter::endDocument()
 	tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:fill", "none");
 	tmpStyleDrawingPagePropertiesOpenElement.write(mpHandler);
 
-	TagCloseElement("style:drawing-page-properties").write(mpHandler);
+	mpHandler->endElement("style:drawing-page-properties");
 
-	TagCloseElement("style:style").write(mpHandler);
+	mpHandler->endElement("style:style");
 	
-	TagCloseElement("office:automatic-styles").write(mpHandler);
+	mpHandler->endElement("office:automatic-styles");
+
 
 	TagOpenElement("office:master-styles").write(mpHandler);
 
@@ -164,9 +165,9 @@ void OdgExporter::endDocument()
 	tmpStyleMasterPageOpenElement.addAttribute("draw:style-name", "dp1");
 	tmpStyleMasterPageOpenElement.write(mpHandler);
 
-	TagCloseElement("style:master-page").write(mpHandler);
+	mpHandler->endElement("style:master-page");
 
-	TagCloseElement("office:master-styles").write(mpHandler);
+	mpHandler->endElement("office:master-styles");
 
 	TagOpenElement("office:body").write(mpHandler);
 
@@ -184,10 +185,10 @@ void OdgExporter::endDocument()
 		(*bodyIter)->write(mpHandler);
 	}	
 
-	TagCloseElement("draw:page").write(mpHandler);
-	TagCloseElement("office:drawing").write(mpHandler);
-	TagCloseElement("office:body").write(mpHandler);
-	TagCloseElement("office:document").write(mpHandler);
+	mpHandler->endElement("draw:page");
+	mpHandler->endElement("office:drawing");
+	mpHandler->endElement("office:body");
+	mpHandler->endElement("office:document");
 
 	mpHandler->endDocument();
 }

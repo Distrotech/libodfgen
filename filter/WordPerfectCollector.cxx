@@ -153,8 +153,7 @@ bool WordPerfectCollector::_parseSourceDocument(WPXInputStream &input)
 
 void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 {
-	TagOpenElement stylesOpenElement("office:styles");
-	stylesOpenElement.write(pHandler);
+	TagOpenElement("office:styles").write(pHandler);
 
 	TagOpenElement defaultParagraphStyleOpenElement("style:default-style");
 	defaultParagraphStyleOpenElement.addAttribute("style:family", "paragraph");
@@ -233,9 +232,7 @@ void WordPerfectCollector::_writeBegin()
 
 void WordPerfectCollector::_writeMasterPages(DocumentHandler *pHandler)
 {
-	WPXPropertyList xBlankAttrList;
-
-	pHandler->startElement("office:master-styles", xBlankAttrList);
+	TagOpenElement("office:master-styles").write(mpHandler);
 	int pageNumber = 1;
 	for (unsigned int i=0; i<mPageSpans.size(); i++)
 	{
@@ -258,7 +255,6 @@ void WordPerfectCollector::_writePageLayouts(DocumentHandler *pHandler)
 bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 {	
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Printing out the header stuff..\n"));
-	WPXPropertyList xBlankAttrList;
 
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Start Document\n"));
 	mpHandler->startDocument();
@@ -292,7 +288,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 		mpHandler->startElement("office:document-content", docContentPropList);
 
 	// write out the font styles
-	mpHandler->startElement("office:font-face-decls", xBlankAttrList);
+	TagOpenElement("office:font-face-decls").write(mpHandler);
 	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		iterFont->second->write(mpHandler);
 	}
@@ -310,7 +306,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	// write default styles
 	_writeDefaultStyles(mpHandler);
 
-	mpHandler->startElement("office:automatic-styles", xBlankAttrList);
+	TagOpenElement("office:automatic-styles").write(mpHandler);
 #if 1
 	// FIXME: hic sunt leones
 	TagOpenElement frameStyleElement("style:style");
@@ -372,8 +368,8 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the document..\n"));
  	// writing out the document
-	pHandler->startElement("office:body", xBlankAttrList);
-	pHandler->startElement("office:text", xBlankAttrList);
+	TagOpenElement("office:body").write(mpHandler);
+	TagOpenElement("office:text").write(mpHandler);
 	
 	for (std::vector<DocumentElement *>::iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
 		(*iterBodyElements)->write(pHandler);
