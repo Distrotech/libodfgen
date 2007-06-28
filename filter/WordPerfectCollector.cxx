@@ -207,9 +207,9 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	TagCloseElement tableHeadingStyleCloseElement("style:style");
 	tableHeadingStyleCloseElement.write(pHandler);
 	
+#if 1
 	TagOpenElement graphicFrameStyleOpenElement("style:style");
-	graphicFrameStyleOpenElement.addAttribute("style:name", "Graphic_Frame");
-	graphicFrameStyleOpenElement.addAttribute("style:display-name", "Graphic Frame");
+	graphicFrameStyleOpenElement.addAttribute("style:name", "OLE");
 	graphicFrameStyleOpenElement.addAttribute("style:family", "graphic");
 	graphicFrameStyleOpenElement.write(pHandler);
 	
@@ -221,8 +221,10 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	graphicFramePropertiesOpenElement.addAttribute("svg:height", "1.500in");
 	graphicFramePropertiesOpenElement.write(pHandler);
 	
-	pHandler->endElement("style:style");
+	pHandler->endElement("style:graphic-properties");
 	
+	pHandler->endElement("style:style");
+#endif	
 	pHandler->endElement("office:styles");
 }
 
@@ -284,7 +286,9 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	docContentPropList.insert("office:version", "1.0");
 	if (mbIsFlatXML)
 	{
-		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");
+		docContentPropList.insert("office:mimetype", "application/x-vnd.oasis.openoffice.text");
+//		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");
+
 		mpHandler->startElement("office:document", docContentPropList);
 	}
 	else
@@ -310,24 +314,24 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	_writeDefaultStyles(mpHandler);
 
 	mpHandler->startElement("office:automatic-styles", xBlankAttrList);
-	
+#if 1
 	// FIXME: hic sunt leones
 	TagOpenElement frameStyleElement("style:style");
 	frameStyleElement.addAttribute("style:name", "fr1");
 	frameStyleElement.addAttribute("style:family", "graphic");
-	frameStyleElement.addAttribute("style:parent-style-name", "Graphic_Frame");
+	frameStyleElement.addAttribute("style:parent-style-name", "OLE");
 	frameStyleElement.write(mpHandler);
 	
 	TagOpenElement framePropertiesElement("style:graphic-properties");
 	framePropertiesElement.addAttribute("style:horizontal-pos", "left");
 	framePropertiesElement.addAttribute("style:horizontal-rel", "page");
-	// framePropertiesElement.addAttribute("draw:ole-draw-aspect", "1");
+	framePropertiesElement.addAttribute("draw:ole-draw-aspect", "1");
 	framePropertiesElement.write(mpHandler);
 	
 	mpHandler->endElement("style:graphic-properties");
 	mpHandler->endElement("style:style");
 	// FIXME: hic sunt leones
-
+#endif
 	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
 	     iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
 	{
@@ -1027,6 +1031,7 @@ void WordPerfectCollector::insertGraphics(const WPXInputStream *graphicsData)
 		return;
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
+#if 0
 	drawFrameOpenElement->addAttribute("draw:style-name","fr1");
 	WPXString objectName;
 	objectName.sprintf("Object%i", miObjectNumber++);
@@ -1036,6 +1041,7 @@ void WordPerfectCollector::insertGraphics(const WPXInputStream *graphicsData)
 	drawFrameOpenElement->addAttribute("svg:y", "0.000in");
 	drawFrameOpenElement->addAttribute("svg:width", "1.000in");
 	drawFrameOpenElement->addAttribute("svg:height", "1.500in");
+#endif
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(drawFrameOpenElement));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:object")));
 	

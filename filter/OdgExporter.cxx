@@ -87,50 +87,9 @@ void OdgExporter::startDocument(double width, double height)
 	tmpOfficeDocumentContent.addAttribute("xmlns:fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
 	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
 	if (mbIsFlatXML)
-		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");	
+		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/x-vnd.oasis.openoffice.drawing");
+//		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.drawing");	
 	tmpOfficeDocumentContent.write(mpHandler);
-
-#if 0
-	TagOpenElement("office:styles").write(mpHandler);
-	TagCloseElement("office:styles").write(mpHandler);
-	
-	TagOpenElement("office:automatic-styles").write(mpHandler);
-
-	TagOpenElement tmpStylePageLayoutOpenElement("style:page-layout");
-	tmpStylePageLayoutOpenElement.addAttribute("style:name", "PM0");
-	tmpStylePageLayoutOpenElement.write(mpHandler);
-
-	TagOpenElement tmpStylePageLayoutPropertiesOpenElement("style:page-layout-properties");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-top", "0in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-bottom", "0in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-left", "0in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-right", "0in");
-	WPXString sValue;
-	sValue = doubleToString(width); sValue.append("in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-width", sValue);
-	sValue = doubleToString(height); sValue.append("in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-height", sValue);
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("style:print-orientation", "portrait");
-	tmpStylePageLayoutPropertiesOpenElement.write(mpHandler);
-
-	TagCloseElement("style:page-layout-properties").write(mpHandler);
-
-	TagCloseElement("style:page-layout").write(mpHandler);
-
-	TagOpenElement tmpStyleStyleOpenElement("style:style");
-	tmpStyleStyleOpenElement.addAttribute("style:name", "dp1");
-	tmpStyleStyleOpenElement.addAttribute("style:family", "drawing-page");
-	tmpStyleStyleOpenElement.write(mpHandler);
-
-	TagOpenElement tmpStyleDrawingPagePropertiesOpenElement("style:drawing-page-properties");
-	tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:background-size", "border");
-	tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:fill", "none");
-	tmpStyleDrawingPagePropertiesOpenElement.write(mpHandler);
-
-	TagCloseElement("style:drawing-page-properties").write(mpHandler);
-
-	TagCloseElement("style:style").write(mpHandler);
-#endif
 }
 
 void OdgExporter::endDocument()
