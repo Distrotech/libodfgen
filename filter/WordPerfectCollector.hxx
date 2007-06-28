@@ -33,7 +33,6 @@
 #include "SectionStyle.hxx"
 
 #include <libwpd/libwpd.h>
-#include <libwpg/libwpg.h>
 #include <vector>
 #include <map>
 #include <stack>
@@ -74,7 +73,7 @@ struct ltstr
 	}
 };
 
-class WordPerfectCollector : public WPXDocumentInterface, public libwpg::WPGPaintInterface
+class WordPerfectCollector : public WPXDocumentInterface
 {
 public:
 	WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML = false);
@@ -131,20 +130,6 @@ public:
  	virtual void closeTable();
 	virtual void insertGraphics(const WPXInputStream *graphicsData);
 
-	// WPGPaintInterface's callbacks
-	virtual void startGraphics(double width, double height);
-	virtual void setPen(const libwpg::WPGPen& pen);
-	virtual void setBrush(const libwpg::WPGBrush& brush);
-	virtual void setFillRule(FillRule rule);
-	virtual void startLayer(unsigned int id);
-	virtual void endLayer(unsigned int id);
-	virtual void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry);
-	virtual void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry);
-	virtual void drawPolygon(const libwpg::WPGPointArray& vertices);
-	virtual void drawPath(const libwpg::WPGPath& path);
-	virtual void drawBitmap(const libwpg::WPGBitmap& bitmap);
-	virtual void endGraphics();
-
 protected:
 	void _resetDocumentState();
 	bool _parseSourceDocument(WPXInputStream &input);
@@ -180,15 +165,13 @@ private:
 
 	// table styles
 	std::vector<TableStyle *> mTableStyles;
+	
+	// frame styles
+	std::vector<DocumentElement *> mFrameStyles;
 
 	// list styles
 	unsigned int miNumListStyles;
 	
-	// graphics styles
-	std::vector<DocumentElement *> mGraphicsStrokeDashStyles;
-	std::vector<DocumentElement *> mGraphicsGradientStyles;
-	std::vector<DocumentElement *> mGraphicsAutomaticStyles;
-
 	// style elements
 	std::vector<DocumentElement *> mStylesElements;
 	// content elements
@@ -210,19 +193,11 @@ private:
 	bool mbListContinueNumbering;
 	bool mbListElementOpened;
 	bool mbListElementParagraphOpened;
+	unsigned miObjectNumber;
 
 	// table state
 	TableStyle *mpCurrentTableStyle;
 
-	libwpg::WPGPen mxPen;
-	libwpg::WPGBrush mxBrush;
-	FillRule mxFillRule;
-	int miGradientIndex;
-	int miDashIndex;
-	int miGraphicsStyleIndex;
-	void writeGraphicsStyle();
-	WPXString doubleToString(const double value);
-	
 	const bool mbIsFlatXML;
 };
 #endif

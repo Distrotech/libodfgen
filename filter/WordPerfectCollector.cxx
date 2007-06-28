@@ -43,6 +43,8 @@
 #include "TableStyle.hxx"
 #include "FilterInternal.hxx"
 #include "WriterProperties.hxx"
+#include "OdgExporter.hxx"
+#include "InternalHandler.hxx"
 
 _WriterDocumentState::_WriterDocumentState() :
 	mbFirstElement(true),
@@ -70,12 +72,7 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandl
 	mbListContinueNumbering(false),
 	mbListElementOpened(false),
 	mbListElementParagraphOpened(false),
-	mxPen(),
-	mxBrush(),
-	mxFillRule(AlternatingFill),
-	miGradientIndex(1),
-	miDashIndex(1), 
-	miGraphicsStyleIndex(1),
+	miObjectNumber(0),
 	mbIsFlatXML(isFlatXML)
 {
 }
@@ -136,20 +133,6 @@ bool WordPerfectCollector::filter()
 	}
 	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
 		delete((*iterTableStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
-		iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++) {
-		delete((*iterGraphicsAutomaticStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsStrokeDashStyles = mGraphicsStrokeDashStyles.begin();
-		iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++) {
-		delete((*iterGraphicsStrokeDashStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsGradientStyles = mGraphicsGradientStyles.begin(); iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++) {
-		delete((*iterGraphicsGradientStyles));
 	}
 
 	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin(); iterPageSpans != mPageSpans.end(); iterPageSpans++) {
@@ -224,20 +207,23 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	TagCloseElement tableHeadingStyleCloseElement("style:style");
 	tableHeadingStyleCloseElement.write(pHandler);
 	
-	for (std::vector<DocumentElement *>::iterator iterGraphicsStrokeDashStyles = mGraphicsStrokeDashStyles.begin();
-		iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++) {
-		(*iterGraphicsStrokeDashStyles)->write(pHandler);
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsGradientStyles = mGraphicsGradientStyles.begin();
-		iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++) {
-		(*iterGraphicsGradientStyles)->write(pHandler);
-	}
+	TagOpenElement graphicFrameStyleOpenElement("style:style");
+	graphicFrameStyleOpenElement.addAttribute("style:name", "Graphic_Frame");
+	graphicFrameStyleOpenElement.addAttribute("style:display-name", "Graphic Frame");
+	graphicFrameStyleOpenElement.addAttribute("style:family", "graphic");
+	graphicFrameStyleOpenElement.write(pHandler);
 	
-
-	TagCloseElement stylesCloseElement("office:styles");
-	stylesCloseElement.write(pHandler);
-
+	TagOpenElement graphicFramePropertiesOpenElement("style:graphic-properties");
+	graphicFramePropertiesOpenElement.addAttribute("text:anchor-type","page");
+	graphicFramePropertiesOpenElement.addAttribute("svg:x", "0.000in");
+	graphicFramePropertiesOpenElement.addAttribute("svg:y", "0.000in");
+	graphicFramePropertiesOpenElement.addAttribute("svg:width", "1.000in");
+	graphicFramePropertiesOpenElement.addAttribute("svg:height", "1.500in");
+	graphicFramePropertiesOpenElement.write(pHandler);
+	
+	pHandler->endElement("style:style");
+	
+	pHandler->endElement("office:styles");
 }
 
 // writes everything up to the automatic styles declarations..
@@ -324,13 +310,24 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	_writeDefaultStyles(mpHandler);
 
 	mpHandler->startElement("office:automatic-styles", xBlankAttrList);
-
-	TagOpenElement stylePOneOpenElement("style:style");
-	stylePOneOpenElement.addAttribute("style:name", "P1");
-	stylePOneOpenElement.addAttribute("style:family", "paragraph");
-	stylePOneOpenElement.write(mpHandler);
-	mpHandler->endElement("style:style");
 	
+	// FIXME: hic sunt leones
+	TagOpenElement frameStyleElement("style:style");
+	frameStyleElement.addAttribute("style:name", "fr1");
+	frameStyleElement.addAttribute("style:family", "graphic");
+	frameStyleElement.addAttribute("style:parent-style-name", "Graphic_Frame");
+	frameStyleElement.write(mpHandler);
+	
+	TagOpenElement framePropertiesElement("style:graphic-properties");
+	framePropertiesElement.addAttribute("style:horizontal-pos", "left");
+	framePropertiesElement.addAttribute("style:horizontal-rel", "page");
+	// framePropertiesElement.addAttribute("draw:ole-draw-aspect", "1");
+	framePropertiesElement.write(mpHandler);
+	
+	mpHandler->endElement("style:graphic-properties");
+	mpHandler->endElement("style:style");
+	// FIXME: hic sunt leones
+
 	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
 	     iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
 	{
@@ -364,31 +361,6 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 		(*iterTableStyles)->write(pHandler);
 	}
 
-	TagOpenElement grZeroStyleOpenElement("style:style");
-	grZeroStyleOpenElement.addAttribute("style:name", "gr0");
-	grZeroStyleOpenElement.addAttribute("style:family", "graphic");
-	grZeroStyleOpenElement.write(mpHandler);
-	
-	TagOpenElement grZeroPropertiesElement("style:graphic-properties");
-	grZeroPropertiesElement.addAttribute("style:run-through", "background");
-	grZeroPropertiesElement.addAttribute("style:vertical-pos", "from-top");
-	grZeroPropertiesElement.addAttribute("style:vertical-rel", "page");
-	grZeroPropertiesElement.addAttribute("style:horizontal-pos", "from-left");
-	grZeroPropertiesElement.addAttribute("style:horizontal-rel", "paragraph");
-	grZeroPropertiesElement.addAttribute("draw:wrap-influence-on-position", "once-concurrent");
-	grZeroPropertiesElement.addAttribute("style:flow-with-text", "false");
-	grZeroPropertiesElement.write(mpHandler);
-	
-	mpHandler->endElement("style:graphic-properties");
-	mpHandler->endElement("style:style");
-		
-		
-	// writing out the graphics automatic styles
-	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
-		iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++) {
-		(*iterGraphicsAutomaticStyles)->write(pHandler);
-	}
-
 	// writing out the page masters
 	_writePageLayouts(pHandler);
 
@@ -402,25 +374,6 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	pHandler->startElement("office:body", xBlankAttrList);
 	pHandler->startElement("office:text", xBlankAttrList);
 	
-	pHandler->startElement("text:sequence-decls", xBlankAttrList);
-	
-	WPXPropertyList textSequenceDeclPropList;
-	textSequenceDeclPropList.insert("text:display-outline-level", "0");
-	textSequenceDeclPropList.insert("text:name", "Illustration");
-	pHandler->startElement("text:sequence-decl", textSequenceDeclPropList);
-	pHandler->endElement("text:sequence-decl");
-	textSequenceDeclPropList.insert("text:name", "Table");
-	pHandler->startElement("text:sequence-decl", textSequenceDeclPropList);
-	pHandler->endElement("text:sequence-decl");
-	textSequenceDeclPropList.insert("text:name", "Text");
-	pHandler->startElement("text:sequence-decl", textSequenceDeclPropList);
-	pHandler->endElement("text:sequence-decl");
-	textSequenceDeclPropList.insert("text:name", "Drawing");
-	pHandler->startElement("text:sequence-decl", textSequenceDeclPropList);
-	pHandler->endElement("text:sequence-decl");
-	
-	pHandler->endElement("text:sequence-decls");
-
 	for (std::vector<DocumentElement *>::iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
 		(*iterBodyElements)->write(pHandler);
 	}
@@ -1070,398 +1023,27 @@ void WordPerfectCollector::insertText(const WPXString &text)
 
 void WordPerfectCollector::insertGraphics(const WPXInputStream *graphicsData)
 {
-	if (graphicsData)
-		libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(graphicsData), this);
-}
-
-void WordPerfectCollector::startGraphics(double width, double height)
-{
-	TagOpenElement *pDrawGElementParagraph = new TagOpenElement("text:p");
-	pDrawGElementParagraph->addAttribute("text:style-name", "Standard");
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawGElementParagraph));
-	TagOpenElement *pDrawGElement = new TagOpenElement("draw:g");
-	pDrawGElement->addAttribute("draw:z-index","0");
-	pDrawGElement->addAttribute("text:anchor-type", "paragraph");
-	// pDrawGElement->addAttribute("text:anchor-page-number", "1");
-	pDrawGElement->addAttribute("draw:style-name", "gr0");
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawGElement));
-}
-
-void WordPerfectCollector::setPen(const libwpg::WPGPen& pen)
-{
-	mxPen = pen;
-}
-
-void WordPerfectCollector::setBrush(const libwpg::WPGBrush& brush)
-{
-	mxBrush = brush;
-}
-
-void WordPerfectCollector::setFillRule(FillRule rule)
-{
-	mxFillRule = rule;
-}
-
-void WordPerfectCollector::startLayer(unsigned int id)
-{
-#if 0
-	TagOpenElement *pTextPElement = new TagOpenElement("text:p");
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pTextPElement));
-	TagOpenElement *pDrawGElement = new TagOpenElement("draw:g");
-	WPXString sId;
-	sId.sprintf("%i", id);
-	pDrawGElement->addAttribute("draw:z-index",sId);
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawGElement));
-#endif
-}
-
-void WordPerfectCollector::endLayer(unsigned int id)
-{
-#if 0
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:g")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
-#endif
-}
-
-void WordPerfectCollector::drawRectangle(const libwpg::WPGRect& rect, double rx, double ry)
-{
-	writeGraphicsStyle();
-	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
-	WPXString sValue;
-	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
-	pDrawRectElement->addAttribute("draw:style-name", sValue);
-	pDrawRectElement->addAttribute("draw:text-style-name", "P1");
-	sValue = doubleToString(rect.x1); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(rect.y1); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(rect.x2-rect.x1); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(rect.y2-rect.y1); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:height", sValue);
-	sValue = doubleToString(rx); sValue.append("in");
-	// FIXME: what to do when rx != ry ?
-	pDrawRectElement->addAttribute("draw:corner-radius", sValue);
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawRectElement));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:rect")));	
-}
-
-void WordPerfectCollector::drawEllipse(const libwpg::WPGPoint& center, double rx, double ry)
-{
-	writeGraphicsStyle();
-	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
-	WPXString sValue;
-	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
-	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
-	pDrawEllipseElement->addAttribute("draw:text-style-name", "P1");
-	sValue = doubleToString(center.x-rx); sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(center.y-ry); sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(2 * rx); sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(2 * ry); sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:height", sValue);
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawEllipseElement));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:ellipse")));
-}
-
-void WordPerfectCollector::drawPolygon(const libwpg::WPGPointArray& vertices)
-{
-	if(vertices.count() < 2)
+	if (!graphicsData)
 		return;
-
-	if(vertices.count() == 2)
-	{
-		const libwpg::WPGPoint& p1 = vertices[0];
-		const libwpg::WPGPoint& p2 = vertices[1];
-
-		writeGraphicsStyle();
-		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
-		WPXString sValue;
-		sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
-		pDrawLineElement->addAttribute("draw:style-name", sValue);
-		pDrawLineElement->addAttribute("draw:text-style-name", "P1");
-		//pDrawLineElement->addAttribute("draw:layer", "layout");
-		sValue = doubleToString(p1.x); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:x1", sValue);
-		sValue = doubleToString(p1.y); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:y1", sValue);
-		sValue = doubleToString(p2.x); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:x2", sValue);
-		sValue = doubleToString(p2.y); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:y2", sValue);
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawLineElement));
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:line")));
-	}
-	else
-	{
-		// draw as path
-		libwpg::WPGPath path;
-		path.moveTo(vertices[0]);
-		for(unsigned long ii = 1; ii < vertices.count(); ii++)
-			path.lineTo(vertices[ii]);
-		path.closed = true;
-		drawPath(path);
-	}
-}
-
-void WordPerfectCollector::drawPath(const libwpg::WPGPath& path)
-{
-	if(path.count() == 0)
-		return;
-
-	// try to find the bounding box
-	// this is simple convex hull technique, the bounding box might not be
-	// accurate but that should be enough for this purpose
-	libwpg::WPGPoint p = path.element(0).point;
-	libwpg::WPGPoint q = path.element(0).point;
-	for(unsigned k = 0; k < path.count(); k++)
-	{
-		libwpg::WPGPathElement element = path.element(k);
-		p.x = (p.x > element.point.x) ? element.point.x : p.x; 
-		p.y = (p.y > element.point.y) ? element.point.y : p.y; 
-		q.x = (q.x < element.point.x) ? element.point.x : q.x; 
-		q.y = (q.y < element.point.y) ? element.point.y : q.y; 
-		if(element.type == libwpg::WPGPathElement::CurveToElement)
-		{
-			p.x = (p.x > element.extra1.x) ? element.extra1.x : p.x; 
-			p.y = (p.y > element.extra1.y) ? element.extra1.y : p.y; 
-			q.x = (q.x < element.extra1.x) ? element.extra1.x : q.x; 
-			q.y = (q.y < element.extra1.y) ? element.extra1.y : q.y; 
-			p.x = (p.x > element.extra2.x) ? element.extra2.x : p.x; 
-			p.y = (p.y > element.extra2.y) ? element.extra2.y : p.y; 
-			q.x = (q.x < element.extra2.x) ? element.extra2.x : q.x; 
-			q.y = (q.y < element.extra2.y) ? element.extra2.y : q.y; 
-		}
-	}
-	double vw = q.x - p.x;
-	double vh = q.y - p.y;
-		
-	writeGraphicsStyle();
-
-	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
-	WPXString sValue;
-	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
-	pDrawPathElement->addAttribute("draw:style-name", sValue);
-	pDrawPathElement->addAttribute("draw:text-style-name", "P1");
-	//pDrawPathElement->addAttribute("draw:layer", "layout");
-	sValue = doubleToString(p.x); sValue.append("in");
-	pDrawPathElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(p.y); sValue.append("in");
-	pDrawPathElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(vw); sValue.append("in");
-	pDrawPathElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(vh); sValue.append("in");
-	pDrawPathElement->addAttribute("svg:height", sValue);
-	sValue.sprintf("%i %i %i %i", 0, 0, (int)(vw*2540), (int)(vh*2540));
-	pDrawPathElement->addAttribute("svg:viewBox", sValue);
-
-	sValue.clear();
-	for(unsigned i = 0; i < path.count(); i++)
-	{
-		libwpg::WPGPathElement element = path.element(i);
-		libwpg::WPGPoint point = element.point;
-		WPXString sElement;
-		switch(element.type)
-		{
-		// 2540 is 2.54*1000, 2.54 cm = 1 inch
-		case libwpg::WPGPathElement::MoveToElement:
-			sElement.sprintf("M%i %i", (int)((point.x-p.x)*2540), (int)((point.y-p.y)*2540));
-			break;
-				
-		case libwpg::WPGPathElement::LineToElement:
-			sElement.sprintf("L%i %i", (int)((point.x-p.x)*2540), (int)((point.y-p.y)*2540));
-			break;
-			
-		case libwpg::WPGPathElement::CurveToElement:
-			sElement.sprintf("C%i %i %i %i %i %i", (int)((element.extra1.x-p.x)*2540),
-			(int)((element.extra1.y-p.y)*2540), (int)((element.extra2.x-p.x)*2540),
-			(int)((element.extra2.y-p.y)*2540), (int)((point.x-p.x)*2540), (int)((point.y-p.y)*2540));
-			break;
-			
-		default:
-			break;
-		}
-		sValue.append(sElement);
-	}
-	if(path.closed)
-		sValue.append(" Z");
-	pDrawPathElement->addAttribute("svg:d", sValue);
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawPathElement));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:path")));
-}
+	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
+	drawFrameOpenElement->addAttribute("draw:style-name","fr1");
+	WPXString objectName;
+	objectName.sprintf("Object%i", miObjectNumber++);
+	drawFrameOpenElement->addAttribute("draw:name", objectName);
+	drawFrameOpenElement->addAttribute("text:anchor-type","page");
+	drawFrameOpenElement->addAttribute("svg:x", "0.000in");
+	drawFrameOpenElement->addAttribute("svg:y", "0.000in");
+	drawFrameOpenElement->addAttribute("svg:width", "1.000in");
+	drawFrameOpenElement->addAttribute("svg:height", "1.500in");
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(drawFrameOpenElement));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:object")));
+	
+	InternalHandler tmpHandler(mpCurrentContentElements);
+	OdgExporter exporter(&tmpHandler, true);
+	libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(graphicsData), &exporter);
 
-void WordPerfectCollector::drawBitmap(const libwpg::WPGBitmap& bitmap)
-{
-	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
-	WPXString sValue;
-	sValue = doubleToString(bitmap.rect.x1); sValue.append("cm");
-	pDrawFrameElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(bitmap.rect.y1); sValue.append("cm");
-	pDrawFrameElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(bitmap.rect.height()); sValue.append("cm");
-	pDrawFrameElement->addAttribute("svg:height", sValue);
-	sValue = doubleToString(bitmap.rect.width()); sValue.append("cm");
-	pDrawFrameElement->addAttribute("svg:width", sValue);
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pDrawFrameElement));
-	
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:image")));
-	
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("office:binary-data")));
-	
-	libwpg::WPGString base64Binary;
-	bitmap.generateBase64DIB(base64Binary);
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new CharDataElement(base64Binary.cstr())));
-	
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("office:binary-data")));
-	
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:image")));
-	
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:object")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
-}
-
-void WordPerfectCollector::endGraphics()
-{
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:g")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 }
-
-void WordPerfectCollector::writeGraphicsStyle()
-{
-	if(!mxPen.solid && (mxPen.dashArray.count() >=2 ) )
-	{
-		// ODG only supports dashes with the same length of spaces inbetween
-		// here we take the first space and assume everything else the same
-		// note that dash length is written in percentage
-		double distance = mxPen.dashArray.at(1);
-		TagOpenElement *pDrawStrokeDashElement = new TagOpenElement("draw:stroke-dash");
-		pDrawStrokeDashElement->addAttribute("draw:style", "rect");
-		WPXString sValue;
-		sValue.sprintf("Dash_%i", miDashIndex++);
-		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
-		sValue.sprintf("%i \%", distance*100);
-		pDrawStrokeDashElement->addAttribute("draw:distance", sValue);
-		WPXString sName;
-		for(unsigned i = 0; i < mxPen.dashArray.count()/2; i++)
-		{
-			sName.sprintf("draw:dots%i", i+1);
-			pDrawStrokeDashElement->addAttribute(sName.cstr(), "1");
-			sName.sprintf("draw:dots%i-length", i+1);
-			sValue.sprintf("%i\%", 100*mxPen.dashArray.at(i*2));
-			pDrawStrokeDashElement->addAttribute(sName.cstr(), sValue);
-		}
-		mGraphicsStrokeDashStyles.push_back(static_cast<DocumentElement *>(pDrawStrokeDashElement));
-		mGraphicsStrokeDashStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:stroke-dash")));
-	}
-
-	if(mxBrush.style == libwpg::WPGBrush::Gradient)
-	{
-		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
-		pDrawGradientElement->addAttribute("draw:style", "linear");
-		WPXString sValue;
-		sValue.sprintf("Gradient_%i", miGradientIndex++);
-		pDrawGradientElement->addAttribute("draw:name", sValue);
-
-		// ODG angle unit is 0.1 degree
-		double angle = -mxBrush.gradient.angle();
-		while(angle < 0)
-			angle += 360;
-		while(angle > 360)
-			angle -= 360;
-
-		sValue.sprintf("%i", angle*10);
-		pDrawGradientElement->addAttribute("draw:angle", sValue);
-
-		libwpg::WPGColor startColor = mxBrush.gradient.stopColor(0);
-		libwpg::WPGColor stopColor = mxBrush.gradient.stopColor(1);
-		sValue.sprintf("#%.2x%.2x%.2x", (startColor.red & 0xff), (startColor.green & 0xff), (startColor.blue & 0xff));
-		pDrawGradientElement->addAttribute("draw:start-color", sValue);
-		sValue.sprintf("#%.2x%.2x%.2x", (stopColor.red & 0xff), (stopColor.green & 0xff), (stopColor.blue & 0xff));
-		pDrawGradientElement->addAttribute("draw:end-color", sValue);
-		pDrawGradientElement->addAttribute("draw:start-intensity", "100%");
-		pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
-		pDrawGradientElement->addAttribute("draw:border", "0%");
-		mGraphicsGradientStyles.push_back(static_cast<DocumentElement *>(pDrawGradientElement));
-		mGraphicsGradientStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:gradient")));
-	}
-
-	TagOpenElement *pStyleStyleElement = new TagOpenElement("style:style");
-	WPXString sValue;
-	sValue.sprintf("gr%i",  miGraphicsStyleIndex);
-	pStyleStyleElement->addAttribute("style:name", sValue);
-	pStyleStyleElement->addAttribute("style:family", "graphic");
-	pStyleStyleElement->addAttribute("style:parent-style-name", "standard");
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(pStyleStyleElement));
-
-	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
-
-	if(mxPen.width > 0.0)
-	{
-		sValue = doubleToString(2.54 * mxPen.width); sValue.append("cm");
-		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", sValue);
-		sValue.sprintf("#%.2x%.2x%.2x", (mxPen.foreColor.red & 0xff),
-			(mxPen.foreColor.green & 0xff), (mxPen.foreColor.blue & 0xff));
-		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", sValue);
-
-		if(!mxPen.solid)
-		{
-			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "dash");
-			sValue.sprintf("Dash_%i", miDashIndex-1);
-			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke-dash", sValue);
-		}
-	}
-	else
-		pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "none");
-
-	if(mxBrush.style == libwpg::WPGBrush::NoBrush)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "none");
-
-	if(mxBrush.style == libwpg::WPGBrush::Solid)
-	{
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
-		sValue.sprintf("#%.2x%.2x%.2x", (mxBrush.foreColor.red & 0xff),
-			(mxBrush.foreColor.green & 0xff), (mxBrush.foreColor.blue & 0xff));
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", sValue);
-	}
-
-	if(mxBrush.style == libwpg::WPGBrush::Gradient)
-	{
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "gradient");
-		sValue.sprintf("Gradient_%i", miGradientIndex-1);
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-gradient-name", sValue);
-	}
-
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(pStyleGraphicsPropertiesElement));
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:graphic-properties")));
-
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:style")));
-	miGraphicsStyleIndex++;
-
-}
-
-WPXString WordPerfectCollector::doubleToString(const double value)
-{
-	WPXString tempString;
-	tempString.sprintf("%.4f", value);
-	std::string decimalPoint(localeconv()->decimal_point);
-	if ((decimalPoint.size() == 0) || (decimalPoint == "."))
-		return tempString;
-	std::string stringValue(tempString.cstr());
-	if (!stringValue.empty())
-	{
-		std::string::size_type pos;
-		while ((pos = stringValue.find(decimalPoint)) != std::string::npos)
-			stringValue.replace(pos,decimalPoint.size(),".");
-	}
-	return WPXString(stringValue.c_str());
-}
-

@@ -14,8 +14,12 @@ libwriterperfect_1_la_SOURCES =		\
 	FontStyle.hxx			\
 	GraphicsStyle.cxx		\
 	GraphicsStyle.hxx		\
+	InternalHandler.cxx		\
+	InternalHandler.hxx		\
 	ListStyle.cxx			\
 	ListStyle.hxx			\
+	OdgExporter.cxx			\
+	OdgExporter.hxx			\
 	PageSpan.cxx			\
 	PageSpan.hxx			\
 	SectionStyle.cxx 		\
