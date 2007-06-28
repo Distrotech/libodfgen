@@ -166,16 +166,15 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	TagCloseElement defaultParagraphStylePropertiesCloseElement("style:paragraph-properties");
 	defaultParagraphStylePropertiesCloseElement.write(pHandler);
 
-	TagCloseElement defaultParagraphStyleCloseElement("style:default-style");
-	defaultParagraphStyleCloseElement.write(pHandler);
+	pHandler->endElement("style:default-style");
 
 	TagOpenElement standardStyleOpenElement("style:style");
 	standardStyleOpenElement.addAttribute("style:name", "Standard");
 	standardStyleOpenElement.addAttribute("style:family", "paragraph");
 	standardStyleOpenElement.addAttribute("style:class", "text");
 	standardStyleOpenElement.write(pHandler);
-	TagCloseElement standardStyleCloseElement("style:style");
-	standardStyleCloseElement.write(pHandler);
+	
+	pHandler->endElement("style:style");
 
 	TagOpenElement textBodyStyleOpenElement("style:style");
 	textBodyStyleOpenElement.addAttribute("style:name", "Text_Body");
@@ -184,8 +183,8 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	textBodyStyleOpenElement.addAttribute("style:parent-style-name", "Standard");
 	textBodyStyleOpenElement.addAttribute("style:class", "text");
 	textBodyStyleOpenElement.write(pHandler);
-	TagCloseElement textBodyStyleCloseElement("style:style");
-	textBodyStyleCloseElement.write(pHandler);
+	
+	pHandler->endElement("style:style");
 
 	TagOpenElement tableContentsStyleOpenElement("style:style");
 	tableContentsStyleOpenElement.addAttribute("style:name", "Table_Contents");
@@ -194,8 +193,8 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	tableContentsStyleOpenElement.addAttribute("style:parent-style-name", "Text_Body");
 	tableContentsStyleOpenElement.addAttribute("style:class", "extra");
 	tableContentsStyleOpenElement.write(pHandler);
-	TagCloseElement tableContentsStyleCloseElement("style:style");
-	tableContentsStyleCloseElement.write(pHandler);
+	
+	pHandler->endElement("style:style");
 
 	TagOpenElement tableHeadingStyleOpenElement("style:style");
 	tableHeadingStyleOpenElement.addAttribute("style:name", "Table_Heading");
@@ -204,9 +203,8 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	tableHeadingStyleOpenElement.addAttribute("style:parent-style-name", "Table_Contents");
 	tableHeadingStyleOpenElement.addAttribute("style:class", "extra");
 	tableHeadingStyleOpenElement.write(pHandler);
-	TagCloseElement tableHeadingStyleCloseElement("style:style");
-	tableHeadingStyleCloseElement.write(pHandler);
 	
+	pHandler->endElement("style:style");
 #if 1
 	TagOpenElement graphicFrameStyleOpenElement("style:style");
 	graphicFrameStyleOpenElement.addAttribute("style:name", "OLE");
@@ -287,7 +285,6 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	if (mbIsFlatXML)
 	{
 		docContentPropList.insert("office:mimetype", "application/x-vnd.oasis.openoffice.text");
-//		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");
 
 		mpHandler->startElement("office:document", docContentPropList);
 	}
