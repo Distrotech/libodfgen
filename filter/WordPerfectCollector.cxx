@@ -214,8 +214,8 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	graphicFramePropertiesOpenElement.addAttribute("text:anchor-type","page");
 	graphicFramePropertiesOpenElement.addAttribute("svg:x", "0.000in");
 	graphicFramePropertiesOpenElement.addAttribute("svg:y", "0.000in");
-	graphicFramePropertiesOpenElement.addAttribute("svg:width", "1.000in");
-	graphicFramePropertiesOpenElement.addAttribute("svg:height", "1.500in");
+	graphicFramePropertiesOpenElement.addAttribute("svg:width", "1.500in");
+	graphicFramePropertiesOpenElement.addAttribute("svg:height", "2.250in");
 	graphicFramePropertiesOpenElement.write(pHandler);
 	
 	pHandler->endElement("style:graphic-properties");
@@ -1024,7 +1024,7 @@ void WordPerfectCollector::insertGraphics(const WPXInputStream *graphicsData)
 		return;
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
-#if 0
+#if 1
 	drawFrameOpenElement->addAttribute("draw:style-name","fr1");
 	WPXString objectName;
 	objectName.sprintf("Object%i", miObjectNumber++);
@@ -1032,8 +1032,8 @@ void WordPerfectCollector::insertGraphics(const WPXInputStream *graphicsData)
 	drawFrameOpenElement->addAttribute("text:anchor-type","page");
 	drawFrameOpenElement->addAttribute("svg:x", "0.000in");
 	drawFrameOpenElement->addAttribute("svg:y", "0.000in");
-	drawFrameOpenElement->addAttribute("svg:width", "1.000in");
-	drawFrameOpenElement->addAttribute("svg:height", "1.500in");
+	drawFrameOpenElement->addAttribute("svg:width", "1.500in");
+	drawFrameOpenElement->addAttribute("svg:height", "2.250in");
 #endif
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(drawFrameOpenElement));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:object")));

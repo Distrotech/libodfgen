@@ -191,7 +191,7 @@ main (int argc, char *argv[])
 
 	gsf_init ();
 
-	if (argc != 3) 
+	if (argc < 2) 
 	{
 		fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", argv[0]);
 		fprintf(stderr, "USAGE : Where <infile> is the WordPerfect source document\n");
@@ -205,7 +205,12 @@ main (int argc, char *argv[])
 
 	char *szInputFile;
 
-	if (!strcmp(argv[1], "--stdout"))
+	if (argc == 2)
+	{
+		szInputFile = argv[1];
+		pOutput = NULL;
+	}
+	else if (!strcmp(argv[1], "--stdout"))
 	{
 	        szInputFile = argv[2];
 	        pOutput = NULL;

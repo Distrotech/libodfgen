@@ -1,8 +1,8 @@
 noinst_LTLIBRARIES = libwriterperfect-1.la
 
-AM_CXXFLAGS = $(WPD2SXW_CXXFLAGS) $(DEBUG_CXXFLAGS)
+AM_CXXFLAGS = $(WRITERPERFECT_CXXFLAGS) $(DEBUG_CXXFLAGS)
 
-libwriterperfect_1_la_LIBADD  = $(WPD2SXW_LIBS)
+libwriterperfect_1_la_LIBADD  = $(WRITERPERFECT_LIBS)
 libwriterperfect_1_la_SOURCES =		\
 	FilterInternal.hxx		\
 	Style.hxx			\

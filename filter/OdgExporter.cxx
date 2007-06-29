@@ -85,11 +85,51 @@ void OdgExporter::startDocument(double width, double height)
 	tmpOfficeDocumentContent.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
 	tmpOfficeDocumentContent.addAttribute("xmlns:svg", "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
+	tmpOfficeDocumentContent.addAttribute("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0");
+	tmpOfficeDocumentContent.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
 	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
 	if (mbIsFlatXML)
 		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/x-vnd.oasis.openoffice.drawing");
 //		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.drawing");	
 	tmpOfficeDocumentContent.write(mpHandler);
+	
+	TagOpenElement("office:settings").write(mpHandler);
+	
+	TagOpenElement configItemSetOpenElement("config:config-item-set");
+	configItemSetOpenElement.addAttribute("config:name", "ooo:view-settings");
+	configItemSetOpenElement.write(mpHandler);
+	
+	TagOpenElement configItemOpenElement("config:config-item");
+
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaTop");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(mpHandler);
+	mpHandler->characters("0");
+	mpHandler->endElement("config:config-item");
+	
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaLeft");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(mpHandler);
+	mpHandler->characters("0");
+	mpHandler->endElement("config:config-item");
+	
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(mpHandler);
+	WPXString sWidth; sWidth.sprintf("%i", (unsigned)(2540 * width));
+	mpHandler->characters(sWidth);
+	mpHandler->endElement("config:config-item");
+	
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(mpHandler);
+	WPXString sHeight; sHeight.sprintf("%i", (unsigned)(2540 * height));
+	mpHandler->characters(sHeight);
+	mpHandler->endElement("config:config-item");
+	
+	mpHandler->endElement("config:config-item-set");
+	
+	mpHandler->endElement("office:settings");
 }
 
 void OdgExporter::endDocument()
@@ -146,7 +186,7 @@ void OdgExporter::endDocument()
 	tmpStyleStyleOpenElement.write(mpHandler);
 
 	TagOpenElement tmpStyleDrawingPagePropertiesOpenElement("style:drawing-page-properties");
-	tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:background-size", "border");
+	// tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:background-size", "border");
 	tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:fill", "none");
 	tmpStyleDrawingPagePropertiesOpenElement.write(mpHandler);
 
@@ -345,7 +385,7 @@ void OdgExporter::drawPath(const libwpg::WPGPath& path)
 	pDrawPathElement->addAttribute("svg:width", sValue);
 	sValue = doubleToString(vh); sValue.append("in");
 	pDrawPathElement->addAttribute("svg:height", sValue);
-	sValue.sprintf("%i %i %i %i", 0, 0, (int)(vw*2540), (int)(vh*2540));
+	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)(vw*2540), (unsigned)(vh*2540));
 	pDrawPathElement->addAttribute("svg:viewBox", sValue);
 
     sValue.clear();
@@ -358,17 +398,17 @@ void OdgExporter::drawPath(const libwpg::WPGPath& path)
 		{
 			// 2540 is 2.54*1000, 2.54 in = 1 inch
 			case libwpg::WPGPathElement::MoveToElement:
-			    sElement.sprintf("M%i %i", (int)((point.x-p.x)*2540), (int)((point.y-p.y)*2540));
+			    sElement.sprintf("M%i %i", (unsigned)((point.x-p.x)*2540), (unsigned)((point.y-p.y)*2540));
 				break;
 				
 			case libwpg::WPGPathElement::LineToElement:
-			    sElement.sprintf("L%i %i", (int)((point.x-p.x)*2540), (int)((point.y-p.y)*2540));
+			    sElement.sprintf("L%i %i", (unsigned)((point.x-p.x)*2540), (unsigned)((point.y-p.y)*2540));
 				break;
 			
 			case libwpg::WPGPathElement::CurveToElement:
-                sElement.sprintf("C%i %i %i %i %i %i", (int)((element.extra1.x-p.x)*2540),
-                (int)((element.extra1.y-p.y)*2540), (int)((element.extra2.x-p.x)*2540),
-                (int)((element.extra2.y-p.y)*2540), (int)((point.x-p.x)*2540), (int)((point.y-p.y)*2540));
+                sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((element.extra1.x-p.x)*2540),
+                (int)((element.extra1.y-p.y)*2540), (unsigned)((element.extra2.x-p.x)*2540),
+                (int)((element.extra2.y-p.y)*2540), (unsigned)((point.x-p.x)*2540), (unsigned)((point.y-p.y)*2540));
 				break;
 			
 			default:
