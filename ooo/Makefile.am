@@ -1,25 +1,22 @@
 EXTRA_DIST = \
 	attrlist.cxx \
 	attrlist.hxx \
-	content.hxx \
-	diagnose.hxx \
 	exports.dxp \
-	genericfilter.cxx \
-	iucbhelper.lib \
-	macros.hxx \
-	object.hxx \
 	OODocumentHandler.cxx \
 	OODocumentHandler.hxx \
-	ref.hxx \
-	ref.inl \
-	refernce.hxx \
-	types.hxx \
+	WordPerfectGraphics.xcu \
+	draw_WordPerfect_Graphics.xcu \
 	TypeDetection.xcu \
 	WordPerfectImportFilter.cxx \
 	WordPerfectImportFilter.hxx \
 	WordPerfectImportStream.cxx \
 	WordPerfectImportStream.hxx \
+	WPGImportFilter.cxx \
+	WPGImportFilter.hxx \
+	WPGImportFilter.uno.xml
 	WriterPerfect.uno.xml \
+	wpdimp.cxx \
+	wpgimp.cxx \
 	xmlkywd.cxx \
 	xmlkywd.hxx \
 	xmltoken.cxx \

@@ -2,9 +2,9 @@
  *
  *  $RCSfile: attrlist.cxx,v $
  *
- *  $Revision: 1.1 $
+ *  $Revision: 1.2 $
  *
- *  last change: $Author: lachancew $ $Date: 2004/11/25 07:54:55 $
+ *  last change: $Author: strbafridrich $ $Date: 2007/06/29 12:07:19 $
  *
  *  The Contents of this file are made available subject to the terms of
  *  either of the following licenses
@@ -253,7 +253,12 @@ SvXMLAttributeList* SvXMLAttributeList::getImplementation( uno::Reference< uno::
 {
 	uno::Reference< lang::XUnoTunnel > xUT( xInt, uno::UNO_QUERY );
 	if( xUT.is() )
-		return (SvXMLAttributeList*)xUT->getSomething( SvXMLAttributeList::getUnoTunnelId() );
+	{
+		return 
+			reinterpret_cast<SvXMLAttributeList*>(
+				sal::static_int_cast<sal_IntPtr>(
+					xUT->getSomething( SvXMLAttributeList::getUnoTunnelId())));
+	}
 	else
 		return NULL;
 }
@@ -265,9 +270,7 @@ sal_Int64 SAL_CALL SvXMLAttributeList::getSomething( const uno::Sequence< sal_In
 	if( rId.getLength() == 16 && 0 == rtl_compareMemory( getUnoTunnelId().getConstArray(),
 														 rId.getConstArray(), 16 ) )
 	{
-		return (sal_Int64)this;
+		return sal::static_int_cast<sal_Int64>(reinterpret_cast<sal_uIntPtr>(this));
 	}
 	return 0;
 }
-
-

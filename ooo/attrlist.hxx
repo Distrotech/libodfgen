@@ -2,9 +2,9 @@
  *
  *  $RCSfile: attrlist.hxx,v $
  *
- *  $Revision: 1.1 $
+ *  $Revision: 1.2 $
  *
- *  last change: $Author: lachancew $ $Date: 2004/11/25 07:54:55 $
+ *  last change: $Author: strbafridrich $ $Date: 2007/06/29 12:07:19 $
  *
  *  The Contents of this file are made available subject to the terms of
  *  either of the following licenses
