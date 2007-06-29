@@ -6,7 +6,8 @@ EXTRA_DIST = \
 	OODocumentHandler.hxx \
 	WordPerfectGraphics.xcu \
 	draw_WordPerfect_Graphics.xcu \
-	TypeDetection.xcu \
+	WordPerfectDocument.xcu \
+	writer_WordPerfect_Document.xcu \
 	WordPerfectImportFilter.cxx \
 	WordPerfectImportFilter.hxx \
 	WordPerfectImportStream.cxx \
