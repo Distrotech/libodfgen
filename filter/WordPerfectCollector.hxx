@@ -128,7 +128,12 @@ public:
 	virtual void closeTableCell();
 	virtual void insertCoveredTableCell(const WPXPropertyList &propList);
  	virtual void closeTable();
-	virtual void insertGraphics(const WPXInputStream *graphicsData);
+
+	virtual void openBox(const WPXPropertyList & propList);
+	virtual void closeBox();
+	
+	virtual void insertBinaryObject(const WPXPropertyList &propList, const WPXInputStream *objectStream);
+	virtual void insertBinaryObject(const WPXPropertyList & /* propList */, const WPXString & /* objectBase64 */) {}
 
 protected:
 	void _resetDocumentState();

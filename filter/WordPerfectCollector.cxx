@@ -1018,10 +1018,8 @@ void WordPerfectCollector::insertText(const WPXString &text)
 	mpCurrentContentElements->push_back(pText);
 }
 
-void WordPerfectCollector::insertGraphics(const WPXInputStream *graphicsData)
+void WordPerfectCollector::openBox(const WPXPropertyList & /* propList */ )
 {
-	if (!graphicsData)
-		return;
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
 #if 1
@@ -1036,13 +1034,26 @@ void WordPerfectCollector::insertGraphics(const WPXInputStream *graphicsData)
 	drawFrameOpenElement->addAttribute("svg:height", "2.250in");
 #endif
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(drawFrameOpenElement));
+
+}
+
+void WordPerfectCollector::closeBox()
+{
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
+}
+
+void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, const WPXInputStream *objectStream)
+{
+	if (!objectStream)
+		return;
+	if (!propList["libwpd:mimetype"] || !(propList["libwpd:mimetype"]->getStr() == "image/x-wpg"))
+		return;
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:object")));
 	
 	InternalHandler tmpHandler(mpCurrentContentElements);
 	OdgExporter exporter(&tmpHandler, true);
-	libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(graphicsData), &exporter);
+	libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(objectStream), &exporter);
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:object")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 }
