@@ -1043,9 +1043,9 @@ void WordPerfectCollector::closeBox()
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 }
 
-void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, const WPXInputStream *objectStream)
+void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData *object)
 {
-	if (!objectStream)
+	if (!object)
 		return;
 	if (!propList["libwpd:mimetype"] || !(propList["libwpd:mimetype"]->getStr() == "image/x-wpg"))
 		return;
@@ -1053,7 +1053,7 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 	
 	InternalHandler tmpHandler(mpCurrentContentElements);
 	OdgExporter exporter(&tmpHandler, true);
-	libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(objectStream), &exporter);
+	libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(object->getDataStream()), &exporter);
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:object")));
 }
