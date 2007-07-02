@@ -1020,7 +1020,6 @@ void WordPerfectCollector::insertText(const WPXString &text)
 
 void WordPerfectCollector::openBox(const WPXPropertyList & /* propList */ )
 {
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:p")));
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
 #if 1
 	drawFrameOpenElement->addAttribute("draw:style-name","fr1");
@@ -1040,7 +1039,6 @@ void WordPerfectCollector::openBox(const WPXPropertyList & /* propList */ )
 void WordPerfectCollector::closeBox()
 {
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 }
 
 void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData *object)
