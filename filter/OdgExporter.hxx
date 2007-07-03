@@ -56,6 +56,7 @@ public:
 	void drawPolygon(const libwpg::WPGPointArray& vertices);
 	void drawPath(const libwpg::WPGPath& path);
 	void drawBitmap(const libwpg::WPGBitmap& bitmap);
+	void drawImageObject(const libwpg::WPGBinaryData& binaryData);
 
 private:
 	void writeGraphicsStyle();

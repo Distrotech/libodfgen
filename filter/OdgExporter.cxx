@@ -452,6 +452,35 @@ void OdgExporter::drawBitmap(const libwpg::WPGBitmap& bitmap)
 	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
 }
 
+void OdgExporter::drawImageObject(const libwpg::WPGBinaryData& binaryData)
+{
+	if (binaryData.mimeType.length() <= 0)
+		return;
+	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
+	WPXString sValue;
+	sValue = doubleToString(binaryData.rect.x1); sValue.append("in");
+	pDrawFrameElement->addAttribute("svg:x", sValue);
+	sValue = doubleToString(binaryData.rect.y1); sValue.append("in");
+	pDrawFrameElement->addAttribute("svg:y", sValue);
+	sValue = doubleToString(binaryData.rect.height()); sValue.append("in");
+	pDrawFrameElement->addAttribute("svg:height", sValue);
+	sValue = doubleToString(binaryData.rect.width()); sValue.append("in");
+	pDrawFrameElement->addAttribute("svg:width", sValue);
+	mBodyElements.push_back(static_cast<DocumentElement *>(pDrawFrameElement));
+	
+	mBodyElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:image")));
+	
+	mBodyElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("office:binary-data")));
+	
+	libwpg::WPGString base64Binary = binaryData.getBase64Data();
+	mBodyElements.push_back(static_cast<DocumentElement *>(new CharDataElement(base64Binary.cstr())));
+	
+	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("office:binary-data")));
+	
+	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:image")));
+	
+	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
+}
 
 void OdgExporter::writeGraphicsStyle()
 {
