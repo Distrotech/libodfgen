@@ -61,6 +61,7 @@ struct _WriterDocumentState
 	bool mbTableCellOpened;
 	bool mbHeaderRow;
 	bool mbInNote;
+	bool mbInFrame;
 };
 
 enum WriterListType { unordered, ordered };
@@ -172,6 +173,8 @@ private:
 	
 	// frame styles
 	std::vector<DocumentElement *> mFrameStyles;
+	
+	std::vector<DocumentElement *> mFrameAutomaticStyles;
 
 	// list styles
 	unsigned int miNumListStyles;

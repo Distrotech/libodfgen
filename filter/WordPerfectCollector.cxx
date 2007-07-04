@@ -52,7 +52,8 @@ _WriterDocumentState::_WriterDocumentState() :
 	mbListElementOpenedAtCurrentLevel(false),
 	mbTableCellOpened(false),
 	mbHeaderRow(false),
-	mbInNote(false)
+	mbInNote(false),
+	mbInFrame(false)
 {
 }
 
@@ -138,6 +139,13 @@ bool WordPerfectCollector::filter()
 	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin(); iterPageSpans != mPageSpans.end(); iterPageSpans++) {
 		delete(*iterPageSpans);
 	}
+	for (std::vector<DocumentElement *>::iterator iterFrameStyles = mFrameStyles.begin(); iterFrameStyles != mFrameStyles.end(); iterFrameStyles++) {
+		delete(*iterFrameStyles);
+	}
+	for (std::vector<DocumentElement *>::iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
+		iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); iterFrameAutomaticStyles++) {
+		delete(*iterFrameAutomaticStyles);
+	}
 
  	return true;
 }
@@ -204,24 +212,11 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	tableHeadingStyleOpenElement.write(pHandler);
 	
 	pHandler->endElement("style:style");
-#if 1
-	TagOpenElement graphicFrameStyleOpenElement("style:style");
-	graphicFrameStyleOpenElement.addAttribute("style:name", "OLE");
-	graphicFrameStyleOpenElement.addAttribute("style:family", "graphic");
-	graphicFrameStyleOpenElement.write(pHandler);
-	
-	TagOpenElement graphicFramePropertiesOpenElement("style:graphic-properties");
-	graphicFramePropertiesOpenElement.addAttribute("text:anchor-type","page");
-	graphicFramePropertiesOpenElement.addAttribute("svg:x", "0.000in");
-	graphicFramePropertiesOpenElement.addAttribute("svg:y", "0.000in");
-	graphicFramePropertiesOpenElement.addAttribute("svg:width", "1.500in");
-	graphicFramePropertiesOpenElement.addAttribute("svg:height", "2.250in");
-	graphicFramePropertiesOpenElement.write(pHandler);
-	
-	pHandler->endElement("style:graphic-properties");
-	
-	pHandler->endElement("style:style");
-#endif	
+
+	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
+		iter != mFrameStyles.end(); iter++)
+		(*iter)->write(pHandler);
+
 	pHandler->endElement("office:styles");
 }
 
@@ -307,25 +302,14 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	_writeDefaultStyles(mpHandler);
 
 	TagOpenElement("office:automatic-styles").write(mpHandler);
-#if 1
-	// FIXME: hic sunt leones
-	TagOpenElement frameStyleElement("style:style");
-	frameStyleElement.addAttribute("style:name", "fr1");
-	frameStyleElement.addAttribute("style:family", "graphic");
-	frameStyleElement.addAttribute("style:parent-style-name", "OLE");
-	frameStyleElement.write(mpHandler);
+
+	for (std::vector<DocumentElement *>::const_iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
+		iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); iterFrameAutomaticStyles++)
+	{
+		(*iterFrameAutomaticStyles)->write(pHandler);
+	}
 	
-	TagOpenElement framePropertiesElement("style:graphic-properties");
-	framePropertiesElement.addAttribute("style:horizontal-pos", "left");
-	framePropertiesElement.addAttribute("style:horizontal-rel", "page");
-	framePropertiesElement.addAttribute("draw:ole-draw-aspect", "1");
-	framePropertiesElement.write(mpHandler);
-	
-	mpHandler->endElement("style:graphic-properties");
-	mpHandler->endElement("style:style");
-	// FIXME: hic sunt leones
-#endif
-	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); 
+	for (std::map<WPXString, ParagraphStyle *, ltstr>::const_iterator iterTextStyle = mTextStyleHash.begin(); 
 	     iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
 	{
 		// writing out the paragraph styles
@@ -337,24 +321,24 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	}
 
 	// span styles..
-	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); 
+	for (std::map<WPXString, SpanStyle *, ltstr>::const_iterator iterSpanStyle = mSpanStyleHash.begin(); 
 	     iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) 
 	{
 		(iterSpanStyle->second)->write(pHandler);
 	}
 
  	// writing out the sections styles
-	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
+	for (std::vector<SectionStyle *>::const_iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
 		(*iterSectionStyles)->write(pHandler);
 	}
 
 	// writing out the lists styles
-	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
+	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
 		(*iterListStyles)->write(pHandler);
 	}
 
  	// writing out the table styles
-	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
+	for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
 		(*iterTableStyles)->write(pHandler);
 	}
 
@@ -371,7 +355,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	TagOpenElement("office:body").write(mpHandler);
 	TagOpenElement("office:text").write(mpHandler);
 	
-	for (std::vector<DocumentElement *>::iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
+	for (std::vector<DocumentElement *>::const_iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
 		(*iterBodyElements)->write(pHandler);
 	}
  	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Finished writing all doc els..\n"));
@@ -509,15 +493,6 @@ void WordPerfectCollector::closeSection()
 	else
 		mWriterDocumentState.mbInFakeSection = false;
 
-	// open as many paragraphs as needed to simulate section space after
-	// WLACH_REFACTORING: disable this for now..
-	#if 0
-	for (float f=0.0f; f<mfSectionSpaceAfter; f+=1.0f) {
-		vector<WPXTabStop> dummyTabStops;
-		openParagraph(WPX_PARAGRAPH_JUSTIFICATION_LEFT, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, dummyTabStops, false, false);
-		closeParagraph();
-	}
-	#endif
 	mfSectionSpaceAfter = 0.0f;
 }
 
@@ -1018,32 +993,111 @@ void WordPerfectCollector::insertText(const WPXString &text)
 	mpCurrentContentElements->push_back(pText);
 }
 
-void WordPerfectCollector::openBox(const WPXPropertyList & /* propList */ )
+void WordPerfectCollector::openBox(const WPXPropertyList &propList)
 {
+	// First, let's create a Frame Style for this box
+	TagOpenElement *frameStyleOpenElement = new TagOpenElement("style:style");
+	WPXString frameStyleName;
+	frameStyleName.sprintf("GraphicFrame_%i", miObjectNumber);
+	frameStyleOpenElement->addAttribute("style:name", frameStyleName);
+	frameStyleOpenElement->addAttribute("style:family", "graphic");
+
+	mFrameStyles.push_back(static_cast<DocumentElement *>(frameStyleOpenElement));
+	
+	TagOpenElement *frameStylePropertiesOpenElement = new TagOpenElement("style:graphic-properties");
+
+	if (propList["text:anchor-type"])
+		frameStylePropertiesOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
+	else
+		frameStylePropertiesOpenElement->addAttribute("text:anchor-type","paragraph");
+
+	if (propList["svg:x"])
+		frameStylePropertiesOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+		
+	if (propList["svg:y"])
+		frameStylePropertiesOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	
+	if (propList["svg:width"])
+		frameStylePropertiesOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	
+	if (propList["svg:height"])
+		frameStylePropertiesOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+
+	mFrameStyles.push_back(static_cast<DocumentElement *>(frameStylePropertiesOpenElement));
+	
+	mFrameStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:graphic-properties")));
+	
+	mFrameStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:style")));
+	
+	// Now, let's create an automatic style for this frame
+	TagOpenElement *frameAutomaticStyleElement = new TagOpenElement("style:style");
+	WPXString frameAutomaticStyleName;
+	frameAutomaticStyleName.sprintf("fr%i", miObjectNumber);
+	frameAutomaticStyleElement->addAttribute("style:name", frameAutomaticStyleName);
+	frameAutomaticStyleElement->addAttribute("style:family", "graphic");
+	frameAutomaticStyleElement->addAttribute("style:parent-style-name", frameStyleName);
+
+	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(frameAutomaticStyleElement));
+	
+	TagOpenElement *frameAutomaticStylePropertiesElement = new TagOpenElement("style:graphic-properties");
+	if (propList["style:horizontal-pos"])
+		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", propList["style:horizontal-pos"]->getStr());
+	else
+		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", "left");
+	
+	if (propList["style:horizontal-rel"])
+		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", propList["style:horizontal-rel"]->getStr());
+	else
+		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", "paragraph");
+		
+	frameAutomaticStylePropertiesElement->addAttribute("draw:ole-draw-aspect", "1");
+
+	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(frameAutomaticStylePropertiesElement));
+	
+	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:graphic-properties")));
+
+	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:style")));
+	
+	// And write the frame itself
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
-#if 1
-	drawFrameOpenElement->addAttribute("draw:style-name","fr1");
+
+	drawFrameOpenElement->addAttribute("draw:style-name",frameAutomaticStyleName);
 	WPXString objectName;
 	objectName.sprintf("Object%i", miObjectNumber++);
-	drawFrameOpenElement->addAttribute("draw:name", objectName);
-	drawFrameOpenElement->addAttribute("text:anchor-type","page");
-	drawFrameOpenElement->addAttribute("svg:x", "0.000in");
-	drawFrameOpenElement->addAttribute("svg:y", "0.000in");
-	drawFrameOpenElement->addAttribute("svg:width", "1.500in");
-	drawFrameOpenElement->addAttribute("svg:height", "2.250in");
-#endif
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(drawFrameOpenElement));
+	if (propList["text:anchor-type"])
+		drawFrameOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
+	else
+		drawFrameOpenElement->addAttribute("text:anchor-type","paragraph");
 
+	if (propList["svg:x"])
+		drawFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+		
+	if (propList["svg:y"])
+		drawFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	
+	if (propList["svg:width"])
+		drawFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+
+	if (propList["svg:height"])
+		drawFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(drawFrameOpenElement));
+	
+	mWriterDocumentState.mbInFrame = true;
 }
 
 void WordPerfectCollector::closeBox()
 {
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
+
+	mWriterDocumentState.mbInFrame = false;
 }
 
 void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData *object)
 {
 	if (!object)
+		return;
+	if (!mWriterDocumentState.mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
 	if (!propList["libwpd:mimetype"] || !(propList["libwpd:mimetype"]->getStr() == "image/x-wpg"))
 		return;
