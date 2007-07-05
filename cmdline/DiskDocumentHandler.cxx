@@ -41,6 +41,7 @@ void DiskDocumentHandler::endElement(const char *psName)
 			gsf_output_puts(mpOutput, ">");
 			gsf_output_puts(mpOutput, "</");
 			gsf_output_puts(mpOutput, psName);
+			gsf_output_puts(mpOutput, ">");
 			mbIsTagOpened = false;
 		}
 	}
