@@ -128,6 +128,19 @@ static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char
 	return false;
 }
 
+static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str, const char compression_level)
+{
+	GsfOutput *child;
+	if (NULL != (child = gsf_outfile_new_child_full  (outfile, fileName, FALSE,"compression-level", 0, (void*)0)))
+	{
+		bool res = gsf_output_puts (child, str) &&
+			gsf_output_close (child);
+		g_object_unref (child);
+		return res;
+	}
+	return false;
+}
+
 static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 {
 	GError *err = NULL;
@@ -249,7 +262,7 @@ main (int argc, char *argv[])
 	        g_object_unref (pOutput);
 	}
 
-	if (pOutfile && !writeChildFile(pOutfile, "mimetype", mimetypeStr)) {
+	if (pOutfile && !writeChildFile(pOutfile, "mimetype", mimetypeStr, (char)0)) {
 		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
 	       	g_object_unref (pOutfile);
 		gsf_shutdown ();
