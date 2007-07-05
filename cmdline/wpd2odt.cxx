@@ -217,8 +217,8 @@ main (int argc, char *argv[])
 		fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", argv[0]);
 		fprintf(stderr, "USAGE : Where <infile> is the WordPerfect source document\n");
 		fprintf(stderr, "USAGE : and [outfile] is the odt target document. Alternately,\n");
-		fprintf(stderr, "USAGE : pass '--stdout' to pipe the resultant document to\n");
-		fprintf(stderr, "USAGE : standard output\n");
+		fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
+		fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
 		fprintf(stderr, "USAGE : \n");
 		gsf_shutdown ();
 		return 1;
