@@ -18,6 +18,10 @@
  * USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <libwpg/libwpg.h>
 #include <libwpd/GSFStream.h>
 #include <gsf/gsf-utils.h>
@@ -58,7 +62,11 @@ static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char
 static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str, const char compression_level)
 {
 	GsfOutput *child;
+#ifdef GSF_HAS_COMPRESSION_LEVEL
 	if (NULL != (child = gsf_outfile_new_child_full  (outfile, fileName, FALSE,"compression-level", 0, (void*)0)))
+#else
+	if (NULL != (child = gsf_outfile_new_child  (outfile, fileName, FALSE)))
+#endif
 	{
 		bool res = gsf_output_puts (child, str) &&
 			gsf_output_close (child);
