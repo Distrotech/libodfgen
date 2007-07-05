@@ -160,13 +160,42 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
                 pHandler->startElement("style:master-page", propList);
 
 		if (mpHeaderContent)
+		{
 			_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
-		if (mpHeaderLeftContent)
+			if (mpHeaderLeftContent)
+			{
+				_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
+				pHandler->endElement("style:header-left");
+			}
+			pHandler->endElement("style:header");
+		}
+		else if (mpHeaderLeftContent)
+		{
+			TagOpenElement dummyHeaderOpen("style:header");
+			dummyHeaderOpen.write(pHandler);
 			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
+			pHandler->endElement("style:header-left");
+			pHandler->endElement("style:header");
+		}
+			
 		if (mpFooterContent)
+		{
 			_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
-		if (mpFooterLeftContent)
+			if (mpFooterLeftContent)
+			{
+				_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
+				pHandler->endElement("style:footer-left");
+			}
+			pHandler->endElement("style:footer");
+		}
+		else if (mpFooterLeftContent)
+		{
+			TagOpenElement dummyFooterOpen("style:footer");
+			dummyFooterOpen.write(pHandler);
 			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
+			pHandler->endElement("style:footer-left");
+			pHandler->endElement("style:footer");
+		}
 
                 pHandler->endElement("style:master-page");
 	}
@@ -183,7 +212,4 @@ void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
 	     iter++) {
 		(*iter)->write(pHandler);
 	}
-	TagCloseElement headerFooterClose(headerFooterTagName);
-	headerFooterClose.write(pHandler);
 }
-
