@@ -146,6 +146,9 @@ bool WordPerfectCollector::filter()
 		iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); iterFrameAutomaticStyles++) {
 		delete(*iterFrameAutomaticStyles);
 	}
+	for (std::vector<DocumentElement *>::iterator iterMetaData = mMetaData.begin(); iterMetaData != mMetaData.end(); iterMetaData++) {
+		delete(*iterMetaData);
+	}
 
  	return true;
 }
@@ -282,6 +285,13 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	else
 		mpHandler->startElement("office:document-content", docContentPropList);
 
+	// write out the metadata
+	TagOpenElement("office:meta").write(mpHandler);
+	for (std::vector<DocumentElement *>::const_iterator iterMetaData = mMetaData.begin(); iterMetaData != mMetaData.end(); iterMetaData++) {
+		(*iterMetaData)->write(mpHandler);
+	}
+	mpHandler->endElement("office:meta");
+
 	// write out the font styles
 	TagOpenElement("office:font-face-decls").write(mpHandler);
 	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
@@ -411,6 +421,22 @@ void WordPerfectCollector::_allocateFontName(const WPXString & sFontName)
 		FontStyle *pFontStyle = new FontStyle(sFontName.cstr(), sFontName.cstr());
 		mFontHash[sFontName] = pFontStyle;
 	}
+}
+
+void WordPerfectCollector::setDocumentMetaData(const WPXPropertyList &propList)
+{
+        WPXPropertyList::Iter i(propList);
+        for (i.rewind(); i.next(); )
+        {
+                // filter out libwpd elements
+                if (strncmp(i.key(), "libwpd", 6) != 0)
+		{
+			mMetaData.push_back(static_cast<DocumentElement *>(new TagOpenElement(i.key())));
+			mMetaData.push_back(static_cast<DocumentElement *>(new TextElement(i()->getStr())));
+			mMetaData.push_back(static_cast<DocumentElement *>(new TagCloseElement(i.key())));
+		}
+        }
+	
 }
 
 void WordPerfectCollector::openPageSpan(const WPXPropertyList &propList)

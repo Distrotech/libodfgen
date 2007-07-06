@@ -82,7 +82,7 @@ public:
 	bool filter();
 
 	// WPXDocumentInterface's callbacks 
- 	virtual void setDocumentMetaData(const WPXPropertyList &propList) {}
+ 	virtual void setDocumentMetaData(const WPXPropertyList &propList);
 	virtual void startDocument() {}
 	virtual void endDocument() {}
 
@@ -175,6 +175,9 @@ private:
 	std::vector<DocumentElement *> mFrameStyles;
 	
 	std::vector<DocumentElement *> mFrameAutomaticStyles;
+	
+	// metadata
+	std::vector<DocumentElement *> mMetaData;
 
 	// list styles
 	unsigned int miNumListStyles;
