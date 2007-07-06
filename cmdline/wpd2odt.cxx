@@ -158,6 +158,7 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 		g_return_val_if_fail (err != NULL, 1);
 		
 		g_warning ("'%s' error: %s", pInFileName, err->message);
+		g_error_free(err);
 		return false;
 	}
 	if (err)
@@ -288,7 +289,7 @@ main (int argc, char *argv[])
 		return 1;
 	}
 
-	if (!writeContent(szInputFile, pOutfile)) 
+	if (pOutfile && !writeContent(szInputFile, pOutfile)) 
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
 	      	g_object_unref (pOutfile);
