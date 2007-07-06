@@ -158,9 +158,6 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 		g_return_val_if_fail (err != NULL, 1);
 		
 		g_warning ("'%s' error: %s", pInFileName, err->message);
-		if (err)
-			g_error_free (err);
-		g_object_unref(pGsfInput);
 		return false;
 	}
 	if (err)
