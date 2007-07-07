@@ -27,6 +27,8 @@
 #include "OdgExporter.hxx"
 #include "DocumentElement.hxx"
 #include "DocumentHandler.hxx"
+#include <locale.h>
+#include <string>
 
 OdgExporter::OdgExporter(DocumentHandler *pHandler, const bool isFlatXML):
 	mpHandler(pHandler),
@@ -495,7 +497,7 @@ void OdgExporter::writeGraphicsStyle()
 		WPXString sValue;
 		sValue.sprintf("Dash_%i", miDashIndex++);
 		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
-		sValue.sprintf("%i \%", distance*100);
+		sValue.sprintf("%i%", distance*100);
 		pDrawStrokeDashElement->addAttribute("draw:distance", sValue);
 		WPXString sName;
 		for(unsigned i = 0; i < mxPen.dashArray.count()/2; i++)
@@ -503,7 +505,7 @@ void OdgExporter::writeGraphicsStyle()
 			sName.sprintf("draw:dots%i", i+1);
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), "1");
 			sName.sprintf("draw:dots%i-length", i+1);
-			sValue.sprintf("%i\%", 100*mxPen.dashArray.at(i*2));
+			sValue.sprintf("%i%", 100*mxPen.dashArray.at(i*2));
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), sValue);
 		}
 		mGraphicsStrokeDashStyles.push_back(static_cast<DocumentElement *>(pDrawStrokeDashElement));
