@@ -162,43 +162,37 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 		if (mpHeaderContent)
 		{
 			_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
+			pHandler->endElement("style:header");
 			if (mpHeaderLeftContent)
 			{
 				_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
 				pHandler->endElement("style:header-left");
 			}
-			pHandler->endElement("style:header");
 		}
 		else if (mpHeaderLeftContent)
 		{
-			TagOpenElement dummyHeaderOpen("style:header");
-			dummyHeaderOpen.write(pHandler);
-			// we need some content in style:header if there is a content in style:header-left
-			// otherwise, the ODT will not validate
-			TagOpenElement("text:p").write(pHandler);
-			pHandler->endElement("text:p");
+			TagOpenElement("style:header").write(pHandler);
+			pHandler->endElement("style:header");
 			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
 			pHandler->endElement("style:header-left");
-			pHandler->endElement("style:header");
 		}
 			
 		if (mpFooterContent)
 		{
 			_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
+			pHandler->endElement("style:footer");
 			if (mpFooterLeftContent)
 			{
 				_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
 				pHandler->endElement("style:footer-left");
 			}
-			pHandler->endElement("style:footer");
 		}
 		else if (mpFooterLeftContent)
 		{
-			TagOpenElement dummyFooterOpen("style:footer");
-			dummyFooterOpen.write(pHandler);
+			TagOpenElement("style:footer").write(pHandler);
+			pHandler->endElement("style:footer");
 			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
 			pHandler->endElement("style:footer-left");
-			pHandler->endElement("style:footer");
 		}
 
                 pHandler->endElement("style:master-page");
