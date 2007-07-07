@@ -173,6 +173,10 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 		{
 			TagOpenElement dummyHeaderOpen("style:header");
 			dummyHeaderOpen.write(pHandler);
+			// we need some content in style:header if there is a content in style:header-left
+			// otherwise, the ODT will not validate
+			TagOpenElement("text:p").write(pHandler);
+			pHandler->endElement("text:p");
 			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
 			pHandler->endElement("style:header-left");
 			pHandler->endElement("style:header");
