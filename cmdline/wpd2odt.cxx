@@ -1,4 +1,4 @@
-/* wpd2odt:
+/* writerperfect:
  *
  * Copyright (C) 2002 Jon K Hellan (hellan@acm.org)
  * Copyright (C) 2002-2004 William Lachance (wrlach@gmail.com)

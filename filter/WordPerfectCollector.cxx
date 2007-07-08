@@ -261,7 +261,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	WPXPropertyList docContentPropList;
 	docContentPropList.insert("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	docContentPropList.insert("xmlns:meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
-	docContentPropList.insert("xmlns:dc", "http://purl.org/dc/elements/1.1/d");
+	docContentPropList.insert("xmlns:dc", "http://purl.org/dc/elements/1.1/");
 	docContentPropList.insert("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0");
 	docContentPropList.insert("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
 	docContentPropList.insert("xmlns:table", "urn:oasis:names:tc:opendocument:xmlns:table:1.0");
@@ -279,7 +279,8 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	docContentPropList.insert("office:version", "1.0");
 	if (mbIsFlatXML)
 	{
-		docContentPropList.insert("office:mimetype", "application/x-vnd.oasis.openoffice.text");
+//		docContentPropList.insert("office:mimetype", "application/x-vnd.oasis.openoffice.text");
+		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");
 
 		mpHandler->startElement("office:document", docContentPropList);
 	}

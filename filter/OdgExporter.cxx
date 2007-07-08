@@ -92,7 +92,7 @@ void OdgExporter::startDocument(double width, double height)
 	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
 	if (mbIsFlatXML)
 		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/x-vnd.oasis.openoffice.drawing");
-//		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.drawing");	
+//		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");	
 	tmpOfficeDocumentContent.write(mpHandler);
 	
 	TagOpenElement("office:settings").write(mpHandler);

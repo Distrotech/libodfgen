@@ -1,7 +1,7 @@
-/* wpg2odg:
+/* writerperfect:
  *
  * Copyright (C) 2006 Ariya Hidayat (ariya@kde.org)
- * Copyright (C) 2006 Fridrich Strba (fridrich.strba@bluewin.ch)
+ * Copyright (C) 2006-2007 Fridrich Strba (fridrich.strba@bluewin.ch)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of version 2 of the GNU General Public
@@ -37,7 +37,7 @@
 #include "DiskDocumentHandler.hxx"
 #include "StdOutHandler.hxx"
 
-const char mimetypeStr[] = "application/vnd.oasis.opendocument.drawing";
+const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
 const char manifestStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 		"<manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\">"
