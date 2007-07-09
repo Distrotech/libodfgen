@@ -490,14 +490,15 @@ void OdgExporter::writeGraphicsStyle()
 	{
 		// ODG only supports dashes with the same length of spaces inbetween
 		// here we take the first space and assume everything else the same
-		// note that dash length is written in percentage
+		// note that dash length is written in percentage ?????????????????
 		double distance = mxPen.dashArray.at(1);
 		TagOpenElement *pDrawStrokeDashElement = new TagOpenElement("draw:stroke-dash");
 		pDrawStrokeDashElement->addAttribute("draw:style", "rect");
 		WPXString sValue;
 		sValue.sprintf("Dash_%i", miDashIndex++);
 		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
-		sValue.sprintf("%i", (int)(distance*100)); sValue.append("%");
+		// sValue.sprintf("%i", (int)(distance*100)); sValue.append("%");
+		sValue = doubleToString(distance); sValue.append("in");
 		pDrawStrokeDashElement->addAttribute("draw:distance", sValue);
 		WPXString sName;
 		for(unsigned i = 0; i < mxPen.dashArray.count()/2; i++)
@@ -505,7 +506,8 @@ void OdgExporter::writeGraphicsStyle()
 			sName.sprintf("draw:dots%i", i+1);
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), "1");
 			sName.sprintf("draw:dots%i-length", i+1);
-			sValue.sprintf("%i", (int)(100*mxPen.dashArray.at(i*2))); sValue.append("%");
+			// sValue.sprintf("%i", (int)(100*mxPen.dashArray.at(i*2))); sValue.append("%");
+			sValue = doubleToString(100*mxPen.dashArray.at(i*2)); sValue.append("in");
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), sValue);
 		}
 		mGraphicsStrokeDashStyles.push_back(static_cast<DocumentElement *>(pDrawStrokeDashElement));
