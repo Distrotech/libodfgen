@@ -92,9 +92,10 @@ void UnorderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 	TagOpenElement listLevelStyleOpen("text:list-level-style-bullet");
 	listLevelStyleOpen.addAttribute("text:level", sLevel);
 	listLevelStyleOpen.addAttribute("text:style-name", "Bullet_Symbols");
-	listLevelStyleOpen.addAttribute("style:num-suffix", ".");
-        if (mPropList["text:bullet-char"])
+        if (mPropList["text:bullet-char"] && !(mPropList["text:bullet-char"]->getStr() == ""))
                 listLevelStyleOpen.addAttribute("text:bullet-char", mPropList["text:bullet-char"]->getStr());
+	else
+		listLevelStyleOpen.addAttribute("text:bullet-char", ".");
 	listLevelStyleOpen.write(pHandler);
 
 	TagOpenElement stylePropertiesOpen("style:list-level-properties");
