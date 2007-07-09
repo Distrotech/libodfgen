@@ -504,6 +504,7 @@ void OdgExporter::writeGraphicsStyle()
 		{
 			sName.sprintf("draw:dots%i", i+1);
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), "1");
+			sName.sprintf("draw:dots%i-length", i+1);
 			sValue.sprintf("%i", (int)(100*mxPen.dashArray.at(i*2))); sValue.append("%");
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), sValue);
 		}
