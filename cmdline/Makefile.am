@@ -8,6 +8,8 @@ wpd2odt_LDADD = $(WRITERPERFECT_LIBS) @WPD2ODT_WIN32_RESOURCE@ ../filter/libwrit
 wpd2odt_SOURCES =			\
 	DiskDocumentHandler.hxx		\
 	DiskDocumentHandler.cxx		\
+	GSFStream.cxx			\
+	GSFStream.hxx			\
 	StdOutHandler.hxx		\
 	StdOutHandler.cxx		\
 	wpd2odt.cxx
@@ -18,6 +20,8 @@ wpg2odg_LDADD = $(WRITERPERFECT_LIBS) @WPG2ODG_WIN32_RESOURCE@ ../filter/libwrit
 wpg2odg_SOURCES =			\
 	DiskDocumentHandler.hxx		\
 	DiskDocumentHandler.cxx		\
+	GSFStream.cxx			\
+	GSFStream.hxx			\
 	StdOutHandler.hxx		\
 	StdOutHandler.cxx		\
 	wpg2odg.cxx

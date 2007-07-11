@@ -25,7 +25,6 @@
 #endif
 
 #include <libwpd/libwpd.h>
-#include <libwpd/GSFStream.h>
 #include <gsf/gsf-utils.h>
 #include <gsf/gsf-output-stdio.h>
 #include <gsf/gsf-outfile.h>
@@ -38,6 +37,7 @@
 #include "WordPerfectCollector.hxx"
 #include "DiskDocumentHandler.hxx"
 #include "StdOutHandler.hxx"
+#include "GSFStream.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.text";
 

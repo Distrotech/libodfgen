@@ -33,7 +33,6 @@ AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
 PKG_CHECK_MODULES(WRITERPERFECT,[
     libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
-    libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
     libwpg-0.2 >= $LIBWPG_REQUIRED_VERSION
     glib-2.0 >= 2.0.0
     libgsf-1 >= 1.6.0

@@ -23,7 +23,6 @@
 #endif
 
 #include <libwpg/libwpg.h>
-#include <libwpd/GSFStream.h>
 #include <gsf/gsf-utils.h>
 #include <gsf/gsf-output-stdio.h>
 #include <gsf/gsf-outfile.h>
@@ -36,6 +35,7 @@
 #include "OdgExporter.hxx"
 #include "DiskDocumentHandler.hxx"
 #include "StdOutHandler.hxx"
+#include "GSFStream.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
