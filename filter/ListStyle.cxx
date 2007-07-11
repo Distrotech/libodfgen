@@ -98,9 +98,13 @@ void UnorderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 	TagOpenElement listLevelStyleOpen("text:list-level-style-bullet");
 	listLevelStyleOpen.addAttribute("text:level", sLevel);
 	listLevelStyleOpen.addAttribute("text:style-name", "Bullet_Symbols");
-	if (mPropList["text:bullet-char"] && !(mPropList["text:bullet-char"]->getStr() == ""))
+	if (mPropList["text:bullet-char"] && (mPropList["text:bullet-char"]->getStr().len()))
 	{
-		WPXString sEscapedString(mPropList["text:bullet-char"]->getStr(), true);
+		// The following is needed because the odf format does not accept bullet chars longer than one character
+		WPXString::Iter i(mPropList["text:bullet-char"]->getStr());
+		WPXString sEscapedString;
+		if (i.next())
+			sEscapedString = WPXString(i(), true);
 		listLevelStyleOpen.addAttribute("text:bullet-char", sEscapedString);
 	}
 	else
