@@ -1,5 +1,4 @@
-/* GraphicsStyle: Stores (and writes) font-based information that is needed at 
- * the head of an OO document.
+/* GraphicsStyle:
  *
  * Copyright (C) 2007 Fridrich Strba (fridrich.strba@bluewin.ch)
  * 

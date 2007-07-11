@@ -497,7 +497,6 @@ void OdgExporter::writeGraphicsStyle()
 		WPXString sValue;
 		sValue.sprintf("Dash_%i", miDashIndex++);
 		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
-		// sValue.sprintf("%i", (int)(distance*100)); sValue.append("%");
 		sValue = doubleToString(distance); sValue.append("in");
 		pDrawStrokeDashElement->addAttribute("draw:distance", sValue);
 		WPXString sName;
@@ -506,8 +505,7 @@ void OdgExporter::writeGraphicsStyle()
 			sName.sprintf("draw:dots%i", i+1);
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), "1");
 			sName.sprintf("draw:dots%i-length", i+1);
-			// sValue.sprintf("%i", (int)(100*mxPen.dashArray.at(i*2))); sValue.append("%");
-			sValue = doubleToString(100*mxPen.dashArray.at(i*2)); sValue.append("in");
+			sValue = doubleToString(mxPen.dashArray.at(i*2)); sValue.append("in");
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), sValue);
 		}
 		mGraphicsStrokeDashStyles.push_back(static_cast<DocumentElement *>(pDrawStrokeDashElement));
