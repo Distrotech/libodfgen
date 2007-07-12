@@ -29,7 +29,7 @@
 #include "DocumentElement.hxx"
 
 FontStyle::FontStyle(const char *psName, const char *psFontFamily) : Style(psName),
-	msFontFamily(psFontFamily),
+	msFontFamily(psFontFamily, true),
 	msFontPitch(IMP_DEFAULT_FONT_PITCH)
 {
 }
