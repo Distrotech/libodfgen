@@ -446,6 +446,7 @@ void WordPerfectCollector::openPageSpan(const WPXPropertyList &propList)
 	PageSpan *pPageSpan = new PageSpan(propList);
 	mPageSpans.push_back(pPageSpan);
 	mpCurrentPageSpan = pPageSpan;
+	miNumPageStyles++;
 }
 
 void WordPerfectCollector::openHeader(const WPXPropertyList &propList)
@@ -551,6 +552,9 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
  	}
 	else
 	{
+//		WPXString sPageStyleName;
+//		sPageStyleName.sprintf("Page_Style_%i", miNumPageStyles);
+//		pPersistPropList->insert("style:master-page-name", sPageStyleName);
 		if (mWriterDocumentState.mbTableCellOpened)
 		{
 			if (mWriterDocumentState.mbHeaderRow)
@@ -644,7 +648,7 @@ void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propLis
 		WPXString sName;
 		sName.sprintf("OL%i", miNumListStyles);
 		miNumListStyles++;
-		pOrderedListStyle = new OrderedListStyle(sName.cstr(), propList["libwpd:id"]->getInt());
+		pOrderedListStyle = new OrderedListStyle(sName.cstr(), id);
 		mListStyles.push_back(static_cast<ListStyle *>(pOrderedListStyle));
 		mpCurrentListStyle = static_cast<ListStyle *>(pOrderedListStyle);
 		mbListContinueNumbering = false;
@@ -658,7 +662,7 @@ void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propLis
 	// and reach those levels. See gradguide0405_PC.wpd in the regression suite
 	for (std::vector<ListStyle *>::iterator iterOrderedListStyles = mListStyles.begin(); iterOrderedListStyles != mListStyles.end(); iterOrderedListStyles++)
 	{
-		if ((* iterOrderedListStyles)->getListID() == propList["libwpd:id"]->getInt())
+		if ((* iterOrderedListStyles)->getListID() == id)
 			(* iterOrderedListStyles)->updateListLevel((propList["libwpd:level"]->getInt() - 1), propList);
 	}
 }
@@ -677,6 +681,7 @@ void WordPerfectCollector::defineUnorderedListLevel(const WPXPropertyList &propL
 		WRITER_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", id));
 		WPXString sName;
 		sName.sprintf("UL%i", miNumListStyles);
+		miNumListStyles++;
 		pUnorderedListStyle = new UnorderedListStyle(sName.cstr(), id);
 		mListStyles.push_back(static_cast<ListStyle *>(pUnorderedListStyle));
 		mpCurrentListStyle = static_cast<ListStyle *>(pUnorderedListStyle);
@@ -685,7 +690,7 @@ void WordPerfectCollector::defineUnorderedListLevel(const WPXPropertyList &propL
 	// See comment in WordPerfectCollector::defineOrderedListLevel
 	for (std::vector<ListStyle *>::iterator iterUnorderedListStyles = mListStyles.begin(); iterUnorderedListStyles != mListStyles.end(); iterUnorderedListStyles++)
 	{
-		if ((* iterUnorderedListStyles)->getListID() == propList["libwpd:id"]->getInt())
+		if ((* iterUnorderedListStyles)->getListID() == id)
 			(* iterUnorderedListStyles)->updateListLevel((propList["libwpd:level"]->getInt() - 1), propList);
 	}
 }

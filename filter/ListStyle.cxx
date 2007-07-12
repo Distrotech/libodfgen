@@ -105,11 +105,12 @@ void UnorderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 	if (mPropList["text:bullet-char"] && (mPropList["text:bullet-char"]->getStr().len()))
 	{
 		// The following is needed because the odf format does not accept bullet chars longer than one character
-		WPXString::Iter i(mPropList["text:bullet-char"]->getStr());
-		WPXString sEscapedString;
+		WPXString::Iter i(mPropList["text:bullet-char"]->getStr()); i.rewind();
+		WPXString sEscapedString(".");
 		if (i.next())
 			sEscapedString = WPXString(i(), true);
 		listLevelStyleOpen.addAttribute("text:bullet-char", sEscapedString);
+		
 	}
 	else
 		listLevelStyleOpen.addAttribute("text:bullet-char", ".");
