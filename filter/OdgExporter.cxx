@@ -500,7 +500,9 @@ void OdgExporter::writeGraphicsStyle()
 		sValue = doubleToString(distance); sValue.append("in");
 		pDrawStrokeDashElement->addAttribute("draw:distance", sValue);
 		WPXString sName;
-		for(unsigned i = 0; i < mxPen.dashArray.count()/2; i++)
+		// We have to find out how to do this intelligently, since the ODF is allowing only
+		// two pairs draw:dots1 draw:dots1-length and draw:dots2 draw:dots2-length
+		for(unsigned i = 0; i < mxPen.dashArray.count()/2 && i < 2; i++)
 		{
 			sName.sprintf("draw:dots%i", i+1);
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), "1");
