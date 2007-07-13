@@ -729,7 +729,7 @@ void WordPerfectCollector::_openListLevel(TagOpenElement *pListLevelOpenElement)
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
 		mbListElementParagraphOpened = false;
 	}
-
+#endif
 	if (miCurrentListLevel==1) {
 		pListLevelOpenElement->addAttribute("text:style-name", mpCurrentListStyle->getName());
 	}
@@ -739,24 +739,22 @@ void WordPerfectCollector::_openListLevel(TagOpenElement *pListLevelOpenElement)
 
 void WordPerfectCollector::closeOrderedListLevel()
 {
-	_closeListLevel("list");
+	_closeListLevel();
 }
 
 void WordPerfectCollector::closeUnorderedListLevel()
 {
-	_closeListLevel("list");
+	_closeListLevel();
 }
 
-void WordPerfectCollector::_closeListLevel(const char *szListType)
+void WordPerfectCollector::_closeListLevel()
 {
 	if (mbListElementOpened)
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
 
 	miCurrentListLevel--;
 
-	WPXString sCloseElement;
-	sCloseElement.sprintf("text:%s", szListType);
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement(sCloseElement.cstr())));
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list")));
 
 	if (miCurrentListLevel > 0)
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));

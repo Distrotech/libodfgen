@@ -147,7 +147,7 @@ protected:
 
 private:
 	void _openListLevel(TagOpenElement *pListLevelOpenElement);
-	void _closeListLevel(const char *szListType);
+	void _closeListLevel();
 
         WPXInputStream *mpInput;
         DocumentHandler *mpHandler;
