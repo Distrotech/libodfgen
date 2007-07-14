@@ -437,7 +437,7 @@ void WordPerfectCollector::setDocumentMetaData(const WPXPropertyList &propList)
         for (i.rewind(); i.next(); )
         {
                 // filter out libwpd elements
-                if (strncmp(i.key(), "libwpd", 6) != 0)
+                if (strncmp(i.key(), "libwpd", 6) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
 		{
 			mMetaData.push_back(static_cast<DocumentElement *>(new TagOpenElement(i.key())));
 			WPXString sStringValue(i()->getStr(), true);
