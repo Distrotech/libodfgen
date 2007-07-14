@@ -64,6 +64,21 @@ struct _WriterDocumentState
 	bool mbInFrame;
 };
 
+// list state
+typedef struct _WriterListState WriterListState;
+struct _WriterListState
+{
+	_WriterListState();
+
+	ListStyle *mpCurrentListStyle;
+	unsigned int miCurrentListLevel;
+	unsigned int miLastListLevel;
+	unsigned int miLastListNumber;
+	bool mbListContinueNumbering;
+	bool mbListElementParagraphOpened;
+	std::stack<bool> mbListElementOpened;
+};
+
 enum WriterListType { unordered, ordered };
 
 struct ltstr
@@ -154,6 +169,8 @@ private:
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
 
 	WriterDocumentState mWriterDocumentState;
+	
+	std::stack<WriterListState> mWriterListStates;
 
 	// paragraph styles
 	std::map<WPXString, ParagraphStyle *, ltstr> mTextStyleHash;
@@ -194,15 +211,10 @@ private:
 	PageSpan *mpCurrentPageSpan;
 	int miNumPageStyles;
 
-	// list styles / state
-	ListStyle *mpCurrentListStyle;
-	unsigned int miCurrentListLevel;
-	unsigned int miLastListLevel;
-	unsigned int miLastListNumber;
+	// list styles
 	std::vector<ListStyle *> mListStyles;
-	bool mbListContinueNumbering;
-	bool mbListElementOpened;
-	bool mbListElementParagraphOpened;
+	
+	// object state
 	unsigned miObjectNumber;
 
 	// table state

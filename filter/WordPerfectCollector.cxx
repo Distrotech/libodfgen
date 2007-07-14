@@ -57,25 +57,31 @@ _WriterDocumentState::_WriterDocumentState() :
 {
 }
 
-WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML) :
-	mpInput(pInput),
-	mpHandler(pHandler),
-	mbUsed(false),
-	mfSectionSpaceAfter(0.0f),
-	miNumListStyles(0),
-	mpCurrentContentElements(&mBodyElements),
-	mpCurrentPageSpan(NULL),
-	miNumPageStyles(0),
+_WriterListState::_WriterListState() :
 	mpCurrentListStyle(NULL),
 	miCurrentListLevel(0),
 	miLastListLevel(0),
 	miLastListNumber(0),
 	mbListContinueNumbering(false),
-	mbListElementOpened(false),
 	mbListElementParagraphOpened(false),
+	mbListElementOpened()
+{
+}
+
+WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML) :
+	mpInput(pInput),
+	mpHandler(pHandler),
+	mbUsed(false),
+	mWriterListStates(),
+	mfSectionSpaceAfter(0.0f),
+	miNumListStyles(0),
+	mpCurrentContentElements(&mBodyElements),
+	mpCurrentPageSpan(NULL),
+	miNumPageStyles(0),
 	miObjectNumber(0),
 	mbIsFlatXML(isFlatXML)
 {
+	mWriterListStates.push(WriterListState());
 }
 
 WordPerfectCollector::~WordPerfectCollector()
@@ -634,8 +640,8 @@ void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propLis
 		id = propList["libwpd:id"]->getInt();
 
  	OrderedListStyle *pOrderedListStyle = NULL;
-	if (mpCurrentListStyle && mpCurrentListStyle->getListID() == id)
-		pOrderedListStyle = static_cast<OrderedListStyle *>(mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
+	if (mWriterListStates.top().mpCurrentListStyle && mWriterListStates.top().mpCurrentListStyle->getListID() == id)
+		pOrderedListStyle = static_cast<OrderedListStyle *>(mWriterListStates.top().mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
 
 	// this rather appalling conditional makes sure we only start a new list (rather than continue an old
 	// one) if: (1) we have no prior list OR (2) the prior list is actually definitively different
@@ -643,7 +649,7 @@ void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propLis
 	// is starting a new list at level 1 (and only level 1)
 	if (pOrderedListStyle == NULL || pOrderedListStyle->getListID() != id  ||
 	    (propList["libwpd:level"] && propList["libwpd:level"]->getInt()==1 && 
-	     (propList["text:start-value"] && propList["text:start-value"]->getInt() != (miLastListNumber+1))))
+	     (propList["text:start-value"] && propList["text:start-value"]->getInt() != (mWriterListStates.top().miLastListNumber+1))))
 	{
 		WRITER_DEBUG_MSG(("Attempting to create a new ordered list style (listid: %i)\n", id));
 		WPXString sName;
@@ -651,12 +657,12 @@ void WordPerfectCollector::defineOrderedListLevel(const WPXPropertyList &propLis
 		miNumListStyles++;
 		pOrderedListStyle = new OrderedListStyle(sName.cstr(), id);
 		mListStyles.push_back(static_cast<ListStyle *>(pOrderedListStyle));
-		mpCurrentListStyle = static_cast<ListStyle *>(pOrderedListStyle);
-		mbListContinueNumbering = false;
-		miLastListNumber = 0;
+		mWriterListStates.top().mpCurrentListStyle = static_cast<ListStyle *>(pOrderedListStyle);
+		mWriterListStates.top().mbListContinueNumbering = false;
+		mWriterListStates.top().miLastListNumber = 0;
 	}
 	else
-		mbListContinueNumbering = true;
+		mWriterListStates.top().mbListContinueNumbering = true;
 
 	// Iterate through ALL list styles with the same WordPerfect list id and define a level if it is not already defined
 	// This solves certain problems with lists that start and finish without reaching certain levels and then begin again
@@ -675,8 +681,8 @@ void WordPerfectCollector::defineUnorderedListLevel(const WPXPropertyList &propL
 		id = propList["libwpd:id"]->getInt();
 
  	UnorderedListStyle *pUnorderedListStyle = NULL;
-	if (mpCurrentListStyle && mpCurrentListStyle->getListID() == id)
-		pUnorderedListStyle = static_cast<UnorderedListStyle *>(mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
+	if (mWriterListStates.top().mpCurrentListStyle && mWriterListStates.top().mpCurrentListStyle->getListID() == id)
+		pUnorderedListStyle = static_cast<UnorderedListStyle *>(mWriterListStates.top().mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
 
 	if (pUnorderedListStyle == NULL) {
 		WRITER_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", id));
@@ -685,7 +691,7 @@ void WordPerfectCollector::defineUnorderedListLevel(const WPXPropertyList &propL
 		miNumListStyles++;
 		pUnorderedListStyle = new UnorderedListStyle(sName.cstr(), id);
 		mListStyles.push_back(static_cast<ListStyle *>(pUnorderedListStyle));
-		mpCurrentListStyle = static_cast<ListStyle *>(pUnorderedListStyle);
+		mWriterListStates.top().mpCurrentListStyle = static_cast<ListStyle *>(pUnorderedListStyle);
 	}
 
 	// See comment in WordPerfectCollector::defineOrderedListLevel
@@ -698,11 +704,15 @@ void WordPerfectCollector::defineUnorderedListLevel(const WPXPropertyList &propL
 
 void WordPerfectCollector::openOrderedListLevel(const WPXPropertyList &propList)
 {
-	miCurrentListLevel++;
+	if (mWriterListStates.top().mbListElementParagraphOpened)
+	{
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
+		mWriterListStates.top().mbListElementParagraphOpened = false;
+	}
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	_openListLevel(pListLevelOpenElement);
 
-	if (mbListContinueNumbering) {
+	if (mWriterListStates.top().mbListContinueNumbering) {
 		pListLevelOpenElement->addAttribute("text:continue-numbering", "true");
 	}
 
@@ -711,7 +721,11 @@ void WordPerfectCollector::openOrderedListLevel(const WPXPropertyList &propList)
 
 void WordPerfectCollector::openUnorderedListLevel(const WPXPropertyList &propList)
 {
-	miCurrentListLevel++;
+	if (mWriterListStates.top().mbListElementParagraphOpened)
+	{
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
+		mWriterListStates.top().mbListElementParagraphOpened = false;
+	}
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	_openListLevel(pListLevelOpenElement);
 
@@ -720,21 +734,17 @@ void WordPerfectCollector::openUnorderedListLevel(const WPXPropertyList &propLis
 
 void WordPerfectCollector::_openListLevel(TagOpenElement *pListLevelOpenElement)
 {
-  	if (!mbListElementOpened && miCurrentListLevel > 1)
-  	{
-  		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:list-item")));
-  	}
-	else if (mbListElementParagraphOpened)
+	if (!mWriterListStates.top().mbListElementOpened.empty() &&
+		!mWriterListStates.top().mbListElementOpened.top())
 	{
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
-		mbListElementParagraphOpened = false;
+		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:list-item")));
+		mWriterListStates.top().mbListElementOpened.top() = true;
 	}
-#endif
-	if (miCurrentListLevel==1) {
-		pListLevelOpenElement->addAttribute("text:style-name", mpCurrentListStyle->getName());
+	
+	mWriterListStates.top().mbListElementOpened.push(false);
+	if (mWriterListStates.top().mbListElementOpened.size() == 1) {
+		pListLevelOpenElement->addAttribute("text:style-name", mWriterListStates.top().mpCurrentListStyle->getName());
 	}
-
-	mbListElementOpened = false;
 }
 
 void WordPerfectCollector::closeOrderedListLevel()
@@ -749,31 +759,36 @@ void WordPerfectCollector::closeUnorderedListLevel()
 
 void WordPerfectCollector::_closeListLevel()
 {
-	if (mbListElementOpened)
+	if (mWriterListStates.top().mbListElementOpened.top())
+	{
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
-
-	miCurrentListLevel--;
+		mWriterListStates.top().mbListElementOpened.top() = false;
+	}
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list")));
 
-	if (miCurrentListLevel > 0)
-		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
-	mbListElementOpened = false;
+	if (!mWriterListStates.top().mbListElementOpened.empty())
+	{
+		mWriterListStates.top().mbListElementOpened.pop();
+	}
 }
 
 void WordPerfectCollector::openListElement(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops)
 {
-	miLastListLevel = miCurrentListLevel;
-	if (miCurrentListLevel == 1)
-		miLastListNumber++;
+	mWriterListStates.top().miLastListLevel = mWriterListStates.top().miCurrentListLevel;
+	if (mWriterListStates.top().miCurrentListLevel == 1)
+		mWriterListStates.top().miLastListNumber++;
 
-	if (mbListElementOpened)
+	if (mWriterListStates.top().mbListElementOpened.top())
+	{
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:list-item")));
+		mWriterListStates.top().mbListElementOpened.top() = false;
+	}
 
 	ParagraphStyle *pStyle = NULL;
 
 	WPXPropertyList *pPersistPropList = new WPXPropertyList(propList);
-	pPersistPropList->insert("style:list-style-name", mpCurrentListStyle->getName());
+	pPersistPropList->insert("style:list-style-name", mWriterListStates.top().mpCurrentListStyle->getName());
 	pPersistPropList->insert("style:parent-style-name", "Standard");
 
 	WPXString sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
@@ -793,17 +808,15 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 		delete pPersistPropList;
 	}
 
-	TagOpenElement *pOpenListElement = new TagOpenElement("text:list-item");
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:list-item")));
+
 	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
-
 	pOpenListElementParagraph->addAttribute("text:style-name", pStyle->getName());
-
-	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenListElement));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenListElementParagraph));
 		
-	mbListElementOpened = true;
-	mbListElementParagraphOpened = true;
-	mbListContinueNumbering = false;
+	mWriterListStates.top().mbListElementOpened.top() = true;
+	mWriterListStates.top().mbListElementParagraphOpened = true;
+	mWriterListStates.top().mbListContinueNumbering = false;
 }
 
 void WordPerfectCollector::closeListElement()
@@ -812,15 +825,16 @@ void WordPerfectCollector::closeListElement()
 	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
 	// code (or when we open another list element)
 
-	if (mbListElementParagraphOpened)
+	if (mWriterListStates.top().mbListElementParagraphOpened)
 	{
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:p")));
-		mbListElementParagraphOpened = false;
+		mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
 }
 
 void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 {
+	mWriterListStates.push(WriterListState());
 	TagOpenElement *pOpenFootNote = new TagOpenElement("text:note");
 	pOpenFootNote->addAttribute("text:note-class", "footnote");
 	if (propList["libwpd:number"])
@@ -844,6 +858,8 @@ void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 void WordPerfectCollector::closeFootnote()
 {
 	mWriterDocumentState.mbInNote = false;
+	if (mWriterListStates.size() > 1)
+		mWriterListStates.pop();
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:note-body")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:note")));
@@ -851,6 +867,7 @@ void WordPerfectCollector::closeFootnote()
 
 void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
 {
+	mWriterListStates.push(WriterListState());
 	TagOpenElement *pOpenEndNote = new TagOpenElement("text:note");
 	pOpenEndNote->addAttribute("text:note-class", "endnote");
 	if (propList["libwpd:number"])
@@ -874,6 +891,8 @@ void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
 void WordPerfectCollector::closeEndnote()
 {
 	mWriterDocumentState.mbInNote = false;
+	if (mWriterListStates.size() > 1)
+		mWriterListStates.pop();
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:note-body")));
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:note")));
@@ -1027,6 +1046,8 @@ void WordPerfectCollector::insertText(const WPXString &text)
 
 void WordPerfectCollector::openBox(const WPXPropertyList &propList)
 {
+	mWriterListStates.push(WriterListState());
+
 	// First, let's create a Frame Style for this box
 	TagOpenElement *frameStyleOpenElement = new TagOpenElement("style:style");
 	WPXString frameStyleName;
@@ -1120,6 +1141,9 @@ void WordPerfectCollector::openBox(const WPXPropertyList &propList)
 
 void WordPerfectCollector::closeBox()
 {
+	if (mWriterListStates.size() > 1)
+		mWriterListStates.pop();
+
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
 
 	mWriterDocumentState.mbInFrame = false;
