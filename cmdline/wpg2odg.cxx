@@ -82,14 +82,19 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 	GsfInput *pGsfInput = NULL;
 	if (!(pGsfInput = GSF_INPUT(gsf_input_stdio_new (pInFileName, &err)))) 
 	{
-		g_return_val_if_fail (err != NULL, 1);
-		
-		g_warning ("'%s' error: %s", pInFileName, err->message);
-		g_error_free (err);
+		if (err) {
+			g_warning ("'%s' error: %s", pInFileName, err->message);
+			g_error_free (err);
+		}
 		return false;
 	}
 	if (err)
+	{
 		g_error_free(err);
+		g_object_unref(pGsfInput);
+ 		return false;
+ 	}
+		
 	GSFInputStream input(pGsfInput);
 
  	if (!libwpg::WPGraphics::isSupported(&input))
@@ -166,11 +171,10 @@ main (int argc, char *argv[])
 
 	        pOutput = GSF_OUTPUT(gsf_output_stdio_new (argv[2], &err));
 	        if (pOutput == NULL) {
-	                g_return_val_if_fail (err != NULL, 1);
-	                
-	                g_warning ("'%s' error: %s", argv[2], err->message);
-			if (err)
+			if (err) {
+	                	g_warning ("'%s' error: %s", argv[2], err->message);
 	                        g_error_free (err);
+			}
 			gsf_shutdown ();
 	                return 1;
 	        }
@@ -179,12 +183,11 @@ main (int argc, char *argv[])
 		err = NULL;
 	        pOutfile = GSF_OUTFILE(gsf_outfile_zip_new (pOutput, &err));
 	        if (pOutfile == NULL) {
-	                g_return_val_if_fail (err != NULL, 1);
-	                
-	                g_warning ("'%s' error: %s",
-	                           "gsf_outfile_zip_new", err->message);
-			if (err)
+			if (err) {
+		                g_warning ("'%s' error: %s",
+					"gsf_outfile_zip_new", err->message);
 	                        g_error_free (err);
+			}
 			gsf_shutdown ();
 	                return 1;
 	        }
