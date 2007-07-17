@@ -70,11 +70,11 @@ void OrderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 	listLevelStyleOpen.write(pHandler);
 
 	TagOpenElement stylePropertiesOpen("style:list-level-properties");
-	if (mPropList["text:space-before"])
+	if (mPropList["text:space-before"] && mPropList["text:space-before"]->getFloat() != 0.0f)
 		stylePropertiesOpen.addAttribute("text:space-before", mPropList["text:space-before"]->getStr());
-	if (mPropList["text:min-label-width"])
+	if (mPropList["text:min-label-width"] && mPropList["text:min-label-width"]->getFloat() != 0.0f)
 		stylePropertiesOpen.addAttribute("text:min-label-width", mPropList["text:min-label-width"]->getStr());
-	if (mPropList["text:min-label-distance"])
+	if (mPropList["text:min-label-distance"] && mPropList["text:min-label-distance"]->getFloat() != 0.0f)
 		stylePropertiesOpen.addAttribute("text:min-label-distance", mPropList["text:min-label-distance"]->getStr());
 	stylePropertiesOpen.write(pHandler);
 
@@ -117,11 +117,11 @@ void UnorderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
 	listLevelStyleOpen.write(pHandler);
 
 	TagOpenElement stylePropertiesOpen("style:list-level-properties");
-	if (mPropList["text:space-before"])
+	if (mPropList["text:space-before"] && mPropList["text:space-before"]->getFloat() != 0.0f)
 		stylePropertiesOpen.addAttribute("text:space-before", mPropList["text:space-before"]->getStr());
-	if (mPropList["text:min-label-width"])
+	if (mPropList["text:min-label-width"] && mPropList["text:min-label-width"]->getFloat() != 0.0f)
 		stylePropertiesOpen.addAttribute("text:min-label-width", mPropList["text:min-label-width"]->getStr());
-	if (mPropList["text:min-label-distance"])
+	if (mPropList["text:min-label-distance"] && mPropList["text:min-label-distance"]->getFloat() != 0.0f)
 		stylePropertiesOpen.addAttribute("text:min-label-distance", mPropList["text:min-label-distance"]->getStr());
 	stylePropertiesOpen.addAttribute("style:font-name", "OpenSymbol");
 	stylePropertiesOpen.write(pHandler);

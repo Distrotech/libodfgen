@@ -82,6 +82,7 @@ void TableRowStyle::write(DocumentHandler *pHandler) const
                 stylePropertiesOpen.addAttribute("style:min-row-height", mPropList["style:min-row-height"]->getStr());
         else if (mPropList["style:row-height"])
                 stylePropertiesOpen.addAttribute("style:row-height", mPropList["style:row-height"]->getStr());
+	stylePropertiesOpen.addAttribute("fo:keep-together", "auto");
         stylePropertiesOpen.write(pHandler);
         pHandler->endElement("style:table-row-properties");
 	
