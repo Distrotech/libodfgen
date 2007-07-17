@@ -184,6 +184,17 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 
 	pHandler->endElement("style:default-style");
 
+	TagOpenElement defaultTableRowStyleOpenElement("style:default-style");
+	defaultTableRowStyleOpenElement.addAttribute("style:family", "table-row");
+	defaultTableRowStyleOpenElement.write(pHandler);
+	
+	TagOpenElement defaultTableRowPropertiesOpenElement("style:table-row-properties");
+	defaultTableRowPropertiesOpenElement.addAttribute("fo:keep-together", "auto");
+	defaultTableRowPropertiesOpenElement.write(pHandler);
+	
+	pHandler->endElement("style:table-row-properties");
+	pHandler->endElement("style:default-style");
+
 	TagOpenElement standardStyleOpenElement("style:style");
 	standardStyleOpenElement.addAttribute("style:name", "Standard");
 	standardStyleOpenElement.addAttribute("style:family", "paragraph");
