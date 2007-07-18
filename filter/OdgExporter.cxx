@@ -70,7 +70,7 @@ OdgExporter::~OdgExporter()
 	}
 }
 
-void OdgExporter::startDocument(double width, double height)
+void OdgExporter::startGraphics(double width, double height)
 {
 	miGradientIndex = 1;
 	miDashIndex = 1;
@@ -118,14 +118,14 @@ void OdgExporter::startDocument(double width, double height)
 	configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
 	configItemOpenElement.addAttribute("config:type", "int");
 	configItemOpenElement.write(mpHandler);
-	WPXString sWidth; sWidth.sprintf("%i", (unsigned)(2540 * width));
+	WPXString sWidth; sWidth.sprintf("%li", (unsigned long)(2540 * width));
 	mpHandler->characters(sWidth);
 	mpHandler->endElement("config:config-item");
 	
 	configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
 	configItemOpenElement.addAttribute("config:type", "int");
 	configItemOpenElement.write(mpHandler);
-	WPXString sHeight; sHeight.sprintf("%i", (unsigned)(2540 * height));
+	WPXString sHeight; sHeight.sprintf("%li", (unsigned long)(2540 * height));
 	mpHandler->characters(sHeight);
 	mpHandler->endElement("config:config-item");
 	
@@ -134,7 +134,7 @@ void OdgExporter::startDocument(double width, double height)
 	mpHandler->endElement("office:settings");
 }
 
-void OdgExporter::endDocument()
+void OdgExporter::endGraphics()
 {
 	TagOpenElement("office:styles").write(mpHandler);
 

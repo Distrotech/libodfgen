@@ -40,10 +40,8 @@ public:
 	OdgExporter(DocumentHandler *pHandler, const bool isFlatXML = false);
 	~OdgExporter();
 
-	void startDocument(double width, double height);
-	void startGraphics(double width, double height) { startDocument(width, height); }
-	void endDocument();
-	void endGraphics() { endDocument(); }
+	void startGraphics(double width, double height);
+	void endGraphics();
 	void startLayer(unsigned int id);
 	void endLayer(unsigned int id);
 
