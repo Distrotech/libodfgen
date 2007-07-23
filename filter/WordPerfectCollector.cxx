@@ -909,6 +909,23 @@ void WordPerfectCollector::closeEndnote()
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:note")));
 }
 
+void WordPerfectCollector::openComment(const WPXPropertyList &propList)
+{
+	mWriterListStates.push(WriterListState());
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("office:annotation")));
+
+	mWriterDocumentState.mbInNote = true;
+}
+
+void WordPerfectCollector::closeComment()
+{
+	mWriterDocumentState.mbInNote = false;
+	if (mWriterListStates.size() > 1)
+		mWriterListStates.pop();
+
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("office:annotation")));
+}
+
 void WordPerfectCollector::openTable(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
 {
 	if (!mWriterDocumentState.mbInNote)
