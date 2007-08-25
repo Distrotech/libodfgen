@@ -1,0 +1,7 @@
+Makefile
+Makefile.in
+.deps
+.libs
+wpd2sxw
+wpd2sxw.rc
+wpd2sxw-win32res.lo
