@@ -30,8 +30,10 @@ wpg2odg_SOURCES =			\
 if OS_WIN32
 
 @WPD2ODT_WIN32_RESOURCE@ : wpd2odt.rc
-	$(top_srcdir)/build/win32/lt-compile-resource wpd2odt.rc @WPD2ODT_WIN32_RESOURCE@
+	chmod +x $(top_srcdir)/build/win32/*compile-resource
+	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource wpd2odt.rc @WPD2ODT_WIN32_RESOURCE@
 
 @WPG2ODG_WIN32_RESOURCE@ : wpg2odg.rc
-	$(top_srcdir)/build/win32/lt-compile-resource wpg2odg.rc @WPG2ODG_WIN32_RESOURCE@
+	chmod +x $(top_srcdir)/build/win32/*compile-resource
+	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource wpg2odg.rc @WPG2ODG_WIN32_RESOURCE@
 endif 

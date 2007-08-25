@@ -49,6 +49,7 @@ AC_MSG_CHECKING([for native Win32])
 case "$host" in
   *-*-mingw*)
     native_win32=yes
+    AC_CHECK_TOOL(WINDRES, windres)
     WPD2ODT_WIN32_RESOURCE=wpd2odt-win32res.lo
     WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
     ;;
