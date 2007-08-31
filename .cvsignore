@@ -16,5 +16,6 @@ ltmain.sh
 missing
 mkinstalldirs
 stamp-h1
-writerperfect.spec
+wpd2sxw.spec
+writerperfect-zip
 *.out

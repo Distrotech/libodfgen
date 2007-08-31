@@ -14,7 +14,7 @@ wpd2sxw_SOURCES =			\
 
 if OS_WIN32
 
-@WPD2SXW_WIN32_RESOURCE@ : wpd2sxw.rc
+@WPD2SXW_WIN32_RESOURCE@ : wpd2sxw.rc $(wpd2sxw_OBJECTS)
 	chmod +x $(top_srcdir)/build/win32/*compile-resource
 	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource wpd2sxw.rc @WPD2SXW_WIN32_RESOURCE@
 endif 

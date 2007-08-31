@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Build runtime and developer zipfiles for libwpd on Win32.
+
+ZIP=wpd2sxw-@WRITERPERFECT_VERSION@.zip
+
+cd $DESTDIR@prefix@
+
+@STRIP@ --strip-all \
+bin/wpd2sxw.exe
+
+upx -qqq --best \
+bin/wpd2sxw.exe
+
+rm -f $ZIP
+zip -q -r -j $ZIP -@ <<EOF
+bin/wpd2sxw.exe
+EOF

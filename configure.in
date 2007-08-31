@@ -85,6 +85,7 @@ AC_SUBST(DEBUG_CXXFLAGS)
 AC_OUTPUT([
 Makefile
 wpd2sxw.spec
+writerperfect-zip
 build/Makefile
 build/win32/Makefile
 filter/Makefile
