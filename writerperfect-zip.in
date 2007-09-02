@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Build zipfiles for writerperfect binaries on Win32.
+
+WPD2ODTZIP=wpd2odt-@WRITERPERFECT_VERSION@.zip
+WPG2ODGZIP=wpg2odg-@WRITERPERFECT_VERSION@.zip
+
+cd $DESTDIR@prefix@
+
+@STRIP@ --strip-all \
+bin/wpd2odt.exe \
+bin/wpg2odg.exe
+
+upx -qqq --best \
+bin/wpd2odt.exe \
+bin/wpg2odg.exe
+
+rm -f $WPD2ODTZIP
+zip -q -r -j $WPD2ODTZIP -@ <<EOF
+bin/wpd2odt.exe
+EOF
+
+rm -f $WPG2ODGZIP
+zip -q -r -j $WPG2ODGZIP -@ <<EOF
+bin/wpg2odg.exe
+EOF

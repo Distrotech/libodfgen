@@ -3,6 +3,7 @@ SUBDIRS = build filter ooo packaging cmdline
 EXTRA_DIST =	\
 	writerperfect.spec.in		\
 	writerperfect.spec		\
+	writerperfect-zip.in		\
 	autogen.sh			\
 	Makefile.ooo-external		\
 	Makefile.ooo-external.msvc.in	\
@@ -16,3 +17,6 @@ distclean-local:
 rpm: dist
 	rpmbuild -ta $(PACKAGE)-$(VERSION).tar.gz
 	@rm -f $(PACKAGE)-$(VERSION).tar.gz
+
+zip: install
+	@sh writerperfect-zip
