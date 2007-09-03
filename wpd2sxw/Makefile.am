@@ -1,6 +1,6 @@
 bin_PROGRAMS = wpd2sxw
 
-AM_CXXFLAGS = $(WPD2SXW_CXXFLAGS) $(DEBUG_CXXFLAGS) -I../filter 
+AM_CXXFLAGS = $(WPD2SXW_CXXFLAGS) $(DEBUG_CXXFLAGS) -I$(top_srcdir)/filter 
 
 wpd2sxw_DEPENDENCIES = @WPD2SXW_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
 wpd2sxw_LDADD = $(WPD2SXW_LIBS) @WPD2SXW_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
