@@ -1,6 +1,6 @@
 bin_PROGRAMS = wpd2odt wpg2odg
 
-AM_CXXFLAGS = $(WRITERPERFECT_CXXFLAGS) $(DEBUG_CXXFLAGS) -I../filter -I..
+AM_CXXFLAGS = $(WRITERPERFECT_CXXFLAGS) $(DEBUG_CXXFLAGS) -I$(top_srcdir)/filter -I$(top_srcdir)
 
 wpd2odt_DEPENDENCIES = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
 wpd2odt_LDADD = $(WRITERPERFECT_LIBS) @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
