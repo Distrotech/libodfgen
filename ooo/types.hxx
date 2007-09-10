@@ -1,6 +1,6 @@
 /*************************************************************************
  *
- *  $RCSfile: xmlkywd.cxx,v $
+ *  $RCSfile: types.hxx,v $
  *
  *  $Revision: 1.1.6.1 $
  *
@@ -35,11 +35,16 @@
  *
  ************************************************************************/
 
-#ifndef _XMLOFF_XMLKYWD_HXX
-#define XML_DEFINE_KEYWORDS
-#include "xmlkywd.hxx"
-#undef XML_DEFINE_KEYWORDS
+
+#ifndef _VOS_TYPES_HXX_
+#define _VOS_TYPES_HXX_
+
+
+/* disable some warnings for MS-C */
+#ifdef _MSC_VER
+#	pragma warning (disable : 4786) // 4786: truncated names (longer 255 chars)
+#	pragma warning (disable : 4355)	// 4355: this used in initializer-list
 #endif
 
-
+#endif //_VOS_TYPES_HXX_
 

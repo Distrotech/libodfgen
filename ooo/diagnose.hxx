@@ -1,6 +1,6 @@
 /*************************************************************************
  *
- *  $RCSfile: xmlkywd.cxx,v $
+ *  $RCSfile: diagnose.hxx,v $
  *
  *  $Revision: 1.1.6.1 $
  *
@@ -35,11 +35,32 @@
  *
  ************************************************************************/
 
-#ifndef _XMLOFF_XMLKYWD_HXX
-#define XML_DEFINE_KEYWORDS
-#include "xmlkywd.hxx"
-#undef XML_DEFINE_KEYWORDS
+
+#ifndef _VOS_DIAGNOSE_H_
+#define _VOS_DIAGNOSE_H_
+
+
+#ifndef _OSL_DIAGNOSE_H_
+	#include <osl/diagnose.h>
 #endif
 
+
+/*
+	Diagnostic support
+*/
+
+#define VOS_THIS_FILE       __FILE__
+
+#define VOS_DEBUG_ONLY(s)	_OSL_DEBUG_ONLY(s)
+#define VOS_TRACE           _OSL_TRACE
+#define VOS_ASSERT(c) 	    _OSL_ASSERT(c, VOS_THIS_FILE, __LINE__)
+#define VOS_VERIFY(c)		_OSL_VERIFY(c, VOS_THIS_FILE, __LINE__)
+#define VOS_ENSHURE(c, m)   _OSL_ENSURE(c, VOS_THIS_FILE, __LINE__, m)
+#define VOS_ENSURE(c, m)    _OSL_ENSURE(c, VOS_THIS_FILE, __LINE__, m)
+
+#define VOS_PRECOND(c, m)  	VOS_ENSHURE(c, m)
+#define VOS_POSTCOND(c, m) 	VOS_ENSHURE(c, m)
+
+#endif /* _VOS_DIAGNOSE_H_ */
 
 
