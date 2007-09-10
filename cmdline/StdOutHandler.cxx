@@ -20,6 +20,8 @@
 
 #include "StdOutHandler.hxx"
 
+#include <string.h>
+
 StdOutHandler::StdOutHandler() :
 	mbIsTagOpened(false)
 {

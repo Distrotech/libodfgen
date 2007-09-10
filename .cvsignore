@@ -17,4 +17,5 @@ missing
 mkinstalldirs
 stamp-h1
 writerperfect.spec
+writerperfect-zip
 *.out

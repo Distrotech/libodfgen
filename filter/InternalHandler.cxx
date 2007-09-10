@@ -23,6 +23,8 @@
  
 #include "InternalHandler.hxx"
 
+#include <string.h>
+
 InternalHandler::InternalHandler(std::vector<DocumentElement *> *elements):
 	mpElements(elements)
 {

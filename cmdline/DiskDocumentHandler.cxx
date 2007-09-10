@@ -20,6 +20,8 @@
 
 #include "DiskDocumentHandler.hxx"
 
+#include <string.h>
+
 DiskDocumentHandler::DiskDocumentHandler(GsfOutput *pOutput) :
         mpOutput(pOutput),
 	mbIsTagOpened(false)
