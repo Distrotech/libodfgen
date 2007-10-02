@@ -2,10 +2,11 @@
 
 TESTAUTOHEADER="autoheader autoheader-2.53"
 TESTAUTOCONF="autoconf autoconf-2.53"
+TESTLIBTOOLIZE="glibtoolize libtoolize"
 
 AUTOHEADERFOUND="0"
 AUTOCONFFOUND="0"
-
+LIBTOOLIZEFOUND="0"
 
 ##
 ## Look for autoheader
@@ -34,13 +35,26 @@ for i in $TESTAUTOCONF; do
         fi
 done
 
+for i in $TESTLIBTOOLIZE; do
+	if which $i > /dev/null 2>&1; then
+		LIBTOOLIZE=$i
+		LIBTOOLIZEFOUND="1"
+		break
+	fi
+done
+
 
 ##
 ## do we have it?
 ##
 if [ "$AUTOCONFFOUND" = "0" -o "$AUTOHEADERFOUND" = "0" ]; then
-        echo "$0: need autoconf 2.53 or later to build wpd2odt" >&2
+        echo "$0: need autoconf 2.53 or later to build writerperfect" >&2
         exit 1
+fi
+
+if [ "$LIBTOOLIZEFOUND" = "0" ]; then
+	echo "$0: need libtoolize tool to build writerperfect" >&2
+	exit 1
 fi
 
 rm -rf autom4te*.cache
@@ -60,7 +74,7 @@ if test "x$amcheck" = "xautomake (GNU automake) 1.5"; then
     echo "         this version has a bug - GNUmakefile.am dependencies are not generated"
 fi
 
-libtoolize --force --copy || {
+$LIBTOOLIZE --force --copy || {
     echo "error: libtoolize failed"
     exit 1
 }
