@@ -171,7 +171,7 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
  	}
 	GSFInputStream input(pGsfInput);
 
-	WPDConfidence confidence = WPDocument::isFileFormatSupported(&input, false);
+	WPDConfidence confidence = WPDocument::isFileFormatSupported(&input);
  	if (confidence != WPD_CONFIDENCE_EXCELLENT)
  	{
  		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
