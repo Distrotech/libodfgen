@@ -53,6 +53,7 @@ _WriterDocumentState::_WriterDocumentState() :
 	mbTableCellOpened(false),
 	mbHeaderRow(false),
 	mbInNote(false),
+	mbInTextBox(false),
 	mbInFrame(false)
 {
 }
@@ -1072,7 +1073,7 @@ void WordPerfectCollector::insertText(const WPXString &text)
 	mpCurrentContentElements->push_back(pText);
 }
 
-void WordPerfectCollector::openBox(const WPXPropertyList &propList)
+void WordPerfectCollector::openFrame(const WPXPropertyList &propList)
 {
 	mWriterListStates.push(WriterListState());
 
@@ -1167,7 +1168,7 @@ void WordPerfectCollector::openBox(const WPXPropertyList &propList)
 	mWriterDocumentState.mbInFrame = true;
 }
 
-void WordPerfectCollector::closeBox()
+void WordPerfectCollector::closeFrame()
 {
 	if (mWriterListStates.size() > 1)
 		mWriterListStates.pop();
@@ -1198,3 +1199,24 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:object")));
 	}
 }
+
+void WordPerfectCollector::openTextBox(const WPXPropertyList &propList)
+{
+	if (!mWriterDocumentState.mbInFrame) // Text box without a frame simply doesn't make sense for us
+		return;
+	mWriterListStates.push(WriterListState());
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:text-box")));
+	mWriterDocumentState.mbInTextBox = true;
+}
+
+void WordPerfectCollector::closeTextBox()
+{
+	if (!mWriterDocumentState.mbInTextBox)
+		return;
+	mWriterDocumentState.mbInNote = false;
+	if (mWriterListStates.size() > 1)
+		mWriterListStates.pop();
+
+	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:text-box")));
+}
+

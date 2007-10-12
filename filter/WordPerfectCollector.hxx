@@ -61,6 +61,7 @@ struct _WriterDocumentState
 	bool mbTableCellOpened;
 	bool mbHeaderRow;
 	bool mbInNote;
+	bool mbInTextBox;
 	bool mbInFrame;
 };
 
@@ -138,6 +139,8 @@ public:
 	virtual void closeEndnote();
 	virtual void openComment(const WPXPropertyList &propList);
 	virtual void closeComment();
+	virtual void openTextBox(const WPXPropertyList &propList);
+	virtual void closeTextBox();
 
  	virtual void openTable(const WPXPropertyList &propList, const WPXPropertyListVector &columns);
  	virtual void openTableRow(const WPXPropertyList &propList);
@@ -147,8 +150,8 @@ public:
 	virtual void insertCoveredTableCell(const WPXPropertyList &propList);
  	virtual void closeTable();
 
-	virtual void openBox(const WPXPropertyList & propList);
-	virtual void closeBox();
+	virtual void openFrame(const WPXPropertyList & propList);
+	virtual void closeFrame();
 	
 	virtual void insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData *object);
 
