@@ -529,7 +529,7 @@ void OdgExporter::writeGraphicsStyle()
 		while(angle > 360)
 			angle -= 360;
 
-		sValue.sprintf("%i", angle*10);
+		sValue.sprintf("%i", (unsigned)(angle*10));
 		pDrawGradientElement->addAttribute("draw:angle", sValue);
 
 		libwpg::WPGColor startColor = mxBrush.gradient.stopColor(0);
