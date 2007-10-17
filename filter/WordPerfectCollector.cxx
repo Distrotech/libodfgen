@@ -128,7 +128,7 @@ bool WordPerfectCollector::filter()
 	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) {
 		delete(iterSpanStyle->second);
 	}
-	
+
 	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
 		delete(iterFont->second);
 	}
@@ -188,11 +188,11 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	TagOpenElement defaultTableRowStyleOpenElement("style:default-style");
 	defaultTableRowStyleOpenElement.addAttribute("style:family", "table-row");
 	defaultTableRowStyleOpenElement.write(pHandler);
-	
+
 	TagOpenElement defaultTableRowPropertiesOpenElement("style:table-row-properties");
 	defaultTableRowPropertiesOpenElement.addAttribute("fo:keep-together", "auto");
 	defaultTableRowPropertiesOpenElement.write(pHandler);
-	
+
 	pHandler->endElement("style:table-row-properties");
 	pHandler->endElement("style:default-style");
 
@@ -201,7 +201,7 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	standardStyleOpenElement.addAttribute("style:family", "paragraph");
 	standardStyleOpenElement.addAttribute("style:class", "text");
 	standardStyleOpenElement.write(pHandler);
-	
+
 	pHandler->endElement("style:style");
 
 	TagOpenElement textBodyStyleOpenElement("style:style");
@@ -211,7 +211,7 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	textBodyStyleOpenElement.addAttribute("style:parent-style-name", "Standard");
 	textBodyStyleOpenElement.addAttribute("style:class", "text");
 	textBodyStyleOpenElement.write(pHandler);
-	
+
 	pHandler->endElement("style:style");
 
 	TagOpenElement tableContentsStyleOpenElement("style:style");
@@ -221,7 +221,7 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	tableContentsStyleOpenElement.addAttribute("style:parent-style-name", "Text_Body");
 	tableContentsStyleOpenElement.addAttribute("style:class", "extra");
 	tableContentsStyleOpenElement.write(pHandler);
-	
+
 	pHandler->endElement("style:style");
 
 	TagOpenElement tableHeadingStyleOpenElement("style:style");
@@ -231,7 +231,7 @@ void WordPerfectCollector::_writeDefaultStyles(DocumentHandler *pHandler)
 	tableHeadingStyleOpenElement.addAttribute("style:parent-style-name", "Table_Contents");
 	tableHeadingStyleOpenElement.addAttribute("style:class", "extra");
 	tableHeadingStyleOpenElement.write(pHandler);
-	
+
 	pHandler->endElement("style:style");
 
 	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
@@ -269,7 +269,7 @@ void WordPerfectCollector::_writePageLayouts(DocumentHandler *pHandler)
 }
 
 bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
-{	
+{
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Printing out the header stuff..\n"));
 
 	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Start Document\n"));
@@ -338,7 +338,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	{
 		(*iterFrameAutomaticStyles)->write(pHandler);
 	}
-	
+
 	for (std::map<WPXString, ParagraphStyle *, ltstr>::const_iterator iterTextStyle = mTextStyleHash.begin(); 
 	     iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
 	{
@@ -384,7 +384,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
  	// writing out the document
 	TagOpenElement("office:body").write(mpHandler);
 	TagOpenElement("office:text").write(mpHandler);
-	
+
 	for (std::vector<DocumentElement *>::const_iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); iterBodyElements++) {
 		(*iterBodyElements)->write(pHandler);
 	}
@@ -420,7 +420,7 @@ WPXString propListToStyleKey(const WPXPropertyList & xPropList)
 WPXString getParagraphStyleKey(const WPXPropertyList & xPropList, const WPXPropertyListVector & xTabStops)
 {
 	WPXString sKey = propListToStyleKey(xPropList);
-	
+
 	WPXString sTabStops;
 	sTabStops.sprintf("[num-tab-stops:%i]", xTabStops.count());
 	WPXPropertyListVector::Iter i(xTabStops);
@@ -457,7 +457,7 @@ void WordPerfectCollector::setDocumentMetaData(const WPXPropertyList &propList)
 			mMetaData.push_back(static_cast<DocumentElement *>(new TagCloseElement(i.key())));
 		}
         }
-	
+
 }
 
 void WordPerfectCollector::openPageSpan(const WPXPropertyList &propList)
@@ -521,10 +521,10 @@ void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WP
 
 		WPXString sSectionName;
 		sSectionName.sprintf("Section%i", mSectionStyles.size());
-		
+
 		SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
 		mSectionStyles.push_back(pSectionStyle);
-		
+
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
 		pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
 		pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
@@ -548,7 +548,7 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 {
 	// FIXMENOW: What happens if we open a footnote inside a table? do we then inherit the footnote's style
 	// from "Table Contents"
-	
+
 	WPXPropertyList *pPersistPropList = new WPXPropertyList(propList);
 	ParagraphStyle *pStyle = NULL;
 
@@ -590,9 +590,9 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		{
 			WPXString sName;
 			sName.sprintf("S%i", mTextStyleHash.size()); 
-			
+
 			pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
-	
+
 			mTextStyleHash[sKey] = pStyle;
 		}
 		else
@@ -625,7 +625,7 @@ void WordPerfectCollector::openSpan(const WPXPropertyList &propList)
 	{
 		// allocate a new paragraph style
 		sName.sprintf("Span%i", mSpanStyleHash.size());
-		SpanStyle *pStyle = new SpanStyle(sName.cstr(), propList);		
+		SpanStyle *pStyle = new SpanStyle(sName.cstr(), propList);
 
 		mSpanStyleHash[sSpanHashKey] = pStyle;
 	}
@@ -752,7 +752,7 @@ void WordPerfectCollector::_openListLevel(TagOpenElement *pListLevelOpenElement)
 		mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:list-item")));
 		mWriterListStates.top().mbListElementOpened.top() = true;
 	}
-	
+
 	mWriterListStates.top().mbListElementOpened.push(false);
 	if (mWriterListStates.top().mbListElementOpened.size() == 1) {
 		pListLevelOpenElement->addAttribute("text:style-name", mWriterListStates.top().mpCurrentListStyle->getName());
@@ -809,9 +809,9 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 	{
 		WPXString sName;
 		sName.sprintf("S%i", mTextStyleHash.size()); 
-		
+
 		pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
-		
+
 		mTextStyleHash[sKey] = pStyle;
 	}
 	else
@@ -825,7 +825,7 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
 	pOpenListElementParagraph->addAttribute("text:style-name", pStyle->getName());
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(pOpenListElementParagraph));
-		
+
 	mWriterListStates.top().mbListElementOpened.top() = true;
 	mWriterListStates.top().mbListElementParagraphOpened = true;
 	mWriterListStates.top().mbListContinueNumbering = false;
@@ -863,7 +863,7 @@ void WordPerfectCollector::openFootnote(const WPXPropertyList &propList)
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:note-citation")));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:note-body")));
-	
+
 	mWriterDocumentState.mbInNote = true;
 }
 
@@ -896,7 +896,7 @@ void WordPerfectCollector::openEndnote(const WPXPropertyList &propList)
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagCloseElement("text:note-citation")));
 
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(new TagOpenElement("text:note-body")));
-	
+
 	mWriterDocumentState.mbInNote = true;
 }
 
@@ -1085,7 +1085,7 @@ void WordPerfectCollector::openFrame(const WPXPropertyList &propList)
 	frameStyleOpenElement->addAttribute("style:family", "graphic");
 
 	mFrameStyles.push_back(static_cast<DocumentElement *>(frameStyleOpenElement));
-	
+
 	TagOpenElement *frameStylePropertiesOpenElement = new TagOpenElement("style:graphic-properties");
 
 	if (propList["text:anchor-type"])
@@ -1093,24 +1093,39 @@ void WordPerfectCollector::openFrame(const WPXPropertyList &propList)
 	else
 		frameStylePropertiesOpenElement->addAttribute("text:anchor-type","paragraph");
 
+	if (propList["text:anchor-page-number"])
+		frameStylePropertiesOpenElement->addAttribute("text:anchor-page-number", propList["text:anchor-page-number"]->getStr());
+
 	if (propList["svg:x"])
 		frameStylePropertiesOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-		
+
 	if (propList["svg:y"])
 		frameStylePropertiesOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-	
+
 	if (propList["svg:width"])
 		frameStylePropertiesOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-	
+
 	if (propList["svg:height"])
 		frameStylePropertiesOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
 
+	if (propList["style:rel-width"])
+		frameStylePropertiesOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
+
+	if (propList["style:rel-height"])
+		frameStylePropertiesOpenElement->addAttribute("style:rel-height", propList["style:rel-height"]->getStr());
+
+	if (propList["fo:max-width"])
+		frameStylePropertiesOpenElement->addAttribute("fo:max-width", propList["fo:max-width"]->getStr());
+
+	if (propList["fo:max-height"])
+		frameStylePropertiesOpenElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
+
 	mFrameStyles.push_back(static_cast<DocumentElement *>(frameStylePropertiesOpenElement));
-	
+
 	mFrameStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:graphic-properties")));
-	
+
 	mFrameStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:style")));
-	
+
 	// Now, let's create an automatic style for this frame
 	TagOpenElement *frameAutomaticStyleElement = new TagOpenElement("style:style");
 	WPXString frameAutomaticStyleName;
@@ -1120,26 +1135,42 @@ void WordPerfectCollector::openFrame(const WPXPropertyList &propList)
 	frameAutomaticStyleElement->addAttribute("style:parent-style-name", frameStyleName);
 
 	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(frameAutomaticStyleElement));
-	
+
 	TagOpenElement *frameAutomaticStylePropertiesElement = new TagOpenElement("style:graphic-properties");
 	if (propList["style:horizontal-pos"])
 		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", propList["style:horizontal-pos"]->getStr());
 	else
 		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", "left");
-	
+
 	if (propList["style:horizontal-rel"])
 		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", propList["style:horizontal-rel"]->getStr());
 	else
 		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", "paragraph");
-		
+
+	if (propList["style:vertical-pos"])
+		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-pos", propList["style:vertical-pos"]->getStr());
+	else
+		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-pos", "top");
+
+	if (propList["style:vertical-rel"])
+		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-rel", propList["style:vertical-rel"]->getStr());
+	else
+		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-rel", "page-content");
+
+	if (propList["fo:max-width"])
+		frameAutomaticStylePropertiesElement->addAttribute("fo:max-width", propList["fo:max-width"]->getStr());
+
+	if (propList["fo:max-height"])
+		frameAutomaticStylePropertiesElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
+
 	frameAutomaticStylePropertiesElement->addAttribute("draw:ole-draw-aspect", "1");
 
 	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(frameAutomaticStylePropertiesElement));
-	
+
 	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:graphic-properties")));
 
 	mFrameAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:style")));
-	
+
 	// And write the frame itself
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
 
@@ -1151,20 +1182,29 @@ void WordPerfectCollector::openFrame(const WPXPropertyList &propList)
 	else
 		drawFrameOpenElement->addAttribute("text:anchor-type","paragraph");
 
+	if (propList["text:anchor-page-number"])
+		drawFrameOpenElement->addAttribute("text:anchor-page-number", propList["text:anchor-page-number"]->getStr());
+
 	if (propList["svg:x"])
 		drawFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-		
+
 	if (propList["svg:y"])
 		drawFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-	
+
 	if (propList["svg:width"])
 		drawFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
 
 	if (propList["svg:height"])
 		drawFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
 
+	if (propList["style:rel-width"])
+		drawFrameOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
+
+	if (propList["style:rel-height"])
+		drawFrameOpenElement->addAttribute("style:rel-height", propList["style:rel-height"]->getStr());
+
 	mpCurrentContentElements->push_back(static_cast<DocumentElement *>(drawFrameOpenElement));
-	
+
 	mWriterDocumentState.mbInFrame = true;
 }
 
