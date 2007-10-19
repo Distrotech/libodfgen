@@ -23,6 +23,8 @@
 #endif
 
 #include <libwpg/libwpg.h>
+#include <libwpd-stream/WPXStreamImplementation.h>
+
 #include <gsf/gsf-utils.h>
 #include <gsf/gsf-output-stdio.h>
 #include <gsf/gsf-outfile.h>
@@ -35,7 +37,7 @@
 #include "OdgExporter.hxx"
 #include "DiskDocumentHandler.hxx"
 #include "StdOutHandler.hxx"
-#include <libwpd/WPXStreamImplementation.h>
+#include <libwpd-stream/WPXStreamImplementation.h>
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
