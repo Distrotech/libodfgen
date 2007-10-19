@@ -43,9 +43,9 @@ GSFInputStream::~GSFInputStream()
 	g_object_unref(G_OBJECT(m_input));
 }
 
-const uint8_t * GSFInputStream::read(size_t numBytes, size_t &numBytesRead)
+const unsigned char * GSFInputStream::read(size_t numBytes, size_t &numBytesRead)
 {
-	const uint8_t *buf = gsf_input_read(m_input, numBytes, 0);
+	const unsigned char *buf = gsf_input_read(m_input, numBytes, 0);
 
 	if (!buf)
 		numBytesRead = 0;
