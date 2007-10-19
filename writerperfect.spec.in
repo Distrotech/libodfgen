@@ -17,12 +17,14 @@ License: LGPL
 Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word Perfect Graphics into OpenDocument Drawing formats.
 
 %package -n wpd2odt
-Summary: Tool for converting WordPerfect(tm) documents into OpenOffice.org Writer format.
+Summary: Tool for converting WordPerfect(tm) documents into OpenDocument Text format.
 Group: Applications
 Requires: libwpd >= @LIBWPD_REQUIRED_VERSION@
+Requires: libwpg >= @LIBWPG_REQUIRED_VERSION@
 Requires: glib2 >= 2.0.0
 Requires: libgsf >= 1.6.0
 BuildRequires: libwpd-devel >= @LIBWPD_REQUIRED_VERSION@
+BuildRequires: libwpg-devel >= @LIBWPG_REQUIRED_VERSION@
 BuildRequires: glib2-devel >= 2.0.0
 BuildRequires: libgsf-devel >= 1.6.0
 
@@ -30,7 +32,7 @@ BuildRequires: libgsf-devel >= 1.6.0
 Tool for converting Word Perfect documents into OpenDocument Text format.
 
 %package -n wpg2odg
-Summary: Tool for converting Word Perfect Graphics into OpenDocument Drawing format.
+Summary: Tool for converting Word Perfect Graphics into OpenDocument Graphics format.
 Group: Applications
 Requires: libwpg >= @LIBWPG_REQUIRED_VERSION@
 Requires: libwpd >= @LIBWPD_REQUIRED_VERSION@
@@ -42,7 +44,7 @@ BuildRequires: glib2-devel >= 2.0.0
 BuildRequires: libgsf-devel >= 1.6.0
  
 %description -n wpg2odg
-Tool for converting Word Perfect Graphics into OpenDocument Drawing format.
+Tool for converting Word Perfect Graphics into OpenDocument Graphics format.
 
 %prep
 %__rm -rf $RPM_BUILD_ROOT
