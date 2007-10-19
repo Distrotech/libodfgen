@@ -35,7 +35,7 @@
 #include "OdgExporter.hxx"
 #include "DiskDocumentHandler.hxx"
 #include "StdOutHandler.hxx"
-#include "GSFStream.hxx"
+#include <libwpd/WPXStreamImplementation.h>
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
@@ -78,29 +78,12 @@ static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char
 
 static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 {
-	GError *err = NULL;
-	GsfInput *pGsfInput = NULL;
-	if (!(pGsfInput = GSF_INPUT(gsf_input_stdio_new (pInFileName, &err)))) 
-	{
-		if (err) {
-			g_warning ("'%s' error: %s", pInFileName, err->message);
-			g_error_free (err);
-		}
-		return false;
-	}
-	if (err)
-	{
-		g_error_free(err);
-		g_object_unref(pGsfInput);
- 		return false;
- 	}
-		
-	GSFInputStream input(pGsfInput);
+	WPXFileStream input(pInFileName);
 
- 	if (!libwpg::WPGraphics::isSupported(&input))
+	WPDConfidence confidence = WPDocument::isFileFormatSupported(&input);
+ 	if (confidence != WPD_CONFIDENCE_EXCELLENT)
  	{
  		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
-		g_object_unref(pGsfInput);
  		return false;
  	}
 	input.seek(0, WPX_SEEK_SET);
@@ -126,8 +109,6 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 	        g_object_unref(G_OBJECT (pContentChild));
 	}
 	delete pHandler;
-
-	g_object_unref(pGsfInput);
 
 	return bRetVal;
 }

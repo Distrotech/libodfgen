@@ -11,8 +11,6 @@ endif
 wpd2odt_SOURCES =			\
 	DiskDocumentHandler.hxx		\
 	DiskDocumentHandler.cxx		\
-	GSFStream.cxx			\
-	GSFStream.hxx			\
 	StdOutHandler.hxx		\
 	StdOutHandler.cxx		\
 	wpd2odt.cxx
@@ -26,8 +24,6 @@ endif
 wpg2odg_SOURCES =			\
 	DiskDocumentHandler.hxx		\
 	DiskDocumentHandler.cxx		\
-	GSFStream.cxx			\
-	GSFStream.hxx			\
 	StdOutHandler.hxx		\
 	StdOutHandler.cxx		\
 	wpg2odg.cxx
