@@ -276,8 +276,8 @@ void OdgExporter::drawRectangle(const libwpg::WPGRect& rect, double rx, double /
 	sValue = doubleToString(rx); sValue.append("in");
 	// FIXME: what to do when rx != ry ?
 	pDrawRectElement->addAttribute("draw:corner-radius", sValue);
-	mBodyElements.push_back(static_cast<DocumentElement *>(pDrawRectElement));
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:rect")));	
+	mBodyElements.push_back(pDrawRectElement);
+	mBodyElements.push_back(new TagCloseElement("draw:rect"));	
 }
 
 void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double ry)
@@ -295,8 +295,8 @@ void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double 
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
 	sValue = doubleToString(2 * ry); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
-	mBodyElements.push_back(static_cast<DocumentElement *>(pDrawEllipseElement));
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:ellipse")));
+	mBodyElements.push_back(pDrawEllipseElement);
+	mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
 
 void OdgExporter::drawPolygon(const libwpg::WPGPointArray& vertices)
@@ -324,8 +324,8 @@ void OdgExporter::drawPolygon(const libwpg::WPGPointArray& vertices)
 		pDrawLineElement->addAttribute("svg:x2", sValue);
 		sValue = doubleToString(p2.y); sValue.append("in");
 		pDrawLineElement->addAttribute("svg:y2", sValue);
-		mBodyElements.push_back(static_cast<DocumentElement *>(pDrawLineElement));
-		mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:line")));
+		mBodyElements.push_back(pDrawLineElement);
+		mBodyElements.push_back(new TagCloseElement("draw:line"));
 	}
 	else
 	{
@@ -421,8 +421,8 @@ void OdgExporter::drawPath(const libwpg::WPGPath& path)
     if(path.closed)
 		sValue.append(" Z");
 	pDrawPathElement->addAttribute("svg:d", sValue);
-	mBodyElements.push_back(static_cast<DocumentElement *>(pDrawPathElement));
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:path")));
+	mBodyElements.push_back(pDrawPathElement);
+	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
 void OdgExporter::drawBitmap(const libwpg::WPGBitmap& bitmap)
@@ -437,21 +437,21 @@ void OdgExporter::drawBitmap(const libwpg::WPGBitmap& bitmap)
 	pDrawFrameElement->addAttribute("svg:height", sValue);
 	sValue = doubleToString(bitmap.rect.width()); sValue.append("in");
 	pDrawFrameElement->addAttribute("svg:width", sValue);
-	mBodyElements.push_back(static_cast<DocumentElement *>(pDrawFrameElement));
+	mBodyElements.push_back(pDrawFrameElement);
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:image")));
+	mBodyElements.push_back(new TagOpenElement("draw:image"));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("office:binary-data")));
+	mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 	
 	libwpg::WPGString base64Binary;
 	bitmap.generateBase64DIB(base64Binary);
-	mBodyElements.push_back(static_cast<DocumentElement *>(new CharDataElement(base64Binary.cstr())));
+	mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("office:binary-data")));
+	mBodyElements.push_back(new TagCloseElement("office:binary-data"));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:image")));
+	mBodyElements.push_back(new TagCloseElement("draw:image"));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
+	mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
 void OdgExporter::drawImageObject(const libwpg::WPGBinaryData& binaryData)
@@ -468,20 +468,20 @@ void OdgExporter::drawImageObject(const libwpg::WPGBinaryData& binaryData)
 	pDrawFrameElement->addAttribute("svg:height", sValue);
 	sValue = doubleToString(binaryData.rect.width()); sValue.append("in");
 	pDrawFrameElement->addAttribute("svg:width", sValue);
-	mBodyElements.push_back(static_cast<DocumentElement *>(pDrawFrameElement));
+	mBodyElements.push_back(pDrawFrameElement);
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("draw:image")));
+	mBodyElements.push_back(new TagOpenElement("draw:image"));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagOpenElement("office:binary-data")));
+	mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 	
 	libwpg::WPGString base64Binary = binaryData.getBase64Data();
-	mBodyElements.push_back(static_cast<DocumentElement *>(new CharDataElement(base64Binary.cstr())));
+	mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("office:binary-data")));
+	mBodyElements.push_back(new TagCloseElement("office:binary-data"));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:image")));
+	mBodyElements.push_back(new TagCloseElement("draw:image"));
 	
-	mBodyElements.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:frame")));
+	mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
 void OdgExporter::writeGraphicsStyle()
@@ -510,8 +510,8 @@ void OdgExporter::writeGraphicsStyle()
 			sValue = doubleToString(mxPen.dashArray.at(i*2)); sValue.append("in");
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), sValue);
 		}
-		mGraphicsStrokeDashStyles.push_back(static_cast<DocumentElement *>(pDrawStrokeDashElement));
-		mGraphicsStrokeDashStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:stroke-dash")));
+		mGraphicsStrokeDashStyles.push_back(pDrawStrokeDashElement);
+		mGraphicsStrokeDashStyles.push_back(new TagCloseElement("draw:stroke-dash"));
 	}
 
 	if(mxBrush.style == libwpg::WPGBrush::Gradient)
@@ -541,8 +541,8 @@ void OdgExporter::writeGraphicsStyle()
 		pDrawGradientElement->addAttribute("draw:start-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:border", "0%");
-		mGraphicsGradientStyles.push_back(static_cast<DocumentElement *>(pDrawGradientElement));
-		mGraphicsGradientStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("draw:gradient")));
+		mGraphicsGradientStyles.push_back(pDrawGradientElement);
+		mGraphicsGradientStyles.push_back(new TagCloseElement("draw:gradient"));
 	}
 
 	TagOpenElement *pStyleStyleElement = new TagOpenElement("style:style");
@@ -551,7 +551,7 @@ void OdgExporter::writeGraphicsStyle()
 	pStyleStyleElement->addAttribute("style:name", sValue);
 	pStyleStyleElement->addAttribute("style:family", "graphic");
 	pStyleStyleElement->addAttribute("style:parent-style-name", "standard");
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(pStyleStyleElement));
+	mGraphicsAutomaticStyles.push_back(pStyleStyleElement);
 
 	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
 
@@ -591,10 +591,10 @@ void OdgExporter::writeGraphicsStyle()
 		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-gradient-name", sValue);
 	}
 
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(pStyleGraphicsPropertiesElement));
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:graphic-properties")));
+	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
+	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
 
-	mGraphicsAutomaticStyles.push_back(static_cast<DocumentElement *>(new TagCloseElement("style:style")));
+	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:style"));
 	miGraphicsStyleIndex++;
 }
 

@@ -40,15 +40,15 @@ void InternalHandler::startElement(const char *psName, const WPXPropertyList &xP
                 if (strncmp(i.key(), "libwpd", 6) != 0)
                         element->addAttribute(i.key(), i()->getStr());
         }
-	mpElements->push_back(static_cast<DocumentElement *>(element));
+	mpElements->push_back(element);
 }
 
 void InternalHandler::endElement(const char *psName)
 {
-	mpElements->push_back(static_cast<DocumentElement *>(new TagCloseElement(psName)));
+	mpElements->push_back(new TagCloseElement(psName));
 }
 
 void InternalHandler::characters(const WPXString &sCharacters)
 {
-	mpElements->push_back(static_cast<DocumentElement *>(new CharDataElement(sCharacters.cstr())));
+	mpElements->push_back(new CharDataElement(sCharacters.cstr()));
 }
