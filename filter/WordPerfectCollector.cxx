@@ -297,9 +297,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	docContentPropList.insert("office:version", "1.0");
 	if (mbIsFlatXML)
 	{
-//		docContentPropList.insert("office:mimetype", "application/x-vnd.oasis.openoffice.text");
 		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");
-
 		mpHandler->startElement("office:document", docContentPropList);
 	}
 	else

@@ -8,11 +8,13 @@ if STATIC_TOOLS
 wpd2odt_LDFLAGS = -all-static
 endif
 
-wpd2odt_SOURCES =			\
-	DiskDocumentHandler.hxx		\
-	DiskDocumentHandler.cxx		\
-	StdOutHandler.hxx		\
-	StdOutHandler.cxx		\
+wpd2odt_SOURCES = \
+	DiskDocumentHandler.hxx \
+	DiskDocumentHandler.cxx \
+	OutputFileHelper.cxx \
+	OutputFileHelper.hxx \
+	StdOutHandler.hxx \
+	StdOutHandler.cxx \
 	wpd2odt.cxx
 
 wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
@@ -21,11 +23,13 @@ if STATIC_TOOLS
 wpg2odg_LDFLAGS = -all-static
 endif
 
-wpg2odg_SOURCES =			\
-	DiskDocumentHandler.hxx		\
-	DiskDocumentHandler.cxx		\
-	StdOutHandler.hxx		\
-	StdOutHandler.cxx		\
+wpg2odg_SOURCES = \
+	DiskDocumentHandler.hxx \
+	DiskDocumentHandler.cxx \
+	OutputFileHelper.cxx \
+	OutputFileHelper.hxx \
+	StdOutHandler.hxx \
+	StdOutHandler.cxx \
 	wpg2odg.cxx
 
 

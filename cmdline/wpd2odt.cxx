@@ -20,24 +20,14 @@
  * USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include <libwpd/libwpd.h>
-#include <libwpd-stream/WPXStreamImplementation.h>
-
-#include <gsf/gsf-utils.h>
-#include <gsf/gsf-output-stdio.h>
-#include <gsf/gsf-outfile.h>
-#include <gsf/gsf-outfile-zip.h>
-
 #include <stdio.h>
 #include <string.h>
 
+#include <libwpd/libwpd.h>
+
+#include "OutputFileHelper.hxx"
+
 #include "WordPerfectCollector.hxx"
-#include "DiskDocumentHandler.hxx"
-#include "StdOutHandler.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.text";
 
@@ -121,92 +111,32 @@ const char stylesStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	"</office:master-styles>"
 	"</office:document-styles>";
 
-bool _isSupportedFormat(WPXInputStream *input)
+class OdtOutputFileHelper : public OutputFileHelper
 {
-	bool retVal = (WPD_CONFIDENCE_EXCELLENT == WPDocument::isFileFormatSupported(input));
-	if (!retVal)
- 		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
-	return retVal;
-}
+public:
+	OdtOutputFileHelper(const char *outFileName) :
+		OutputFileHelper(outFileName) {};
+	~OdtOutputFileHelper() {};
 
-bool _parseDocument(WPXInputStream *input, DocumentHandler *handler, bool isFlatXML)
-{
-	WordPerfectCollector collector(input, handler, isFlatXML);
-	return collector.filter();
-}
-
-static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str)
-{
-	GsfOutput *child;
-	if (NULL != (child = gsf_outfile_new_child  (outfile, fileName, FALSE)))
+private:
+	bool _isSupportedFormat(WPXInputStream *input)
 	{
-		bool res = gsf_output_puts (child, str) &&
-			gsf_output_close (child);
-		g_object_unref (child);
-		return res;
+		bool retVal = (WPD_CONFIDENCE_EXCELLENT == WPDocument::isFileFormatSupported(input));
+		if (!retVal)
+ 			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
+		return retVal;
 	}
-	return false;
-}
 
-static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str, const char compression_level)
-{
-	GsfOutput *child;
-#ifdef GSF_HAS_COMPRESSION_LEVEL
-	if (NULL != (child = gsf_outfile_new_child_full  (outfile, fileName, FALSE,"compression-level", compression_level, (void*)0)))
-#else
-	if (NULL != (child = gsf_outfile_new_child  (outfile, fileName, FALSE)))
-#endif
+	bool _convertDocument(WPXInputStream *input, DocumentHandler *handler, bool isFlatXML)
 	{
-		bool res = gsf_output_puts (child, str) &&
-			gsf_output_close (child);
-		g_object_unref (child);
-		return res;
+		WordPerfectCollector collector(input, handler, isFlatXML);
+		return collector.filter();
 	}
-	return false;
-}
-
-static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
-{
-	WPXFileStream input(pInFileName);
-
- 	if (!_isSupportedFormat(&input))
- 		return false;
-
-	input.seek(0, WPX_SEEK_SET);
-
-	DocumentHandler *pHandler;
-	GsfOutput *pContentChild = NULL;
-	bool tmpIsFlatXML = true;
-	if (pOutfile)
-	{
-	        pContentChild = gsf_outfile_new_child(pOutfile, "content.xml", FALSE);
-	        pHandler = new DiskDocumentHandler(pContentChild); // WLACH_REFACTORING: rename to DiskHandler
-		tmpIsFlatXML = false;
-	}
-	else
-	        pHandler = new StdOutHandler();
-
-	bool bRetVal = _parseDocument(&input, pHandler, tmpIsFlatXML);
-
-	if (pContentChild)
-	{
-	        gsf_output_close(pContentChild);
-	        g_object_unref(G_OBJECT (pContentChild));
-	}
-	delete pHandler;
-
-	return bRetVal;
-}
+};
 
 int
 main (int argc, char *argv[])
 {
-	GsfOutput  *pOutput = NULL;
-	GsfOutfile *pOutfile = NULL;
-	GError   *err = NULL;
-
-	gsf_init ();
-
 	if (argc < 2) 
 	{
 		fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", argv[0]);
@@ -215,95 +145,51 @@ main (int argc, char *argv[])
 		fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
 		fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
 		fprintf(stderr, "USAGE : \n");
-		gsf_shutdown ();
 		return 1;
 	}
 
 	char *szInputFile;
+	char *szOutFile;
 
 	if (argc == 2)
 	{
 		szInputFile = argv[1];
-		pOutput = NULL;
+		szOutFile = NULL;
 	}
 	else if (!strcmp(argv[1], "--stdout"))
 	{
 	        szInputFile = argv[2];
-	        pOutput = NULL;
+	        szOutFile = NULL;
 	}
 	else
 	{
 	        szInputFile = argv[1];
-
-	        pOutput = GSF_OUTPUT(gsf_output_stdio_new (argv[2], &err));
-	        if (pOutput == NULL) {
-			if (err) {
-		                g_warning ("'%s' error: %s", argv[2], err->message);
-	                        g_error_free (err);
-			}
-			gsf_shutdown ();
-	                return 1;
-	        }
-		if (err)
-			g_error_free (err);
-		err = NULL;
-	        pOutfile = GSF_OUTFILE(gsf_outfile_zip_new (pOutput, &err));
-	        if (pOutfile == NULL) {
-			if (err) {
-		                g_warning ("'%s' error: %s",
-					"gsf_outfile_zip_new", err->message);
-	                        g_error_free (err);
-			}
-			gsf_shutdown ();
-	                return 1;
-	        }
-		if (err)
-			g_error_free (err);
-		err = NULL;
-	        g_object_unref (pOutput);
+		szOutFile = argv[2];
 	}
+	
+	OdtOutputFileHelper helper(szOutFile);
 
-	if (pOutfile && !writeChildFile(pOutfile, "mimetype", mimetypeStr, (char)0)) {
+
+	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0)) {
 		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
-	       	g_object_unref (pOutfile);
-		gsf_shutdown ();
 		return 1;
 	}
 
-	if (pOutfile && !writeChildFile(pOutfile, "META-INF/manifest.xml", manifestStr)) {
+	if (!helper.writeChildFile("META-INF/manifest.xml", manifestStr)) {
 		fprintf(stderr, "ERROR : Couldn't write manifest\n");
-	       	g_object_unref (pOutfile);
-		gsf_shutdown ();
 		return 1;
 	}
 	
-	if (pOutfile && !writeChildFile(pOutfile, "styles.xml", stylesStr)) {
+	if (!helper.writeChildFile("styles.xml", stylesStr)) {
 		fprintf(stderr, "ERROR : Couldn't write styles\n");
-	       	g_object_unref (pOutfile);
-		gsf_shutdown ();
 		return 1;
 	}
 
-	if (!writeContent(szInputFile, pOutfile)) 
+	if (!helper.writeConvertedContent("content.xml", szInputFile)) 
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
-		if (pOutfile)
-		      	g_object_unref (pOutfile);
-		gsf_shutdown ();
 	        return 1;
 	}
-
-	if (pOutfile && !gsf_output_close ((GsfOutput *) pOutfile)) {
-		fprintf(stderr, "ERROR : Couldn't close outfile\n");
-	       	g_object_unref (pOutfile);
-		gsf_shutdown ();
-		return 1;
-	}
-
-	if (pOutfile)
-	        g_object_unref (pOutfile);
-
-	gsf_shutdown ();
-
+	
 	return 0;
 }

@@ -1,15 +1,11 @@
-SUBDIRS = build filter ooo packaging cmdline
+SUBDIRS = build filter cmdline
 
-EXTRA_DIST =	\
-	writerperfect.spec.in		\
-	writerperfect.spec		\
-	writerperfect-zip.in		\
-	autogen.sh			\
-	Makefile.ooo-external		\
-	Makefile.ooo-external.msvc.in	\
-	CHANGES README \
-	README.ooo-external.msvc \
-	OOoSDK.win32.diff
+EXTRA_DIST = \
+	writerperfect.spec.in \
+	writerperfect.spec \
+	writerperfect-zip.in \
+	autogen.sh \
+	CHANGES README
 
 distclean-local:
 	rm -rf *.cache *~ *.out

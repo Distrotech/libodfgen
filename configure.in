@@ -118,13 +118,9 @@ writerperfect-zip
 build/Makefile
 build/win32/Makefile
 filter/Makefile
-ooo/Makefile
 cmdline/Makefile
 cmdline/wpd2odt.rc
 cmdline/wpg2odg.rc
-packaging/Makefile
-packaging/NSIS/Makefile
-packaging/NSIS/WriterPerfect.nsi
 ])
 
 case "$debug" in
