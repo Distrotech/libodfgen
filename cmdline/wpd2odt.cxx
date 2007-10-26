@@ -121,6 +121,20 @@ const char stylesStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	"</office:master-styles>"
 	"</office:document-styles>";
 
+bool _isSupportedFormat(WPXInputStream *input)
+{
+	bool retVal = (WPD_CONFIDENCE_EXCELLENT == WPDocument::isFileFormatSupported(input));
+	if (!retVal)
+ 		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
+	return retVal;
+}
+
+bool _parseDocument(WPXInputStream *input, DocumentHandler *handler, bool isFlatXML)
+{
+	WordPerfectCollector collector(input, handler, isFlatXML);
+	return collector.filter();
+}
+
 static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str)
 {
 	GsfOutput *child;
@@ -138,7 +152,7 @@ static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char
 {
 	GsfOutput *child;
 #ifdef GSF_HAS_COMPRESSION_LEVEL
-	if (NULL != (child = gsf_outfile_new_child_full  (outfile, fileName, FALSE,"compression-level", 0, (void*)0)))
+	if (NULL != (child = gsf_outfile_new_child_full  (outfile, fileName, FALSE,"compression-level", compression_level, (void*)0)))
 #else
 	if (NULL != (child = gsf_outfile_new_child  (outfile, fileName, FALSE)))
 #endif
@@ -155,12 +169,9 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 {
 	WPXFileStream input(pInFileName);
 
-	WPDConfidence confidence = WPDocument::isFileFormatSupported(&input);
- 	if (confidence != WPD_CONFIDENCE_EXCELLENT)
- 	{
- 		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
+ 	if (!_isSupportedFormat(&input))
  		return false;
- 	}
+
 	input.seek(0, WPX_SEEK_SET);
 
 	DocumentHandler *pHandler;
@@ -175,8 +186,7 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 	else
 	        pHandler = new StdOutHandler();
 
-	WordPerfectCollector collector(&input, pHandler, tmpIsFlatXML);
-	bool bRetVal = collector.filter();
+	bool bRetVal = _parseDocument(&input, pHandler, tmpIsFlatXML);
 
 	if (pContentChild)
 	{

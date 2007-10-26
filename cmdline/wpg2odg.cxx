@@ -48,6 +48,20 @@ const char manifestStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 //		" <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>"
 		"</manifest:manifest>";
 
+bool _isSupportedFormat(WPXInputStream *input)
+{
+	bool retVal = libwpg::WPGraphics::isSupported(input);
+	if (!retVal)
+ 		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect Graphics.\n");
+	return retVal;		
+}
+
+bool _parseDocument(WPXInputStream *input, DocumentHandler *handler, bool isFlatXML)
+{
+	OdgExporter exporter(handler, isFlatXML);
+	return libwpg::WPGraphics::parse(input, &exporter);
+}
+
 static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char *str)
 {
 	GsfOutput *child;
@@ -65,7 +79,7 @@ static bool writeChildFile(GsfOutfile *outfile, const char *fileName, const char
 {
 	GsfOutput *child;
 #ifdef GSF_HAS_COMPRESSION_LEVEL
-	if (NULL != (child = gsf_outfile_new_child_full  (outfile, fileName, FALSE,"compression-level", 0, (void*)0)))
+	if (NULL != (child = gsf_outfile_new_child_full  (outfile, fileName, FALSE,"compression-level", compression_level, (void*)0)))
 #else
 	if (NULL != (child = gsf_outfile_new_child  (outfile, fileName, FALSE)))
 #endif
@@ -82,12 +96,9 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 {
 	WPXFileStream input(pInFileName);
 
-	WPDConfidence confidence = WPDocument::isFileFormatSupported(&input);
- 	if (confidence != WPD_CONFIDENCE_EXCELLENT)
- 	{
- 		fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
+ 	if (!_isSupportedFormat(&input))
  		return false;
- 	}
+
 	input.seek(0, WPX_SEEK_SET);
 
 	DocumentHandler *pHandler;
@@ -102,8 +113,7 @@ static bool writeContent(const char *pInFileName, GsfOutfile *pOutfile)
 	else
 	        pHandler = new StdOutHandler();
 
-	OdgExporter exporter(pHandler, tmpIsFlatXML);
-	bool bRetVal = libwpg::WPGraphics::parse(&input, &exporter);
+	bool bRetVal = _parseDocument(&input, pHandler, tmpIsFlatXML);
 
 	if (pContentChild)
 	{
