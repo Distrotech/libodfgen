@@ -134,8 +134,14 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 	return false;
 #else
 	m_impl->mpOutfile->createEntry(childFileName, 0);
+	if (m_impl->mpOutfile->errorCode())
+		return false;
 	m_impl->mpOutfile->writeString(str);
+	if (m_impl->mpOutfile->errorCode())
+		return false;
 	m_impl->mpOutfile->closeEntry();
+	if (m_impl->mpOutfile->errorCode())
+		return false;
 	return true;
 #endif
 }
@@ -160,8 +166,14 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 	return false;
 #else
 	m_impl->mpOutfile->createEntry(childFileName, (int)compression_level);
+	if (m_impl->mpOutfile->errorCode())
+	    return false;
 	m_impl->mpOutfile->writeString(str);
+	if (m_impl->mpOutfile->errorCode())
+	    return false;
 	m_impl->mpOutfile->closeEntry();
+	if (m_impl->mpOutfile->errorCode())
+	    return false;
 	return true;
 #endif
 }
@@ -187,6 +199,8 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 	if (m_impl->mpOutfile)
 	{
 		m_impl->mpOutfile->createEntry(childFileName, 0); 
+		if (m_impl->mpOutfile->errorCode())
+			return false;
 		pHandler = new DiskDocumentHandler(m_impl->mpOutfile);
 #endif
 		tmpIsFlatXML = false;
