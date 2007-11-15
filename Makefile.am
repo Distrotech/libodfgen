@@ -5,6 +5,7 @@ EXTRA_DIST = \
 	writerperfect.spec \
 	writerperfect-zip.in \
 	autogen.sh \
+	config.h.in \
 	CHANGES README
 
 distclean-local:

@@ -15,6 +15,8 @@ wpd2odt_SOURCES = \
 	OutputFileHelper.hxx \
 	StdOutHandler.hxx \
 	StdOutHandler.cxx \
+	FemtoZip.cxx \
+	FemtoZip.hxx \
 	wpd2odt.cxx
 
 wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
@@ -30,6 +32,8 @@ wpg2odg_SOURCES = \
 	OutputFileHelper.hxx \
 	StdOutHandler.hxx \
 	StdOutHandler.cxx \
+	FemtoZip.cxx \
+	FemtoZip.hxx \
 	wpg2odg.cxx
 
 

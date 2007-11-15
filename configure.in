@@ -46,20 +46,42 @@ AC_PROG_LIBTOOL
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
-PKG_CHECK_MODULES(WRITERPERFECT,[
-    libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
-    libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
-    libwpg-0.2 >= $LIBWPG_REQUIRED_VERSION
-    glib-2.0 >= 2.0.0
-    libgsf-1 >= 1.6.0
-])
+test_libgsf=false
+AC_ARG_WITH(libgsf,
+	[  --with-libgsf           Use libgsf for output of structured files],
+	if test "x$withval" = xyes; then
+		test_libgsf=true
+		AC_DEFINE([USE_LIBGSF_OUTPUT], [1], [Whether to use libgsf for output of structured files])
+	fi
+)
 
-PKG_CHECK_EXISTS([ libgsf-1 >= 1.12.0 ],[
-    AC_DEFINE([GSF_HAS_COMPRESSION_LEVEL], [1], [Whether compression level is supported])
-],[
-    AC_MSG_WARN([*** Will not be able to write uncompressed mimetype stream.])
-    AC_MSG_WARN([*** The output files will not be strictly ODF compliant.])
-])
+if test "x$test_libgsf" = "xtrue"; then
+
+    PKG_CHECK_MODULES(WRITERPERFECT,[
+        libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
+        libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
+        libwpg-0.2 >= $LIBWPG_REQUIRED_VERSION
+        glib-2.0 >= 2.0.0
+        libgsf-1 >= 1.6.0
+    ])
+
+    PKG_CHECK_EXISTS([ libgsf-1 >= 1.12.0 ],[
+        AC_DEFINE([GSF_HAS_COMPRESSION_LEVEL], [1], [Whether compression level is supported])
+    ],[
+        AC_MSG_WARN([*** Will not be able to write uncompressed mimetype stream.])
+        AC_MSG_WARN([*** The output files will not be strictly ODF compliant.])
+    ])
+
+else
+
+    PKG_CHECK_MODULES(WRITERPERFECT,[
+        libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
+        libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
+        libwpg-0.2 >= $LIBWPG_REQUIRED_VERSION
+    ])
+
+fi
+    
 
 AC_MSG_CHECKING([for native Win32])
 case "$host" in

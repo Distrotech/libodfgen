@@ -22,7 +22,13 @@
 
 #include <string.h>
 
+#ifdef USE_GSF_OUTPUT
+#define PUTSTRING(M) gsf_output_puts(mpOutput, M)
 DiskDocumentHandler::DiskDocumentHandler(GsfOutput *pOutput) :
+#else
+#define PUTSTRING(M) mpOutput->writeString(M)
+DiskDocumentHandler::DiskDocumentHandler(FemtoZip *pOutput) :
+#endif
         mpOutput(pOutput),
 	mbIsTagOpened(false)
 {
@@ -32,22 +38,22 @@ void DiskDocumentHandler::startElement(const char *psName, const WPXPropertyList
 {
 	if (mbIsTagOpened)
 	{
-		gsf_output_puts(mpOutput, ">");
+		PUTSTRING(">");
 		mbIsTagOpened = false;
 	}
-	gsf_output_puts(mpOutput, "<");
-	gsf_output_puts(mpOutput, psName);
+	PUTSTRING("<");
+	PUTSTRING(psName);
         WPXPropertyList::Iter i(xPropList);
         for (i.rewind(); i.next(); )
         {
                 // filter out libwpd elements
                 if (strncmp(i.key(), "libwpd", 6) != 0)
 		{
-			gsf_output_puts(mpOutput, " ");
-			gsf_output_puts(mpOutput, i.key());
-			gsf_output_puts(mpOutput, "=\"");
-			gsf_output_puts(mpOutput, i()->getStr().cstr());
-			gsf_output_puts(mpOutput, "\"");
+			PUTSTRING(" ");
+			PUTSTRING(i.key());
+			PUTSTRING("=\"");
+			PUTSTRING(i()->getStr().cstr());
+			PUTSTRING("\"");
 		}
 
         }
@@ -61,23 +67,23 @@ void DiskDocumentHandler::endElement(const char *psName)
 	{
 		if( msOpenedTagName == psName )
 		{
-			gsf_output_puts(mpOutput, "/>");
+			PUTSTRING("/>");
 			mbIsTagOpened = false;
 		}
 		else // should not happen, but handle it
 		{
-			gsf_output_puts(mpOutput, ">");
-			gsf_output_puts(mpOutput, "</");
-			gsf_output_puts(mpOutput, psName);
-			gsf_output_puts(mpOutput, ">");
+			PUTSTRING(">");
+			PUTSTRING("</");
+			PUTSTRING(psName);
+			PUTSTRING(">");
 			mbIsTagOpened = false;
 		}
 	}
 	else
 	{
-		gsf_output_puts(mpOutput, "</");
-		gsf_output_puts(mpOutput, psName);
-		gsf_output_puts(mpOutput, ">");
+		PUTSTRING("</");
+		PUTSTRING(psName);
+		PUTSTRING(">");
 		mbIsTagOpened = false;
 	}
 }
@@ -86,19 +92,19 @@ void DiskDocumentHandler::characters(const WPXString &sCharacters)
 {
 	if (mbIsTagOpened)
 	{
-		gsf_output_puts(mpOutput, ">");
+		PUTSTRING(">");
 		mbIsTagOpened = false;
 	}
         WPXString sEscapedCharacters(sCharacters, true);
 	if (sEscapedCharacters.len() > 0)
-		gsf_output_puts(mpOutput, sEscapedCharacters.cstr());
+		PUTSTRING(sEscapedCharacters.cstr());
 }
 
 void DiskDocumentHandler::endDocument()
 {
 	if (mbIsTagOpened)
 	{
-		gsf_output_puts(mpOutput, ">");
+		PUTSTRING(">");
 		mbIsTagOpened = false;
 	}
 }

@@ -21,12 +21,25 @@
 #ifndef _DISKDOCUMENTHANDLER_H
 #define _DISKDOCUMENTHANDLER_H
 #include "DocumentElement.hxx"
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef USE_GSF_OUTPUT
 #include <gsf/gsf-output.h>
+#else
+#include "FemtoZip.hxx"
+#endif
 
 class DiskDocumentHandler : public DocumentHandler
 {
   public:
+#ifdef USE_GSF_OUTPUT
         DiskDocumentHandler(GsfOutput *pOutput);
+#else
+        DiskDocumentHandler(FemtoZip *pOutput);
+#endif
         virtual void startDocument() {}
         virtual void endDocument();
         virtual void startElement(const char *psName, const WPXPropertyList &xPropList);
@@ -34,7 +47,11 @@ class DiskDocumentHandler : public DocumentHandler
         virtual void characters(const WPXString &sCharacters);
 
   private:
+#ifdef USE_GSF_OUTPUT
         GsfOutput *mpOutput;
+#else
+        FemtoZip *mpOutput;
+#endif
 	bool mbIsTagOpened;
 	WPXString msOpenedTagName;
 };

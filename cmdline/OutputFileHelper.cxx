@@ -23,11 +23,15 @@
 
 #include "OutputFileHelper.hxx"
 
+#ifdef USE_GSF_OUTPUT
 #include <gsf/gsf-utils.h>
 #include <gsf/gsf-output-stdio.h>
 #include <gsf/gsf-outfile.h>
 #include <gsf/gsf-outfile-zip.h>
 #include <gsf/gsf-input-stdio.h>
+#else
+#include "FemtoZip.hxx"
+#endif
 
 #include "DiskDocumentHandler.hxx"
 #include "StdOutHandler.hxx"
@@ -35,15 +39,24 @@
 
 struct OutputFileHelperImpl
 {
+#ifdef USE_GSF_OUTPUT
 	GsfOutfile *mpOutfile;
+#else
+	FemtoZip *mpOutfile;
+#endif
 };
 
 
 OutputFileHelper::OutputFileHelper(const char* outFileName) :
+#ifdef USE_GSF_OUTPUT
 	m_impl(new OutputFileHelperImpl())
+#else
+	m_impl(new OutputFileHelperImpl())
+#endif
 {
-	GsfOutput  *pOutput = NULL;
 	m_impl->mpOutfile = NULL;
+#ifdef USE_GSF_OUTPUT
+	GsfOutput  *pOutput = NULL;
 	GError   *err = NULL;
 
 	gsf_init ();
@@ -81,10 +94,15 @@ OutputFileHelper::OutputFileHelper(const char* outFileName) :
 			}
 		}
 	}
+#else
+	if (outFileName)
+		m_impl->mpOutfile = new FemtoZip(outFileName);
+#endif 
 }
 
 OutputFileHelper::~OutputFileHelper()
 {
+#ifdef USE_GSF_OUTPUT
 	if (m_impl->mpOutfile && !gsf_output_close ((GsfOutput *) m_impl->mpOutfile))
 		fprintf(stderr, "ERROR : Couldn't close outfile\n");
 
@@ -92,7 +110,10 @@ OutputFileHelper::~OutputFileHelper()
 	        g_object_unref (m_impl->mpOutfile);
 
 	gsf_shutdown ();
-
+#else
+	if (m_impl->mpOutfile)
+		delete m_impl->mpOutfile;
+#endif
 	if (m_impl)
 		delete m_impl;
 }
@@ -101,6 +122,7 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 {
 	if (!m_impl->mpOutfile)
 		return true;
+#ifdef USE_GSF_OUTPUT
 	GsfOutput *child;
 	if (NULL != (child = gsf_outfile_new_child  (m_impl->mpOutfile, childFileName, FALSE)))
 	{
@@ -110,12 +132,19 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 		return res;
 	}
 	return false;
+#else
+	m_impl->mpOutfile->createEntry(childFileName, 0);
+	m_impl->mpOutfile->writeString(str);
+	m_impl->mpOutfile->closeEntry();
+	return true;
+#endif
 }
 
 bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str, const char compression_level)
 {
 	if (!m_impl->mpOutfile)
 		return true;
+#ifdef USE_GSF_OUTPUT
 	GsfOutput *child;
 #ifdef GSF_HAS_COMPRESSION_LEVEL
 	if (NULL != (child = gsf_outfile_new_child_full  (m_impl->mpOutfile, childFileName, FALSE,"compression-level", compression_level, (void*)0)))
@@ -129,6 +158,12 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 		return res;
 	}
 	return false;
+#else
+	m_impl->mpOutfile->createEntry(childFileName, (int)compression_level);
+	m_impl->mpOutfile->writeString(str);
+	m_impl->mpOutfile->closeEntry();
+	return true;
+#endif
 }
 
 bool OutputFileHelper::writeConvertedContent(const char *childFileName, const char *inFileName)
@@ -141,12 +176,19 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 	input.seek(0, WPX_SEEK_SET);
 
 	DocumentHandler *pHandler;
-	GsfOutput *pContentChild = NULL;
 	bool tmpIsFlatXML = true;
+#ifdef USE_GSF_OUTPUT
+	GsfOutput *pContentChild = NULL;
 	if (m_impl->mpOutfile)
 	{
 	        pContentChild = gsf_outfile_new_child(m_impl->mpOutfile, childFileName, FALSE);
 	        pHandler = new DiskDocumentHandler(pContentChild); // WLACH_REFACTORING: rename to DiskHandler
+#else
+	if (m_impl->mpOutfile)
+	{
+		m_impl->mpOutfile->createEntry(childFileName, 0); 
+		pHandler = new DiskDocumentHandler(m_impl->mpOutfile);
+#endif
 		tmpIsFlatXML = false;
 	}
 	else
@@ -154,11 +196,17 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 
 	bool bRetVal = _convertDocument(&input, pHandler, tmpIsFlatXML);
 
+#ifdef USE_GSF_OUTPUT
 	if (pContentChild)
 	{
 	        gsf_output_close(pContentChild);
 	        g_object_unref(G_OBJECT (pContentChild));
 	}
+
+#else
+	if (m_impl->mpOutfile)
+		m_impl->mpOutfile->closeEntry();
+#endif
 	delete pHandler;
 
 	return bRetVal;
