@@ -165,7 +165,7 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 	}
 	return false;
 #else
-	m_impl->mpOutfile->createEntry(childFileName, (int)compression_level);
+	m_impl->mpOutfile->createEntry(childFileName, 0); // only storing without compressing works with FemtoZip
 	if (m_impl->mpOutfile->errorCode())
 	    return false;
 	m_impl->mpOutfile->writeString(str);
