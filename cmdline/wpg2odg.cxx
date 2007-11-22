@@ -39,12 +39,12 @@ const char manifestStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 class OdgOutputFileHelper : public OutputFileHelper
 {
 public:
-	OdgOutputFileHelper(const char *outFileName) :
-		OutputFileHelper(outFileName) {}
+	OdgOutputFileHelper(const char *outFileName, const char *password) :
+		OutputFileHelper(outFileName, password) {}
 	~OdgOutputFileHelper() {}
 
 private:
-	bool _isSupportedFormat(WPXInputStream *input)
+	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
 	{
 		bool retVal = libwpg::WPGraphics::isSupported(input);
 		if (!retVal)
@@ -52,7 +52,7 @@ private:
 		return retVal;		
 	}
 
-	bool _convertDocument(WPXInputStream *input, DocumentHandler *handler, bool isFlatXML)
+	bool _convertDocument(WPXInputStream *input, const char * /* password */, DocumentHandler *handler, bool isFlatXML)
 	{
 		OdgExporter exporter(handler, isFlatXML);
 		return libwpg::WPGraphics::parse(input, &exporter);
@@ -91,7 +91,7 @@ int main (int argc, char *argv[])
 		szOutFile = argv[2];
 	}
 	
-	OdgOutputFileHelper helper(szOutFile);
+	OdgOutputFileHelper helper(szOutFile, 0);
 
 	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0)) {
 		fprintf(stderr, "ERROR : Couldn't write mimetype\n");

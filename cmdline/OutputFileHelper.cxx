@@ -39,19 +39,21 @@
 
 struct OutputFileHelperImpl
 {
+	OutputFileHelperImpl(const char *password) : mpPassword(password) {}
 #ifdef USE_GSF_OUTPUT
 	GsfOutfile *mpOutfile;
 #else
 	FemtoZip *mpOutfile;
 #endif
+	const char *mpPassword;
 };
 
 
-OutputFileHelper::OutputFileHelper(const char* outFileName) :
+OutputFileHelper::OutputFileHelper(const char* outFileName, const char *password) :
 #ifdef USE_GSF_OUTPUT
-	m_impl(new OutputFileHelperImpl())
+	m_impl(new OutputFileHelperImpl(password))
 #else
-	m_impl(new OutputFileHelperImpl())
+	m_impl(new OutputFileHelperImpl(password))
 #endif
 {
 	m_impl->mpOutfile = NULL;
@@ -182,7 +184,7 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 {
 	WPXFileStream input(inFileName);
 
- 	if (!_isSupportedFormat(&input))
+ 	if (!_isSupportedFormat(&input, m_impl->mpPassword))
  		return false;
 
 	input.seek(0, WPX_SEEK_SET);
@@ -208,7 +210,7 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 	else
 	        pHandler = new StdOutHandler();
 
-	bool bRetVal = _convertDocument(&input, pHandler, tmpIsFlatXML);
+	bool bRetVal = _convertDocument(&input, m_impl->mpPassword, pHandler, tmpIsFlatXML);
 
 #ifdef USE_GSF_OUTPUT
 	if (pContentChild)

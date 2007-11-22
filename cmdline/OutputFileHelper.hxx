@@ -27,7 +27,7 @@ class OutputFileHelperImpl;
 class OutputFileHelper
 {
 public:
-	OutputFileHelper(const char* outFileName);
+	OutputFileHelper(const char* outFileName, const char *password);
 	virtual ~OutputFileHelper();
 
 	bool writeChildFile(const char *childFileName, const char *str);
@@ -35,8 +35,8 @@ public:
 	bool writeConvertedContent(const char *childFileName, const char *inFileName);
 
 private:
-	virtual bool _isSupportedFormat(WPXInputStream *input) = 0;
-	virtual bool _convertDocument(WPXInputStream *input, DocumentHandler *handler, const bool isFlatXML) = 0;
+	virtual bool _isSupportedFormat(WPXInputStream *input, const char *password) = 0;
+	virtual bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const bool isFlatXML) = 0;
 	OutputFileHelperImpl* m_impl;
 };
 

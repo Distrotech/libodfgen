@@ -93,7 +93,7 @@ struct ltstr
 class WordPerfectCollector : public WPXDocumentInterface
 {
 public:
-	WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML = false);
+	WordPerfectCollector(WPXInputStream *pInput, const char * password, DocumentHandler *pHandler, const bool isFlatXML = false);
 	virtual ~WordPerfectCollector();
 	bool filter();
 
@@ -157,7 +157,7 @@ public:
 
 protected:
 	void _resetDocumentState();
-	bool _parseSourceDocument(WPXInputStream &input);
+	bool _parseSourceDocument(WPXInputStream &input, const char *password);
 	bool _writeTargetDocument(DocumentHandler *pHandler);
 	void _writeBegin();
 	void _writeDefaultStyles(DocumentHandler *pHandler);
@@ -226,5 +226,7 @@ private:
 	TableStyle *mpCurrentTableStyle;
 
 	const bool mbIsFlatXML;
+	
+	const char * mpPassword;
 };
 #endif

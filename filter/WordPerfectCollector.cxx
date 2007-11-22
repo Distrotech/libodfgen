@@ -69,7 +69,7 @@ _WriterListState::_WriterListState() :
 {
 }
 
-WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandler *pHandler, const bool isFlatXML) :
+WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, const char * password, DocumentHandler *pHandler, const bool isFlatXML) :
 	mpInput(pInput),
 	mpHandler(pHandler),
 	mbUsed(false),
@@ -80,7 +80,8 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, DocumentHandl
 	mpCurrentPageSpan(NULL),
 	miNumPageStyles(0),
 	miObjectNumber(0),
-	mbIsFlatXML(isFlatXML)
+	mbIsFlatXML(isFlatXML),
+	mpPassword(password)
 {
 	mWriterListStates.push(WriterListState());
 }
@@ -100,7 +101,7 @@ bool WordPerfectCollector::filter()
 
 	// parse & write
 	// WLACH_REFACTORING: Remove these args..
- 	if (!_parseSourceDocument(*mpInput))
+ 	if (!_parseSourceDocument(*mpInput, mpPassword))
 		return false;
 	if (!_writeTargetDocument(mpHandler))
 		return false;
@@ -160,9 +161,9 @@ bool WordPerfectCollector::filter()
  	return true;
 }
 
-bool WordPerfectCollector::_parseSourceDocument(WPXInputStream &input)
+bool WordPerfectCollector::_parseSourceDocument(WPXInputStream &input, const char * password)
 {
-	WPDResult result = WPDocument::parse(&input, this);
+	WPDResult result = WPDocument::parse(&input, this, password);
 	if (result != WPD_OK)
 		return false;
 

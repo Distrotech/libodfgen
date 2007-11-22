@@ -114,22 +114,22 @@ const char stylesStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 class OdtOutputFileHelper : public OutputFileHelper
 {
 public:
-	OdtOutputFileHelper(const char *outFileName) :
-		OutputFileHelper(outFileName) {};
+	OdtOutputFileHelper(const char *outFileName,const char *password) :
+		OutputFileHelper(outFileName, password) {};
 	~OdtOutputFileHelper() {};
 
 private:
-	bool _isSupportedFormat(WPXInputStream *input)
+	bool _isSupportedFormat(WPXInputStream *input, const char * password)
 	{
-		bool retVal = (WPD_CONFIDENCE_EXCELLENT == WPDocument::isFileFormatSupported(input));
+		bool retVal = (WPD_CONFIDENCE_EXCELLENT == WPDocument::isFileFormatSupported(input, password));
 		if (!retVal)
  			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
 		return retVal;
 	}
 
-	bool _convertDocument(WPXInputStream *input, DocumentHandler *handler, bool isFlatXML)
+	bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, bool isFlatXML)
 	{
-		WordPerfectCollector collector(input, handler, isFlatXML);
+		WordPerfectCollector collector(input, password, handler, isFlatXML);
 		return collector.filter();
 	}
 };
@@ -167,7 +167,7 @@ main (int argc, char *argv[])
 		szOutFile = argv[2];
 	}
 	
-	OdtOutputFileHelper helper(szOutFile);
+	OdtOutputFileHelper helper(szOutFile, 0);
 
 
 	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0)) {
