@@ -59,37 +59,43 @@ private:
 	}
 };
 
+int printUsage(char * name)
+{
+	fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", name);
+	fprintf(stderr, "USAGE : Where <infile> is the WordPerfect Graphics source image\n");
+	fprintf(stderr, "USAGE : and [outfile] is the odg target document. Alternately,\n");
+	fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
+	fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
+	fprintf(stderr, "USAGE : \n");
+	return 1;
+}
+
 int main (int argc, char *argv[])
 {
 	if (argc < 2) 
-	{
-		fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", argv[0]);
-		fprintf(stderr, "USAGE : Where <infile> is the WordPerfect Graphics source image\n");
-		fprintf(stderr, "USAGE : and [outfile] is the odg target document. Alternately,\n");
-		fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
-		fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
-		fprintf(stderr, "USAGE : \n");
-		return 1;
-	}
+		return printUsage(argv[0]);
 
-	char *szInputFile;
-	char *szOutFile;
+	char *szInputFile = 0;
+	char *szOutFile = 0;
+	bool stdOutput = false;
 
-	if (argc == 2)
+	for (int i = 1; i < argc; i++)
 	{
-		szInputFile = argv[1];
-		szOutFile = NULL;
+		if (!strcmp(argv[i], "--stdout"))
+			stdOutput = true;
+		else if (!szInputFile && strncmp(argv[i], "--", 2))
+			szInputFile = argv[i];
+		else if (szInputFile && !szOutFile && strncmp(argv[i], "--", 2))
+			szOutFile = argv[i];
+		else
+			return printUsage(argv[0]);
 	}
-	else if (!strcmp(argv[1], "--stdout"))
-	{
-	        szInputFile = argv[2];
-	        szOutFile = NULL;
-	}
-	else
-	{
-	        szInputFile = argv[1];
-		szOutFile = argv[2];
-	}
+	
+	if (!szInputFile)
+		return printUsage(argv[0]);
+
+	if (szOutFile && stdOutput)
+		szOutFile = 0;
 	
 	OdgOutputFileHelper helper(szOutFile, 0);
 

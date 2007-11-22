@@ -134,41 +134,55 @@ private:
 	}
 };
 
-int
-main (int argc, char *argv[])
+
+int printUsage(char * name)
+{
+	fprintf(stderr, "USAGE : %s [--stdout] --password <password> <infile> [outfile]\n", name);
+	fprintf(stderr, "USAGE : Where <infile> is the WordPerfect source document\n");
+	fprintf(stderr, "USAGE : and [outfile] is the odt target document. Alternately,\n");
+	fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
+	fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
+	fprintf(stderr, "USAGE : pass '--password <password>' to try to decrypt password\n");
+	fprintf(stderr, "USAGE : protected documents.\n");
+	fprintf(stderr, "USAGE : \n");
+	return 1;
+}
+
+
+int main (int argc, char *argv[])
 {
 	if (argc < 2) 
-	{
-		fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", argv[0]);
-		fprintf(stderr, "USAGE : Where <infile> is the WordPerfect source document\n");
-		fprintf(stderr, "USAGE : and [outfile] is the odt target document. Alternately,\n");
-		fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
-		fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
-		fprintf(stderr, "USAGE : \n");
-		return 1;
-	}
+		return printUsage(argv[0]);
 
-	char *szInputFile;
-	char *szOutFile;
+	char *szInputFile = 0;
+	char *szOutFile = 0;
+	bool stdOutput = false;
+	char *password = 0;
 
-	if (argc == 2)
+	for (int i = 1; i < argc; i++)
 	{
-		szInputFile = argv[1];
-		szOutFile = NULL;
-	}
-	else if (!strcmp(argv[1], "--stdout"))
-	{
-	        szInputFile = argv[2];
-	        szOutFile = NULL;
-	}
-	else
-	{
-	        szInputFile = argv[1];
-		szOutFile = argv[2];
+		if (!strcmp(argv[i], "--password"))
+		{
+		    if (i < argc - 1)
+				password = argv[++i];
+		}
+		else if (!strcmp(argv[i], "--stdout"))
+			stdOutput = true;
+		else if (!szInputFile && strncmp(argv[i], "--", 2))
+			szInputFile = argv[i];
+		else if (szInputFile && !szOutFile && strncmp(argv[i], "--", 2))
+			szOutFile = argv[i];
+		else
+			return printUsage(argv[0]);
 	}
 	
-	OdtOutputFileHelper helper(szOutFile, 0);
+	if (!szInputFile)
+		return printUsage(argv[0]);
 
+	if (szOutFile && stdOutput)
+		szOutFile = 0;
+	
+	OdtOutputFileHelper helper(szOutFile, password);
 
 	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0)) {
 		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
