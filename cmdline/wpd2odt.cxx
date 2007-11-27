@@ -121,7 +121,13 @@ public:
 private:
 	bool _isSupportedFormat(WPXInputStream *input, const char * password)
 	{
-		bool retVal = (WPD_CONFIDENCE_EXCELLENT == WPDocument::isFileFormatSupported(input, password));
+		WPDConfidence confidence = WPDocument::isFileFormatSupported(input);
+		bool retVal = true;
+		if (WPD_CONFIDENCE_EXCELLENT != confidence && WPD_CONFIDENCE_SUPPORTED_ENCRYPTION != confidence)
+			retVal = false;
+		if (WPD_CONFIDENCE_SUPPORTED_ENCRYPTION == confidence && !password)
+			retVal = false;
+			
 		if (!retVal)
  			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
 		return retVal;
