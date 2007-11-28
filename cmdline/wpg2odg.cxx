@@ -46,10 +46,12 @@ public:
 private:
 	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
 	{
-		bool retVal = libwpg::WPGraphics::isSupported(input);
-		if (!retVal)
+		if (!libwpg::WPGraphics::isSupported(input))
+		{
  			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect Graphics.\n");
-		return retVal;		
+			return false;
+		}
+		return true;		
 	}
 
 	bool _convertDocument(WPXInputStream *input, const char * /* password */, DocumentHandler *handler, bool isFlatXML)

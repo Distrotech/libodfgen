@@ -122,15 +122,24 @@ private:
 	bool _isSupportedFormat(WPXInputStream *input, const char * password)
 	{
 		WPDConfidence confidence = WPDocument::isFileFormatSupported(input);
-		bool retVal = true;
 		if (WPD_CONFIDENCE_EXCELLENT != confidence && WPD_CONFIDENCE_SUPPORTED_ENCRYPTION != confidence)
-			retVal = false;
+		{
+			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");		
+			return false;
+		}
 		if (WPD_CONFIDENCE_SUPPORTED_ENCRYPTION == confidence && !password)
-			retVal = false;
+		{
+			fprintf(stderr, "ERROR: The WordPerfect document is encrypted and you did not give us a password.\n");		
+			return false;
+		}
+		if (confidence == WPD_CONFIDENCE_SUPPORTED_ENCRYPTION && password && (WPD_PASSWORD_MATCH_OK != WPDocument::verifyPassword(input, password)))
+		{
+			fprintf(stderr, "ERROR: The WordPerfect document is encrypted and we either\n");
+			fprintf(stderr, "ERROR: don't know how to decrypt it or the given password is wrong.\n");		
+			return false;
+		}
 			
-		if (!retVal)
- 			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
-		return retVal;
+		return true;
 	}
 
 	bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, bool isFlatXML)
