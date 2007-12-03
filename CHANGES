@@ -1,4 +1,9 @@
 CHANGES:
+0.7.2 -> 0.7.3
+- Option to build a completely static wpd2sxw (for win32)
+- Build fixes for gcc 4.3.x
+- Fix some license headers - we are released under LGPL only
+
 0.7.1 -> 0.7.2
 - Make cross-compiling possible and smooth including the compiling
   of the resource files (Fridrich)
