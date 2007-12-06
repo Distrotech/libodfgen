@@ -1175,9 +1175,10 @@ void WordPerfectCollector::openFrame(const WPXPropertyList &propList)
 	// And write the frame itself
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
 
-	drawFrameOpenElement->addAttribute("draw:style-name",frameAutomaticStyleName);
+	drawFrameOpenElement->addAttribute("draw:style-name", frameAutomaticStyleName);
 	WPXString objectName;
 	objectName.sprintf("Object%i", miObjectNumber++);
+	drawFrameOpenElement->addAttribute("draw:name", objectName);
 	if (propList["text:anchor-type"])
 		drawFrameOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
 	else
