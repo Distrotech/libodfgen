@@ -1249,6 +1249,7 @@ void WordPerfectCollector::openTextBox(const WPXPropertyList &propList)
 	mWriterDocumentStates.push(WriterDocumentState());
 	mpCurrentContentElements->push_back(new TagOpenElement("draw:text-box"));
 	mWriterDocumentStates.top().mbInTextBox = true;
+	mWriterDocumentStates.top().mbFirstElement = false;
 }
 
 void WordPerfectCollector::closeTextBox()
