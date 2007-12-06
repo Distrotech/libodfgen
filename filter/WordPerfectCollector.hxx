@@ -173,7 +173,7 @@ private:
         DocumentHandler *mpHandler;
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
 
-	WriterDocumentState mWriterDocumentState;
+	std::stack<WriterDocumentState> mWriterDocumentStates;
 	
 	std::stack<WriterListState> mWriterListStates;
 
