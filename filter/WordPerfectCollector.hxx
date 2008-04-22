@@ -169,8 +169,8 @@ private:
 	void _openListLevel(TagOpenElement *pListLevelOpenElement);
 	void _closeListLevel();
 
-        WPXInputStream *mpInput;
-        DocumentHandler *mpHandler;
+	WPXInputStream *mpInput;
+	DocumentHandler *mpHandler;
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
 
 	std::stack<WriterDocumentState> mWriterDocumentStates;
@@ -180,8 +180,8 @@ private:
 	// paragraph styles
 	std::map<WPXString, ParagraphStyle *, ltstr> mTextStyleHash;
 
-        // span styles
-        std::map<WPXString, SpanStyle *, ltstr> mSpanStyleHash;
+	// span styles
+	std::map<WPXString, SpanStyle *, ltstr> mSpanStyleHash;
 
 	// font styles
 	std::map<WPXString, FontStyle *, ltstr> mFontHash;
