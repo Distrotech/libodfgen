@@ -111,6 +111,12 @@ int main (int argc, char *argv[])
 		return 1;
 	}
 	
+	if (szOutFile && !helper.writeConvertedContent("styles.xml", szInputFile))
+	{
+		fprintf(stderr, "ERROR : Couldn't write document styles\n");
+		return 1;
+	}
+	
 	if (!helper.writeConvertedContent("content.xml", szInputFile)) 
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");

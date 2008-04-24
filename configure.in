@@ -51,7 +51,7 @@ AC_ARG_WITH(libgsf,
 	[  --with-libgsf           Use libgsf for output of structured files],
 	if test "x$withval" = xyes; then
 		test_libgsf=true
-		AC_DEFINE([USE_LIBGSF_OUTPUT], [1], [Whether to use libgsf for output of structured files])
+		AC_DEFINE([USE_GSF_OUTPUT], [1], [Whether to use libgsf for output of structured files])
 	fi
 )
 
