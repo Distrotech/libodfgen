@@ -44,6 +44,8 @@ public:
 	void endGraphics();
 	void startLayer(unsigned int id);
 	void endLayer(unsigned int id);
+	void startEmbeddedGraphics(double /* width */, double /* height */) {}
+	void endEmbeddedGraphics() {}
 
 	void setPen(const libwpg::WPGPen& pen);
 	void setBrush(const libwpg::WPGBrush& brush);
