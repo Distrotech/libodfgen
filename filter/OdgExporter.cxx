@@ -298,7 +298,17 @@ void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double 
 	mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
 
+void OdgExporter::drawPolyline(const libwpg::WPGPointArray& vertices)
+{
+	drawPolySomething(vertices, false);
+}
+
 void OdgExporter::drawPolygon(const libwpg::WPGPointArray& vertices)
+{
+	drawPolySomething(vertices, true);
+}
+
+void OdgExporter::drawPolySomething(const libwpg::WPGPointArray& vertices, bool isClosed)
 {
 	if(vertices.count() < 2)
 		return;
@@ -333,7 +343,7 @@ void OdgExporter::drawPolygon(const libwpg::WPGPointArray& vertices)
 		path.moveTo(vertices[0]);
 		for(unsigned long ii = 1; ii < vertices.count(); ii++)
 			path.lineTo(vertices[ii]);
-		path.closed = true;
+		path.closed = isClosed;
 		drawPath(path);
 	}
 }
@@ -554,10 +564,16 @@ void OdgExporter::writeGraphicsStyle()
 
 	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
 
-	if(mxPen.width > 0.0)
+	if(mxPen.width > 0.0 || mxPen.solid)
 	{
-		sValue = doubleToString(mxPen.width); sValue.append("in");
-		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", sValue);
+		if (mxPen.width > 0.0)
+		{
+			sValue = doubleToString(mxPen.width); sValue.append("in");
+			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", sValue);
+		}
+		else
+			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", "0.01in");
+
 		sValue.sprintf("#%.2x%.2x%.2x", (mxPen.foreColor.red & 0xff),
 			(mxPen.foreColor.green & 0xff), (mxPen.foreColor.blue & 0xff));
 		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", sValue);

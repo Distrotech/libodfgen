@@ -53,6 +53,7 @@ public:
 
 	void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry);
 	void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry);
+	void drawPolyline(const libwpg::WPGPointArray& vertices);
 	void drawPolygon(const libwpg::WPGPointArray& vertices);
 	void drawPath(const libwpg::WPGPath& path);
 	void drawBitmap(const libwpg::WPGBitmap& bitmap);
@@ -61,6 +62,7 @@ public:
 private:
 	void writeGraphicsStyle();
 	WPXString doubleToString(const double value);
+	void drawPolySomething(const libwpg::WPGPointArray& vertices, bool isClosed);
 	
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
