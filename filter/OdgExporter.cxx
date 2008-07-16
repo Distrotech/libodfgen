@@ -279,7 +279,7 @@ void OdgExporter::drawRectangle(const libwpg::WPGRect& rect, double rx, double /
 	mBodyElements.push_back(new TagCloseElement("draw:rect"));	
 }
 
-void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double ry)
+void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double ry, double rotation, const libwpg::WPGPoint& from, const libwpg::WPGPoint& to)
 {
 	writeGraphicsStyle();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
@@ -294,6 +294,15 @@ void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double 
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
 	sValue = doubleToString(2 * ry); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
+#if 0
+	if (rotation != 0.0)
+	{
+		sValue = "translate("; sValue.append(doubleToString(-center.x)); sValue.append("in, "); sValue.append(doubleToString(-center.y)); sValue.append("in) ");
+		sValue.append("rotate("); sValue.append(doubleToString(-rotation)); sValue.append(") ");
+		sValue.append("translate("); sValue.append(doubleToString(center.x)); sValue.append("in, "); sValue.append(doubleToString(center.y)); sValue.append("in) ");
+		pDrawEllipseElement->addAttribute("svg:transform", sValue);
+	}
+#endif
 	mBodyElements.push_back(pDrawEllipseElement);
 	mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
@@ -564,15 +573,10 @@ void OdgExporter::writeGraphicsStyle()
 
 	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
 
-	if(mxPen.width > 0.0 || mxPen.solid)
+	if(mxPen.width > 0.0)
 	{
-		if (mxPen.width > 0.0)
-		{
-			sValue = doubleToString(mxPen.width); sValue.append("in");
-			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", sValue);
-		}
-		else
-			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", "0.01in");
+		sValue = doubleToString(mxPen.width); sValue.append("in");
+		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", sValue);
 
 		sValue.sprintf("#%.2x%.2x%.2x", (mxPen.foreColor.red & 0xff),
 			(mxPen.foreColor.green & 0xff), (mxPen.foreColor.blue & 0xff));

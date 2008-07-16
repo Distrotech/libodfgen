@@ -52,7 +52,7 @@ public:
 	void setFillRule(FillRule rule);
 
 	void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry);
-	void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry);
+	void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry, double rotation, const libwpg::WPGPoint& from, const libwpg::WPGPoint& to);
 	void drawPolyline(const libwpg::WPGPointArray& vertices);
 	void drawPolygon(const libwpg::WPGPointArray& vertices);
 	void drawPath(const libwpg::WPGPath& path);
