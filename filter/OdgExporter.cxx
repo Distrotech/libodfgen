@@ -28,7 +28,12 @@
 #include "DocumentElement.hxx"
 #include "DocumentHandler.hxx"
 #include <locale.h>
+#include <math.h>
 #include <string>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 OdgExporter::OdgExporter(DocumentHandler *pHandler, const bool isFlatXML):
 	mpHandler(pHandler),
@@ -268,9 +273,9 @@ void OdgExporter::drawRectangle(const libwpg::WPGRect& rect, double rx, double /
 	pDrawRectElement->addAttribute("svg:x", sValue);
 	sValue = doubleToString(rect.y1); sValue.append("in");
 	pDrawRectElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(rect.x2-rect.x1); sValue.append("in");
+	sValue = doubleToString(rect.width()); sValue.append("in");
 	pDrawRectElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(rect.y2-rect.y1); sValue.append("in");
+	sValue = doubleToString(rect.height()); sValue.append("in");
 	pDrawRectElement->addAttribute("svg:height", sValue);
 	sValue = doubleToString(rx); sValue.append("in");
 	// FIXME: what to do when rx != ry ?
@@ -286,23 +291,30 @@ void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double 
 	WPXString sValue;
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
-	sValue = doubleToString(center.x-rx); sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(center.y-ry); sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:y", sValue);
 	sValue = doubleToString(2 * rx); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
 	sValue = doubleToString(2 * ry); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
-#if 0
 	if (rotation != 0.0)
 	{
-		sValue = "translate("; sValue.append(doubleToString(-center.x)); sValue.append("in, "); sValue.append(doubleToString(-center.y)); sValue.append("in) ");
-		sValue.append("rotate("); sValue.append(doubleToString(-rotation)); sValue.append(") ");
-		sValue.append("translate("); sValue.append(doubleToString(center.x)); sValue.append("in, "); sValue.append(doubleToString(center.y)); sValue.append("in) ");
+		while(rotation < -180)
+			rotation += 360;
+		while(rotation > 180)
+			rotation -= 360;
+		double radrotation = rotation*M_PI/180.0;
+		double deltax = sqrt(pow(rx, 2.0) + pow(ry, 2.0))*cos(atan(ry/rx) - radrotation ) - rx;
+		double deltay = sqrt(pow(rx, 2.0) + pow(ry, 2.0))*sin(atan(ry/rx) - radrotation ) - ry;
+		sValue = "rotate("; sValue.append(doubleToString(radrotation)); sValue.append(") ");
+		sValue.append("translate("); sValue.append(doubleToString(center.x - rx - deltax)); sValue.append("in, "); sValue.append(doubleToString(center.y - ry - deltay)); sValue.append("in)");
 		pDrawEllipseElement->addAttribute("svg:transform", sValue);
 	}
-#endif
+	else
+	{
+		sValue = doubleToString(center.x-rx); sValue.append("in");
+		pDrawEllipseElement->addAttribute("svg:x", sValue);
+		sValue = doubleToString(center.y-ry); sValue.append("in");
+		pDrawEllipseElement->addAttribute("svg:y", sValue);
+	}
 	mBodyElements.push_back(pDrawEllipseElement);
 	mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
