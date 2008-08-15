@@ -1226,7 +1226,7 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 		return;
 	if (!mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
-	if (!propList["libwpd:mimetype"]) // || !(propList["libwpd:mimetype"]->getStr() == "image/x-wpg"))
+	if (!propList["libwpd:mimetype"])
 		return;
 
 	if (propList["libwpd:mimetype"]->getStr() == "image/x-wpg")
