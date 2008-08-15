@@ -1226,19 +1226,36 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 		return;
 	if (!mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
-	if (!propList["libwpd:mimetype"] || !(propList["libwpd:mimetype"]->getStr() == "image/x-wpg"))
+	if (!propList["libwpd:mimetype"]) // || !(propList["libwpd:mimetype"]->getStr() == "image/x-wpg"))
 		return;
 
-	std::vector<DocumentElement *> tmpContentElements;
-	InternalHandler tmpHandler(&tmpContentElements);
-	OdgExporter exporter(&tmpHandler, true);
-
-	if (libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(object->getDataStream()), &exporter) && !tmpContentElements.empty())
+	if (propList["libwpd:mimetype"]->getStr() == "image/x-wpg")
 	{
-		mpCurrentContentElements->push_back(new TagOpenElement("draw:object"));
-		for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); iter++)
-			mpCurrentContentElements->push_back(*iter);
-		mpCurrentContentElements->push_back(new TagCloseElement("draw:object"));
+		std::vector<DocumentElement *> tmpContentElements;
+		InternalHandler tmpHandler(&tmpContentElements);
+		OdgExporter exporter(&tmpHandler, true);
+
+		if (libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(object->getDataStream()), &exporter) && !tmpContentElements.empty())
+		{
+			mpCurrentContentElements->push_back(new TagOpenElement("draw:object"));
+			for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); iter++)
+				mpCurrentContentElements->push_back(*iter);
+			mpCurrentContentElements->push_back(new TagCloseElement("draw:object"));
+		}
+	}
+	else
+	{
+		mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
+		
+		mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
+		
+		WPXString binaryBase64Data = object->getBase64Data();
+		
+		mpCurrentContentElements->push_back(new CharDataElement(binaryBase64Data.cstr()));
+		
+		mpCurrentContentElements->push_back(new TagCloseElement("office:binary-data"));
+		
+		mpCurrentContentElements->push_back(new TagCloseElement("draw:image"));
 	}
 }
 

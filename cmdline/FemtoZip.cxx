@@ -544,7 +544,7 @@ public:
 		// that's all for this one
 		currentEntry = 0;
 	}
-	
+
 	void writeData(unsigned long len, const void* data)
 	{
 		if(errorCode != FemtoZip::NoError)
@@ -592,11 +592,6 @@ void FemtoZip::createEntry(const char* name, int compressionLevel)
 	d->createEntry(name, compressionLevel);
 }
   
-void FemtoZip::writeData(unsigned long len, const void* data)
-{
-	d->writeData(len, data);
-}
-
 void FemtoZip::writeString(const char* str)
 {
 	d->writeData(strlen(str), str);

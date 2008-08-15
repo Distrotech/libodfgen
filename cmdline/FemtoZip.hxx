@@ -46,8 +46,6 @@ public:
 
 	void createEntry(const char* name, int compressionLevel = 3);
 
-	void writeData(unsigned long len, const void* data);
-	
 	void writeString(const char* str);
 
 	void closeEntry();
