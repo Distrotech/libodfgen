@@ -1234,8 +1234,13 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 		std::vector<DocumentElement *> tmpContentElements;
 		InternalHandler tmpHandler(&tmpContentElements);
 		OdgExporter exporter(&tmpHandler, true);
+		
+		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
+		
+		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(object->getDataStream())))
+			fileFormat = libwpg::WPG_WPG1;
 
-		if (libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(object->getDataStream()), &exporter) && !tmpContentElements.empty())
+		if (libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(object->getDataStream()), &exporter, fileFormat) && !tmpContentElements.empty())
 		{
 			mpCurrentContentElements->push_back(new TagOpenElement("draw:object"));
 			for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); iter++)
