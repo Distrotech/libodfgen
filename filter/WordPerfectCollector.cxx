@@ -1120,6 +1120,9 @@ void WordPerfectCollector::openFrame(const WPXPropertyList &propList)
 
 	if (propList["fo:max-height"])
 		frameStylePropertiesOpenElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
+		
+	if (propList["style:wrap"])
+		frameStylePropertiesOpenElement->addAttribute("style:wrap", propList["style:wrap"]->getStr());
 
 	mFrameStyles.push_back(frameStylePropertiesOpenElement);
 
