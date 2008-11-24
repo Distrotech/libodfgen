@@ -473,7 +473,7 @@ void OdgExporter::drawBitmap(const libwpg::WPGBitmap& bitmap)
 	
 	mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 	
-	libwpg::WPGString base64Binary;
+	::WPXString base64Binary;
 	bitmap.generateBase64DIB(base64Binary);
 	mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
 	
@@ -484,27 +484,29 @@ void OdgExporter::drawBitmap(const libwpg::WPGBitmap& bitmap)
 	mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
-void OdgExporter::drawImageObject(const libwpg::WPGBinaryData& binaryData)
+void OdgExporter::drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData)
 {
-	if (binaryData.mimeType.length() <= 0)
+	if (!propList["libwpg:mime-type"] && propList["libwpg:mime-type"]->getStr().len() <= 0)
 		return;
 	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
+	
+	
 	WPXString sValue;
-	sValue = doubleToString(binaryData.rect.x1); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(binaryData.rect.y1); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(binaryData.rect.height()); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:height", sValue);
-	sValue = doubleToString(binaryData.rect.width()); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:width", sValue);
+	if (propList["svg:x"])
+		pDrawFrameElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+	if (propList["svg:y"])
+		pDrawFrameElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	if (propList["svg:height"])
+		pDrawFrameElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+	if (propList["svg:width"])
+		pDrawFrameElement->addAttribute("svg:width", propList["svg:width"]->getStr());
 	mBodyElements.push_back(pDrawFrameElement);
 	
 	mBodyElements.push_back(new TagOpenElement("draw:image"));
 	
 	mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 	
-	libwpg::WPGString base64Binary = binaryData.getBase64Data();
+	::WPXString base64Binary = binaryData.getBase64Data();
 	mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
 	
 	mBodyElements.push_back(new TagCloseElement("office:binary-data"));

@@ -30,7 +30,7 @@
 #include <sstream>
 #include <string>
 
-#include <libwpd/WPXString.h>
+#include <libwpd/libwpd.h>
 #include <libwpg/libwpg.h>
 #include "DocumentElement.hxx"
 #include "DocumentHandler.hxx"
@@ -57,7 +57,7 @@ public:
 	void drawPolygon(const libwpg::WPGPointArray& vertices);
 	void drawPath(const libwpg::WPGPath& path);
 	void drawBitmap(const libwpg::WPGBitmap& bitmap);
-	void drawImageObject(const libwpg::WPGBinaryData& binaryData);
+	void drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
 
 private:
 	void writeGraphicsStyle();
