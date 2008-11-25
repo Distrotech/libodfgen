@@ -75,13 +75,13 @@ OdgExporter::~OdgExporter()
 	}
 }
 
-void OdgExporter::startGraphics(double width, double height)
+void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 {
 	miGradientIndex = 1;
 	miDashIndex = 1;
 	miGraphicsStyleIndex = 1;
-	mfWidth = width;
-	mfHeight = height;
+	mfWidth = 0.0;
+	mfHeight = 0.0;
 
 	mpHandler->startDocument();
 	TagOpenElement tmpOfficeDocumentContent("office:document");
@@ -122,14 +122,18 @@ void OdgExporter::startGraphics(double width, double height)
 	configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
 	configItemOpenElement.addAttribute("config:type", "int");
 	configItemOpenElement.write(mpHandler);
-	WPXString sWidth; sWidth.sprintf("%li", (unsigned long)(2540 * width));
+	if (propList["svg:width"])
+		mfWidth = propList["svg:width"]->getFloat();
+	WPXString sWidth; sWidth.sprintf("%li", (unsigned long)(2540 * mfWidth));
 	mpHandler->characters(sWidth);
 	mpHandler->endElement("config:config-item");
 	
 	configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
 	configItemOpenElement.addAttribute("config:type", "int");
 	configItemOpenElement.write(mpHandler);
-	WPXString sHeight; sHeight.sprintf("%li", (unsigned long)(2540 * height));
+	if (propList["svg:height"])
+		mfHeight = propList["svg:height"]->getFloat();
+	WPXString sHeight; sHeight.sprintf("%li", (unsigned long)(2540 * mfHeight));
 	mpHandler->characters(sHeight);
 	mpHandler->endElement("config:config-item");
 	
@@ -319,26 +323,23 @@ void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double 
 	mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
 
-void OdgExporter::drawPolyline(const libwpg::WPGPointArray& vertices)
+void OdgExporter::drawPolyline(const ::WPXPropertyListVector& vertices)
 {
 	drawPolySomething(vertices, false);
 }
 
-void OdgExporter::drawPolygon(const libwpg::WPGPointArray& vertices)
+void OdgExporter::drawPolygon(const ::WPXPropertyListVector& vertices)
 {
 	drawPolySomething(vertices, true);
 }
 
-void OdgExporter::drawPolySomething(const libwpg::WPGPointArray& vertices, bool isClosed)
+void OdgExporter::drawPolySomething(const ::WPXPropertyListVector& vertices, bool isClosed)
 {
 	if(vertices.count() < 2)
 		return;
 
 	if(vertices.count() == 2)
 	{
-		const libwpg::WPGPoint& p1 = vertices[0];
-		const libwpg::WPGPoint& p2 = vertices[1];
-
 		writeGraphicsStyle();
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
 		WPXString sValue;
@@ -346,30 +347,38 @@ void OdgExporter::drawPolySomething(const libwpg::WPGPointArray& vertices, bool 
 		pDrawLineElement->addAttribute("draw:style-name", sValue);
 		pDrawLineElement->addAttribute("draw:text-style-name", "P1");
 		pDrawLineElement->addAttribute("draw:layer", "layout");
-		sValue = doubleToString(p1.x); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:x1", sValue);
-		sValue = doubleToString(p1.y); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:y1", sValue);
-		sValue = doubleToString(p2.x); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:x2", sValue);
-		sValue = doubleToString(p2.y); sValue.append("in");
-		pDrawLineElement->addAttribute("svg:y2", sValue);
+		pDrawLineElement->addAttribute("svg:x1", vertices[0]["svg:x"]->getStr());
+		pDrawLineElement->addAttribute("svg:y1", vertices[0]["svg:y"]->getStr());
+		pDrawLineElement->addAttribute("svg:x2", vertices[1]["svg:x"]->getStr());
+		pDrawLineElement->addAttribute("svg:y2", vertices[1]["svg:y"]->getStr());
 		mBodyElements.push_back(pDrawLineElement);
 		mBodyElements.push_back(new TagCloseElement("draw:line"));
 	}
 	else
 	{
-		// draw as path
-		libwpg::WPGPath path;
-		path.moveTo(vertices[0]);
-		for(unsigned long ii = 1; ii < vertices.count(); ii++)
-			path.lineTo(vertices[ii]);
-		path.closed = isClosed;
+		::WPXPropertyListVector path;
+		::WPXPropertyList element;
+
+		for (unsigned long ii = 0; ii < vertices.count(); ii++)
+		{
+			element = vertices[ii];
+			if (ii == 0)
+				element.insert("libwpg:path-action", "M");
+			else
+				element.insert("libwpg:path-action", "L");
+			path.append(element);
+			element.clear();
+		}
+		if (isClosed)
+		{
+			element.insert("libwpg:path-action", "Z");
+			path.append(element);
+		}
 		drawPath(path);
 	}
 }
 
-void OdgExporter::drawPath(const libwpg::WPGPath& path)
+void OdgExporter::drawPath(const WPXPropertyListVector& path)
 {
 	if(path.count() == 0)
 		return;
@@ -377,29 +386,32 @@ void OdgExporter::drawPath(const libwpg::WPGPath& path)
 	// try to find the bounding box
 	// this is simple convex hull technique, the bounding box might not be
 	// accurate but that should be enough for this purpose
-	libwpg::WPGPoint p = path.element(0).point;
-	libwpg::WPGPoint q = path.element(0).point;
+	double px = path[0]["svg:x"]->getFloat();
+	double py = path[0]["svg:y"]->getFloat();
+	double qx = path[0]["svg:x"]->getFloat();
+	double qy = path[0]["svg:y"]->getFloat();
 	for(unsigned k = 0; k < path.count(); k++)
 	{
-		libwpg::WPGPathElement element = path.element(k);
-		p.x = (p.x > element.point.x) ? element.point.x : p.x; 
-		p.y = (p.y > element.point.y) ? element.point.y : p.y; 
-		q.x = (q.x < element.point.x) ? element.point.x : q.x; 
-		q.y = (q.y < element.point.y) ? element.point.y : q.y; 
-		if(element.type == libwpg::WPGPathElement::CurveToElement)
+		if (!path[k]["svg:x"] || !path[k]["svg:y"])
+			continue;
+		px = (px > path[k]["svg:x"]->getFloat()) ? path[k]["svg:x"]->getFloat() : px; 
+		py = (py > path[k]["svg:y"]->getFloat()) ? path[k]["svg:y"]->getFloat() : py; 
+		qx = (qx < path[k]["svg:x"]->getFloat()) ? path[k]["svg:x"]->getFloat() : qx; 
+		qy = (qy < path[k]["svg:y"]->getFloat()) ? path[k]["svg:y"]->getFloat() : qy; 
+		if(path[k]["libwpg:path-action"]->getStr() == "C")
 		{
-			p.x = (p.x > element.extra1.x) ? element.extra1.x : p.x; 
-			p.y = (p.y > element.extra1.y) ? element.extra1.y : p.y; 
-			q.x = (q.x < element.extra1.x) ? element.extra1.x : q.x; 
-			q.y = (q.y < element.extra1.y) ? element.extra1.y : q.y; 
-			p.x = (p.x > element.extra2.x) ? element.extra2.x : p.x; 
-			p.y = (p.y > element.extra2.y) ? element.extra2.y : p.y; 
-			q.x = (q.x < element.extra2.x) ? element.extra2.x : q.x; 
-			q.y = (q.y < element.extra2.y) ? element.extra2.y : q.y; 
+			px = (px > path[k]["svg:x1"]->getFloat()) ? path[k]["svg:x1"]->getFloat() : px; 
+			py = (py > path[k]["svg:y1"]->getFloat()) ? path[k]["svg:y1"]->getFloat() : py; 
+			qx = (qx < path[k]["svg:x1"]->getFloat()) ? path[k]["svg:x1"]->getFloat() : qx; 
+			qy = (qy < path[k]["svg:y1"]->getFloat()) ? path[k]["svg:y1"]->getFloat() : qy; 
+			px = (px > path[k]["svg:x2"]->getFloat()) ? path[k]["svg:x2"]->getFloat() : px; 
+			py = (py > path[k]["svg:y2"]->getFloat()) ? path[k]["svg:y2"]->getFloat() : py; 
+			qx = (qx < path[k]["svg:x2"]->getFloat()) ? path[k]["svg:x2"]->getFloat() : qx; 
+			qy = (qy < path[k]["svg:y2"]->getFloat()) ? path[k]["svg:y2"]->getFloat() : qy; 
 		}
 	}
-	double vw = q.x - p.x;
-	double vh = q.y - p.y;
+	double vw = qx - px;
+	double vh = qy - py;
 		
 	writeGraphicsStyle();
 
@@ -409,9 +421,9 @@ void OdgExporter::drawPath(const libwpg::WPGPath& path)
 	pDrawPathElement->addAttribute("draw:style-name", sValue);
 	pDrawPathElement->addAttribute("draw:text-style-name", "P1");
 	pDrawPathElement->addAttribute("draw:layer", "layout");
-	sValue = doubleToString(p.x); sValue.append("in");
+	sValue = doubleToString(px); sValue.append("in");
 	pDrawPathElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(p.y); sValue.append("in");
+	sValue = doubleToString(py); sValue.append("in");
 	pDrawPathElement->addAttribute("svg:y", sValue);
 	sValue = doubleToString(vw); sValue.append("in");
 	pDrawPathElement->addAttribute("svg:width", sValue);
@@ -423,33 +435,28 @@ void OdgExporter::drawPath(const libwpg::WPGPath& path)
     sValue.clear();
 	for(unsigned i = 0; i < path.count(); i++)
 	{
-		libwpg::WPGPathElement element = path.element(i);
-		libwpg::WPGPoint point = element.point;
         WPXString sElement;
-		switch(element.type)
+		if (path[i]["libwpg:path-action"]->getStr() == "M")
 		{
 			// 2540 is 2.54*1000, 2.54 in = 1 inch
-			case libwpg::WPGPathElement::MoveToElement:
-			    sElement.sprintf("M%i %i", (unsigned)((point.x-p.x)*2540), (unsigned)((point.y-p.y)*2540));
-				break;
-				
-			case libwpg::WPGPathElement::LineToElement:
-			    sElement.sprintf("L%i %i", (unsigned)((point.x-p.x)*2540), (unsigned)((point.y-p.y)*2540));
-				break;
-			
-			case libwpg::WPGPathElement::CurveToElement:
-                sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((element.extra1.x-p.x)*2540),
-                (int)((element.extra1.y-p.y)*2540), (unsigned)((element.extra2.x-p.x)*2540),
-                (int)((element.extra2.y-p.y)*2540), (unsigned)((point.x-p.x)*2540), (unsigned)((point.y-p.y)*2540));
-				break;
-			
-			default:
-				break;
+		    sElement.sprintf("M%i %i", (unsigned)((path[i]["svg:x"]->getFloat()-px)*2540), (unsigned)((path[i]["svg:y"]->getFloat()-py)*2540));
+			sValue.append(sElement);
 		}
-		sValue.append(sElement);
+		else if (path[i]["libwpg:path-action"]->getStr() == "L")
+		{
+		    sElement.sprintf("L%i %i", (unsigned)((path[i]["svg:x"]->getFloat()-px)*2540), (unsigned)((path[i]["svg:y"]->getFloat()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (path[i]["libwpg:path-action"]->getStr() == "C")
+		{			
+			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getFloat()-px)*2540),
+				(int)((path[i]["svg:y1"]->getFloat()-py)*2540), (unsigned)((path[i]["svg:x2"]->getFloat()-px)*2540),
+				(int)((path[i]["svg:y2"]->getFloat()-py)*2540), (unsigned)((path[i]["svg:x"]->getFloat()-px)*2540), (unsigned)((path[i]["svg:y"]->getFloat()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (path[i]["libwpg:path-action"]->getStr() == "Z" && i == (path.count() - 1))
+			sValue.append(" Z");
 	}
-    if(path.closed)
-		sValue.append(" Z");
 	pDrawPathElement->addAttribute("svg:d", sValue);
 	mBodyElements.push_back(pDrawPathElement);
 	mBodyElements.push_back(new TagCloseElement("draw:path"));

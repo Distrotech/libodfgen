@@ -40,11 +40,11 @@ public:
 	OdgExporter(DocumentHandler *pHandler, const bool isFlatXML = false);
 	~OdgExporter();
 
-	void startGraphics(double width, double height);
+	void startGraphics(const ::WPXPropertyList &propList);
 	void endGraphics();
 	void startLayer(unsigned int id);
 	void endLayer(unsigned int id);
-	void startEmbeddedGraphics(double /* width */, double /* height */) {}
+	void startEmbeddedGraphics(const ::WPXPropertyList& /*propList*/) {}
 	void endEmbeddedGraphics() {}
 
 	void setPen(const libwpg::WPGPen& pen);
@@ -53,16 +53,16 @@ public:
 
 	void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry);
 	void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry, double rotation, const libwpg::WPGPoint& from, const libwpg::WPGPoint& to);
-	void drawPolyline(const libwpg::WPGPointArray& vertices);
-	void drawPolygon(const libwpg::WPGPointArray& vertices);
-	void drawPath(const libwpg::WPGPath& path);
+	void drawPolyline(const ::WPXPropertyListVector& vertices);
+	void drawPolygon(const ::WPXPropertyListVector& vertices);
+	void drawPath(const ::WPXPropertyListVector& path);
 	void drawBitmap(const libwpg::WPGBitmap& bitmap);
 	void drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
 
 private:
 	void writeGraphicsStyle();
 	WPXString doubleToString(const double value);
-	void drawPolySomething(const libwpg::WPGPointArray& vertices, bool isClosed);
+	void drawPolySomething(const ::WPXPropertyListVector& vertices, bool isClosed);
 	
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
