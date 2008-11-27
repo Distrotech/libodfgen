@@ -51,12 +51,12 @@ public:
 	void setBrush(const libwpg::WPGBrush& brush);
 	void setFillRule(FillRule rule);
 
-	void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry);
+	void drawRectangle(const ::WPXPropertyList &propList);
 	void drawEllipse(const ::WPXPropertyList &propList);
 	void drawPolyline(const ::WPXPropertyListVector& vertices);
 	void drawPolygon(const ::WPXPropertyListVector& vertices);
 	void drawPath(const ::WPXPropertyListVector& path);
-	void drawBitmap(const libwpg::WPGBitmap& bitmap);
+	void drawBitmap(const ::WPXPropertyList &propList, const libwpg::WPGBitmap& bitmap);
 	void drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
 
 private:

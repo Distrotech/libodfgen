@@ -266,24 +266,19 @@ void OdgExporter::endLayer()
 {
 }
 
-void OdgExporter::drawRectangle(const libwpg::WPGRect& rect, double rx, double /* ry */)
+void OdgExporter::drawRectangle(const ::WPXPropertyList &propList)
 {
 	writeGraphicsStyle();
 	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
 	WPXString sValue;
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 	pDrawRectElement->addAttribute("draw:style-name", sValue);
-	sValue = doubleToString(rect.x1); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(rect.y1); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(rect.width()); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(rect.height()); sValue.append("in");
-	pDrawRectElement->addAttribute("svg:height", sValue);
-	sValue = doubleToString(rx); sValue.append("in");
+	pDrawRectElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+	pDrawRectElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	pDrawRectElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	pDrawRectElement->addAttribute("svg:height", propList["svg:height"]->getStr());
 	// FIXME: what to do when rx != ry ?
-	pDrawRectElement->addAttribute("draw:corner-radius", sValue);
+	pDrawRectElement->addAttribute("draw:corner-radius", propList["svg:rx"]->getStr());
 	mBodyElements.push_back(pDrawRectElement);
 	mBodyElements.push_back(new TagCloseElement("draw:rect"));	
 }
@@ -469,26 +464,20 @@ void OdgExporter::drawPath(const WPXPropertyListVector& path)
 	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
-void OdgExporter::drawBitmap(const libwpg::WPGBitmap& bitmap)
+void OdgExporter::drawBitmap(const ::WPXPropertyList &propList, const libwpg::WPGBitmap& bitmap)
 {
 	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
-	WPXString sValue;
-	sValue = doubleToString(bitmap.rect.x1); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(bitmap.rect.y1); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString(bitmap.rect.height()); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:height", sValue);
-	sValue = doubleToString(bitmap.rect.width()); sValue.append("in");
-	pDrawFrameElement->addAttribute("svg:width", sValue);
+	pDrawFrameElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+	pDrawFrameElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	pDrawFrameElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	pDrawFrameElement->addAttribute("svg:height", propList["svg:height"]->getStr());
 	mBodyElements.push_back(pDrawFrameElement);
 	
 	mBodyElements.push_back(new TagOpenElement("draw:image"));
 	
 	mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 	
-	::WPXString base64Binary;
-	bitmap.generateBase64DIB(base64Binary);
+	::WPXString base64Binary = bitmap.getDIB().getBase64Data();
 	mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
 	
 	mBodyElements.push_back(new TagCloseElement("office:binary-data"));
