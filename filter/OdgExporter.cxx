@@ -37,7 +37,6 @@
 
 OdgExporter::OdgExporter(DocumentHandler *pHandler, const bool isFlatXML):
 	mpHandler(pHandler),
-	mxFillRule(AlternatingFill),
 	miGradientIndex(1),
 	miDashIndex(1), 
 	miGraphicsStyleIndex(1),
@@ -251,11 +250,6 @@ void OdgExporter::setPen(const libwpg::WPGPen& pen)
 void OdgExporter::setBrush(const libwpg::WPGBrush& brush)
 {
 	mxBrush = brush;
-}
-
-void OdgExporter::setFillRule(FillRule rule)
-{
-	mxFillRule = rule;
 }
 
 void OdgExporter::startLayer(const ::WPXPropertyList & /* propList */)

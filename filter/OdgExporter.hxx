@@ -49,7 +49,7 @@ public:
 
 	void setPen(const libwpg::WPGPen& pen);
 	void setBrush(const libwpg::WPGBrush& brush);
-	void setFillRule(FillRule rule);
+	void setFillRule(const ::WPXPropertyList & /*propList*/) {};
 
 	void drawRectangle(const ::WPXPropertyList &propList);
 	void drawEllipse(const ::WPXPropertyList &propList);
@@ -76,7 +76,6 @@ private:
 
 	libwpg::WPGPen mxPen;
 	libwpg::WPGBrush mxBrush;
-	FillRule mxFillRule;
 	int miGradientIndex;
 	int miDashIndex;
 	int miGraphicsStyleIndex;
