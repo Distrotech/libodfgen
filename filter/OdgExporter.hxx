@@ -42,8 +42,8 @@ public:
 
 	void startGraphics(const ::WPXPropertyList &propList);
 	void endGraphics();
-	void startLayer(unsigned int id);
-	void endLayer(unsigned int id);
+	void startLayer(const ::WPXPropertyList &propList);
+	void endLayer();
 	void startEmbeddedGraphics(const ::WPXPropertyList& /*propList*/) {}
 	void endEmbeddedGraphics() {}
 
@@ -52,7 +52,7 @@ public:
 	void setFillRule(FillRule rule);
 
 	void drawRectangle(const libwpg::WPGRect& rect, double rx, double ry);
-	void drawEllipse(const libwpg::WPGPoint& center, double rx, double ry, double rotation, const libwpg::WPGPoint& from, const libwpg::WPGPoint& to);
+	void drawEllipse(const ::WPXPropertyList &propList);
 	void drawPolyline(const ::WPXPropertyListVector& vertices);
 	void drawPolygon(const ::WPXPropertyListVector& vertices);
 	void drawPath(const ::WPXPropertyListVector& path);

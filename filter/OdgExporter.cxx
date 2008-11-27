@@ -258,11 +258,11 @@ void OdgExporter::setFillRule(FillRule rule)
 	mxFillRule = rule;
 }
 
-void OdgExporter::startLayer(unsigned int /* id */)
+void OdgExporter::startLayer(const ::WPXPropertyList & /* propList */)
 {
 }
 
-void OdgExporter::endLayer(unsigned int)
+void OdgExporter::endLayer()
 {
 }
 
@@ -288,35 +288,42 @@ void OdgExporter::drawRectangle(const libwpg::WPGRect& rect, double rx, double /
 	mBodyElements.push_back(new TagCloseElement("draw:rect"));	
 }
 
-void OdgExporter::drawEllipse(const libwpg::WPGPoint& center, double rx, double ry, double rotation, const libwpg::WPGPoint& from, const libwpg::WPGPoint& to)
+void OdgExporter::drawEllipse(const ::WPXPropertyList &propList)
 {
 	writeGraphicsStyle();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
 	WPXString sValue;
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
-	sValue = doubleToString(2 * rx); sValue.append("in");
+	sValue = doubleToString(2 * propList["svg:rx"]->getFloat()); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(2 * ry); sValue.append("in");
+	sValue = doubleToString(2 * propList["svg:ry"]->getFloat()); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
-	if (rotation != 0.0)
+	if (propList["libwpg:rotate"] && propList["libwpg:rotate"]->getFloat() != 0.0)
 	{
+		double rotation = propList["libwpg:rotate"]->getFloat();
 		while(rotation < -180)
 			rotation += 360;
 		while(rotation > 180)
 			rotation -= 360;
 		double radrotation = rotation*M_PI/180.0;
-		double deltax = sqrt(pow(rx, 2.0) + pow(ry, 2.0))*cos(atan(ry/rx) - radrotation ) - rx;
-		double deltay = sqrt(pow(rx, 2.0) + pow(ry, 2.0))*sin(atan(ry/rx) - radrotation ) - ry;
+		double deltax = sqrt(pow(propList["svg:rx"]->getFloat(), 2.0)
+			+ pow(propList["svg:ry"]->getFloat(), 2.0))*cos(atan(propList["svg:ry"]->getFloat()/propList["svg:rx"]->getFloat())
+			- radrotation ) - propList["svg:rx"]->getFloat();
+		double deltay = sqrt(pow(propList["svg:rx"]->getFloat(), 2.0)
+			+ pow(propList["svg:ry"]->getFloat(), 2.0))*sin(atan(propList["svg:ry"]->getFloat()/propList["svg:rx"]->getFloat())
+			- radrotation ) - propList["svg:ry"]->getFloat();
 		sValue = "rotate("; sValue.append(doubleToString(radrotation)); sValue.append(") ");
-		sValue.append("translate("); sValue.append(doubleToString(center.x - rx - deltax)); sValue.append("in, "); sValue.append(doubleToString(center.y - ry - deltay)); sValue.append("in)");
+		sValue.append("translate("); sValue.append(doubleToString(propList["svg:cx"]->getFloat() - propList["svg:rx"]->getFloat() - deltax));
+		sValue.append("in, ");
+		sValue.append(doubleToString(propList["svg:cy"]->getFloat() - propList["svg:ry"]->getFloat() - deltay)); sValue.append("in)");
 		pDrawEllipseElement->addAttribute("svg:transform", sValue);
 	}
 	else
 	{
-		sValue = doubleToString(center.x-rx); sValue.append("in");
+		sValue = doubleToString(propList["svg:cx"]->getFloat()-propList["svg:rx"]->getFloat()); sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:x", sValue);
-		sValue = doubleToString(center.y-ry); sValue.append("in");
+		sValue = doubleToString(propList["svg:cy"]->getFloat()-propList["svg:ry"]->getFloat()); sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:y", sValue);
 	}
 	mBodyElements.push_back(pDrawEllipseElement);
