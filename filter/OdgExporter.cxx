@@ -242,13 +242,9 @@ void OdgExporter::endGraphics()
 	mpHandler->endDocument();
 }
 
-void OdgExporter::setPen(const libwpg::WPGPen& pen)
+void OdgExporter::setStyle(const libwpg::WPGPen& pen, const libwpg::WPGBrush& brush, const ::WPXPropertyList & /*propList*/)
 {
 	mxPen = pen;
-}
-
-void OdgExporter::setBrush(const libwpg::WPGBrush& brush)
-{
 	mxBrush = brush;
 }
 

@@ -47,9 +47,7 @@ public:
 	void startEmbeddedGraphics(const ::WPXPropertyList& /*propList*/) {}
 	void endEmbeddedGraphics() {}
 
-	void setPen(const libwpg::WPGPen& pen);
-	void setBrush(const libwpg::WPGBrush& brush);
-	void setFillRule(const ::WPXPropertyList & /*propList*/) {};
+	void setStyle(const libwpg::WPGPen& pen, const libwpg::WPGBrush& brush, const ::WPXPropertyList &propList);
 
 	void drawRectangle(const ::WPXPropertyList &propList);
 	void drawEllipse(const ::WPXPropertyList &propList);
