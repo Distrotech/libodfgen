@@ -458,29 +458,6 @@ void OdgExporter::drawPath(const WPXPropertyListVector& path)
 	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
-void OdgExporter::drawBitmap(const ::WPXPropertyList &propList, const libwpg::WPGBitmap& bitmap)
-{
-	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
-	pDrawFrameElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-	pDrawFrameElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-	pDrawFrameElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-	pDrawFrameElement->addAttribute("svg:height", propList["svg:height"]->getStr());
-	mBodyElements.push_back(pDrawFrameElement);
-	
-	mBodyElements.push_back(new TagOpenElement("draw:image"));
-	
-	mBodyElements.push_back(new TagOpenElement("office:binary-data"));
-	
-	::WPXString base64Binary = bitmap.getDIB().getBase64Data();
-	mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
-	
-	mBodyElements.push_back(new TagCloseElement("office:binary-data"));
-	
-	mBodyElements.push_back(new TagCloseElement("draw:image"));
-	
-	mBodyElements.push_back(new TagCloseElement("draw:frame"));
-}
-
 void OdgExporter::drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData)
 {
 	if (!propList["libwpg:mime-type"] && propList["libwpg:mime-type"]->getStr().len() <= 0)

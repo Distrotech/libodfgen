@@ -56,7 +56,6 @@ public:
 	void drawPolyline(const ::WPXPropertyListVector& vertices);
 	void drawPolygon(const ::WPXPropertyListVector& vertices);
 	void drawPath(const ::WPXPropertyListVector& path);
-	void drawBitmap(const ::WPXPropertyList &propList, const libwpg::WPGBitmap& bitmap);
 	void drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
 
 private:
