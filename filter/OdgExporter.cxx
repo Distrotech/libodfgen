@@ -122,7 +122,7 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 	configItemOpenElement.addAttribute("config:type", "int");
 	configItemOpenElement.write(mpHandler);
 	if (propList["svg:width"])
-		mfWidth = propList["svg:width"]->getFloat();
+		mfWidth = propList["svg:width"]->getDouble();
 	WPXString sWidth; sWidth.sprintf("%li", (unsigned long)(2540 * mfWidth));
 	mpHandler->characters(sWidth);
 	mpHandler->endElement("config:config-item");
@@ -131,7 +131,7 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 	configItemOpenElement.addAttribute("config:type", "int");
 	configItemOpenElement.write(mpHandler);
 	if (propList["svg:height"])
-		mfHeight = propList["svg:height"]->getFloat();
+		mfHeight = propList["svg:height"]->getDouble();
 	WPXString sHeight; sHeight.sprintf("%li", (unsigned long)(2540 * mfHeight));
 	mpHandler->characters(sHeight);
 	mpHandler->endElement("config:config-item");
@@ -268,7 +268,10 @@ void OdgExporter::drawRectangle(const ::WPXPropertyList &propList)
 	pDrawRectElement->addAttribute("svg:width", propList["svg:width"]->getStr());
 	pDrawRectElement->addAttribute("svg:height", propList["svg:height"]->getStr());
 	// FIXME: what to do when rx != ry ?
-	pDrawRectElement->addAttribute("draw:corner-radius", propList["svg:rx"]->getStr());
+	if (propList["svg:rx"])
+		pDrawRectElement->addAttribute("draw:corner-radius", propList["svg:rx"]->getStr());
+	else
+		pDrawRectElement->addAttribute("draw:corner-radius", "0.0000in");
 	mBodyElements.push_back(pDrawRectElement);
 	mBodyElements.push_back(new TagCloseElement("draw:rect"));	
 }
@@ -280,35 +283,35 @@ void OdgExporter::drawEllipse(const ::WPXPropertyList &propList)
 	WPXString sValue;
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
-	sValue = doubleToString(2 * propList["svg:rx"]->getFloat()); sValue.append("in");
+	sValue = doubleToString(2 * propList["svg:rx"]->getDouble()); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(2 * propList["svg:ry"]->getFloat()); sValue.append("in");
+	sValue = doubleToString(2 * propList["svg:ry"]->getDouble()); sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
-	if (propList["libwpg:rotate"] && propList["libwpg:rotate"]->getFloat() != 0.0)
+	if (propList["libwpg:rotate"] && propList["libwpg:rotate"]->getDouble() != 0.0)
 	{
-		double rotation = propList["libwpg:rotate"]->getFloat();
+		double rotation = propList["libwpg:rotate"]->getDouble();
 		while(rotation < -180)
 			rotation += 360;
 		while(rotation > 180)
 			rotation -= 360;
 		double radrotation = rotation*M_PI/180.0;
-		double deltax = sqrt(pow(propList["svg:rx"]->getFloat(), 2.0)
-			+ pow(propList["svg:ry"]->getFloat(), 2.0))*cos(atan(propList["svg:ry"]->getFloat()/propList["svg:rx"]->getFloat())
-			- radrotation ) - propList["svg:rx"]->getFloat();
-		double deltay = sqrt(pow(propList["svg:rx"]->getFloat(), 2.0)
-			+ pow(propList["svg:ry"]->getFloat(), 2.0))*sin(atan(propList["svg:ry"]->getFloat()/propList["svg:rx"]->getFloat())
-			- radrotation ) - propList["svg:ry"]->getFloat();
+		double deltax = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
+			+ pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
+			- radrotation ) - propList["svg:rx"]->getDouble();
+		double deltay = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
+			+ pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
+			- radrotation ) - propList["svg:ry"]->getDouble();
 		sValue = "rotate("; sValue.append(doubleToString(radrotation)); sValue.append(") ");
-		sValue.append("translate("); sValue.append(doubleToString(propList["svg:cx"]->getFloat() - propList["svg:rx"]->getFloat() - deltax));
+		sValue.append("translate("); sValue.append(doubleToString(propList["svg:cx"]->getDouble() - propList["svg:rx"]->getDouble() - deltax));
 		sValue.append("in, ");
-		sValue.append(doubleToString(propList["svg:cy"]->getFloat() - propList["svg:ry"]->getFloat() - deltay)); sValue.append("in)");
+		sValue.append(doubleToString(propList["svg:cy"]->getDouble() - propList["svg:ry"]->getDouble() - deltay)); sValue.append("in)");
 		pDrawEllipseElement->addAttribute("svg:transform", sValue);
 	}
 	else
 	{
-		sValue = doubleToString(propList["svg:cx"]->getFloat()-propList["svg:rx"]->getFloat()); sValue.append("in");
+		sValue = doubleToString(propList["svg:cx"]->getDouble()-propList["svg:rx"]->getDouble()); sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:x", sValue);
-		sValue = doubleToString(propList["svg:cy"]->getFloat()-propList["svg:ry"]->getFloat()); sValue.append("in");
+		sValue = doubleToString(propList["svg:cy"]->getDouble()-propList["svg:ry"]->getDouble()); sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:y", sValue);
 	}
 	mBodyElements.push_back(pDrawEllipseElement);
@@ -378,28 +381,28 @@ void OdgExporter::drawPath(const WPXPropertyListVector& path)
 	// try to find the bounding box
 	// this is simple convex hull technique, the bounding box might not be
 	// accurate but that should be enough for this purpose
-	double px = path[0]["svg:x"]->getFloat();
-	double py = path[0]["svg:y"]->getFloat();
-	double qx = path[0]["svg:x"]->getFloat();
-	double qy = path[0]["svg:y"]->getFloat();
+	double px = path[0]["svg:x"]->getDouble();
+	double py = path[0]["svg:y"]->getDouble();
+	double qx = path[0]["svg:x"]->getDouble();
+	double qy = path[0]["svg:y"]->getDouble();
 	for(unsigned k = 0; k < path.count(); k++)
 	{
 		if (!path[k]["svg:x"] || !path[k]["svg:y"])
 			continue;
-		px = (px > path[k]["svg:x"]->getFloat()) ? path[k]["svg:x"]->getFloat() : px; 
-		py = (py > path[k]["svg:y"]->getFloat()) ? path[k]["svg:y"]->getFloat() : py; 
-		qx = (qx < path[k]["svg:x"]->getFloat()) ? path[k]["svg:x"]->getFloat() : qx; 
-		qy = (qy < path[k]["svg:y"]->getFloat()) ? path[k]["svg:y"]->getFloat() : qy; 
+		px = (px > path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : px; 
+		py = (py > path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : py; 
+		qx = (qx < path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : qx; 
+		qy = (qy < path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : qy; 
 		if(path[k]["libwpg:path-action"]->getStr() == "C")
 		{
-			px = (px > path[k]["svg:x1"]->getFloat()) ? path[k]["svg:x1"]->getFloat() : px; 
-			py = (py > path[k]["svg:y1"]->getFloat()) ? path[k]["svg:y1"]->getFloat() : py; 
-			qx = (qx < path[k]["svg:x1"]->getFloat()) ? path[k]["svg:x1"]->getFloat() : qx; 
-			qy = (qy < path[k]["svg:y1"]->getFloat()) ? path[k]["svg:y1"]->getFloat() : qy; 
-			px = (px > path[k]["svg:x2"]->getFloat()) ? path[k]["svg:x2"]->getFloat() : px; 
-			py = (py > path[k]["svg:y2"]->getFloat()) ? path[k]["svg:y2"]->getFloat() : py; 
-			qx = (qx < path[k]["svg:x2"]->getFloat()) ? path[k]["svg:x2"]->getFloat() : qx; 
-			qy = (qy < path[k]["svg:y2"]->getFloat()) ? path[k]["svg:y2"]->getFloat() : qy; 
+			px = (px > path[k]["svg:x1"]->getDouble()) ? path[k]["svg:x1"]->getDouble() : px; 
+			py = (py > path[k]["svg:y1"]->getDouble()) ? path[k]["svg:y1"]->getDouble() : py; 
+			qx = (qx < path[k]["svg:x1"]->getDouble()) ? path[k]["svg:x1"]->getDouble() : qx; 
+			qy = (qy < path[k]["svg:y1"]->getDouble()) ? path[k]["svg:y1"]->getDouble() : qy; 
+			px = (px > path[k]["svg:x2"]->getDouble()) ? path[k]["svg:x2"]->getDouble() : px; 
+			py = (py > path[k]["svg:y2"]->getDouble()) ? path[k]["svg:y2"]->getDouble() : py; 
+			qx = (qx < path[k]["svg:x2"]->getDouble()) ? path[k]["svg:x2"]->getDouble() : qx; 
+			qy = (qy < path[k]["svg:y2"]->getDouble()) ? path[k]["svg:y2"]->getDouble() : qy; 
 		}
 	}
 	double vw = qx - px;
@@ -431,22 +434,25 @@ void OdgExporter::drawPath(const WPXPropertyListVector& path)
 		if (path[i]["libwpg:path-action"]->getStr() == "M")
 		{
 			// 2540 is 2.54*1000, 2.54 in = 1 inch
-		    sElement.sprintf("M%i %i", (unsigned)((path[i]["svg:x"]->getFloat()-px)*2540), (unsigned)((path[i]["svg:y"]->getFloat()-py)*2540));
+		    sElement.sprintf("M%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "L")
 		{
-		    sElement.sprintf("L%i %i", (unsigned)((path[i]["svg:x"]->getFloat()-px)*2540), (unsigned)((path[i]["svg:y"]->getFloat()-py)*2540));
+		    sElement.sprintf("L%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "C")
 		{			
-			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getFloat()-px)*2540),
-				(int)((path[i]["svg:y1"]->getFloat()-py)*2540), (unsigned)((path[i]["svg:x2"]->getFloat()-px)*2540),
-				(int)((path[i]["svg:y2"]->getFloat()-py)*2540), (unsigned)((path[i]["svg:x"]->getFloat()-px)*2540), (unsigned)((path[i]["svg:y"]->getFloat()-py)*2540));
+			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
+				(int)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
+				(int)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
-		else if (path[i]["libwpg:path-action"]->getStr() == "Z" && i == (path.count() - 1))
+		else if (path[i]["libwpg:path-action"]->getStr() == "Z" && i >= (path.count() - 1))
 			sValue.append(" Z");
 	}
 	pDrawPathElement->addAttribute("svg:d", sValue);

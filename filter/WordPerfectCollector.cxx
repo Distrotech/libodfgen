@@ -509,16 +509,16 @@ void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WP
 	float fSectionMarginLeft = 0.0f;
 	float fSectionMarginRight = 0.0f;
 	if (propList["fo:margin-left"])
-		fSectionMarginLeft = propList["fo:margin-left"]->getFloat();
+		fSectionMarginLeft = propList["fo:margin-left"]->getDouble();
 	if (propList["fo:margin-right"])
-		fSectionMarginRight = propList["fo:margin-right"]->getFloat();
+		fSectionMarginRight = propList["fo:margin-right"]->getDouble();
 
 	if (iNumColumns > 1 || fSectionMarginLeft != 0 || fSectionMarginRight != 0)
 	{
 		if (propList["fo:margin-bottom"])
-			mfSectionSpaceAfter = propList["fo:margin-bottom"]->getFloat();
+			mfSectionSpaceAfter = propList["fo:margin-bottom"]->getDouble();
 		else if (propList["libwpd:margin-bottom"])
-			mfSectionSpaceAfter =  propList["libwpd:margin-bottom"]->getFloat();
+			mfSectionSpaceAfter =  propList["libwpd:margin-bottom"]->getDouble();
 
 		WPXString sSectionName;
 		sSectionName.sprintf("Section%i", mSectionStyles.size());

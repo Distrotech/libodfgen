@@ -87,18 +87,18 @@ int PageSpan::getSpan() const
         return 0; // should never happen
 }
 
-float PageSpan::getMarginLeft() const
+double PageSpan::getMarginLeft() const
 { 
         if (mxPropList["fo:margin-left"])
-                return mxPropList["fo:margin-left"]->getFloat();
+                return mxPropList["fo:margin-left"]->getDouble();
 
          return 0.0f; 
 }
 
-float PageSpan::getMarginRight() const
+double PageSpan::getMarginRight() const
 { 
         if (mxPropList["fo:margin-right"])
-                return mxPropList["fo:margin-right"]->getFloat();
+                return mxPropList["fo:margin-right"]->getDouble();
 
          return 0.0f; 
 }

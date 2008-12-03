@@ -40,8 +40,8 @@ public:
 	void writePageLayout(const int iNum, DocumentHandler *pHandler) const;
 	void writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, DocumentHandler *pHandler) const;
 	int getSpan() const;
-	float getMarginLeft() const;
-	float getMarginRight() const;
+	double getMarginLeft() const;
+	double getMarginRight() const;
 
 	const std::vector<DocumentElement *> * getHeaderContent() const { return mpHeaderContent; }
 	void setHeaderContent(std::vector<DocumentElement *> * pHeaderContent) { mpHeaderContent = pHeaderContent; }

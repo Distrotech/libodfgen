@@ -80,10 +80,10 @@ void ParagraphStyle::write(DocumentHandler *pHandler) const
 			propList.insert("fo:margin-top", i()->getStr());
 		if (strcmp(i.key(), "fo:margin-bottom") == 0)
 		{
-			if (i()->getFloat() > 0.0f)
+			if (i()->getDouble() > 0.0)
 				propList.insert("fo:margin-bottom", i()->getStr());
 			else
-				propList.insert("fo:margin-bottom", 0.0f);
+				propList.insert("fo:margin-bottom", 0.0);
 		}
 		if (strcmp(i.key(), "fo:line-height") == 0)
 			propList.insert("fo:line-height", i()->getStr());
@@ -105,7 +105,7 @@ void ParagraphStyle::write(DocumentHandler *pHandler) const
 		WPXPropertyListVector::Iter i(mxTabStops);
 		for (i.rewind(); i.next();)
 		{
-			if (i()["style:position"] && i()["style:position"]->getFloat() < 0)
+			if (i()["style:position"] && i()["style:position"]->getDouble() < 0.0)
 				continue;
 			TagOpenElement tabStopOpen("style:tab-stop");
 			
@@ -148,7 +148,7 @@ void SpanStyle::write(DocumentHandler *pHandler) const
 
 	if (mPropList["fo:font-size"])
 	{
-		if (mPropList["fo:font-size"]->getFloat() > 0.0f)
+		if (mPropList["fo:font-size"]->getDouble() > 0.0)
 		{
 			propList.insert("style:font-size-asian", mPropList["fo:font-size"]->getStr());
 			propList.insert("style:font-size-complex", mPropList["fo:font-size"]->getStr());
