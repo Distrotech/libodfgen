@@ -73,7 +73,7 @@ void SectionStyle::write(DocumentHandler *pHandler) const
 	else
 	{
 		columnProps.insert("fo:column-count", 0);
-		columnProps.insert("fo:column-gap", 0.0f);
+		columnProps.insert("fo:column-gap", 0.0);
 		pHandler->startElement("style:columns", columnProps);
 	}
 

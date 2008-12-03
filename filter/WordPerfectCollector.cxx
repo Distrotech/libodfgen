@@ -75,7 +75,7 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, const char * 
 	mbUsed(false),
 	mWriterDocumentStates(),
 	mWriterListStates(),
-	mfSectionSpaceAfter(0.0f),
+	mfSectionSpaceAfter(0.0),
 	miNumListStyles(0),
 	mpCurrentContentElements(&mBodyElements),
 	mpCurrentPageSpan(NULL),
@@ -506,8 +506,8 @@ void WordPerfectCollector::closeFooter()
 void WordPerfectCollector::openSection(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
 {
 	int iNumColumns = columns.count();
-	float fSectionMarginLeft = 0.0f;
-	float fSectionMarginRight = 0.0f;
+	double fSectionMarginLeft = 0.0;
+	double fSectionMarginRight = 0.0;
 	if (propList["fo:margin-left"])
 		fSectionMarginLeft = propList["fo:margin-left"]->getDouble();
 	if (propList["fo:margin-right"])
@@ -542,7 +542,7 @@ void WordPerfectCollector::closeSection()
 	else
 		mWriterDocumentStates.top().mbInFakeSection = false;
 
-	mfSectionSpaceAfter = 0.0f;
+	mfSectionSpaceAfter = 0.0;
 }
 
 void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops)

@@ -92,7 +92,7 @@ double PageSpan::getMarginLeft() const
         if (mxPropList["fo:margin-left"])
                 return mxPropList["fo:margin-left"]->getDouble();
 
-         return 0.0f; 
+         return 0.0; 
 }
 
 double PageSpan::getMarginRight() const
@@ -100,7 +100,7 @@ double PageSpan::getMarginRight() const
         if (mxPropList["fo:margin-right"])
                 return mxPropList["fo:margin-right"]->getDouble();
 
-         return 0.0f; 
+         return 0.0; 
 }
 
 void PageSpan::writePageLayout(const int iNum, DocumentHandler *pHandler) const

@@ -188,7 +188,7 @@ private:
 
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
-	float mfSectionSpaceAfter;
+	double mfSectionSpaceAfter;
 
 	// table styles
 	std::vector<TableStyle *> mTableStyles;

@@ -40,8 +40,8 @@ OdgExporter::OdgExporter(DocumentHandler *pHandler, const bool isFlatXML):
 	miGradientIndex(1),
 	miDashIndex(1), 
 	miGraphicsStyleIndex(1),
-	mfWidth(0.0f),
-	mfHeight(0.0f),
+	mfWidth(0.0),
+	mfHeight(0.0),
 	mbIsFlatXML(isFlatXML)
 {
 }
