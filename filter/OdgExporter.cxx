@@ -540,12 +540,8 @@ void OdgExporter::writeGraphicsStyle()
 		sValue.sprintf("%i", (unsigned)(angle*10));
 		pDrawGradientElement->addAttribute("draw:angle", sValue);
 
-		libwpg::WPGColor startColor = mxBrush.gradient.stopColor(0);
-		libwpg::WPGColor stopColor = mxBrush.gradient.stopColor(1);
-		sValue.sprintf("#%.2x%.2x%.2x", (startColor.red & 0xff), (startColor.green & 0xff), (startColor.blue & 0xff));
-		pDrawGradientElement->addAttribute("draw:start-color", sValue);
-		sValue.sprintf("#%.2x%.2x%.2x", (stopColor.red & 0xff), (stopColor.green & 0xff), (stopColor.blue & 0xff));
-		pDrawGradientElement->addAttribute("draw:end-color", sValue);
+		pDrawGradientElement->addAttribute("draw:start-color", mxBrush.gradient.stopColor(0).cstr());
+		pDrawGradientElement->addAttribute("draw:end-color", mxBrush.gradient.stopColor(1).cstr());
 		pDrawGradientElement->addAttribute("draw:start-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:border", "0%");
@@ -568,9 +564,7 @@ void OdgExporter::writeGraphicsStyle()
 		sValue = doubleToString(mxPen.width); sValue.append("in");
 		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", sValue);
 
-		sValue.sprintf("#%.2x%.2x%.2x", (mxPen.foreColor.red & 0xff),
-			(mxPen.foreColor.green & 0xff), (mxPen.foreColor.blue & 0xff));
-		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", sValue);
+		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", mxPen.foreColor.getColorString().cstr());
 
 		if(!mxPen.solid)
 		{
@@ -588,9 +582,7 @@ void OdgExporter::writeGraphicsStyle()
 	if(mxBrush.style == libwpg::WPGBrush::Solid)
 	{
 		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
-		sValue.sprintf("#%.2x%.2x%.2x", (mxBrush.foreColor.red & 0xff),
-			(mxBrush.foreColor.green & 0xff), (mxBrush.foreColor.blue & 0xff));
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", sValue);
+		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", mxBrush.foreColor.getColorString().cstr());
 	}
 
 	if(mxBrush.style == libwpg::WPGBrush::Gradient)
