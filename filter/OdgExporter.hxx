@@ -71,6 +71,7 @@ private:
 
 	DocumentHandler *mpHandler;
 
+	::WPXPropertyList mxStyle;
 	libwpg::WPGPen mxPen;
 	libwpg::WPGBrush mxBrush;
 	int miGradientIndex;

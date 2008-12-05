@@ -242,8 +242,9 @@ void OdgExporter::endGraphics()
 	mpHandler->endDocument();
 }
 
-void OdgExporter::setStyle(const libwpg::WPGPen& pen, const libwpg::WPGBrush& brush, const ::WPXPropertyList & /*propList*/)
+void OdgExporter::setStyle(const libwpg::WPGPen& pen, const libwpg::WPGBrush& brush, const ::WPXPropertyList & propList)
 {
+	mxStyle = propList;
 	mxPen = pen;
 	mxBrush = brush;
 }
@@ -522,7 +523,7 @@ void OdgExporter::writeGraphicsStyle()
 		mGraphicsStrokeDashStyles.push_back(new TagCloseElement("draw:stroke-dash"));
 	}
 
-	if(mxBrush.style == "gradient")
+	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
 	{
 		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
 		pDrawGradientElement->addAttribute("draw:style", "linear");
@@ -576,16 +577,16 @@ void OdgExporter::writeGraphicsStyle()
 	else
 		pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "none");
 
-	if(mxBrush.style == "none")
+	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "none")
 		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "none");
 
-	if(mxBrush.style == "solid")
+	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "solid")
 	{
 		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
 		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", mxBrush.foreColor.cstr());
 	}
 
-	if(mxBrush.style == "gradient")
+	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
 	{
 		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "gradient");
 		sValue.sprintf("Gradient_%i", miGradientIndex-1);
