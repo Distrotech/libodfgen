@@ -242,11 +242,11 @@ void OdgExporter::endGraphics()
 	mpHandler->endDocument();
 }
 
-void OdgExporter::setStyle(const libwpg::WPGPen& pen, const libwpg::WPGBrush& brush, const ::WPXPropertyList & propList)
+void OdgExporter::setStyle(const libwpg::WPGDashArray& dashArray, const libwpg::WPGGradient& gradient, const ::WPXPropertyList & propList)
 {
 	mxStyle = propList;
-	mxPen = pen;
-	mxBrush = brush;
+	mxDashArray = dashArray;
+	mxGradient = gradient;
 }
 
 void OdgExporter::startLayer(const ::WPXPropertyList & /* propList */)
@@ -495,12 +495,12 @@ void OdgExporter::drawImageObject(const ::WPXPropertyList &propList, const ::WPX
 
 void OdgExporter::writeGraphicsStyle()
 {
-	if(!mxPen.solid && (mxPen.dashArray.count() >=2 ) )
+	if(!mxStyle["libwpg:stroke-solid"]->getInt() && (mxDashArray.count() >=2 ) )
 	{
 		// ODG only supports dashes with the same length of spaces inbetween
 		// here we take the first space and assume everything else the same
 		// note that dash length is written in percentage ?????????????????
-		double distance = mxPen.dashArray.at(1);
+		double distance = mxDashArray.at(1);
 		TagOpenElement *pDrawStrokeDashElement = new TagOpenElement("draw:stroke-dash");
 		pDrawStrokeDashElement->addAttribute("draw:style", "rect");
 		WPXString sValue;
@@ -511,19 +511,19 @@ void OdgExporter::writeGraphicsStyle()
 		WPXString sName;
 		// We have to find out how to do this intelligently, since the ODF is allowing only
 		// two pairs draw:dots1 draw:dots1-length and draw:dots2 draw:dots2-length
-		for(unsigned i = 0; i < mxPen.dashArray.count()/2 && i < 2; i++)
+		for(unsigned i = 0; i < mxDashArray.count()/2 && i < 2; i++)
 		{
 			sName.sprintf("draw:dots%i", i+1);
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), "1");
 			sName.sprintf("draw:dots%i-length", i+1);
-			sValue = doubleToString(mxPen.dashArray.at(i*2)); sValue.append("in");
+			sValue = doubleToString(mxDashArray.at(i*2)); sValue.append("in");
 			pDrawStrokeDashElement->addAttribute(sName.cstr(), sValue);
 		}
 		mGraphicsStrokeDashStyles.push_back(pDrawStrokeDashElement);
 		mGraphicsStrokeDashStyles.push_back(new TagCloseElement("draw:stroke-dash"));
 	}
 
-	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
+	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient" && mxGradient.count() >= 2)
 	{
 		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
 		pDrawGradientElement->addAttribute("draw:style", "linear");
@@ -532,7 +532,7 @@ void OdgExporter::writeGraphicsStyle()
 		pDrawGradientElement->addAttribute("draw:name", sValue);
 
 		// ODG angle unit is 0.1 degree
-		double angle = -mxBrush.gradient.angle();
+		double angle = -mxGradient.angle();
 		while(angle < 0)
 			angle += 360;
 		while(angle > 360)
@@ -541,8 +541,8 @@ void OdgExporter::writeGraphicsStyle()
 		sValue.sprintf("%i", (unsigned)(angle*10));
 		pDrawGradientElement->addAttribute("draw:angle", sValue);
 
-		pDrawGradientElement->addAttribute("draw:start-color", mxBrush.gradient.stopColor(0).cstr());
-		pDrawGradientElement->addAttribute("draw:end-color", mxBrush.gradient.stopColor(1).cstr());
+		pDrawGradientElement->addAttribute("draw:start-color", mxGradient.stopColor(0).cstr());
+		pDrawGradientElement->addAttribute("draw:end-color", mxGradient.stopColor(1).cstr());
 		pDrawGradientElement->addAttribute("draw:start-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:border", "0%");
@@ -560,14 +560,20 @@ void OdgExporter::writeGraphicsStyle()
 
 	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
 
-	if(mxPen.width > 0.0)
+	if(!(mxStyle["draw:stroke"] && mxStyle["draw:stroke"]->getStr() == "none") && mxStyle["svg:stroke-width"] && mxStyle["svg:stroke-width"]->getDouble() > 0.0)
 	{
-		sValue = doubleToString(mxPen.width); sValue.append("in");
-		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", sValue);
+		if (mxStyle["svg:stroke-width"])
+			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", mxStyle["svg:stroke-width"]->getStr());
 
-		pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", mxPen.foreColor.cstr());
+		if (mxStyle["svg:stroke-color"])
+			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", mxStyle["svg:stroke-color"]->getStr());
+		if (mxStyle["svg:stroke-opacity"] && mxStyle["svg:stroke-opacity"]->getDouble() != 1.0)
+			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-opacity", mxStyle["svg:stroke-opacity"]->getStr());
+			
 
-		if(!mxPen.solid)
+		if(mxStyle["libwpg:stroke-solid"] && mxStyle["libwpg:stroke-solid"]->getInt())
+			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "solid");
+		else
 		{
 			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "dash");
 			sValue.sprintf("Dash_%i", miDashIndex-1);
@@ -583,7 +589,10 @@ void OdgExporter::writeGraphicsStyle()
 	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "solid")
 	{
 		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", mxBrush.foreColor.cstr());
+		if (mxStyle["draw:fill-color"])
+			pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", mxStyle["draw:fill-color"]->getStr());
+		if (mxStyle["draw:opacity"] && mxStyle["draw:opacity"]->getDouble() != 1.0)
+			pStyleGraphicsPropertiesElement->addAttribute("draw:opacity", mxStyle["draw:opacity"]->getStr());
 	}
 
 	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")

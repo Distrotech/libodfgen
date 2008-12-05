@@ -22,7 +22,6 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
-
 #ifndef __ODGEXPORTER_HXX__
 #define __ODGEXPORTER_HXX__
 
@@ -47,7 +46,7 @@ public:
 	void startEmbeddedGraphics(const ::WPXPropertyList& /*propList*/) {}
 	void endEmbeddedGraphics() {}
 
-	void setStyle(const libwpg::WPGPen& pen, const libwpg::WPGBrush& brush, const ::WPXPropertyList &propList);
+	void setStyle(const libwpg::WPGDashArray& dashArray, const libwpg::WPGGradient& gradient, const ::WPXPropertyList &propList);
 
 	void drawRectangle(const ::WPXPropertyList &propList);
 	void drawEllipse(const ::WPXPropertyList &propList);
@@ -72,8 +71,8 @@ private:
 	DocumentHandler *mpHandler;
 
 	::WPXPropertyList mxStyle;
-	libwpg::WPGPen mxPen;
-	libwpg::WPGBrush mxBrush;
+	libwpg::WPGDashArray mxDashArray;
+	libwpg::WPGGradient mxGradient;
 	int miGradientIndex;
 	int miDashIndex;
 	int miGraphicsStyleIndex;
