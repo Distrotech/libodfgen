@@ -532,7 +532,7 @@ void OdgExporter::writeGraphicsStyle()
 		pDrawGradientElement->addAttribute("draw:name", sValue);
 
 		// ODG angle unit is 0.1 degree
-		double angle = -mxGradient.angle();
+		double angle = mxStyle["draw:angle"] ? -mxStyle["draw:angle"]->getDouble() : 0.0;
 		while(angle < 0)
 			angle += 360;
 		while(angle > 360)
