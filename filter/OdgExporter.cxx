@@ -242,7 +242,7 @@ void OdgExporter::endGraphics()
 	mpHandler->endDocument();
 }
 
-void OdgExporter::setStyle(const libwpg::WPGDashArray& dashArray, const libwpg::WPGGradient& gradient, const ::WPXPropertyList & propList)
+void OdgExporter::setStyle(const libwpg::WPGDashArray& dashArray, const ::WPXPropertyListVector& gradient, const ::WPXPropertyList & propList)
 {
 	mxStyle = propList;
 	mxDashArray = dashArray;
@@ -541,8 +541,8 @@ void OdgExporter::writeGraphicsStyle()
 		sValue.sprintf("%i", (unsigned)(angle*10));
 		pDrawGradientElement->addAttribute("draw:angle", sValue);
 
-		pDrawGradientElement->addAttribute("draw:start-color", mxGradient.stopColor(0).cstr());
-		pDrawGradientElement->addAttribute("draw:end-color", mxGradient.stopColor(1).cstr());
+		pDrawGradientElement->addAttribute("draw:start-color", mxGradient[0]["svg:stop-color"]->getStr().cstr());
+		pDrawGradientElement->addAttribute("draw:end-color", mxGradient[1]["svg:stop-color"]->getStr().cstr());
 		pDrawGradientElement->addAttribute("draw:start-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
 		pDrawGradientElement->addAttribute("draw:border", "0%");

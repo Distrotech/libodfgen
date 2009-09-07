@@ -46,7 +46,7 @@ public:
 	void startEmbeddedGraphics(const ::WPXPropertyList& /*propList*/) {}
 	void endEmbeddedGraphics() {}
 
-	void setStyle(const libwpg::WPGDashArray& dashArray, const libwpg::WPGGradient& gradient, const ::WPXPropertyList &propList);
+	void setStyle(const libwpg::WPGDashArray& dashArray, const ::WPXPropertyListVector& gradient, const ::WPXPropertyList &propList);
 
 	void drawRectangle(const ::WPXPropertyList &propList);
 	void drawEllipse(const ::WPXPropertyList &propList);
@@ -72,7 +72,7 @@ private:
 
 	::WPXPropertyList mxStyle;
 	libwpg::WPGDashArray mxDashArray;
-	libwpg::WPGGradient mxGradient;
+	::WPXPropertyListVector mxGradient;
 	int miGradientIndex;
 	int miDashIndex;
 	int miGraphicsStyleIndex;
