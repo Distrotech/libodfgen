@@ -242,10 +242,9 @@ void OdgExporter::endGraphics()
 	mpHandler->endDocument();
 }
 
-void OdgExporter::setStyle(const libwpg::WPGDashArray& dashArray, const ::WPXPropertyListVector& gradient, const ::WPXPropertyList & propList)
+void OdgExporter::setStyle(const ::WPXPropertyListVector& gradient, const ::WPXPropertyList & propList)
 {
 	mxStyle = propList;
-	mxDashArray = dashArray;
 	mxGradient = gradient;
 }
 
