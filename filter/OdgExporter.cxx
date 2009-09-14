@@ -494,7 +494,8 @@ void OdgExporter::drawImageObject(const ::WPXPropertyList &propList, const ::WPX
 
 void OdgExporter::writeGraphicsStyle()
 {
-	if(!mxStyle["libwpg:stroke-solid"]->getInt() && (mxDashArray.count() >=2 ) )
+#if 0
+	if(mxStyle["libwpg:stroke-solid"] && !mxStyle["libwpg:stroke-solid"]->getInt() && (mxDashArray.count() >=2 ) )
 	{
 		// ODG only supports dashes with the same length of spaces inbetween
 		// here we take the first space and assume everything else the same
@@ -521,7 +522,7 @@ void OdgExporter::writeGraphicsStyle()
 		mGraphicsStrokeDashStyles.push_back(pDrawStrokeDashElement);
 		mGraphicsStrokeDashStyles.push_back(new TagCloseElement("draw:stroke-dash"));
 	}
-
+#endif
 	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient" && mxGradient.count() >= 2)
 	{
 		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
