@@ -46,6 +46,15 @@ AC_PROG_LIBTOOL
 
 AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
 
+PKG_CHECK_MODULES(WRITERPERFECTCORE,[
+    libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
+    libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
+])
+
+WRITERPERFECTCORE_CXXFLAGS="$WRITERPERFECTCORE_CFLAGS"
+AC_SUBST(WRITERPERFECTCORE_CXXFLAGS)
+AC_SUBST(WRITERPERFECTCORE_LIBS)
+
 test_libgsf=false
 AC_ARG_WITH(libgsf,
 	[  --with-libgsf           Use libgsf for output of structured files],
@@ -57,12 +66,9 @@ AC_ARG_WITH(libgsf,
 
 if test "x$test_libgsf" = "xtrue"; then
 
-    PKG_CHECK_MODULES(WRITERPERFECT,[
-        libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
-        libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
-        libwpg-0.2 >= $LIBWPG_REQUIRED_VERSION
-        glib-2.0 >= 2.0.0
+    PKG_CHECK_MODULES(WRITERPERFECTGSF,[
         libgsf-1 >= 1.6.0
+        glib-2.0 >= 2.0.0
     ])
 
     PKG_CHECK_EXISTS([ libgsf-1 >= 1.12.0 ],[
@@ -72,16 +78,38 @@ if test "x$test_libgsf" = "xtrue"; then
         AC_MSG_WARN([*** The output files will not be strictly ODF compliant.])
     ])
 
-else
+fi
 
-    PKG_CHECK_MODULES(WRITERPERFECT,[
-        libwpd-0.9 >= $LIBWPD_REQUIRED_VERSION
-        libwpd-stream-0.9 >= $LIBWPD_REQUIRED_VERSION
+WRITERPERFECTGSF_CXXFLAGS="$WRITERPERFECTGSF_CFLAGS"
+AC_SUBST(WRITERPERFECTGSF_CXXFLAGS)
+AC_SUBST(WRITERPERFECTGSF_LIBS)
+
+AM_CONDITIONAL(USE_GSF_OUTPUT, test "x$test_libgsf" = "xtrue")
+
+
+test_libwpg=true
+AC_ARG_WITH(libwpg,
+	[  --with-libwpg           Use libwpg for conversion of WordPerfect Graphics],
+	if test "x$withval" != xyes; then
+		test_libwpg=false
+		AC_DEFINE([USE_LIBWPG], [1], [Whether to use libwpg for conversion of WordPerfect Graphics])
+	fi
+)
+
+if test "x$test_libwpg" = "xtrue"; then
+
+    PKG_CHECK_MODULES(WRITERPERFECTWPG,[
         libwpg-0.2 >= $LIBWPG_REQUIRED_VERSION
     ])
 
 fi
-    
+
+AM_CONDITIONAL(USE_LIBWPG, test "x$test_libwpg" = "xtrue")
+
+
+WRITERPERFECTWPG_CXXFLAGS="$WRITERPERFECTWPG_CFLAGS"
+AC_SUBST(WRITERPERFECTWPG_CXXFLAGS)
+AC_SUBST(WRITERPERFECTWPG_LIBS)
 
 AC_MSG_CHECKING([for native Win32])
 case "$host" in
@@ -127,10 +155,6 @@ AC_ARG_ENABLE(debug,[  --enable-debug    Turn on debugging],[
 	DEBUG_CXXFLAGS="-DNDEBUG" 
 ])
 
-WRITERPERFECT_CXXFLAGS="$WRITERPERFECT_CFLAGS"
-
-AC_SUBST(WRITERPERFECT_CXXFLAGS)
-AC_SUBST(WRITERPERFECT_LIBS)
 AC_SUBST(DEBUG_CXXFLAGS)
 
 AC_OUTPUT([

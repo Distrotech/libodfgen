@@ -36,14 +36,16 @@
 #include "DocumentElement.hxx"
 #include "TextRunStyle.hxx"
 #include "FontStyle.hxx"
-#include "GraphicsStyle.hxx"
 #include "ListStyle.hxx"
 #include "PageSpan.hxx"
 #include "SectionStyle.hxx"
 #include "TableStyle.hxx"
 #include "FilterInternal.hxx"
 #include "WriterProperties.hxx"
+#ifdef USE_LIBWPG
+#include "GraphicsStyle.hxx"
 #include "OdgExporter.hxx"
+#endif
 #include "InternalHandler.hxx"
 
 _WriterDocumentState::_WriterDocumentState() :
@@ -1234,6 +1236,7 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 
 	if (propList["libwpd:mimetype"]->getStr() == "image/x-wpg")
 	{
+#ifdef USE_LIBWPG
 		std::vector<DocumentElement *> tmpContentElements;
 		InternalHandler tmpHandler(&tmpContentElements);
 		OdgExporter exporter(&tmpHandler, true);
@@ -1250,6 +1253,7 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 				mpCurrentContentElements->push_back(*iter);
 			mpCurrentContentElements->push_back(new TagCloseElement("draw:object"));
 		}
+#endif
 	}
 	else
 	{

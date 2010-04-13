@@ -1,8 +1,30 @@
+if USE_LIBWPG
+
+writerperfect_wpg_sources = \
+	GraphicsStyle.cxx		\
+	GraphicsStyle.hxx		\
+	OdgExporter.cxx			\
+	OdgExporter.hxx
+
+writerperfect_wpg_cxxflags = \
+	$(WRITERPERFECTWPG_CXXFLAGS)
+	
+writerperfect_wpg_ldflags = \
+	$(WRITERPERFECTWPG_LIBS)
+
+else
+
+writerperfect_wpg_sources = 
+writerperfect_wpg_cxxflags =
+writerperfect_wpg_ldflags =
+
+endif
+	
 noinst_LTLIBRARIES = libwriterperfect-1.la
 
-AM_CXXFLAGS = $(WRITERPERFECT_CXXFLAGS) $(DEBUG_CXXFLAGS)
+AM_CXXFLAGS = $(WRITERPERFECTCORE_CXXFLAGS) $(writerperfect_wpg_cxxflags) $(DEBUG_CXXFLAGS)
 
-libwriterperfect_1_la_LIBADD  = $(WRITERPERFECT_LIBS)
+libwriterperfect_1_la_LIBADD  = $(WRITERPERFECTCORE_LIBS) $(writerperfect_wpg_ldflags)
 libwriterperfect_1_la_SOURCES =		\
 	FilterInternal.hxx		\
 	Style.hxx			\
@@ -12,14 +34,10 @@ libwriterperfect_1_la_SOURCES =		\
 	DocumentHandler.hxx		\
 	FontStyle.cxx			\
 	FontStyle.hxx			\
-	GraphicsStyle.cxx		\
-	GraphicsStyle.hxx		\
 	InternalHandler.cxx		\
 	InternalHandler.hxx		\
 	ListStyle.cxx			\
 	ListStyle.hxx			\
-	OdgExporter.cxx			\
-	OdgExporter.hxx			\
 	PageSpan.cxx			\
 	PageSpan.hxx			\
 	SectionStyle.cxx 		\
@@ -29,4 +47,6 @@ libwriterperfect_1_la_SOURCES =		\
 	TextRunStyle.cxx 		\
 	TextRunStyle.hxx		\
 	WordPerfectCollector.cxx 	\
-	WordPerfectCollector.hxx 
+	WordPerfectCollector.hxx	\
+	$(writerperfect_wpg_sources)	
+

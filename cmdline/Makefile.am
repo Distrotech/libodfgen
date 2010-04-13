@@ -1,9 +1,27 @@
-bin_PROGRAMS = wpd2odt wpg2odg
+if USE_LIBWPG
+writerperfectwpg_program = wpg2odg
+writerperfectwpg_cxxflags = $(WRITERPERFECTWPG_CXXFLAGS)
+writerperfectwpg_ldadd = $(WRITERPERFECTWPG_LIBS)
+else
+writerperfectwpg_program =
+writerperfectwpg_cxxflags =
+writerperfectwpg_ldadd =
+endif
 
-AM_CXXFLAGS = $(WRITERPERFECT_CXXFLAGS) $(DEBUG_CXXFLAGS) -I$(top_srcdir)/filter -I$(top_srcdir)
+bin_PROGRAMS = wpd2odt $(writerperfectwpg_program)
+
+if USE_GSF_OUTPUT
+writerperfectgsf_cxxflags = $(WRITERPERFECTGSF_CXXFLAGS)
+writerperfectgsf_ldadd = $(WRITERPERFECTGSF_LIBS)
+else
+writerperfectgsf_cxxflags =
+writerperfectgsf_ldadd =
+endif
+
+AM_CXXFLAGS = $(WRITERPERFECTCORE_CXXFLAGS) $(writerperfectgsf_cxxflags) $(writerperfectwpg_cxxflags) $(DEBUG_CXXFLAGS) -I$(top_srcdir)/filter -I$(top_srcdir)
 
 wpd2odt_DEPENDENCIES = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
-wpd2odt_LDADD = $(WRITERPERFECT_LIBS) @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
+wpd2odt_LDADD = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la $(WRITERPERFECTCORE_LIBS) $(writerperfectwpg_ldadd) $(writerperfectgsf_ldadd)
 if STATIC_TOOLS
 wpd2odt_LDFLAGS = -all-static
 endif
@@ -20,7 +38,7 @@ wpd2odt_SOURCES = \
 	wpd2odt.cxx
 
 wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
-wpg2odg_LDADD = $(WRITERPERFECT_LIBS) @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
+wpg2odg_LDADD = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la $(WRITERPERFECTCORE_LIBS) $(writerperfectwpg_ldadd) $(writerperfectgsf_ldadd)
 if STATIC_TOOLS
 wpg2odg_LDFLAGS = -all-static
 endif
