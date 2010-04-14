@@ -89,14 +89,15 @@ AM_CONDITIONAL(USE_GSF_OUTPUT, test "x$test_libgsf" = "xtrue")
 
 test_libwpg=true
 AC_ARG_WITH(libwpg,
-	[  --with-libwpg           Use libwpg for conversion of WordPerfect Graphics],
-	if test "x$withval" != xyes; then
+	[  --without-libwpg        Do not use libwpg for conversion of WordPerfect Graphics (embedded images will not be converted)],
+	if test "x$withval" = xno; then
 		test_libwpg=false
-		AC_DEFINE([USE_LIBWPG], [1], [Whether to use libwpg for conversion of WordPerfect Graphics])
 	fi
 )
 
 if test "x$test_libwpg" = "xtrue"; then
+
+	AC_DEFINE([USE_LIBWPG], [1], [Whether to use libwpg for conversion of WordPerfect Graphics])
 
     PKG_CHECK_MODULES(WRITERPERFECTWPG,[
         libwpg-0.2 >= $LIBWPG_REQUIRED_VERSION

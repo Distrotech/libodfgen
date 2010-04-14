@@ -28,6 +28,10 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <libwpd/libwpd.h>
 #include <string.h> // for strcmp
 #include <string>
