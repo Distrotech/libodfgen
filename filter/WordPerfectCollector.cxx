@@ -1243,7 +1243,7 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 #ifdef USE_LIBWPG
 		std::vector<DocumentElement *> tmpContentElements;
 		InternalHandler tmpHandler(&tmpContentElements);
-		OdgExporter exporter(&tmpHandler, true);
+		OdgExporter exporter(&tmpHandler, ODG_FLAT_XML);
 		
 		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
 		

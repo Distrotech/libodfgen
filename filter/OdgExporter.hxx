@@ -34,9 +34,11 @@
 #include "DocumentElement.hxx"
 #include "DocumentHandler.hxx"
 
+enum OdgStreamType { ODG_FLAT_XML, ODG_CONTENT_XML, ODG_STYLES_XML, ODG_SETTINGS_XML, ODG_META_XML };
+
 class OdgExporter : public libwpg::WPGPaintInterface {
 public:
-	OdgExporter(DocumentHandler *pHandler, const bool isFlatXML = false);
+	OdgExporter(DocumentHandler *pHandler, const OdgStreamType streamType);
 	~OdgExporter();
 
 	void startGraphics(const ::WPXPropertyList &propList);
@@ -79,7 +81,7 @@ private:
 	double mfWidth;
 	double mfHeight;
 
-	const bool mbIsFlatXML;
+	const OdgStreamType mxStreamType;
 };
 
 #endif // __ODGEXPORTER_HXX__
