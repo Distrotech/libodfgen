@@ -1229,9 +1229,9 @@ void WordPerfectCollector::closeFrame()
 	mWriterDocumentStates.top().mbInFrame = false;
 }
 
-void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &object)
+void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &data)
 {
-	if (!object.size())
+	if (!data.size())
 		return;
 	if (!mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
@@ -1247,10 +1247,10 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 		
 		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
 		
-		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(object.getDataStream())))
+		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(data.getDataStream())))
 			fileFormat = libwpg::WPG_WPG1;
 
-		if (libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(object.getDataStream()), &exporter, fileFormat) && !tmpContentElements.empty())
+		if (libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat) && !tmpContentElements.empty())
 		{
 			mpCurrentContentElements->push_back(new TagOpenElement("draw:object"));
 			for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); iter++)
@@ -1265,7 +1265,7 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 		
 		mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
 		
-		WPXString binaryBase64Data = object.getBase64Data();
+		WPXString binaryBase64Data = data.getBase64Data();
 		
 		mpCurrentContentElements->push_back(new CharDataElement(binaryBase64Data.cstr()));
 		

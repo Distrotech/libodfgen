@@ -154,7 +154,8 @@ public:
 	virtual void openFrame(const WPXPropertyList & propList);
 	virtual void closeFrame();
 	
-	virtual void insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &object);
+	virtual void insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &data);
+	virtual void insertEquation(const WPXPropertyList & /* propList */, const WPXString & /* data */) {}
 
 protected:
 	void _resetDocumentState();
