@@ -31,7 +31,7 @@ const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
 const char manifestStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 		"<manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\">"
-		" <manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.drawing\" manifest:version=\"1.2\" manifest:full-path=\"/\"/>"
+		" <manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.graphics\" manifest:version=\"1.0\" manifest:full-path=\"/\"/>"
 		" <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>"
 		" <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"settings.xml\"/>"
 		" <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>"
@@ -55,7 +55,7 @@ private:
 		return true;		
 	}
 
-	bool _convertDocument(WPXInputStream *input, const char * /* password */, DocumentHandler *handler, OdgStreamType streamType)
+	bool _convertDocument(WPXInputStream *input, const char * /* password */, DocumentHandler *handler, OdfStreamType streamType)
 	{
 		OdgExporter exporter(handler, streamType);
 		return libwpg::WPGraphics::parse(input, &exporter);
@@ -112,19 +112,19 @@ int main (int argc, char *argv[])
 		return 1;
 	}
 	
-	if (szOutFile && !helper.writeConvertedContent("settings.xml", szInputFile, ODG_SETTINGS_XML))
+	if (szOutFile && !helper.writeConvertedContent("settings.xml", szInputFile, ODF_SETTINGS_XML))
 	{
 		fprintf(stderr, "ERROR : Couldn't write document settings\n");
 		return 1;
 	}
 	
-	if (szOutFile && !helper.writeConvertedContent("styles.xml", szInputFile, ODG_STYLES_XML))
+	if (szOutFile && !helper.writeConvertedContent("styles.xml", szInputFile, ODF_STYLES_XML))
 	{
 		fprintf(stderr, "ERROR : Couldn't write document styles\n");
 		return 1;
 	}
 	
-	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODG_CONTENT_XML : ODG_FLAT_XML)) 
+	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODF_CONTENT_XML : ODF_FLAT_XML)) 
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
 	        return 1;

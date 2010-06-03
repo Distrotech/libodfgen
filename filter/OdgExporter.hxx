@@ -33,12 +33,11 @@
 #include <libwpg/libwpg.h>
 #include "DocumentElement.hxx"
 #include "DocumentHandler.hxx"
-
-enum OdgStreamType { ODG_FLAT_XML, ODG_CONTENT_XML, ODG_STYLES_XML, ODG_SETTINGS_XML, ODG_META_XML };
+#include "FilterInternal.hxx"
 
 class OdgExporter : public libwpg::WPGPaintInterface {
 public:
-	OdgExporter(DocumentHandler *pHandler, const OdgStreamType streamType);
+	OdgExporter(DocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdgExporter();
 
 	void startGraphics(const ::WPXPropertyList &propList);
@@ -81,7 +80,7 @@ private:
 	double mfWidth;
 	double mfHeight;
 
-	const OdgStreamType mxStreamType;
+	const OdfStreamType mxStreamType;
 };
 
 #endif // __ODGEXPORTER_HXX__

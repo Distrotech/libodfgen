@@ -35,7 +35,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-OdgExporter::OdgExporter(DocumentHandler *pHandler, const OdgStreamType streamType):
+OdgExporter::OdgExporter(DocumentHandler *pHandler, const OdfStreamType streamType):
 	mpHandler(pHandler),
 	miGradientIndex(1),
 	miDashIndex(1), 
@@ -82,13 +82,19 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 	mfWidth = 0.0;
 	mfHeight = 0.0;
 
+	if (propList["svg:width"])
+		mfWidth = propList["svg:width"]->getDouble();
+
+	if (propList["svg:height"])
+		mfHeight = propList["svg:height"]->getDouble();
+
 	mpHandler->startDocument();
 	TagOpenElement tmpOfficeDocumentContent(
-		(mxStreamType == ODG_FLAT_XML) ? "office:document" : (
-		(mxStreamType == ODG_CONTENT_XML) ? "office:document-content" : (
-		(mxStreamType == ODG_STYLES_XML) ? "office:document-styles" : (
-		(mxStreamType == ODG_SETTINGS_XML) ? "office:document-settings" : (
-		(mxStreamType == ODG_META_XML) ? "office:document-meta" : "office:document" )))));
+		(mxStreamType == ODF_FLAT_XML) ? "office:document" : (
+		(mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
+		(mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
+		(mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
+		(mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
 	tmpOfficeDocumentContent.addAttribute("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
@@ -99,11 +105,11 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 	tmpOfficeDocumentContent.addAttribute("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
 	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
-	if (mxStreamType == ODG_FLAT_XML)
+	if (mxStreamType == ODF_FLAT_XML)
 		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");	
 	tmpOfficeDocumentContent.write(mpHandler);
 	
-	if ((mxStreamType == ODG_FLAT_XML) || (mxStreamType == ODG_SETTINGS_XML))
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_SETTINGS_XML))
 	{
 		TagOpenElement("office:settings").write(mpHandler);
 	
@@ -128,8 +134,6 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpHandler);
-		if (propList["svg:width"])
-			mfWidth = propList["svg:width"]->getDouble();
 		WPXString sWidth; sWidth.sprintf("%li", (unsigned long)(2540 * mfWidth));
 		mpHandler->characters(sWidth);
 		mpHandler->endElement("config:config-item");
@@ -137,8 +141,6 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpHandler);
-		if (propList["svg:height"])
-			mfHeight = propList["svg:height"]->getDouble();
 		WPXString sHeight; sHeight.sprintf("%li", (unsigned long)(2540 * mfHeight));
 		mpHandler->characters(sHeight);
 		mpHandler->endElement("config:config-item");
@@ -151,7 +153,7 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 
 void OdgExporter::endGraphics()
 {
-	if ((mxStreamType == ODG_FLAT_XML) || (mxStreamType == ODG_STYLES_XML))
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_STYLES_XML))
 	{
 		TagOpenElement("office:styles").write(mpHandler);
 
@@ -171,17 +173,23 @@ void OdgExporter::endGraphics()
 	}
 
 	
-	if ((mxStreamType == ODG_FLAT_XML) || (mxStreamType == ODG_CONTENT_XML))
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_CONTENT_XML) || (mxStreamType == ODF_STYLES_XML))
 	{
 		TagOpenElement("office:automatic-styles").write(mpHandler);
+	}
 
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_CONTENT_XML))
+	{
 		// writing out the graphics automatic styles
 		for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
 			iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++)
 		{
 			(*iterGraphicsAutomaticStyles)->write(mpHandler);
 		}
+	}
 
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_STYLES_XML))
+	{
 		TagOpenElement tmpStylePageLayoutOpenElement("style:page-layout");
 		tmpStylePageLayoutOpenElement.addAttribute("style:name", "PM0");
 		tmpStylePageLayoutOpenElement.write(mpHandler);
@@ -216,10 +224,15 @@ void OdgExporter::endGraphics()
 		mpHandler->endElement("style:drawing-page-properties");
 
 		mpHandler->endElement("style:style");
+	}
 	
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_CONTENT_XML) || (mxStreamType == ODF_STYLES_XML))
+	{
 		mpHandler->endElement("office:automatic-styles");
+	}
 
-
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_STYLES_XML))
+	{
 		TagOpenElement("office:master-styles").write(mpHandler);
 
 		TagOpenElement tmpStyleMasterPageOpenElement("style:master-page");
@@ -231,7 +244,10 @@ void OdgExporter::endGraphics()
 		mpHandler->endElement("style:master-page");
 
 		mpHandler->endElement("office:master-styles");
-
+	}
+	
+	if ((mxStreamType == ODF_FLAT_XML) || (mxStreamType == ODF_CONTENT_XML))
+	{
 		TagOpenElement("office:body").write(mpHandler);
 
 		TagOpenElement("office:drawing").write(mpHandler);
@@ -254,11 +270,11 @@ void OdgExporter::endGraphics()
 	}
 
 	mpHandler->endElement(
-		(mxStreamType == ODG_FLAT_XML) ? "office:document" : (
-		(mxStreamType == ODG_CONTENT_XML) ? "office:document-content" : (
-		(mxStreamType == ODG_STYLES_XML) ? "office:document-styles" : (
-		(mxStreamType == ODG_SETTINGS_XML) ? "office:document-settings" : (
-		(mxStreamType == ODG_META_XML) ? "office:document-meta" : "office:document" )))));
+		(mxStreamType == ODF_FLAT_XML) ? "office:document" : (
+		(mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
+		(mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
+		(mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
+		(mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
 
 	mpHandler->endDocument();
 }

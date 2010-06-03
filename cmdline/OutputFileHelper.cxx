@@ -180,7 +180,7 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 #endif
 }
 
-bool OutputFileHelper::writeConvertedContent(const char *childFileName, const char *inFileName, const OdgStreamType streamType)
+bool OutputFileHelper::writeConvertedContent(const char *childFileName, const char *inFileName, const OdfStreamType streamType)
 {
 	WPXFileStream input(inFileName);
 
@@ -208,7 +208,7 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 	else
 	        pHandler = new StdOutHandler();
 
-	bool bRetVal = _convertDocument(&input, m_impl->mpPassword, pHandler, m_impl->mpOutfile ? streamType : ODG_FLAT_XML);
+	bool bRetVal = _convertDocument(&input, m_impl->mpPassword, pHandler, m_impl->mpOutfile ? streamType : ODF_FLAT_XML);
 
 #ifdef USE_GSF_OUTPUT
 	if (pContentChild)

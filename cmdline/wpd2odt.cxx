@@ -142,7 +142,7 @@ private:
 		return true;
 	}
 
-	bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const OdgStreamType streamType)
+	bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const OdfStreamType streamType)
 	{
 		WordPerfectCollector collector(input, password, handler, streamType);
 		return collector.filter();
@@ -216,7 +216,7 @@ int main (int argc, char *argv[])
 		return 1;
 	}
 
-	if (!helper.writeConvertedContent("content.xml", szInputFile, ODG_CONTENT_XML)) 
+	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODF_CONTENT_XML : ODF_FLAT_XML)) 
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
 	        return 1;

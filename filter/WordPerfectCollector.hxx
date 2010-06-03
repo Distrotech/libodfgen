@@ -31,6 +31,7 @@
 #ifndef _WORDPERFECTCOLLECTOR_H
 #define _WORDPERFECTCOLLECTOR_H
 #include "SectionStyle.hxx"
+#include "FilterInternal.hxx"
 
 #include <libwpd/libwpd.h>
 #include <vector>
@@ -93,7 +94,7 @@ struct ltstr
 class WordPerfectCollector : public WPXDocumentInterface
 {
 public:
-	WordPerfectCollector(WPXInputStream *pInput, const char * password, DocumentHandler *pHandler, const bool isFlatXML = false);
+	WordPerfectCollector(WPXInputStream *pInput, const char * password, DocumentHandler *pHandler, const OdfStreamType streamType);
 	virtual ~WordPerfectCollector();
 	bool filter();
 
@@ -225,7 +226,7 @@ private:
 	// table state
 	TableStyle *mpCurrentTableStyle;
 
-	const bool mbIsFlatXML;
+	const OdfStreamType mxStreamType;
 	
 	const char * mpPassword;
 };

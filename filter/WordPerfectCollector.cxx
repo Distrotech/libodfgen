@@ -75,7 +75,7 @@ _WriterListState::_WriterListState() :
 {
 }
 
-WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, const char * password, DocumentHandler *pHandler, const bool isFlatXML) :
+WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, const char * password, DocumentHandler *pHandler, const OdfStreamType streamType) :
 	mpInput(pInput),
 	mpHandler(pHandler),
 	mbUsed(false),
@@ -87,7 +87,7 @@ WordPerfectCollector::WordPerfectCollector(WPXInputStream *pInput, const char * 
 	mpCurrentPageSpan(NULL),
 	miNumPageStyles(0),
 	miObjectNumber(0),
-	mbIsFlatXML(isFlatXML),
+	mxStreamType(streamType),
 	mpPassword(password)
 {
 	mWriterDocumentStates.push(WriterDocumentState());
@@ -304,7 +304,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 	docContentPropList.insert("xmlns:script", "urn:oasis:names:tc:opendocument:xmlns:script:1.0");
 	docContentPropList.insert("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
 	docContentPropList.insert("office:version", "1.0");
-	if (mbIsFlatXML)
+	if (mxStreamType == ODF_FLAT_XML)
 	{
 		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");
 		mpHandler->startElement("office:document", docContentPropList);
@@ -399,7 +399,7 @@ bool WordPerfectCollector::_writeTargetDocument(DocumentHandler *pHandler)
 
 	pHandler->endElement("office:text");
 	pHandler->endElement("office:body");
-	if (mbIsFlatXML)
+	if (mxStreamType == ODF_FLAT_XML)
 		pHandler->endElement("office:document");
 	else
 		pHandler->endElement("office:document-content");
@@ -1243,7 +1243,7 @@ void WordPerfectCollector::insertBinaryObject(const WPXPropertyList &propList, c
 #ifdef USE_LIBWPG
 		std::vector<DocumentElement *> tmpContentElements;
 		InternalHandler tmpHandler(&tmpContentElements);
-		OdgExporter exporter(&tmpHandler, ODG_FLAT_XML);
+		OdgExporter exporter(&tmpHandler, ODF_FLAT_XML);
 		
 		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
 		
