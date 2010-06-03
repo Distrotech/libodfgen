@@ -20,6 +20,8 @@
 #ifndef _OUTPUTFILEHELPER_HXX
 #define _OUTPUTFILEHELPER_HXX
 
+#include <OdgExporter.hxx>
+
 class DocumentHandler;
 class WPXInputStream;
 class OutputFileHelperImpl;
@@ -32,11 +34,11 @@ public:
 
 	bool writeChildFile(const char *childFileName, const char *str);
 	bool writeChildFile(const char *childFileName, const char *str, const char compression_level);
-	bool writeConvertedContent(const char *childFileName, const char *inFileName);
+	bool writeConvertedContent(const char *childFileName, const char *inFileName, const OdgStreamType streamType);
 
 private:
 	virtual bool _isSupportedFormat(WPXInputStream *input, const char *password) = 0;
-	virtual bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const bool isFlatXML) = 0;
+	virtual bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const OdgStreamType streamType) = 0;
 	OutputFileHelperImpl* m_impl;
 };
 

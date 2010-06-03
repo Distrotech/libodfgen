@@ -249,7 +249,7 @@ public:
 		FemtoZipEntry* entry = entryList;
 		while(entry && (errorCode == FemtoZip::NoError))
 		{
-			FZ_DEBUG(("central directory: entry for %s", entry->name));
+			FZ_DEBUG(("central directory: entry for %s\n", entry->name));
 			size_t namelen = strlen(entry->name);
 
 			/*

@@ -180,7 +180,7 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 #endif
 }
 
-bool OutputFileHelper::writeConvertedContent(const char *childFileName, const char *inFileName)
+bool OutputFileHelper::writeConvertedContent(const char *childFileName, const char *inFileName, const OdgStreamType streamType)
 {
 	WPXFileStream input(inFileName);
 
@@ -190,7 +190,6 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 	input.seek(0, WPX_SEEK_SET);
 
 	DocumentHandler *pHandler;
-	bool tmpIsFlatXML = true;
 #ifdef USE_GSF_OUTPUT
 	GsfOutput *pContentChild = NULL;
 	if (m_impl->mpOutfile)
@@ -205,12 +204,11 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 			return false;
 		pHandler = new DiskDocumentHandler(m_impl->mpOutfile);
 #endif
-		tmpIsFlatXML = false;
 	}
 	else
 	        pHandler = new StdOutHandler();
 
-	bool bRetVal = _convertDocument(&input, m_impl->mpPassword, pHandler, tmpIsFlatXML);
+	bool bRetVal = _convertDocument(&input, m_impl->mpPassword, pHandler, m_impl->mpOutfile ? streamType : ODG_FLAT_XML);
 
 #ifdef USE_GSF_OUTPUT
 	if (pContentChild)

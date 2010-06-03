@@ -142,9 +142,9 @@ private:
 		return true;
 	}
 
-	bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, bool isFlatXML)
+	bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const OdgStreamType streamType)
 	{
-		WordPerfectCollector collector(input, password, handler, isFlatXML);
+		WordPerfectCollector collector(input, password, handler, streamType);
 		return collector.filter();
 	}
 };
@@ -216,7 +216,7 @@ int main (int argc, char *argv[])
 		return 1;
 	}
 
-	if (!helper.writeConvertedContent("content.xml", szInputFile)) 
+	if (!helper.writeConvertedContent("content.xml", szInputFile, ODG_CONTENT_XML)) 
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
 	        return 1;

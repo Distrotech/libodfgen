@@ -251,10 +251,16 @@ void OdgExporter::endGraphics()
 		mpHandler->endElement("draw:page");
 		mpHandler->endElement("office:drawing");
 		mpHandler->endElement("office:body");
-		mpHandler->endElement("office:document");
-
-		mpHandler->endDocument();
 	}
+
+	mpHandler->endElement(
+		(mxStreamType == ODG_FLAT_XML) ? "office:document" : (
+		(mxStreamType == ODG_CONTENT_XML) ? "office:document-content" : (
+		(mxStreamType == ODG_STYLES_XML) ? "office:document-styles" : (
+		(mxStreamType == ODG_SETTINGS_XML) ? "office:document-settings" : (
+		(mxStreamType == ODG_META_XML) ? "office:document-meta" : "office:document" )))));
+
+	mpHandler->endDocument();
 }
 
 void OdgExporter::setStyle(const ::WPXPropertyListVector& gradient, const ::WPXPropertyList & propList)
