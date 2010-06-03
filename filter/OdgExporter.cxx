@@ -305,7 +305,7 @@ void OdgExporter::drawEllipse(const ::WPXPropertyList &propList)
 		sValue.append("translate("); sValue.append(doubleToString(propList["svg:cx"]->getDouble() - propList["svg:rx"]->getDouble() - deltax));
 		sValue.append("in, ");
 		sValue.append(doubleToString(propList["svg:cy"]->getDouble() - propList["svg:ry"]->getDouble() - deltay)); sValue.append("in)");
-		pDrawEllipseElement->addAttribute("svg:transform", sValue);
+		pDrawEllipseElement->addAttribute("draw:transform", sValue);
 	}
 	else
 	{
