@@ -610,12 +610,14 @@ void OdgExporter::writeGraphicsStyle()
 
 		if(mxStyle["libwpg:stroke-solid"] && mxStyle["libwpg:stroke-solid"]->getInt())
 			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "solid");
+#if 0
 		else
 		{
 			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "dash");
 			sValue.sprintf("Dash_%i", miDashIndex-1);
 			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke-dash", sValue);
 		}
+#endif
 	}
 	else
 		pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "none");
@@ -633,11 +635,14 @@ void OdgExporter::writeGraphicsStyle()
 	}
 
 	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
-	{
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "gradient");
-		sValue.sprintf("Gradient_%i", miGradientIndex-1);
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill-gradient-name", sValue);
-	}
+		if (mxGradient.count() >= 2)
+		{
+			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "gradient");
+			sValue.sprintf("Gradient_%i", miGradientIndex-1);
+			pStyleGraphicsPropertiesElement->addAttribute("draw:fill-gradient-name", sValue);
+		}
+		else
+			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "none");
 
 	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
 	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
