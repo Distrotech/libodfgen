@@ -47,14 +47,15 @@ public:
 	void startEmbeddedGraphics(const ::WPXPropertyList& /*propList*/) {}
 	void endEmbeddedGraphics() {}
 
-	void setStyle(const ::WPXPropertyListVector& gradient, const ::WPXPropertyList &propList);
+	void setStyle(const ::WPXPropertyList &propList, const ::WPXPropertyListVector& gradient);
 
 	void drawRectangle(const ::WPXPropertyList &propList);
 	void drawEllipse(const ::WPXPropertyList &propList);
 	void drawPolyline(const ::WPXPropertyListVector& vertices);
 	void drawPolygon(const ::WPXPropertyListVector& vertices);
 	void drawPath(const ::WPXPropertyListVector& path);
-	void drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
+	void drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
+	void drawTextLine(const ::WPXPropertyList &propList, const ::WPXString& str);
 
 private:
 	void writeGraphicsStyle();

@@ -279,7 +279,7 @@ void OdgExporter::endGraphics()
 	mpHandler->endDocument();
 }
 
-void OdgExporter::setStyle(const ::WPXPropertyListVector& gradient, const ::WPXPropertyList & propList)
+void OdgExporter::setStyle(const ::WPXPropertyList & propList, const ::WPXPropertyListVector& gradient)
 {
 	mxStyle = propList;
 	mxGradient = gradient;
@@ -511,7 +511,7 @@ void OdgExporter::drawPath(const WPXPropertyListVector& path)
 	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
-void OdgExporter::drawImageObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData)
+void OdgExporter::drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData)
 {
 	if (!propList["libwpg:mime-type"] && propList["libwpg:mime-type"]->getStr().len() <= 0)
 		return;
@@ -541,6 +541,10 @@ void OdgExporter::drawImageObject(const ::WPXPropertyList &propList, const ::WPX
 	mBodyElements.push_back(new TagCloseElement("draw:image"));
 	
 	mBodyElements.push_back(new TagCloseElement("draw:frame"));
+}
+
+void OdgExporter::drawTextLine(const ::WPXPropertyList &propList, const ::WPXString &str)
+{
 }
 
 void OdgExporter::writeGraphicsStyle()
