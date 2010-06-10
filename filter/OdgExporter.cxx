@@ -543,10 +543,6 @@ void OdgExporter::drawGraphicObject(const ::WPXPropertyList &propList, const ::W
 	mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
-void OdgExporter::drawTextLine(const ::WPXPropertyList &propList, const ::WPXString &str)
-{
-}
-
 void OdgExporter::writeGraphicsStyle()
 {
 #if 0

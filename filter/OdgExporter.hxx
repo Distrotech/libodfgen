@@ -55,7 +55,13 @@ public:
 	void drawPolygon(const ::WPXPropertyListVector& vertices);
 	void drawPath(const ::WPXPropertyListVector& path);
 	void drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
-	void drawTextLine(const ::WPXPropertyList &propList, const ::WPXString& str);
+	void startTextObject(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &path) {}
+	void endTextObject() {}
+	void startTextLine(const ::WPXPropertyList &propList) {}
+	void endTextLine() {}
+	void startTextSpan(const ::WPXPropertyList &propList) {}
+	void endTextSpan() {}
+	void insertText(const ::WPXString &str) {}
 
 private:
 	void writeGraphicsStyle();
