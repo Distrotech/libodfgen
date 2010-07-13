@@ -1074,6 +1074,12 @@ void WordPerfectCollector::insertLineBreak()
 	mpCurrentContentElements->push_back(new TagCloseElement("text:line-break"));
 }
 
+void WordPerfectCollector::insertPageNumber(const WPXPropertyList &propList)
+{
+	mpCurrentContentElements->push_back(new TagOpenElement("text:page-number"));
+	mpCurrentContentElements->push_back(new TagCloseElement("text:page-number"));
+}
+
 void WordPerfectCollector::insertText(const WPXString &text)
 {
 	DocumentElement *pText = new TextElement(text);
