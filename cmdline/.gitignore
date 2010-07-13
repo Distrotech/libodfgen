@@ -5,3 +5,4 @@ Makefile.in
 wp?2od?
 wp?2od?.rc
 wp?2od?-win32res.lo
+*.o
