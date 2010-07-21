@@ -93,6 +93,9 @@ void ParagraphStyle::write(DocumentHandler *pHandler) const
 			propList.insert("fo:text-align", i()->getStr());
 		if (strcmp(i.key(), "fo:text-align-last") == 0)
 			propList.insert("fo:text-align-last", i()->getStr());
+		if (strcmp(i.key(), "style:page-number") == 0)
+			propList.insert("style:page-number", i()->getStr());
+
 	}
 	
 	propList.insert("style:justify-single-word", "false");

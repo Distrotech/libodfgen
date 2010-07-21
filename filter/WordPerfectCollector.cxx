@@ -54,6 +54,7 @@
 
 _WriterDocumentState::_WriterDocumentState() :
 	mbFirstElement(true),
+        mbFirstParagraphInPageSpan(true),
 	mbInFakeSection(false),
 	mbListElementOpenedAtCurrentLevel(false),
 	mbTableCellOpened(false),
@@ -473,6 +474,8 @@ void WordPerfectCollector::openPageSpan(const WPXPropertyList &propList)
 	mPageSpans.push_back(pPageSpan);
 	mpCurrentPageSpan = pPageSpan;
 	miNumPageStyles++;
+
+	mWriterDocumentStates.top().mbFirstParagraphInPageSpan = true;
 }
 
 void WordPerfectCollector::openHeader(const WPXPropertyList &propList)
@@ -575,12 +578,18 @@ void WordPerfectCollector::openParagraph(const WPXPropertyList &propList, const 
 		pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
 		mTextStyleHash[sParagraphHashKey] = pStyle;
 		mWriterDocumentStates.top().mbFirstElement = false;
+		mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;
  	}
 	else
 	{
-//		WPXString sPageStyleName;
-//		sPageStyleName.sprintf("Page_Style_%i", miNumPageStyles);
-//		pPersistPropList->insert("style:master-page-name", sPageStyleName);
+		if (mWriterDocumentStates.top().mbFirstParagraphInPageSpan && mpCurrentContentElements == &mBodyElements)
+		{
+			WPXString sPageStyleName;
+			sPageStyleName.sprintf("Page_Style_%i", miNumPageStyles);
+			pPersistPropList->insert("style:master-page-name", sPageStyleName);
+			mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;	
+		}
+
 		if (mWriterDocumentStates.top().mbTableCellOpened)
 		{
 			if (mWriterDocumentStates.top().mbHeaderRow)
@@ -1076,7 +1085,9 @@ void WordPerfectCollector::insertLineBreak()
 
 void WordPerfectCollector::insertPageNumber(const WPXPropertyList &propList)
 {
-	mpCurrentContentElements->push_back(new TagOpenElement("text:page-number"));
+	TagOpenElement *pageNumberOpenElement = new TagOpenElement("text:page-number");
+	pageNumberOpenElement->addAttribute("text:select-page", "current");
+	mpCurrentContentElements->push_back(pageNumberOpenElement);
 	mpCurrentContentElements->push_back(new TagCloseElement("text:page-number"));
 }
 
