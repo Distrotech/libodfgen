@@ -842,6 +842,9 @@ void WordPerfectCollector::openListElement(const WPXPropertyList &propList, cons
 	pOpenListElementParagraph->addAttribute("text:style-name", pStyle->getName());
 	mpCurrentContentElements->push_back(pOpenListElementParagraph);
 
+	if (mpCurrentContentElements == &mBodyElements)
+		mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;
+
 	mWriterListStates.top().mbListElementOpened.top() = true;
 	mWriterListStates.top().mbListElementParagraphOpened = true;
 	mWriterListStates.top().mbListContinueNumbering = false;
