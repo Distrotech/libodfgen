@@ -1089,7 +1089,10 @@ void WordPerfectCollector::insertLineBreak()
 void WordPerfectCollector::insertPageNumber(const WPXPropertyList &propList)
 {
 	TagOpenElement *pageNumberOpenElement = new TagOpenElement("text:page-number");
-	pageNumberOpenElement->addAttribute("text:select-page", "current");
+	pageNumberOpenElement->addAttribute("text:select-page", "current"); 
+	if (propList["style:num-format"])
+		pageNumberOpenElement->addAttribute("style:num-format", propList["style:num-format"]->getStr());
+
 	mpCurrentContentElements->push_back(pageNumberOpenElement);
 	mpCurrentContentElements->push_back(new TagCloseElement("text:page-number"));
 }
