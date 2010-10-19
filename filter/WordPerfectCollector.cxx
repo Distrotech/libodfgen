@@ -1088,16 +1088,18 @@ void WordPerfectCollector::insertLineBreak()
 
 void WordPerfectCollector::insertField(const WPXString &type, const WPXPropertyList &propList)
 {
+	if (!type.len())
+		return;
 
-	TagOpenElement *openElement = new TagOpenElement(type.cstr());
-	if (strcmp(type.cstr(), "text:page-number") == 0)
+	TagOpenElement *openElement = new TagOpenElement(type);
+	if (type == "text:page-number")
 		openElement->addAttribute("text:select-page", "current"); 
 
 	if (propList["style:num-format"])
 		openElement->addAttribute("style:num-format", propList["style:num-format"]->getStr());
 
 	mpCurrentContentElements->push_back(openElement);
-	mpCurrentContentElements->push_back(new TagCloseElement(type.cstr()));
+	mpCurrentContentElements->push_back(new TagCloseElement(type));
 }
 
 void WordPerfectCollector::insertText(const WPXString &text)

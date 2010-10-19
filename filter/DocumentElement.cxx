@@ -47,9 +47,9 @@ void TagOpenElement::print() const
 	TagElement::print(); 	
 }
 
-void TagOpenElement::addAttribute(const char *szAttributeName, const WPXString &sAttributeValue)
+void TagOpenElement::addAttribute(const WPXString &szAttributeName, const WPXString &sAttributeValue)
 {
-        maAttrList.insert(szAttributeName, sAttributeValue);
+        maAttrList.insert(szAttributeName.cstr(), sAttributeValue);
 }
 
 void TagCloseElement::write(DocumentHandler *pHandler) const
@@ -63,11 +63,6 @@ void CharDataElement::write(DocumentHandler *pHandler) const
 {
 	WRITER_DEBUG_MSG(("TextElement: write\n"));
 	pHandler->characters(msData);
-}
-
-TextElement::TextElement(const WPXString & sTextBuf) :
-	msTextBuf(sTextBuf, false)
-{
 }
 
 // write: writes a text run, appropriately converting spaces to <text:s>
