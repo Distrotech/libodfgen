@@ -38,10 +38,12 @@ PageSpan::PageSpan(const WPXPropertyList &xPropList) :
 {
 }
 
+namespace {
+	typedef std::vector<DocumentElement *>::iterator DEVIter;
+}
+
 PageSpan::~PageSpan()
 {
-	typedef std::vector<DocumentElement *>::iterator DEVIter;
-
 	if (mpHeaderContent)
 	{
 		for (DEVIter iterHeaderContent = mpHeaderContent->begin();
@@ -101,6 +103,62 @@ double PageSpan::getMarginRight() const
                 return mxPropList["fo:margin-right"]->getDouble();
 
          return 0.0; 
+}
+
+void PageSpan::setHeaderContent(std::vector<DocumentElement *> * pHeaderContent)
+{
+	if (mpHeaderContent)
+	{
+		for (DEVIter iterHeaderContent = mpHeaderContent->begin();
+			iterHeaderContent != mpHeaderContent->end();
+			iterHeaderContent++)
+				delete(*iterHeaderContent);
+		delete mpHeaderContent;
+	}
+
+	mpHeaderContent = pHeaderContent;
+}
+
+void PageSpan::setFooterContent(std::vector<DocumentElement *> * pFooterContent)
+{
+	if (mpFooterContent)
+	{
+		for (DEVIter iterFooterContent = mpFooterContent->begin();
+			iterFooterContent != mpFooterContent->end();
+			iterFooterContent++)
+				delete(*iterFooterContent);
+		delete mpFooterContent;
+	}
+
+	mpFooterContent = pFooterContent;
+}
+
+void PageSpan::setHeaderLeftContent(std::vector<DocumentElement *> * pHeaderContent)
+{
+	if (mpHeaderLeftContent)
+	{
+		for (DEVIter iterHeaderLeftContent = mpHeaderLeftContent->begin();
+			iterHeaderLeftContent != mpHeaderLeftContent->end();
+			iterHeaderLeftContent++)
+				delete(*iterHeaderLeftContent);
+		delete mpHeaderLeftContent;
+	}
+
+	mpHeaderLeftContent = pHeaderContent;
+}
+
+void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> * pFooterContent)
+{
+	if (mpFooterLeftContent)
+	{
+		for (DEVIter iterFooterLeftContent = mpFooterLeftContent->begin();
+			iterFooterLeftContent != mpFooterLeftContent->end();
+			iterFooterLeftContent++)
+				delete(*iterFooterLeftContent);
+		delete mpFooterLeftContent;
+	}
+
+	mpFooterLeftContent = pFooterContent;
 }
 
 void PageSpan::writePageLayout(const int iNum, DocumentHandler *pHandler) const

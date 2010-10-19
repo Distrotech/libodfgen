@@ -43,11 +43,10 @@ public:
 	double getMarginLeft() const;
 	double getMarginRight() const;
 
-	const std::vector<DocumentElement *> * getHeaderContent() const { return mpHeaderContent; }
-	void setHeaderContent(std::vector<DocumentElement *> * pHeaderContent) { mpHeaderContent = pHeaderContent; }
-	void setFooterContent(std::vector<DocumentElement *> * pFooterContent) { mpFooterContent = pFooterContent; }
-	void setHeaderLeftContent(std::vector<DocumentElement *> * pHeaderContent) { mpHeaderLeftContent = pHeaderContent; }
-	void setFooterLeftContent(std::vector<DocumentElement *> * pFooterContent) { mpFooterLeftContent = pFooterContent; }
+	void setHeaderContent(std::vector<DocumentElement *> * pHeaderContent);
+	void setFooterContent(std::vector<DocumentElement *> * pFooterContent);
+	void setHeaderLeftContent(std::vector<DocumentElement *> * pHeaderContent);
+	void setFooterLeftContent(std::vector<DocumentElement *> * pFooterContent);
 protected:
 	void _writeHeaderFooter(const char *headerFooterTagName, const std::vector<DocumentElement *> & headerFooterContent,
 				DocumentHandler *pHandler) const;
