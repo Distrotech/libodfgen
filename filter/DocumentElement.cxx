@@ -65,36 +65,9 @@ void CharDataElement::write(DocumentHandler *pHandler) const
 	pHandler->characters(msData);
 }
 
-// write: writes a text run, appropriately converting spaces to <text:s>
-// elements
 void TextElement::write(DocumentHandler *pHandler) const
 {
 	if (msTextBuf.len() <= 0)
 		return;
-	WPXPropertyList xBlankAttrList;
-        
-	WPXString sTemp;
-
-	int iNumConsecutiveSpaces = 0;
-        WPXString::Iter i(msTextBuf);
-	for (i.rewind(); i.next();) 
-        {
-		if (*(i()) == ASCII_SPACE)
-			iNumConsecutiveSpaces++;
-		else
-			iNumConsecutiveSpaces = 0;
-
-		if (iNumConsecutiveSpaces > 1) {
-			if (sTemp.len() > 0) {
-				pHandler->characters(sTemp);
-				sTemp.clear();
-			}
-			pHandler->startElement("text:s", xBlankAttrList);
-			pHandler->endElement("text:s");
-		}
-		else {
-                        sTemp.append(i());
-		}
-	}
-	pHandler->characters(sTemp);
+	pHandler->characters(msTextBuf);
 }

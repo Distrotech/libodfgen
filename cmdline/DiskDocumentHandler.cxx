@@ -95,7 +95,7 @@ void DiskDocumentHandler::characters(const WPXString &sCharacters)
 		PUTSTRING(">");
 		mbIsTagOpened = false;
 	}
-        WPXString sEscapedCharacters(sCharacters, true);
+	WPXString sEscapedCharacters(sCharacters, true);
 	if (sEscapedCharacters.len() > 0)
 		PUTSTRING(sEscapedCharacters.cstr());
 }

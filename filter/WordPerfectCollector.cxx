@@ -1080,6 +1080,12 @@ void WordPerfectCollector::insertTab()
 	mpCurrentContentElements->push_back(new TagCloseElement("text:tab"));
 }
 
+void WordPerfectCollector::insertSpace()
+{
+	mpCurrentContentElements->push_back(new TagOpenElement("text:s"));
+	mpCurrentContentElements->push_back(new TagCloseElement("text:s"));
+}
+
 void WordPerfectCollector::insertLineBreak()
 {
 	mpCurrentContentElements->push_back(new TagOpenElement("text:line-break"));

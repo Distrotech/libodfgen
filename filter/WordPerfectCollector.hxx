@@ -126,6 +126,7 @@ public:
 	virtual void closeSpan();
 
 	virtual void insertTab();
+	virtual void insertSpace();
 	virtual void insertText(const WPXString &text);
  	virtual void insertLineBreak();
 	virtual void insertField(const WPXString &type, const WPXPropertyList &propList);
