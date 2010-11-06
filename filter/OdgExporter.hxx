@@ -79,7 +79,6 @@ private:
 	DocumentHandler *mpHandler;
 
 	::WPXPropertyList mxStyle;
-	libwpg::WPGDashArray mxDashArray;
 	::WPXPropertyListVector mxGradient;
 	int miGradientIndex;
 	int miDashIndex;
