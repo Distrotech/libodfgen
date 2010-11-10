@@ -6,7 +6,7 @@ EXTRA_DIST = \
 	writerperfect-zip.in \
 	autogen.sh \
 	config.h.in \
-	CHANGES README
+	NEWS README
 
 distclean-local:
 	rm -rf *.cache *~ *.out
@@ -17,3 +17,6 @@ rpm: dist
 
 zip: install
 	@sh writerperfect-zip
+
+dist-hook:
+	git log --date=short --pretty="format:@%cd  %an  <%ae>  [%H]%n%n%s%n%n%e%b" | sed -e "s|^\([^@]\)|\t\1|" -e "s|^@||" >$(distdir)/ChangeLog

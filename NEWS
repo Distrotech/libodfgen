@@ -1,4 +1,4 @@
-CHANGES:
+NEWS:
 0.7.0 -> 0.7.1
 - Convert table in foot/endnote into normal text because OOo is not
   supporting tables in foot/endnotes (Fridrich Strba)
