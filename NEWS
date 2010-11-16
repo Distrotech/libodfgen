@@ -1,4 +1,20 @@
 NEWS:
+0.7.x -> 0.8.0
+- Generate ODT instead of SXW file format (wpd2sxw -> wpd2odt)
+- Use this module for the wpg2odg command-line tool in order to prevent
+  code duplication.
+- Support password protected documents in file-format where we know
+  the encryption algorithm (not password cracking !!!)
+- Convert embedded WordPerfect Graphics files inside WordPerfect
+  documents.
+- Convert positionned boxes in WordPerfect documents
+- Convert comments and annotations in WordPerfect documents.
+- Convert graphics in other formats then WPG inside WordPerfect documents.
+- Convert page numbering in WordPerfect documents.
+- Make libgsf dependency optional.
+- Fix a lot of bugs and validity issues with generated ODT/ODG.
+
+
 0.7.0 -> 0.7.1
 - Convert table in foot/endnote into normal text because OOo is not
   supporting tables in foot/endnotes (Fridrich Strba)
