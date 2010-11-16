@@ -13,6 +13,7 @@ NEWS:
 - Convert page numbering in WordPerfect documents.
 - Make libgsf dependency optional.
 - Fix a lot of bugs and validity issues with generated ODT/ODG.
+- Convert embedded text in WPG documents.
 
 
 0.7.0 -> 0.7.1
