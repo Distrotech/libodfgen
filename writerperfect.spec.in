@@ -1,17 +1,22 @@
 %define name writerperfect
 %define version @VERSION@
-%define  RELEASE 1
-%define  release     %{?CUSTOM_RELEASE} %{!?CUSTOM_RELEASE:%RELEASE}
 
 Name: %{name}
 Version: %{version}
-Release: %{release}
-Summary: Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word Perfect Graphics into OpenDocument Drawing formats.
+Release: 0
+Summary: Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word Perfect Graphics into OpenDocument Drawing formats
 Source: ftp://ftp.sourceforge.net/pub/sourceforge/libwpd/%{name}-%{version}.tar.gz
 Group: Applications
 URL: http://libwpd.sf.net/
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 License: LGPL
+BuildRequires: gcc-c++ pkgconfig
+BuildRequires: libwpd-devel >= @LIBWPD_REQUIRED_VERSION@
+BuildRequires: libwpg-devel >= @LIBWPG_REQUIRED_VERSION@
+%if %{!?_without_stream:1}%{?_without_stream:0}
+BuildRequires: glib2-devel >= 2.0.0
+BuildRequires: libgsf-devel >= 1.6.0
+%endif
 
 %description
 Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word Perfect Graphics into OpenDocument Drawing formats.
@@ -19,29 +24,12 @@ Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word P
 %package -n wpd2odt
 Summary: Tool for converting WordPerfect(tm) documents into OpenDocument Text format.
 Group: Applications
-Requires: libwpd >= @LIBWPD_REQUIRED_VERSION@
-Requires: libwpg >= @LIBWPG_REQUIRED_VERSION@
-Requires: glib2 >= 2.0.0
-Requires: libgsf >= 1.6.0
-BuildRequires: libwpd-devel >= @LIBWPD_REQUIRED_VERSION@
-BuildRequires: libwpg-devel >= @LIBWPG_REQUIRED_VERSION@
-BuildRequires: glib2-devel >= 2.0.0
-BuildRequires: libgsf-devel >= 1.6.0
-
 %description -n wpd2odt
 Tool for converting Word Perfect documents into OpenDocument Text format.
 
 %package -n wpg2odg
-Summary: Tool for converting Word Perfect Graphics into OpenDocument Graphics format.
+Summary: Tool for converting Word Perfect Graphics into OpenDocument Graphics format
 Group: Applications
-Requires: libwpg >= @LIBWPG_REQUIRED_VERSION@
-Requires: libwpd >= @LIBWPD_REQUIRED_VERSION@
-Requires: glib2 >= 2.0.0
-Requires: libgsf >= 1.6.0
-BuildRequires: libwpg-devel >= @LIBWPG_REQUIRED_VERSION@
-BuildRequires: libwpd-devel >= @LIBWPD_REQUIRED_VERSION@
-BuildRequires: glib2-devel >= 2.0.0
-BuildRequires: libgsf-devel >= 1.6.0
  
 %description -n wpg2odg
 Tool for converting Word Perfect Graphics into OpenDocument Graphics format.
