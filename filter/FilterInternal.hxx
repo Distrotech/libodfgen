@@ -22,8 +22,8 @@
 #ifndef __FILTERINTERNAL_HXX__
 #define __FILTERINTERNAL_HXX__
 
-#include <stdio.h>
 #ifdef DEBUG
+#include <stdio.h>
 #define WRITER_DEBUG_MSG(M) printf M
 #else
 #define WRITER_DEBUG_MSG(M)

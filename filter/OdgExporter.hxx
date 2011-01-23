@@ -55,11 +55,11 @@ public:
 	void drawPolygon(const ::WPXPropertyListVector& vertices);
 	void drawPath(const ::WPXPropertyListVector& path);
 	void drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData);
-	void startTextObject(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &path) {}
+	void startTextObject(const ::WPXPropertyList & /* propList */, const ::WPXPropertyListVector & /* path */) {}
 	void endTextObject() {}
-	void startTextLine(const ::WPXPropertyList &propList) {}
+	void startTextLine(const ::WPXPropertyList & /* propList */) {}
 	void endTextLine() {}
-	void startTextSpan(const ::WPXPropertyList &propList) {}
+	void startTextSpan(const ::WPXPropertyList & /* propList */) {}
 	void endTextSpan() {}
 	void insertText(const ::WPXString &str) {}
 
