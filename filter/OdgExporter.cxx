@@ -134,14 +134,14 @@ void OdgExporter::startGraphics(const ::WPXPropertyList &propList)
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpHandler);
-		WPXString sWidth; sWidth.sprintf("%i", (unsigned)floor(2540.0 * mfWidth + 0.5));
+		WPXString sWidth; sWidth.sprintf("%li", (unsigned long)(2540 * mfWidth));
 		mpHandler->characters(sWidth);
 		mpHandler->endElement("config:config-item");
 	
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpHandler);
-		WPXString sHeight; sHeight.sprintf("%i", (unsigned)floor(2540.0 * mfHeight + 0.5));
+		WPXString sHeight; sHeight.sprintf("%li", (unsigned long)(2540 * mfHeight));
 		mpHandler->characters(sHeight);
 		mpHandler->endElement("config:config-item");
 	
@@ -468,7 +468,7 @@ void OdgExporter::drawPath(const WPXPropertyListVector& path)
 	pDrawPathElement->addAttribute("svg:width", sValue);
 	sValue = doubleToString(vh); sValue.append("in");
 	pDrawPathElement->addAttribute("svg:height", sValue);
-	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)floor(vw*2540.0+0.5), (unsigned)floor(vh*2540.0+0.5));
+	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)(vw*2540), (unsigned)(vh*2540));
 	pDrawPathElement->addAttribute("svg:viewBox", sValue);
 
     sValue.clear();
@@ -478,29 +478,29 @@ void OdgExporter::drawPath(const WPXPropertyListVector& path)
 		if (path[i]["libwpg:path-action"]->getStr() == "M")
 		{
 			// 2540 is 2.54*1000, 2.54 in = 1 inch
-		    sElement.sprintf("M%i %i", (unsigned)floor((path[i]["svg:x"]->getDouble()-px)*2540.0+0.5),
-				(unsigned)floor((path[i]["svg:y"]->getDouble()-py)*2540.0+0.5));
+		    sElement.sprintf("M%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "L")
 		{
-		    sElement.sprintf("L%i %i", (unsigned)floor((path[i]["svg:x"]->getDouble()-px)*2540.0+0.5),
-				(unsigned)floor((path[i]["svg:y"]->getDouble()-py)*2540.0+0.5));
+		    sElement.sprintf("L%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "C")
 		{			
-			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)floor((path[i]["svg:x1"]->getDouble()-px)*2540.0),
-				(int)floor((path[i]["svg:y1"]->getDouble()-py)*2540.0+0.5), (unsigned)floor((path[i]["svg:x2"]->getDouble()-px)*2540.0+0.5),
-				(int)floor((path[i]["svg:y2"]->getDouble()-py)*2540.0+0.5), (unsigned)floor((path[i]["svg:x"]->getDouble()-px)*2540.0+0.5),
-				(unsigned)floor((path[i]["svg:y"]->getDouble()-py)*2540.0+0.5));
+			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
+				(int)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
+				(int)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "A")
 		{			
-			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)floor((path[i]["svg:rx"]->getDouble())*2540.0+0.5),
-				(int)floor((path[i]["svg:ry"]->getDouble())*2540.0+0.5), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0), 
-				0, 0, (unsigned)floor((path[i]["svg:x"]->getDouble()-px)*2540.0+0.5), (unsigned)floor((path[i]["svg:y"]->getDouble()-py)*2540.0+0.5));
+			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
+				(int)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0), 
+				0, 0, (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "Z" && i >= (path.count() - 1))
