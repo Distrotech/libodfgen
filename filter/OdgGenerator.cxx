@@ -727,3 +727,39 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	miGraphicsStyleIndex++;
 }
 
+void OdgGenerator::startEmbeddedGraphics(WPXPropertyList const&)
+{
+}
+
+void OdgGenerator::endEmbeddedGraphics()
+{
+}
+
+void OdgGenerator::startTextObject(WPXPropertyList const&, WPXPropertyListVector const&)
+{
+}
+
+void OdgGenerator::endTextObject()
+{
+}
+
+void OdgGenerator::startTextLine(WPXPropertyList const&)
+{
+}
+
+void OdgGenerator::endTextLine()
+{
+}
+
+void OdgGenerator::startTextSpan(WPXPropertyList const&)
+{
+}
+
+void OdgGenerator::endTextSpan()
+{
+}
+
+void OdgGenerator::insertText(WPXString const&)
+{
+}
+

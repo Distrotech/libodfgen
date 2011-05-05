@@ -219,57 +219,6 @@ OdtGeneratorPrivate::OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 
 OdtGeneratorPrivate::~OdtGeneratorPrivate()
 {
- 	// clean up the mess we made
- 	WRITER_DEBUG_MSG(("WriterWordPerfect: Cleaning up our mess..\n"));
-
-	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
-	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++) {
-		delete (*iterBody);
-		(*iterBody) = NULL;
-	}
-
-	WRITER_DEBUG_MSG(("Destroying the styles elements\n"));
-	for (std::vector<DocumentElement *>::iterator iterStyles = mStylesElements.begin(); iterStyles != mStylesElements.end(); iterStyles++) {
- 		delete (*iterStyles);
-		(*iterStyles) = NULL; // we may pass over the same element again (in the case of headers/footers spanning multiple pages)
-				      // so make sure we don't do a double del
-	}
-
-	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
-	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin(); iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
-		delete (iterTextStyle->second);
-	}
-	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin(); iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) {
-		delete(iterSpanStyle->second);
-	}
-
-	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin(); iterFont != mFontHash.end(); iterFont++) {
-		delete(iterFont->second);
-	}
-
-	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); iterListStyles++) {
-		delete(*iterListStyles);
-	}
-	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
-		delete(*iterSectionStyles);
-	}
-	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); iterTableStyles++) {
-		delete((*iterTableStyles));
-	}
-
-	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin(); iterPageSpans != mPageSpans.end(); iterPageSpans++) {
-		delete(*iterPageSpans);
-	}
-	for (std::vector<DocumentElement *>::iterator iterFrameStyles = mFrameStyles.begin(); iterFrameStyles != mFrameStyles.end(); iterFrameStyles++) {
-		delete(*iterFrameStyles);
-	}
-	for (std::vector<DocumentElement *>::iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
-		iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); iterFrameAutomaticStyles++) {
-		delete(*iterFrameAutomaticStyles);
-	}
-	for (std::vector<DocumentElement *>::iterator iterMetaData = mMetaData.begin(); iterMetaData != mMetaData.end(); iterMetaData++) {
-		delete(*iterMetaData);
-	}
 }
 
 OdtGenerator::OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
@@ -279,7 +228,6 @@ OdtGenerator::OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 
 OdtGenerator::~OdtGenerator()
 {
-	mpImpl->_writeTargetDocument(mpImpl->mpHandler);
 	if (mpImpl)
 		delete mpImpl;
 }
@@ -1447,6 +1395,69 @@ void OdtGenerator::insertEquation(WPXPropertyList const&, WPXString const&)
 
 void OdtGenerator::endDocument()
 {
+	mpImpl->_writeTargetDocument(mpImpl->mpHandler);
+
+ 	// clean up the mess we made
+ 	WRITER_DEBUG_MSG(("WriterWordPerfect: Cleaning up our mess..\n"));
+
+	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
+	for (std::vector<DocumentElement *>::iterator iterBody = mpImpl->mBodyElements.begin(); iterBody != mpImpl->mBodyElements.end(); iterBody++) {
+		delete (*iterBody);
+		(*iterBody) = NULL;
+	}
+
+	WRITER_DEBUG_MSG(("Destroying the styles elements\n"));
+	for (std::vector<DocumentElement *>::iterator iterStyles = mpImpl->mStylesElements.begin(); iterStyles != mpImpl->mStylesElements.end(); iterStyles++) {
+ 		delete (*iterStyles);
+		(*iterStyles) = NULL; // we may pass over the same element again (in the case of headers/footers spanning multiple pages)
+				      // so make sure we don't do a double del
+	}
+
+	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
+	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mpImpl->mTextStyleHash.begin();
+		iterTextStyle != mpImpl->mTextStyleHash.end(); iterTextStyle++) {
+		delete (iterTextStyle->second);
+	}
+
+	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mpImpl->mSpanStyleHash.begin();
+		iterSpanStyle != mpImpl->mSpanStyleHash.end(); iterSpanStyle++) {
+		delete(iterSpanStyle->second);
+	}
+
+	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mpImpl->mFontHash.begin();
+		iterFont != mpImpl->mFontHash.end(); iterFont++) {
+		delete(iterFont->second);
+	}
+
+	for (std::vector<ListStyle *>::iterator iterListStyles = mpImpl->mListStyles.begin();
+		iterListStyles != mpImpl->mListStyles.end(); iterListStyles++) {
+		delete(*iterListStyles);
+	}
+	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mpImpl->mSectionStyles.begin();
+		iterSectionStyles != mpImpl->mSectionStyles.end(); iterSectionStyles++) {
+		delete(*iterSectionStyles);
+	}
+	for (std::vector<TableStyle *>::iterator iterTableStyles = mpImpl->mTableStyles.begin();
+		iterTableStyles != mpImpl->mTableStyles.end(); iterTableStyles++) {
+		delete((*iterTableStyles));
+	}
+
+	for (std::vector<PageSpan *>::iterator iterPageSpans = mpImpl->mPageSpans.begin();
+		iterPageSpans != mpImpl->mPageSpans.end(); iterPageSpans++) {
+		delete(*iterPageSpans);
+	}
+	for (std::vector<DocumentElement *>::iterator iterFrameStyles = mpImpl->mFrameStyles.begin();
+		iterFrameStyles != mpImpl->mFrameStyles.end(); iterFrameStyles++) {
+		delete(*iterFrameStyles);
+	}
+	for (std::vector<DocumentElement *>::iterator iterFrameAutomaticStyles = mpImpl->mFrameAutomaticStyles.begin();
+		iterFrameAutomaticStyles != mpImpl->mFrameAutomaticStyles.end(); iterFrameAutomaticStyles++) {
+		delete(*iterFrameAutomaticStyles);
+	}
+	for (std::vector<DocumentElement *>::iterator iterMetaData = mpImpl->mMetaData.begin();
+		iterMetaData != mpImpl->mMetaData.end(); iterMetaData++) {
+		delete(*iterMetaData);
+	}
 }
 
 void OdtGenerator::startDocument()
