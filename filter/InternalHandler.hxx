@@ -27,9 +27,9 @@
 #include <libwpd/WPXProperty.h>
 #include <libwpd/WPXString.h>
 #include "DocumentElement.hxx"
-#include "DocumentHandler.hxx"
+#include "OdfDocumentHandler.hxx"
 
-class InternalHandler : public DocumentHandler
+class InternalHandler : public OdfDocumentHandler
 {
 public:
 	InternalHandler(std::vector<DocumentElement *> *elements);

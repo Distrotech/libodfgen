@@ -20,9 +20,9 @@
 #ifndef _OUTPUTFILEHELPER_HXX
 #define _OUTPUTFILEHELPER_HXX
 
-#include <OdgExporter.hxx>
+#include <OdgGenerator.hxx>
 
-class DocumentHandler;
+class OdfDocumentHandler;
 class WPXInputStream;
 class OutputFileHelperImpl;
 
@@ -38,7 +38,7 @@ public:
 
 private:
 	virtual bool _isSupportedFormat(WPXInputStream *input, const char *password) = 0;
-	virtual bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const OdfStreamType streamType) = 0;
+	virtual bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType) = 0;
 	OutputFileHelperImpl* m_impl;
 };
 

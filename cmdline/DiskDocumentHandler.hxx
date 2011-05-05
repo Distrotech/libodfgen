@@ -32,13 +32,13 @@
 #include "FemtoZip.hxx"
 #endif
 
-class DiskDocumentHandler : public DocumentHandler
+class DiskOdfDocumentHandler : public OdfDocumentHandler
 {
   public:
 #ifdef USE_GSF_OUTPUT
-        DiskDocumentHandler(GsfOutput *pOutput);
+        DiskOdfDocumentHandler(GsfOutput *pOutput);
 #else
-        DiskDocumentHandler(FemtoZip *pOutput);
+        DiskOdfDocumentHandler(FemtoZip *pOutput);
 #endif
         virtual void startDocument() {}
         virtual void endDocument();

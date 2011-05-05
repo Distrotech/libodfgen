@@ -41,7 +41,7 @@ void OrderedListStyle::updateListLevel(const int iLevel, const WPXPropertyList &
 	    setListLevel(iLevel, new OrderedListLevelStyle(xPropList));
 }
 
-void OrderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
+void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) const
 {
 	WPXString sLevel;
 	sLevel.sprintf("%i", (iLevel+1));
@@ -95,7 +95,7 @@ void UnorderedListStyle::updateListLevel(const int iLevel, const WPXPropertyList
 		setListLevel(iLevel, new UnorderedListLevelStyle(xPropList));
 }
 
-void UnorderedListLevelStyle::write(DocumentHandler *pHandler, int iLevel) const
+void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) const
 {
 	WPXString sLevel;
 	sLevel.sprintf("%i", (iLevel+1));
@@ -165,7 +165,7 @@ void ListStyle::setListLevel(int iLevel, ListLevelStyle *iListLevelStyle)
 		mppListLevels[iLevel] = iListLevelStyle;
 }
 
-void ListStyle::write(DocumentHandler *pHandler) const
+void ListStyle::write(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement listStyleOpenElement("text:list-style");
 	listStyleOpenElement.addAttribute("style:name", getName());

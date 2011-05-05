@@ -38,7 +38,7 @@ FontStyle::~FontStyle()
 {
 }
 
-void FontStyle::write(DocumentHandler *pHandler) const
+void FontStyle::write(OdfDocumentHandler *pHandler) const
 {        
 	TagOpenElement styleOpen("style:font-face");
 	styleOpen.addAttribute("style:name", getName());

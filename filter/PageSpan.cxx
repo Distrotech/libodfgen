@@ -161,7 +161,7 @@ void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> * pFooterCont
 	mpFooterLeftContent = pFooterContent;
 }
 
-void PageSpan::writePageLayout(const int iNum, DocumentHandler *pHandler) const
+void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const
 {
         WPXPropertyList propList;
         
@@ -192,7 +192,7 @@ void PageSpan::writePageLayout(const int iNum, DocumentHandler *pHandler) const
 }
 
 void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, 
-                                DocumentHandler *pHandler) const
+                                OdfDocumentHandler *pHandler) const
 {
 	int iSpan = 0;
 	(bLastPageSpan) ? iSpan = 1 : iSpan = getSpan();
@@ -259,7 +259,7 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 
 void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
 				  const std::vector<DocumentElement *> & headerFooterContent,
-				  DocumentHandler *pHandler) const
+				  OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement headerFooterOpen(headerFooterTagName);
 	headerFooterOpen.write(pHandler);

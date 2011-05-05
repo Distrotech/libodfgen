@@ -189,20 +189,20 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 
 	input.seek(0, WPX_SEEK_SET);
 
-	DocumentHandler *pHandler;
+	OdfDocumentHandler *pHandler;
 #ifdef USE_GSF_OUTPUT
 	GsfOutput *pContentChild = NULL;
 	if (m_impl->mpOutfile)
 	{
 	        pContentChild = gsf_outfile_new_child(m_impl->mpOutfile, childFileName, FALSE);
-	        pHandler = new DiskDocumentHandler(pContentChild); // WLACH_REFACTORING: rename to DiskHandler
+	        pHandler = new DiskOdfDocumentHandler(pContentChild); // WLACH_REFACTORING: rename to DiskHandler
 #else
 	if (m_impl->mpOutfile)
 	{
 		m_impl->mpOutfile->createEntry(childFileName, 0); 
 		if (m_impl->mpOutfile->errorCode())
 			return false;
-		pHandler = new DiskDocumentHandler(m_impl->mpOutfile);
+		pHandler = new DiskOdfDocumentHandler(m_impl->mpOutfile);
 #endif
 	}
 	else

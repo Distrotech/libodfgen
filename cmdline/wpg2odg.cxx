@@ -25,7 +25,7 @@
 
 #include "OutputFileHelper.hxx"
 
-#include "OdgExporter.hxx"
+#include "OdgGenerator.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
@@ -55,9 +55,9 @@ private:
 		return true;		
 	}
 
-	bool _convertDocument(WPXInputStream *input, const char * /* password */, DocumentHandler *handler, OdfStreamType streamType)
+	bool _convertDocument(WPXInputStream *input, const char * /* password */, OdfDocumentHandler *handler, OdfStreamType streamType)
 	{
-		OdgExporter exporter(handler, streamType);
+		OdgGenerator exporter(handler, streamType);
 		return libwpg::WPGraphics::parse(input, &exporter);
 	}
 };

@@ -26,7 +26,7 @@
  */
 
 #include "DocumentElement.hxx"
-#include "DocumentHandler.hxx"
+#include "OdfDocumentHandler.hxx"
 #include "FilterInternal.hxx"
 #include <string.h>
 
@@ -37,7 +37,7 @@ void TagElement::print() const
 	WRITER_DEBUG_MSG(("%s\n", msTagName.cstr()));
 }
 
-void TagOpenElement::write(DocumentHandler *pHandler) const
+void TagOpenElement::write(OdfDocumentHandler *pHandler) const
 {
 	pHandler->startElement(getTagName().cstr(), maAttrList);
 }
@@ -52,20 +52,20 @@ void TagOpenElement::addAttribute(const WPXString &szAttributeName, const WPXStr
         maAttrList.insert(szAttributeName.cstr(), sAttributeValue);
 }
 
-void TagCloseElement::write(DocumentHandler *pHandler) const
+void TagCloseElement::write(OdfDocumentHandler *pHandler) const
 {
 	WRITER_DEBUG_MSG(("TagCloseElement: write (%s)\n", getTagName().cstr()));
 
 	pHandler->endElement(getTagName().cstr());
 }
 
-void CharDataElement::write(DocumentHandler *pHandler) const
+void CharDataElement::write(OdfDocumentHandler *pHandler) const
 {
 	WRITER_DEBUG_MSG(("TextElement: write\n"));
 	pHandler->characters(msData);
 }
 
-void TextElement::write(DocumentHandler *pHandler) const
+void TextElement::write(OdfDocumentHandler *pHandler) const
 {
 	if (msTextBuf.len() <= 0)
 		return;

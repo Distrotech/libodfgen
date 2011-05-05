@@ -29,8 +29,6 @@
 #define WRITER_DEBUG_MSG(M)
 #endif
 
-enum OdfStreamType { ODF_FLAT_XML, ODF_CONTENT_XML, ODF_STYLES_XML, ODF_SETTINGS_XML, ODF_META_XML };
-
 const double fDefaultSideMargin = 1.0; // inches
 const double fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
 const double fDefaultPageHeight = 11.0; // inches

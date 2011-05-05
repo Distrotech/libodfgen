@@ -30,15 +30,15 @@
 #include <vector>
 
 class DocumentElement;
-class DocumentHandler;
+class OdfDocumentHandler;
 
 class PageSpan
 {
 public:
 	PageSpan(const WPXPropertyList &xPropList);
 	virtual ~PageSpan();
-	void writePageLayout(const int iNum, DocumentHandler *pHandler) const;
-	void writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, DocumentHandler *pHandler) const;
+	void writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const;
+	void writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, OdfDocumentHandler *pHandler) const;
 	int getSpan() const;
 	double getMarginLeft() const;
 	double getMarginRight() const;
@@ -49,7 +49,7 @@ public:
 	void setFooterLeftContent(std::vector<DocumentElement *> * pFooterContent);
 protected:
 	void _writeHeaderFooter(const char *headerFooterTagName, const std::vector<DocumentElement *> & headerFooterContent,
-				DocumentHandler *pHandler) const;
+				OdfDocumentHandler *pHandler) const;
 private:
         WPXPropertyList mxPropList;
 	std::vector<DocumentElement *> * mpHeaderContent;

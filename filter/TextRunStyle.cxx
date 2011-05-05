@@ -50,7 +50,7 @@ ParagraphStyle::~ParagraphStyle()
 	delete mpPropList;
 }
 
-void ParagraphStyle::write(DocumentHandler *pHandler) const
+void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 {
 	WRITER_DEBUG_MSG(("Writing a paragraph style..\n"));
 
@@ -133,7 +133,7 @@ SpanStyle::SpanStyle(const char *psName, const WPXPropertyList &xPropList) :
 {
 }
 
-void SpanStyle::write(DocumentHandler *pHandler) const 
+void SpanStyle::write(OdfDocumentHandler *pHandler) const 
 {
 	WRITER_DEBUG_MSG(("Writing a span style..\n"));
 	WPXPropertyList styleOpenList;    

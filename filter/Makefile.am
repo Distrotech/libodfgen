@@ -3,8 +3,8 @@ if USE_LIBWPG
 writerperfect_wpg_sources = \
 	GraphicsStyle.cxx		\
 	GraphicsStyle.hxx		\
-	OdgExporter.cxx			\
-	OdgExporter.hxx
+	OdgGenerator.cxx			\
+	OdgGenerator.hxx
 
 writerperfect_wpg_cxxflags = \
 	$(WRITERPERFECTWPG_CXXFLAGS)
@@ -31,7 +31,7 @@ libwriterperfect_1_la_SOURCES =		\
 	WriterProperties.hxx		\
 	DocumentElement.cxx 		\
 	DocumentElement.hxx 		\
-	DocumentHandler.hxx		\
+	OdfDocumentHandler.hxx		\
 	FontStyle.cxx			\
 	FontStyle.hxx			\
 	InternalHandler.cxx		\
@@ -46,7 +46,7 @@ libwriterperfect_1_la_SOURCES =		\
 	TableStyle.hxx			\
 	TextRunStyle.cxx 		\
 	TextRunStyle.hxx		\
-	WordPerfectCollector.cxx 	\
-	WordPerfectCollector.hxx	\
+	OdtGenerator.cxx 	\
+	OdtGenerator.hxx	\
 	$(writerperfect_wpg_sources)	
 

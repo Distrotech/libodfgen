@@ -43,7 +43,7 @@ TableCellStyle::TableCellStyle(const WPXPropertyList &xPropList, const char *psN
 {
 }
 
-void TableCellStyle::write(DocumentHandler *pHandler) const
+void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
@@ -72,7 +72,7 @@ TableRowStyle::TableRowStyle(const WPXPropertyList &propList, const char *psName
 {
 }
 
-void TableRowStyle::write(DocumentHandler *pHandler) const
+void TableRowStyle::write(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
@@ -109,7 +109,7 @@ TableStyle::~TableStyle()
 		delete(*iterTableRowStyles);
 }
 
-void TableStyle::write(DocumentHandler *pHandler) const
+void TableStyle::write(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());

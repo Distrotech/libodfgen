@@ -25,20 +25,16 @@
 #ifndef __ODGEXPORTER_HXX__
 #define __ODGEXPORTER_HXX__
 
-#include <iostream>
-#include <sstream>
-#include <string>
-
 #include <libwpd/libwpd.h>
 #include <libwpg/libwpg.h>
-#include "DocumentElement.hxx"
-#include "DocumentHandler.hxx"
-#include "FilterInternal.hxx"
+#include "OdfDocumentHandler.hxx"
 
-class OdgExporter : public libwpg::WPGPaintInterface {
+class OdgGeneratorPrivate;
+
+class OdgGenerator : public libwpg::WPGPaintInterface {
 public:
-	OdgExporter(DocumentHandler *pHandler, const OdfStreamType streamType);
-	~OdgExporter();
+	OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	~OdgGenerator();
 
 	void startGraphics(const ::WPXPropertyList &propList);
 	void endGraphics();
@@ -64,29 +60,7 @@ public:
 	void insertText(const ::WPXString &str) {}
 
 private:
-	void writeGraphicsStyle();
-	WPXString doubleToString(const double value);
-	void drawPolySomething(const ::WPXPropertyListVector& vertices, bool isClosed);
-	
-	// body elements
-	std::vector <DocumentElement *> mBodyElements;
-
-	// graphics styles
-	std::vector<DocumentElement *> mGraphicsStrokeDashStyles;
-	std::vector<DocumentElement *> mGraphicsGradientStyles;
-	std::vector<DocumentElement *> mGraphicsAutomaticStyles;
-
-	DocumentHandler *mpHandler;
-
-	::WPXPropertyList mxStyle;
-	::WPXPropertyListVector mxGradient;
-	int miGradientIndex;
-	int miDashIndex;
-	int miGraphicsStyleIndex;
-	double mfWidth;
-	double mfHeight;
-
-	const OdfStreamType mxStreamType;
+	OdgGeneratorPrivate *mpImpl;
 };
 
 #endif // __ODGEXPORTER_HXX__

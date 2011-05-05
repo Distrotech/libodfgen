@@ -34,6 +34,6 @@ class GraphicsStyle : public Style
 public:
 	GraphicsStyle(const char *psName);
 	~GraphicsStyle();
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 };
 #endif

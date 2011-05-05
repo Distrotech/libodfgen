@@ -44,7 +44,7 @@ SectionStyle::SectionStyle(const WPXPropertyList &xPropList,
 {
 }
 
-void SectionStyle::write(DocumentHandler *pHandler) const
+void SectionStyle::write(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());

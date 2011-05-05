@@ -27,7 +27,7 @@
 
 #include "OutputFileHelper.hxx"
 
-#include "WordPerfectCollector.hxx"
+#include "OdtGenerator.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.text";
 
@@ -142,10 +142,12 @@ private:
 		return true;
 	}
 
-	bool _convertDocument(WPXInputStream *input, const char *password, DocumentHandler *handler, const OdfStreamType streamType)
+	bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType)
 	{
-		WordPerfectCollector collector(input, password, handler, streamType);
-		return collector.filter();
+		OdtGenerator collector(handler, streamType);
+		if (WPD_OK == WPDocument::parse(input, &collector, password))
+			return true;
+		return false;
 	}
 };
 

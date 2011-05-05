@@ -24,17 +24,17 @@
 
 #ifdef USE_GSF_OUTPUT
 #define PUTSTRING(M) gsf_output_puts(mpOutput, M)
-DiskDocumentHandler::DiskDocumentHandler(GsfOutput *pOutput) :
+DiskOdfDocumentHandler::DiskOdfDocumentHandler(GsfOutput *pOutput) :
 #else
 #define PUTSTRING(M) mpOutput->writeString(M)
-DiskDocumentHandler::DiskDocumentHandler(FemtoZip *pOutput) :
+DiskOdfDocumentHandler::DiskOdfDocumentHandler(FemtoZip *pOutput) :
 #endif
         mpOutput(pOutput),
 	mbIsTagOpened(false)
 {
 }
 
-void DiskDocumentHandler::startElement(const char *psName, const WPXPropertyList &xPropList)
+void DiskOdfDocumentHandler::startElement(const char *psName, const WPXPropertyList &xPropList)
 {
 	if (mbIsTagOpened)
 	{
@@ -61,7 +61,7 @@ void DiskDocumentHandler::startElement(const char *psName, const WPXPropertyList
 	msOpenedTagName.sprintf("%s", psName);
 }
 
-void DiskDocumentHandler::endElement(const char *psName)
+void DiskOdfDocumentHandler::endElement(const char *psName)
 {
 	if (mbIsTagOpened)
 	{
@@ -88,7 +88,7 @@ void DiskDocumentHandler::endElement(const char *psName)
 	}
 }
 
-void DiskDocumentHandler::characters(const WPXString &sCharacters)
+void DiskOdfDocumentHandler::characters(const WPXString &sCharacters)
 {
 	if (mbIsTagOpened)
 	{
@@ -100,7 +100,7 @@ void DiskDocumentHandler::characters(const WPXString &sCharacters)
 		PUTSTRING(sEscapedCharacters.cstr());
 }
 
-void DiskDocumentHandler::endDocument()
+void DiskOdfDocumentHandler::endDocument()
 {
 	if (mbIsTagOpened)
 	{

@@ -35,6 +35,6 @@ GraphicsStyle::~GraphicsStyle()
 {
 }
 
-void GraphicsStyle::write(DocumentHandler *pHandler) const
+void GraphicsStyle::write(OdfDocumentHandler *pHandler) const
 {        
 }

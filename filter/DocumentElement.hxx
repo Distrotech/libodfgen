@@ -32,13 +32,13 @@
 #include <libwpd/WPXString.h>
 #include <vector>
 
-#include "DocumentHandler.hxx"
+#include "OdfDocumentHandler.hxx"
 
 class DocumentElement
 {
 public:	
 	virtual ~DocumentElement() {}
-	virtual void write(DocumentHandler *pHandler) const = 0;
+	virtual void write(OdfDocumentHandler *pHandler) const = 0;
 	virtual void print() const {}
 };
 
@@ -59,7 +59,7 @@ public:
 	TagOpenElement(const WPXString &szTagName) : TagElement(szTagName) {}
 	virtual ~TagOpenElement() {}
 	void addAttribute(const WPXString &szAttributeName, const WPXString &sAttributeValue);
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 	virtual void print () const;
 private:
 	WPXPropertyList maAttrList;
@@ -70,7 +70,7 @@ class TagCloseElement : public TagElement
 public:
 	TagCloseElement(const WPXString &szTagName) : TagElement(szTagName) {}
 	virtual ~TagCloseElement() {}
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 };
 
 class CharDataElement : public DocumentElement
@@ -78,7 +78,7 @@ class CharDataElement : public DocumentElement
 public:
 	CharDataElement(const WPXString &sData) : DocumentElement(), msData(sData) {}
 	virtual ~CharDataElement() {}
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
 	WPXString msData;
 };
@@ -88,7 +88,7 @@ class TextElement : public DocumentElement
 public:
 	TextElement(const WPXString &sTextBuf) : DocumentElement(), msTextBuf(sTextBuf, false) {}
 	virtual ~TextElement() {}
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
 	WPXString msTextBuf;

@@ -35,14 +35,14 @@
 
 class TagOpenElement;
 class DocumentElement;
-class DocumentHandler;
+class OdfDocumentHandler;
 
 class ParagraphStyle
 {
 public:
 	ParagraphStyle(WPXPropertyList *propList, const WPXPropertyListVector &tabStops, const WPXString &sName);
 	virtual ~ParagraphStyle();
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 	WPXString getName() const { return msName; }
 private:
 	WPXPropertyList *mpPropList;
@@ -55,7 +55,7 @@ class SpanStyle : public Style
 {
 public:
 	SpanStyle(const char *psName, const WPXPropertyList &xPropList);
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
         WPXPropertyList mPropList;

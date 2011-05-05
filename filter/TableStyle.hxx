@@ -34,14 +34,14 @@
 #include "WriterProperties.hxx"
 
 class DocumentElement;
-class DocumentHandler;
+class OdfDocumentHandler;
 
 class TableCellStyle : public Style
 {
 public:
 	virtual ~TableCellStyle() {};
 	TableCellStyle(const WPXPropertyList &xPropList, const char *psName);
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
         WPXPropertyList mPropList;
 };
@@ -51,7 +51,7 @@ class TableRowStyle : public Style
 public:
 	virtual ~TableRowStyle() {};
 	TableRowStyle(const WPXPropertyList &propList, const char *psName);
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
         WPXPropertyList mPropList;
 };
@@ -61,7 +61,7 @@ class TableStyle : public Style, public TopLevelElementStyle
 public:
 	TableStyle(const WPXPropertyList &xPropList, const WPXPropertyListVector &columns, const char *psName);
 	virtual ~TableStyle();
-	virtual void write(DocumentHandler *pHandler) const;
+	virtual void write(OdfDocumentHandler *pHandler) const;
 	const int getNumColumns() const { return mColumns.count(); }
 	void addTableCellStyle(TableCellStyle *pTableCellStyle) { mTableCellStyles.push_back(pTableCellStyle); }
 	int getNumTableCellStyles() { return mTableCellStyles.size(); }

@@ -22,7 +22,7 @@
 #define _STDOUTHANDLER_H
 #include "DocumentElement.hxx"
 
-class StdOutHandler : public DocumentHandler
+class StdOutHandler : public OdfDocumentHandler
 {
   public:
   	StdOutHandler();
