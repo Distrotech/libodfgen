@@ -111,6 +111,7 @@ const char stylesStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	"</office:master-styles>"
 	"</office:document-styles>";
 	
+#ifdef USE_LIBWPG
 class EmbeddedWPG : public OdfEmbeddedObject
 {
 public:
@@ -128,6 +129,7 @@ public:
 		return libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat);
 	}
 };		
+#endif
 
 class OdtOutputFileHelper : public OutputFileHelper
 {
@@ -163,8 +165,10 @@ private:
 	bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType)
 	{
 		OdtGenerator collector(handler, streamType);
+#ifdef USE_LIBWPG
 		EmbeddedWPG embeddedWPG;
 		collector.registerEmbeddedObjectHandler("image/x-wpg", static_cast<OdfEmbeddedObject*>(&embeddedWPG));
+#endif
 		if (WPD_OK == WPDocument::parse(input, &collector, password))
 			return true;
 		return false;

@@ -49,10 +49,6 @@
 #include "TableStyle.hxx"
 #include "FilterInternal.hxx"
 #include "WriterProperties.hxx"
-#ifdef USE_LIBWPG
-#include "GraphicsStyle.hxx"
-#include "OdgGenerator.hxx"
-#endif
 #include "InternalHandler.hxx"
 
 // the state we use for writing the final document
