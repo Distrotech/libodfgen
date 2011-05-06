@@ -110,6 +110,24 @@ const char stylesStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	"<style:master-page style:name=\"Endnote\" style:page-layout-name=\"PM1\"/>"
 	"</office:master-styles>"
 	"</office:document-styles>";
+	
+class EmbeddedWPG : public OdfEmbeddedObject
+{
+public:
+	EmbeddedWPG() {}
+	
+	bool handleEmbeddedObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType)
+	{
+		OdgGenerator exporter(pHandler, streamType);
+
+		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
+
+		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(data.getDataStream())))
+			fileFormat = libwpg::WPG_WPG1;
+ 
+		return libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat);
+	}
+};		
 
 class OdtOutputFileHelper : public OutputFileHelper
 {
@@ -145,6 +163,8 @@ private:
 	bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType)
 	{
 		OdtGenerator collector(handler, streamType);
+		EmbeddedWPG embeddedWPG;
+		collector.registerEmbeddedObjectHandler("image/x-wpg", static_cast<OdfEmbeddedObject*>(&embeddedWPG));
 		if (WPD_OK == WPDocument::parse(input, &collector, password))
 			return true;
 		return false;

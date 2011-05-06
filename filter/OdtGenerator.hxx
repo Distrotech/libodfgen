@@ -35,6 +35,15 @@
 
 #include "OdfDocumentHandler.hxx"
 
+class OdfEmbeddedObject
+{
+public:
+	OdfEmbeddedObject() {}
+	virtual ~OdfEmbeddedObject() {}
+	
+	virtual bool handleEmbeddedObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType) = 0;
+};
+
 class OdtGeneratorPrivate;
 
 class OdtGenerator : public WPXDocumentInterface
@@ -43,7 +52,7 @@ public:
 	OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdtGenerator();
 
-	// WPXDocumentInterface's callbacks 
+	// WPXDocumentInterface's implementation 
  	void setDocumentMetaData(const WPXPropertyList &propList);
 	void startDocument();
 	void endDocument();
@@ -106,6 +115,9 @@ public:
 	
 	void insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &data);
 	void insertEquation(const WPXPropertyList &propList, const WPXString &data);
+	
+	// Register special converter for certain embedded binary objects
+	void registerEmbeddedObjectHandler(const WPXString &mimeType, OdfEmbeddedObject *objectHandler);
 
 private:
 	OdtGeneratorPrivate *mpImpl;

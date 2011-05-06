@@ -138,6 +138,8 @@ public:
 	void _openListLevel(TagOpenElement *pListLevelOpenElement);
 	void _closeListLevel();
 
+	OdfEmbeddedObject *_findEmbeddedObjectHandler(const WPXString& mimeType);
+
 	WPXInputStream *mpInput;
 	OdfDocumentHandler *mpHandler;
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
@@ -154,6 +156,9 @@ public:
 
 	// font styles
 	std::map<WPXString, FontStyle *, ltstr> mFontHash;
+	
+	// embedded object handlers
+	std::map<WPXString, OdfEmbeddedObject *, ltstr > mObjectHandlers;
 
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
@@ -219,6 +224,76 @@ OdtGeneratorPrivate::OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 
 OdtGeneratorPrivate::~OdtGeneratorPrivate()
 {
+ 	// clean up the mess we made
+ 	WRITER_DEBUG_MSG(("WriterWordPerfect: Cleaning up our mess..\n"));
+
+	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
+	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++) {
+		delete (*iterBody);
+		(*iterBody) = NULL;
+	}
+
+	WRITER_DEBUG_MSG(("Destroying the styles elements\n"));
+	for (std::vector<DocumentElement *>::iterator iterStyles = mStylesElements.begin(); iterStyles != mStylesElements.end(); iterStyles++) {
+ 		delete (*iterStyles);
+		(*iterStyles) = NULL; // we may pass over the same element again (in the case of headers/footers spanning multiple pages)
+				      // so make sure we don't do a double del
+	}
+
+	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
+	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mTextStyleHash.begin();
+		iterTextStyle != mTextStyleHash.end(); iterTextStyle++) {
+		delete (iterTextStyle->second);
+	}
+
+	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mSpanStyleHash.begin();
+		iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) {
+		delete(iterSpanStyle->second);
+	}
+
+	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mFontHash.begin();
+		iterFont != mFontHash.end(); iterFont++) {
+		delete(iterFont->second);
+	}
+
+	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
+		iterListStyles != mListStyles.end(); iterListStyles++) {
+		delete(*iterListStyles);
+	}
+	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin();
+		iterSectionStyles != mSectionStyles.end(); iterSectionStyles++) {
+		delete(*iterSectionStyles);
+	}
+	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin();
+		iterTableStyles != mTableStyles.end(); iterTableStyles++) {
+		delete((*iterTableStyles));
+	}
+
+	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
+		iterPageSpans != mPageSpans.end(); iterPageSpans++) {
+		delete(*iterPageSpans);
+	}
+	for (std::vector<DocumentElement *>::iterator iterFrameStyles = mFrameStyles.begin();
+		iterFrameStyles != mFrameStyles.end(); iterFrameStyles++) {
+		delete(*iterFrameStyles);
+	}
+	for (std::vector<DocumentElement *>::iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
+		iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); iterFrameAutomaticStyles++) {
+		delete(*iterFrameAutomaticStyles);
+	}
+	for (std::vector<DocumentElement *>::iterator iterMetaData = mMetaData.begin();
+		iterMetaData != mMetaData.end(); iterMetaData++) {
+		delete(*iterMetaData);
+	}
+}
+
+OdfEmbeddedObject *OdtGeneratorPrivate::_findEmbeddedObjectHandler(const WPXString& mimeType)
+{
+	std::map<WPXString, OdfEmbeddedObject*, ltstr>::iterator i = mObjectHandlers.find(mimeType);
+	if (i != mObjectHandlers.end())
+		return i->second;
+
+	return 0;
 }
 
 OdtGenerator::OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
@@ -1325,28 +1400,23 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 	if (!propList["libwpd:mimetype"])
 		return;
 
-	if (propList["libwpd:mimetype"]->getStr() == "image/x-wpg")
+	OdfEmbeddedObject* tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["libwpd:mimetype"]->getStr());
+	 
+	if (tmpObjectHandler)
 	{
-#ifdef USE_LIBWPG
 		std::vector<DocumentElement *> tmpContentElements;
 		InternalHandler tmpHandler(&tmpContentElements);
-		OdgGenerator exporter(&tmpHandler, ODF_FLAT_XML);
-		
-		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
-		
-		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(data.getDataStream())))
-			fileFormat = libwpg::WPG_WPG1;
 
-		if (libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat) && !tmpContentElements.empty())
+		if (tmpObjectHandler->handleEmbeddedObject(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
 		{
 			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:object"));
 			for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); iter++)
 				mpImpl->mpCurrentContentElements->push_back(*iter);
 			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:object"));
 		}
-#endif
 	}
 	else
+	// assuming we have a binary image that we can just insert as it is
 	{
 		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
 		
@@ -1395,69 +1465,8 @@ void OdtGenerator::insertEquation(WPXPropertyList const&, WPXString const&)
 
 void OdtGenerator::endDocument()
 {
+	// Write out the collected document
 	mpImpl->_writeTargetDocument(mpImpl->mpHandler);
-
- 	// clean up the mess we made
- 	WRITER_DEBUG_MSG(("WriterWordPerfect: Cleaning up our mess..\n"));
-
-	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
-	for (std::vector<DocumentElement *>::iterator iterBody = mpImpl->mBodyElements.begin(); iterBody != mpImpl->mBodyElements.end(); iterBody++) {
-		delete (*iterBody);
-		(*iterBody) = NULL;
-	}
-
-	WRITER_DEBUG_MSG(("Destroying the styles elements\n"));
-	for (std::vector<DocumentElement *>::iterator iterStyles = mpImpl->mStylesElements.begin(); iterStyles != mpImpl->mStylesElements.end(); iterStyles++) {
- 		delete (*iterStyles);
-		(*iterStyles) = NULL; // we may pass over the same element again (in the case of headers/footers spanning multiple pages)
-				      // so make sure we don't do a double del
-	}
-
-	WRITER_DEBUG_MSG(("Destroying the rest of the styles elements\n"));
-	for (std::map<WPXString, ParagraphStyle *, ltstr>::iterator iterTextStyle = mpImpl->mTextStyleHash.begin();
-		iterTextStyle != mpImpl->mTextStyleHash.end(); iterTextStyle++) {
-		delete (iterTextStyle->second);
-	}
-
-	for (std::map<WPXString, SpanStyle *, ltstr>::iterator iterSpanStyle = mpImpl->mSpanStyleHash.begin();
-		iterSpanStyle != mpImpl->mSpanStyleHash.end(); iterSpanStyle++) {
-		delete(iterSpanStyle->second);
-	}
-
-	for (std::map<WPXString, FontStyle *, ltstr>::iterator iterFont = mpImpl->mFontHash.begin();
-		iterFont != mpImpl->mFontHash.end(); iterFont++) {
-		delete(iterFont->second);
-	}
-
-	for (std::vector<ListStyle *>::iterator iterListStyles = mpImpl->mListStyles.begin();
-		iterListStyles != mpImpl->mListStyles.end(); iterListStyles++) {
-		delete(*iterListStyles);
-	}
-	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mpImpl->mSectionStyles.begin();
-		iterSectionStyles != mpImpl->mSectionStyles.end(); iterSectionStyles++) {
-		delete(*iterSectionStyles);
-	}
-	for (std::vector<TableStyle *>::iterator iterTableStyles = mpImpl->mTableStyles.begin();
-		iterTableStyles != mpImpl->mTableStyles.end(); iterTableStyles++) {
-		delete((*iterTableStyles));
-	}
-
-	for (std::vector<PageSpan *>::iterator iterPageSpans = mpImpl->mPageSpans.begin();
-		iterPageSpans != mpImpl->mPageSpans.end(); iterPageSpans++) {
-		delete(*iterPageSpans);
-	}
-	for (std::vector<DocumentElement *>::iterator iterFrameStyles = mpImpl->mFrameStyles.begin();
-		iterFrameStyles != mpImpl->mFrameStyles.end(); iterFrameStyles++) {
-		delete(*iterFrameStyles);
-	}
-	for (std::vector<DocumentElement *>::iterator iterFrameAutomaticStyles = mpImpl->mFrameAutomaticStyles.begin();
-		iterFrameAutomaticStyles != mpImpl->mFrameAutomaticStyles.end(); iterFrameAutomaticStyles++) {
-		delete(*iterFrameAutomaticStyles);
-	}
-	for (std::vector<DocumentElement *>::iterator iterMetaData = mpImpl->mMetaData.begin();
-		iterMetaData != mpImpl->mMetaData.end(); iterMetaData++) {
-		delete(*iterMetaData);
-	}
 }
 
 void OdtGenerator::startDocument()
@@ -1480,3 +1489,7 @@ void OdtGenerator::defineCharacterStyle(WPXPropertyList const&)
 {
 }
 
+void OdtGenerator::registerEmbeddedObjectHandler(const WPXString &mimeType, OdfEmbeddedObject *objectHandler)
+{
+	mpImpl->mObjectHandlers[mimeType] = objectHandler;
+}
