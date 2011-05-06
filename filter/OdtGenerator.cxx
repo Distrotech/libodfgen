@@ -850,7 +850,7 @@ void OdtGenerator::defineUnorderedListLevel(const WPXPropertyList &propList)
 	}
 }
 
-void OdtGenerator::openOrderedListLevel(const WPXPropertyList &propList)
+void OdtGenerator::openOrderedListLevel(const WPXPropertyList&)
 {
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
@@ -867,7 +867,7 @@ void OdtGenerator::openOrderedListLevel(const WPXPropertyList &propList)
 	mpImpl->mpCurrentContentElements->push_back(pListLevelOpenElement);
 }
 
-void OdtGenerator::openUnorderedListLevel(const WPXPropertyList &propList)
+void OdtGenerator::openUnorderedListLevel(const WPXPropertyList&)
 {
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
@@ -1049,7 +1049,7 @@ void OdtGenerator::closeEndnote()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note"));
 }
 
-void OdtGenerator::openComment(const WPXPropertyList &propList)
+void OdtGenerator::openComment(const WPXPropertyList &)
 {
 	mpImpl->mWriterListStates.push(WriterListState());
 	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:annotation"));
@@ -1176,7 +1176,7 @@ void OdtGenerator::closeTableCell()
 	}
 }
 
-void OdtGenerator::insertCoveredTableCell(const WPXPropertyList &propList)
+void OdtGenerator::insertCoveredTableCell(const WPXPropertyList &)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote)
 	{
@@ -1424,7 +1424,7 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 	}
 }
 
-void OdtGenerator::openTextBox(const WPXPropertyList &propList)
+void OdtGenerator::openTextBox(const WPXPropertyList &)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Text box without a frame simply doesn't make sense for us
 		return;

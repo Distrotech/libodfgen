@@ -67,8 +67,8 @@ public:
 	virtual ~ListStyle();
 	virtual void updateListLevel(const int iLevel, const WPXPropertyList &xPropList) = 0;
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	const int getListID() { return miListID; }
-	const bool isListLevelDefined(int iLevel) const;
+	int getListID() { return miListID; }
+	bool isListLevelDefined(int iLevel) const;
 
 protected:
 	void setListLevel(int iLevel, ListLevelStyle *iListLevelStyle);

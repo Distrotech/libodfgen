@@ -62,11 +62,13 @@ void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) cons
 	if (mPropList["style:num-format"])
 		listLevelStyleOpen.addAttribute("style:num-format", mPropList["style:num-format"]->getStr());
 	if (mPropList["text:start-value"])
+	{
 		// odf as to the version 1.1 does require the text:start-value to be a positive integer, means > 0
 		if (mPropList["text:start-value"]->getInt() > 0)
 			listLevelStyleOpen.addAttribute("text:start-value", mPropList["text:start-value"]->getStr());
 		else
 			listLevelStyleOpen.addAttribute("text:start-value", "1");
+	}
 	listLevelStyleOpen.write(pHandler);
 
 	TagOpenElement stylePropertiesOpen("style:list-level-properties");
@@ -148,7 +150,7 @@ ListStyle::~ListStyle()
 
 }
 
-const bool ListStyle::isListLevelDefined(int iLevel) const
+bool ListStyle::isListLevelDefined(int iLevel) const
 {
 	if (mppListLevels[iLevel] == NULL) 
 		return false;

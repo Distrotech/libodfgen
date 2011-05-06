@@ -139,12 +139,12 @@ void TableStyle::write(OdfDocumentHandler *pHandler) const
         WPXPropertyListVector::Iter j(mColumns);
 	for (j.rewind(); j.next();)
 	{
-		TagOpenElement styleOpen("style:style");
+		TagOpenElement columnStyleOpen("style:style");
 		WPXString sColumnName;
 		sColumnName.sprintf("%s.Column%i", getName().cstr(), i);
-		styleOpen.addAttribute("style:name", sColumnName);
-		styleOpen.addAttribute("style:family", "table-column");
-		styleOpen.write(pHandler);
+		columnStyleOpen.addAttribute("style:name", sColumnName);
+		columnStyleOpen.addAttribute("style:family", "table-column");
+		columnStyleOpen.write(pHandler);
 
                 pHandler->startElement("style:table-column-properties", j());
 		pHandler->endElement("style:table-column-properties");

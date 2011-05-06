@@ -48,7 +48,7 @@ class Style
 	Style(const WPXString &psName) : msName(psName) {}
 	virtual ~Style() {}
 
-	virtual void write(OdfDocumentHandler *pHandler) const {};
+	virtual void write(OdfDocumentHandler *) const {};
 	const WPXString &getName() const { return msName; }
 
  private:

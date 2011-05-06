@@ -711,6 +711,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	}
 
 	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
+	{
 		if (mxGradient.count() >= 2)
 		{
 			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "gradient");
@@ -719,6 +720,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 		}
 		else
 			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "none");
+	}
 
 	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
 	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));

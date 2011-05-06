@@ -1,8 +1,6 @@
 if USE_LIBWPG
 
 writerperfect_wpg_sources = \
-	GraphicsStyle.cxx		\
-	GraphicsStyle.hxx		\
 	OdgGenerator.cxx			\
 	OdgGenerator.hxx
 

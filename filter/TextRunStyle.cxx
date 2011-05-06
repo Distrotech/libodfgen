@@ -105,14 +105,14 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	{
 		TagOpenElement tabListOpen("style:tab-stops");
 		tabListOpen.write(pHandler);
-		WPXPropertyListVector::Iter i(mxTabStops);
-		for (i.rewind(); i.next();)
+		WPXPropertyListVector::Iter k(mxTabStops);
+		for (k.rewind(); k.next();)
 		{
-			if (i()["style:position"] && i()["style:position"]->getDouble() < 0.0)
+			if (k()["style:position"] && k()["style:position"]->getDouble() < 0.0)
 				continue;
 			TagOpenElement tabStopOpen("style:tab-stop");
 			
-			WPXPropertyList::Iter j(i());
+			WPXPropertyList::Iter j(k());
 			for (j.rewind(); j.next(); )
 			{
 				tabStopOpen.addAttribute(j.key(), j()->getStr().cstr());			
