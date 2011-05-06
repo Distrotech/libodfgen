@@ -28,10 +28,6 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <libwpd/libwpd.h>
 #include <vector>
 #include <map>
@@ -134,7 +130,7 @@ public:
 	void _openListLevel(TagOpenElement *pListLevelOpenElement);
 	void _closeListLevel();
 
-	OdfEmbeddedObject *_findEmbeddedObjectHandler(const WPXString& mimeType);
+	OdfEmbeddedObject _findEmbeddedObjectHandler(const WPXString& mimeType);
 
 	WPXInputStream *mpInput;
 	OdfDocumentHandler *mpHandler;
@@ -154,7 +150,7 @@ public:
 	std::map<WPXString, FontStyle *, ltstr> mFontHash;
 	
 	// embedded object handlers
-	std::map<WPXString, OdfEmbeddedObject *, ltstr > mObjectHandlers;
+	std::map<WPXString, OdfEmbeddedObject, ltstr > mObjectHandlers;
 
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
@@ -283,9 +279,9 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	}
 }
 
-OdfEmbeddedObject *OdtGeneratorPrivate::_findEmbeddedObjectHandler(const WPXString& mimeType)
+OdfEmbeddedObject OdtGeneratorPrivate::_findEmbeddedObjectHandler(const WPXString& mimeType)
 {
-	std::map<WPXString, OdfEmbeddedObject*, ltstr>::iterator i = mObjectHandlers.find(mimeType);
+	std::map<WPXString, OdfEmbeddedObject, ltstr>::iterator i = mObjectHandlers.find(mimeType);
 	if (i != mObjectHandlers.end())
 		return i->second;
 
@@ -1396,14 +1392,14 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 	if (!propList["libwpd:mimetype"])
 		return;
 
-	OdfEmbeddedObject* tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["libwpd:mimetype"]->getStr());
+	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["libwpd:mimetype"]->getStr());
 	 
 	if (tmpObjectHandler)
 	{
 		std::vector<DocumentElement *> tmpContentElements;
 		InternalHandler tmpHandler(&tmpContentElements);
 
-		if (tmpObjectHandler->handleEmbeddedObject(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
+		if (tmpObjectHandler(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
 		{
 			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:object"));
 			for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); iter++)
@@ -1485,7 +1481,7 @@ void OdtGenerator::defineCharacterStyle(WPXPropertyList const&)
 {
 }
 
-void OdtGenerator::registerEmbeddedObjectHandler(const WPXString &mimeType, OdfEmbeddedObject *objectHandler)
+void OdtGenerator::registerEmbeddedObjectHandler(const WPXString &mimeType, OdfEmbeddedObject objectHandler)
 {
 	mpImpl->mObjectHandlers[mimeType] = objectHandler;
 }

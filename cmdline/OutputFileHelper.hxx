@@ -20,9 +20,8 @@
 #ifndef _OUTPUTFILEHELPER_HXX
 #define _OUTPUTFILEHELPER_HXX
 
-#include <OdgGenerator.hxx>
+#include <OdfDocumentHandler.hxx>
 
-class OdfDocumentHandler;
 class WPXInputStream;
 class OutputFileHelperImpl;
 

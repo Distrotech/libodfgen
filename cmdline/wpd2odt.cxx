@@ -20,6 +20,10 @@
  * USA
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -28,6 +32,9 @@
 #include "OutputFileHelper.hxx"
 
 #include "OdtGenerator.hxx"
+#ifdef USE_LIBWPG
+#include "OdgGenerator.hxx"
+#endif
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.text";
 
@@ -111,26 +118,6 @@ const char stylesStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	"</office:master-styles>"
 	"</office:document-styles>";
 	
-#ifdef USE_LIBWPG
-class EmbeddedWPG : public OdfEmbeddedObject
-{
-public:
-	EmbeddedWPG() {}
-	
-	bool handleEmbeddedObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType)
-	{
-		OdgGenerator exporter(pHandler, streamType);
-
-		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
-
-		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(data.getDataStream())))
-			fileFormat = libwpg::WPG_WPG1;
- 
-		return libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat);
-	}
-};		
-#endif
-
 class OdtOutputFileHelper : public OutputFileHelper
 {
 public:
@@ -162,13 +149,26 @@ private:
 		return true;
 	}
 
+	static bool handleEmbeddedWPG(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType)
+	{
+#ifdef USE_LIBWPG
+		OdgGenerator exporter(pHandler, streamType);
+
+		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
+
+		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(data.getDataStream())))
+			fileFormat = libwpg::WPG_WPG1;
+ 
+		return libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat);
+#else
+		return true;
+#endif
+	}
+
 	bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType)
 	{
 		OdtGenerator collector(handler, streamType);
-#ifdef USE_LIBWPG
-		EmbeddedWPG embeddedWPG;
-		collector.registerEmbeddedObjectHandler("image/x-wpg", static_cast<OdfEmbeddedObject*>(&embeddedWPG));
-#endif
+		collector.registerEmbeddedObjectHandler("image/x-wpg", &handleEmbeddedWPG);
 		if (WPD_OK == WPDocument::parse(input, &collector, password))
 			return true;
 		return false;
