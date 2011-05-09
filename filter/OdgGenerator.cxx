@@ -98,7 +98,7 @@ OdgGeneratorPrivate::~OdgGeneratorPrivate()
 	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++)
 	{
 		delete (*iterBody);
-		(*iterBody) = NULL;
+		(*iterBody) = 0;
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();

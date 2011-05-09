@@ -56,19 +56,19 @@ OutputFileHelper::OutputFileHelper(const char* outFileName, const char *password
 	m_impl(new OutputFileHelperImpl(password))
 #endif
 {
-	m_impl->mpOutfile = NULL;
+	m_impl->mpOutfile = 0;
 #ifdef USE_GSF_OUTPUT
-	GsfOutput  *pOutput = NULL;
-	GError   *err = NULL;
+	GsfOutput  *pOutput = 0;
+	GError   *err = 0;
 
 	gsf_init ();
 
 	if (!outFileName)
-	        pOutput = NULL;
+	        pOutput = 0;
 	else
 	{
 	        pOutput = GSF_OUTPUT(gsf_output_stdio_new (outFileName, &err));
-	        if (pOutput == NULL) {
+	        if (pOutput == 0) {
 			if (err) {
 	                	g_warning ("'%s' error: %s", outFileName, err->message);
 	                        g_error_free (err);
@@ -78,9 +78,9 @@ OutputFileHelper::OutputFileHelper(const char* outFileName, const char *password
 		else {
 			if (err)
 				g_error_free (err);
-			err = NULL;
+			err = 0;
 	        	m_impl->mpOutfile = GSF_OUTFILE(gsf_outfile_zip_new (pOutput, &err));
-	        	if (m_impl->mpOutfile == NULL) {
+	        	if (m_impl->mpOutfile == 0) {
 				if (err) {
 		                	g_warning ("'%s' error: %s",
 						"gsf_outfile_zip_new", err->message);
@@ -91,7 +91,7 @@ OutputFileHelper::OutputFileHelper(const char* outFileName, const char *password
 			else {
 				if (err)
 					g_error_free (err);
-				err = NULL;
+				err = 0;
 			        g_object_unref (pOutput);
 			}
 		}
@@ -126,7 +126,7 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 		return true;
 #ifdef USE_GSF_OUTPUT
 	GsfOutput *child;
-	if (NULL != (child = gsf_outfile_new_child  (m_impl->mpOutfile, childFileName, FALSE)))
+	if (0 != (child = gsf_outfile_new_child  (m_impl->mpOutfile, childFileName, FALSE)))
 	{
 		bool res = gsf_output_puts (child, str) &&
 			gsf_output_close (child);
@@ -155,9 +155,9 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 #ifdef USE_GSF_OUTPUT
 	GsfOutput *child;
 #ifdef GSF_HAS_COMPRESSION_LEVEL
-	if (NULL != (child = gsf_outfile_new_child_full  (m_impl->mpOutfile, childFileName, FALSE,"compression-level", compression_level, (void*)0)))
+	if (0 != (child = gsf_outfile_new_child_full  (m_impl->mpOutfile, childFileName, FALSE,"compression-level", compression_level, (void*)0)))
 #else
-	if (NULL != (child = gsf_outfile_new_child  (m_impl->mpOutfile, childFileName, FALSE)))
+	if (0 != (child = gsf_outfile_new_child  (m_impl->mpOutfile, childFileName, FALSE)))
 #endif
 	{
 		bool res = gsf_output_puts (child, str) &&
@@ -191,7 +191,7 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 
 	OdfDocumentHandler *pHandler;
 #ifdef USE_GSF_OUTPUT
-	GsfOutput *pContentChild = NULL;
+	GsfOutput *pContentChild = 0;
 	if (m_impl->mpOutfile)
 	{
 	        pContentChild = gsf_outfile_new_child(m_impl->mpOutfile, childFileName, FALSE);

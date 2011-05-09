@@ -31,10 +31,10 @@
 
 PageSpan::PageSpan(const WPXPropertyList &xPropList) :
         mxPropList(xPropList),
-	mpHeaderContent(NULL),
-	mpFooterContent(NULL),
-	mpHeaderLeftContent(NULL),
-	mpFooterLeftContent(NULL)
+	mpHeaderContent(0),
+	mpFooterContent(0),
+	mpHeaderLeftContent(0),
+	mpFooterLeftContent(0)
 {
 }
 

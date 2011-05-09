@@ -103,7 +103,7 @@ _WriterDocumentState::_WriterDocumentState() :
 }
 
 _WriterListState::_WriterListState() :
-	mpCurrentListStyle(NULL),
+	mpCurrentListStyle(0),
 	miCurrentListLevel(0),
 	miLastListLevel(0),
 	miLastListNumber(0),
@@ -205,7 +205,7 @@ OdtGeneratorPrivate::OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mfSectionSpaceAfter(0.0),
 	miNumListStyles(0),
 	mpCurrentContentElements(&mBodyElements),
-	mpCurrentPageSpan(NULL),
+	mpCurrentPageSpan(0),
 	miNumPageStyles(0),
 	miObjectNumber(0),
 	mxStreamType(streamType)
@@ -222,13 +222,13 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
 	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++) {
 		delete (*iterBody);
-		(*iterBody) = NULL;
+		(*iterBody) = 0;
 	}
 
 	WRITER_DEBUG_MSG(("Destroying the styles elements\n"));
 	for (std::vector<DocumentElement *>::iterator iterStyles = mStylesElements.begin(); iterStyles != mStylesElements.end(); iterStyles++) {
  		delete (*iterStyles);
-		(*iterStyles) = NULL; // we may pass over the same element again (in the case of headers/footers spanning multiple pages)
+		(*iterStyles) = 0; // we may pass over the same element again (in the case of headers/footers spanning multiple pages)
 				      // so make sure we don't do a double del
 	}
 
@@ -680,7 +680,7 @@ void OdtGenerator::openParagraph(const WPXPropertyList &propList, const WPXPrope
 	// from "Table Contents"
 
 	WPXPropertyList *pPersistPropList = new WPXPropertyList(propList);
-	ParagraphStyle *pStyle = NULL;
+	ParagraphStyle *pStyle = 0;
 
 	if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
 	{
@@ -787,7 +787,7 @@ void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
 	if (propList["libwpd:id"])
 		id = propList["libwpd:id"]->getInt();
 
- 	OrderedListStyle *pOrderedListStyle = NULL;
+ 	OrderedListStyle *pOrderedListStyle = 0;
 	if (mpImpl->mWriterListStates.top().mpCurrentListStyle && mpImpl->mWriterListStates.top().mpCurrentListStyle->getListID() == id)
 		pOrderedListStyle = static_cast<OrderedListStyle *>(mpImpl->mWriterListStates.top().mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
 
@@ -795,7 +795,7 @@ void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
 	// one) if: (1) we have no prior list OR (2) the prior list is actually definitively different
 	// from the list that is just being defined (listIDs differ) OR (3) we can tell that the user actually
 	// is starting a new list at level 1 (and only level 1)
-	if (pOrderedListStyle == NULL || pOrderedListStyle->getListID() != id  ||
+	if (pOrderedListStyle == 0 || pOrderedListStyle->getListID() != id  ||
 	    (propList["libwpd:level"] && propList["libwpd:level"]->getInt()==1 && 
 	     (propList["text:start-value"] && propList["text:start-value"]->getInt() != (mpImpl->mWriterListStates.top().miLastListNumber+1))))
 	{
@@ -828,11 +828,11 @@ void OdtGenerator::defineUnorderedListLevel(const WPXPropertyList &propList)
 	if (propList["libwpd:id"])
 		id = propList["libwpd:id"]->getInt();
 
- 	UnorderedListStyle *pUnorderedListStyle = NULL;
+ 	UnorderedListStyle *pUnorderedListStyle = 0;
 	if (mpImpl->mWriterListStates.top().mpCurrentListStyle && mpImpl->mWriterListStates.top().mpCurrentListStyle->getListID() == id)
 		pUnorderedListStyle = static_cast<UnorderedListStyle *>(mpImpl->mWriterListStates.top().mpCurrentListStyle); // FIXME: using a dynamic cast here causes oo to crash?!
 
-	if (pUnorderedListStyle == NULL) {
+	if (pUnorderedListStyle == 0) {
 		WRITER_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", id));
 		WPXString sName;
 		sName.sprintf("UL%i", mpImpl->miNumListStyles);
@@ -933,7 +933,7 @@ void OdtGenerator::openListElement(const WPXPropertyList &propList, const WPXPro
 		mpImpl->mWriterListStates.top().mbListElementOpened.top() = false;
 	}
 
-	ParagraphStyle *pStyle = NULL;
+	ParagraphStyle *pStyle = 0;
 
 	WPXPropertyList *pPersistPropList = new WPXPropertyList(propList);
 	pPersistPropList->insert("style:list-style-name", mpImpl->mWriterListStates.top().mpCurrentListStyle->getName());
