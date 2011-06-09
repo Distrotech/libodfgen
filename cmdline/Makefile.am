@@ -8,7 +8,17 @@ writerperfectwpg_cxxflags =
 writerperfectwpg_ldadd =
 endif
 
-bin_PROGRAMS = wpd2odt $(writerperfectwpg_program)
+if USE_LIBVISIO
+writerperfectvsd_program = vsd2odg
+writerperfectvsd_cxxflags = $(WRITERPERFECTVSD_CXXFLAGS)
+writerperfectvsd_ldadd = $(WRITERPERFECTVSD_LIBS)
+else
+writerperfectvsd_program =
+writerperfectvsd_cxxflags =
+writerperfectvsd_ldadd =
+endif
+
+bin_PROGRAMS = wpd2odt $(writerperfectwpg_program) $(writerperfectvsd_program)
 
 if USE_GSF_OUTPUT
 writerperfectgsf_cxxflags = $(WRITERPERFECTGSF_CXXFLAGS)
@@ -55,6 +65,25 @@ wpg2odg_SOURCES = \
 	wpg2odg.cxx
 
 
+vsd2odg_DEPENDENCIES = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
+vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la $(WRITERPERFECTCORE_LIBS) $(writerperfectvsd_ldadd) $(writerperfectgsf_ldadd)
+vsd2odg_CXXFLAGS = -I../filter $(writerperfectvsd_cxxflags)
+if STATIC_TOOLS
+vsd2odg_LDFLAGS = -all-static
+endif
+
+vsd2odg_SOURCES = \
+	DiskDocumentHandler.hxx \
+	DiskDocumentHandler.cxx \
+	OutputFileHelper.cxx \
+	OutputFileHelper.hxx \
+	StdOutHandler.hxx \
+	StdOutHandler.cxx \
+	FemtoZip.cxx \
+	FemtoZip.hxx \
+	vsd2odg.cxx
+
+
 if OS_WIN32
 
 @WPD2ODT_WIN32_RESOURCE@ : wpd2odt.rc $(wpd2odt_OBJECTS)
@@ -64,4 +93,8 @@ if OS_WIN32
 @WPG2ODG_WIN32_RESOURCE@ : wpg2odg.rc $(wpg2odg_OBJECTS)
 	chmod +x $(top_srcdir)/build/win32/*compile-resource
 	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource wpg2odg.rc @WPG2ODG_WIN32_RESOURCE@
+
+@VSD2ODG_WIN32_RESOURCE@ : vsd2odg.rc $(vsd2odg_OBJECTS)
+	chmod +x $(top_srcdir)/build/win32/*compile-resource
+	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource vsd2odg.rc @VSD2ODG_WIN32_RESOURCE@
 endif 

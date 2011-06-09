@@ -113,6 +113,31 @@ WRITERPERFECTWPG_CXXFLAGS="$WRITERPERFECTWPG_CFLAGS"
 AC_SUBST(WRITERPERFECTWPG_CXXFLAGS)
 AC_SUBST(WRITERPERFECTWPG_LIBS)
 
+test_libvisio=false
+AC_ARG_WITH(libvisio,
+	[  --with-libvisio         Use libvisio for conversion of Microsoft Visio Documents],
+	if test "x$withval" = xyes; then
+		test_libvisio=true
+	fi
+)
+
+if test "x$test_libvisio" = "xtrue"; then
+
+	AC_DEFINE([USE_LIBVISIO], [1], [Whether to use libvisio for conversion of Microsoft Visio Documents])
+
+    PKG_CHECK_MODULES(WRITERPERFECTVSD,[
+        libvisio-0.0
+    ])
+
+fi
+
+AM_CONDITIONAL(USE_LIBVISIO, test "x$test_libvisio" = "xtrue")
+
+
+WRITERPERFECTVSD_CXXFLAGS="$WRITERPERFECTVSD_CFLAGS"
+AC_SUBST(WRITERPERFECTVSD_CXXFLAGS)
+AC_SUBST(WRITERPERFECTVSD_LIBS)
+
 AC_MSG_CHECKING([for native Win32])
 case "$host" in
   *-*-mingw*)
@@ -120,17 +145,20 @@ case "$host" in
     AC_CHECK_TOOL(WINDRES, windres)
     WPD2ODT_WIN32_RESOURCE=wpd2odt-win32res.lo
     WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
+    VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
     ;;
    *)
     native_win32=no
     WPD2ODT_WIN32_RESOURCE=
     WPG2ODG_WIN32_RESOURCE=
+    VSD2ODG_WIN32_RESOURCE=
     ;;
 esac
 AC_MSG_RESULT([$native_win32])
 AM_CONDITIONAL(OS_WIN32, test "$native_win32" = yes)
 AC_SUBST(WPD2ODT_WIN32_RESOURCE)
 AC_SUBST(WPG2ODG_WIN32_RESOURCE)
+AC_SUBST(VSD2ODG_WIN32_RESOURCE)
 
 AC_MSG_CHECKING([for Win32 platform in general])
 case "$host" in
