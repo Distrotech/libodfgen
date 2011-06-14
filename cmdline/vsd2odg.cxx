@@ -49,7 +49,7 @@ private:
 	{
 		if (!libvisio::VisioDocument::isSupported(input))
 		{
- 			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect Graphics.\n");
+ 			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Visio Document.\n");
 			return false;
 		}
 		return true;		
