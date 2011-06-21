@@ -52,9 +52,9 @@ typedef struct _WriterDocumentState WriterDocumentState;
 struct _WriterDocumentState
 {
 	_WriterDocumentState();
-		
+
 	bool mbFirstElement;
-	bool mbFirstParagraphInPageSpan;        
+	bool mbFirstParagraphInPageSpan;
 	bool mbInFakeSection;
 	bool mbListElementOpenedAtCurrentLevel;
 	bool mbTableCellOpened;
@@ -137,7 +137,7 @@ public:
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
 
 	std::stack<WriterDocumentState> mWriterDocumentStates;
-	
+
 	std::stack<WriterListState> mWriterListStates;
 
 	// paragraph styles
@@ -148,7 +148,7 @@ public:
 
 	// font styles
 	std::map<WPXString, FontStyle *, ltstr> mFontHash;
-	
+
 	// embedded object handlers
 	std::map<WPXString, OdfEmbeddedObject, ltstr > mObjectHandlers;
 
@@ -158,18 +158,18 @@ public:
 
 	// table styles
 	std::vector<TableStyle *> mTableStyles;
-	
+
 	// frame styles
 	std::vector<DocumentElement *> mFrameStyles;
-	
+
 	std::vector<DocumentElement *> mFrameAutomaticStyles;
-	
+
 	// metadata
 	std::vector<DocumentElement *> mMetaData;
 
 	// list styles
 	unsigned int miNumListStyles;
-	
+
 	// style elements
 	std::vector<DocumentElement *> mStylesElements;
 	// content elements
@@ -184,7 +184,7 @@ public:
 
 	// list styles
 	std::vector<ListStyle *> mListStyles;
-	
+
 	// object state
 	unsigned miObjectNumber;
 
@@ -192,7 +192,7 @@ public:
 	TableStyle *mpCurrentTableStyle;
 
 	const OdfStreamType mxStreamType;
-	
+
 	const char * mpPassword;
 
 };
@@ -467,11 +467,11 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 		(*iterFrameAutomaticStyles)->write(pHandler);
 	}
 
-	for (std::map<WPXString, ParagraphStyle *, ltstr>::const_iterator iterTextStyle = mTextStyleHash.begin(); 
-	     iterTextStyle != mTextStyleHash.end(); iterTextStyle++) 
+	for (std::map<WPXString, ParagraphStyle *, ltstr>::const_iterator iterTextStyle = mTextStyleHash.begin();
+	     iterTextStyle != mTextStyleHash.end(); iterTextStyle++)
 	{
 		// writing out the paragraph styles
-		if (strcmp((iterTextStyle->second)->getName().cstr(), "Standard")) 
+		if (strcmp((iterTextStyle->second)->getName().cstr(), "Standard"))
 		{
 			// don't write standard paragraph "no styles" style
 			(iterTextStyle->second)->write(pHandler);
@@ -479,8 +479,8 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	}
 
 	// span styles..
-	for (std::map<WPXString, SpanStyle *, ltstr>::const_iterator iterSpanStyle = mSpanStyleHash.begin(); 
-	     iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++) 
+	for (std::map<WPXString, SpanStyle *, ltstr>::const_iterator iterSpanStyle = mSpanStyleHash.begin();
+	     iterSpanStyle != mSpanStyleHash.end(); iterSpanStyle++)
 	{
 		(iterSpanStyle->second)->write(pHandler);
 	}
@@ -684,10 +684,10 @@ void OdtGenerator::openParagraph(const WPXPropertyList &propList, const WPXPrope
 
 	if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
 	{
-		// we don't have to go through the fuss of determining if the paragraph style is 
+		// we don't have to go through the fuss of determining if the paragraph style is
 		// unique in this case, because if we are the first document element, then we
 		// are singular. Neither do we have to determine what our parent style is-- we can't
-		// be inside a table in this case (the table would be the first document element 
+		// be inside a table in this case (the table would be the first document element
 		//in that case)
 		pPersistPropList->insert("style:parent-style-name", "Standard");
 		WPXString sName;
@@ -707,7 +707,7 @@ void OdtGenerator::openParagraph(const WPXPropertyList &propList, const WPXPrope
 			WPXString sPageStyleName;
 			sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
 			pPersistPropList->insert("style:master-page-name", sPageStyleName);
-			mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;	
+			mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;
 		}
 
 		if (mpImpl->mWriterDocumentStates.top().mbTableCellOpened)
@@ -725,7 +725,7 @@ void OdtGenerator::openParagraph(const WPXPropertyList &propList, const WPXPrope
 		if (mpImpl->mTextStyleHash.find(sKey) == mpImpl->mTextStyleHash.end())
 		{
 			WPXString sName;
-			sName.sprintf("S%i", mpImpl->mTextStyleHash.size()); 
+			sName.sprintf("S%i", mpImpl->mTextStyleHash.size());
 
 			pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
 
@@ -765,7 +765,7 @@ void OdtGenerator::openSpan(const WPXPropertyList &propList)
 
 		mpImpl->mSpanStyleHash[sSpanHashKey] = pStyle;
 	}
-	else 
+	else
 	{
 		sName.sprintf("%s", mpImpl->mSpanStyleHash.find(sSpanHashKey)->second->getName().cstr());
 	}
@@ -796,7 +796,7 @@ void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
 	// from the list that is just being defined (listIDs differ) OR (3) we can tell that the user actually
 	// is starting a new list at level 1 (and only level 1)
 	if (pOrderedListStyle == 0 || pOrderedListStyle->getListID() != id  ||
-	    (propList["libwpd:level"] && propList["libwpd:level"]->getInt()==1 && 
+	    (propList["libwpd:level"] && propList["libwpd:level"]->getInt()==1 &&
 	     (propList["text:start-value"] && propList["text:start-value"]->getInt() != (mpImpl->mWriterListStates.top().miLastListNumber+1))))
 	{
 		WRITER_DEBUG_MSG(("Attempting to create a new ordered list style (listid: %i)\n", id));
@@ -941,10 +941,10 @@ void OdtGenerator::openListElement(const WPXPropertyList &propList, const WPXPro
 
 	WPXString sKey = getParagraphStyleKey(*pPersistPropList, tabStops);
 
-	if (mpImpl->mTextStyleHash.find(sKey) == mpImpl->mTextStyleHash.end()) 
+	if (mpImpl->mTextStyleHash.find(sKey) == mpImpl->mTextStyleHash.end())
 	{
 		WPXString sName;
-		sName.sprintf("S%i", mpImpl->mTextStyleHash.size()); 
+		sName.sprintf("S%i", mpImpl->mTextStyleHash.size());
 
 		pStyle = new ParagraphStyle(pPersistPropList, tabStops, sName);
 
@@ -1095,7 +1095,7 @@ void OdtGenerator::openTable(const WPXPropertyList &propList, const WPXPropertyL
 		pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
 		mpImpl->mpCurrentContentElements->push_back(pTableOpenElement);
 
-		for (int i=0; i<pTableStyle->getNumColumns(); i++) 
+		for (int i=0; i<pTableStyle->getNumColumns(); i++)
 		{
 			TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
 			WPXString sColumnStyleName;
@@ -1155,7 +1155,7 @@ void OdtGenerator::openTableCell(const WPXPropertyList &propList)
 		TagOpenElement *pTableCellOpenElement = new TagOpenElement("table:table-cell");
 		pTableCellOpenElement->addAttribute("table:style-name", sTableCellStyleName);
 		if (propList["table:number-columns-spanned"])
-			pTableCellOpenElement->addAttribute("table:number-columns-spanned", 
+			pTableCellOpenElement->addAttribute("table:number-columns-spanned",
 							    propList["table:number-columns-spanned"]->getStr().cstr());
 		if (propList["table:number-rows-spanned"])
 			pTableCellOpenElement->addAttribute("table:number-rows-spanned",
@@ -1219,7 +1219,7 @@ void OdtGenerator::insertField(const WPXString &type, const WPXPropertyList &pro
 
 	TagOpenElement *openElement = new TagOpenElement(type);
 	if (type == "text:page-number")
-		openElement->addAttribute("text:select-page", "current"); 
+		openElement->addAttribute("text:select-page", "current");
 
 	if (propList["style:num-format"])
 		openElement->addAttribute("style:num-format", propList["style:num-format"]->getStr());
@@ -1280,7 +1280,7 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	if (propList["fo:max-height"])
 		frameStylePropertiesOpenElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
-		
+
 	if (propList["style:wrap"])
 		frameStylePropertiesOpenElement->addAttribute("style:wrap", propList["style:wrap"]->getStr());
 
@@ -1393,7 +1393,7 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 		return;
 
 	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["libwpd:mimetype"]->getStr());
-	 
+
 	if (tmpObjectHandler)
 	{
 		std::vector<DocumentElement *> tmpContentElements;
@@ -1411,15 +1411,15 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 	// assuming we have a binary image that we can just insert as it is
 	{
 		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
-		
+
 		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
-		
+
 		WPXString binaryBase64Data = data.getBase64Data();
-		
+
 		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(binaryBase64Data.cstr()));
-		
+
 		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:binary-data"));
-		
+
 		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:image"));
 	}
 }

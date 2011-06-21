@@ -82,27 +82,27 @@ PageSpan::~PageSpan()
 }
 
 int PageSpan::getSpan() const
-{ 
-        if (mxPropList["libwpd:num-pages"]) 
-                return mxPropList["libwpd:num-pages"]->getInt(); 
+{
+        if (mxPropList["libwpd:num-pages"])
+                return mxPropList["libwpd:num-pages"]->getInt();
 
         return 0; // should never happen
 }
 
 double PageSpan::getMarginLeft() const
-{ 
+{
         if (mxPropList["fo:margin-left"])
                 return mxPropList["fo:margin-left"]->getDouble();
 
-         return 0.0; 
+         return 0.0;
 }
 
 double PageSpan::getMarginRight() const
-{ 
+{
         if (mxPropList["fo:margin-right"])
                 return mxPropList["fo:margin-right"]->getDouble();
 
-         return 0.0; 
+         return 0.0;
 }
 
 void PageSpan::setHeaderContent(std::vector<DocumentElement *> * pHeaderContent)
@@ -164,8 +164,8 @@ void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> * pFooterCont
 void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const
 {
         WPXPropertyList propList;
-        
-	WPXString sPageLayoutName; 
+
+	WPXString sPageLayoutName;
         sPageLayoutName.sprintf("PM%i", iNum+2);
         propList.insert("style:name", sPageLayoutName);
 	pHandler->startElement("style:page-layout", propList);
@@ -176,7 +176,7 @@ void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) con
 	if (!tempPropList["style:footnote-max-height"])
 		tempPropList.insert("style:footnote-max-height", WPXString("0in"));
         pHandler->startElement("style:page-layout-properties", tempPropList);
-	
+
 	WPXPropertyList footnoteSepPropList;
 	footnoteSepPropList.insert("style:width", WPXString("0.0071in"));
 	footnoteSepPropList.insert("style:distance-before-sep", WPXString("0.0398in"));
@@ -185,13 +185,13 @@ void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) con
 	footnoteSepPropList.insert("style:rel-width", WPXString("25%"));
 	footnoteSepPropList.insert("style:color", WPXString("#000000"));
 	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
-	
+
 	pHandler->endElement("style:footnote-sep");
         pHandler->endElement("style:page-layout-properties");
         pHandler->endElement("style:page-layout");
 }
 
-void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, 
+void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan,
                                 OdfDocumentHandler *pHandler) const
 {
 	int iSpan = 0;
@@ -234,7 +234,7 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
 			pHandler->endElement("style:header-left");
 		}
-			
+
 		if (mpFooterContent)
 		{
 			_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);

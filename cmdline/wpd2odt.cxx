@@ -117,7 +117,7 @@ const char stylesStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 	"<style:master-page style:name=\"Endnote\" style:page-layout-name=\"PM1\"/>"
 	"</office:master-styles>"
 	"</office:document-styles>";
-	
+
 class OdtOutputFileHelper : public OutputFileHelper
 {
 public:
@@ -131,21 +131,21 @@ private:
 		WPDConfidence confidence = WPDocument::isFileFormatSupported(input);
 		if (WPD_CONFIDENCE_EXCELLENT != confidence && WPD_CONFIDENCE_SUPPORTED_ENCRYPTION != confidence)
 		{
-			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");		
+			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
 			return false;
 		}
 		if (WPD_CONFIDENCE_SUPPORTED_ENCRYPTION == confidence && !password)
 		{
-			fprintf(stderr, "ERROR: The WordPerfect document is encrypted and you did not give us a password.\n");		
+			fprintf(stderr, "ERROR: The WordPerfect document is encrypted and you did not give us a password.\n");
 			return false;
 		}
 		if (confidence == WPD_CONFIDENCE_SUPPORTED_ENCRYPTION && password && (WPD_PASSWORD_MATCH_OK != WPDocument::verifyPassword(input, password)))
 		{
 			fprintf(stderr, "ERROR: The WordPerfect document is encrypted and we either\n");
-			fprintf(stderr, "ERROR: don't know how to decrypt it or the given password is wrong.\n");		
+			fprintf(stderr, "ERROR: don't know how to decrypt it or the given password is wrong.\n");
 			return false;
 		}
-			
+
 		return true;
 	}
 
@@ -158,7 +158,7 @@ private:
 
 		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(data.getDataStream())))
 			fileFormat = libwpg::WPG_WPG1;
- 
+
 		return libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat);
 #else
 		return true;
@@ -192,7 +192,7 @@ int printUsage(char * name)
 
 int main (int argc, char *argv[])
 {
-	if (argc < 2) 
+	if (argc < 2)
 		return printUsage(argv[0]);
 
 	char *szInputFile = 0;
@@ -218,13 +218,13 @@ int main (int argc, char *argv[])
 		else
 			return printUsage(argv[0]);
 	}
-	
+
 	if (!szInputFile)
 		return printUsage(argv[0]);
 
 	if (szOutFile && stdOutput)
 		szOutFile = 0;
-	
+
 	OdtOutputFileHelper helper(szOutFile, password);
 
 	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0)) {
@@ -236,17 +236,17 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "ERROR : Couldn't write manifest\n");
 		return 1;
 	}
-	
+
 	if (!helper.writeChildFile("styles.xml", stylesStr)) {
 		fprintf(stderr, "ERROR : Couldn't write styles\n");
 		return 1;
 	}
 
-	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODF_CONTENT_XML : ODF_FLAT_XML)) 
+	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODF_CONTENT_XML : ODF_FLAT_XML))
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
 	        return 1;
 	}
-	
+
 	return 0;
 }

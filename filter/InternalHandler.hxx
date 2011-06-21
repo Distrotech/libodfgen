@@ -20,7 +20,7 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
- 
+
 #ifndef _INTERNALHANDLER_H
 #define _INTERNALHANDLER_H
 #include <libwpd/libwpd.h>
@@ -34,7 +34,7 @@ class InternalHandler : public OdfDocumentHandler
 public:
 	InternalHandler(std::vector<DocumentElement *> *elements);
 	~InternalHandler() {};
-	
+
 	void startDocument() {};
 	void endDocument() {};
 	void startElement(const char *psName, const WPXPropertyList &xPropList);

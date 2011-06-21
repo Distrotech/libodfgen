@@ -52,7 +52,7 @@ private:
  			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Visio Document.\n");
 			return false;
 		}
-		return true;		
+		return true;
 	}
 
 	bool _convertDocument(WPXInputStream *input, const char * /* password */, OdfDocumentHandler *handler, OdfStreamType streamType)
@@ -75,7 +75,7 @@ int printUsage(char * name)
 
 int main (int argc, char *argv[])
 {
-	if (argc < 2) 
+	if (argc < 2)
 		return printUsage(argv[0]);
 
 	char *szInputFile = 0;
@@ -93,13 +93,13 @@ int main (int argc, char *argv[])
 		else
 			return printUsage(argv[0]);
 	}
-	
+
 	if (!szInputFile)
 		return printUsage(argv[0]);
 
 	if (szOutFile && stdOutput)
 		szOutFile = 0;
-	
+
 	OdgOutputFileHelper helper(szOutFile, 0);
 
 	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0)) {
@@ -111,24 +111,24 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "ERROR : Couldn't write manifest\n");
 		return 1;
 	}
-	
+
 	if (szOutFile && !helper.writeConvertedContent("settings.xml", szInputFile, ODF_SETTINGS_XML))
 	{
 		fprintf(stderr, "ERROR : Couldn't write document settings\n");
 		return 1;
 	}
-	
+
 	if (szOutFile && !helper.writeConvertedContent("styles.xml", szInputFile, ODF_STYLES_XML))
 	{
 		fprintf(stderr, "ERROR : Couldn't write document styles\n");
 		return 1;
 	}
-	
-	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODF_CONTENT_XML : ODF_FLAT_XML)) 
+
+	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODF_CONTENT_XML : ODF_FLAT_XML))
 	{
 	        fprintf(stderr, "ERROR : Couldn't write document content\n");
 	        return 1;
 	}
-	
+
 	return 0;
 }

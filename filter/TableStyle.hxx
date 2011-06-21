@@ -1,9 +1,9 @@
-/* TableStyle: Stores (and writes) table-based information that is 
+/* TableStyle: Stores (and writes) table-based information that is
  * needed at the head of an OO document.
  *
  * Copyright (C) 2002-2003 William Lachance (wrlach@gmail.com)
  * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -22,7 +22,7 @@
  *
  */
 
-/* "This product is not manufactured, approved, or supported by 
+/* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
 #ifndef _TABLESTYLE_H
@@ -67,8 +67,8 @@ public:
 	int getNumTableCellStyles() { return mTableCellStyles.size(); }
 	void addTableRowStyle(TableRowStyle *pTableRowStyle) { mTableRowStyles.push_back(pTableRowStyle); }
 	int getNumTableRowStyles() { return mTableRowStyles.size(); }
-private:	
-        WPXPropertyList mPropList;
+private:
+	WPXPropertyList mPropList;
 	WPXPropertyListVector mColumns;
 	std::vector<TableCellStyle *> mTableCellStyles;
 	std::vector<TableRowStyle *> mTableRowStyles;

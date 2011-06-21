@@ -99,7 +99,7 @@ OutputFileHelper::OutputFileHelper(const char* outFileName, const char *password
 #else
 	if (outFileName)
 		m_impl->mpOutfile = new FemtoZip(outFileName);
-#endif 
+#endif
 }
 
 OutputFileHelper::~OutputFileHelper()
@@ -199,7 +199,7 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 #else
 	if (m_impl->mpOutfile)
 	{
-		m_impl->mpOutfile->createEntry(childFileName, 0); 
+		m_impl->mpOutfile->createEntry(childFileName, 0);
 		if (m_impl->mpOutfile->errorCode())
 			return false;
 		pHandler = new DiskOdfDocumentHandler(m_impl->mpOutfile);

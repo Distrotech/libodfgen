@@ -46,7 +46,7 @@ public:
 	OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdtGenerator();
 
-	// WPXDocumentInterface's implementation 
+	// WPXDocumentInterface's implementation
  	void setDocumentMetaData(const WPXPropertyList &propList);
 	void startDocument();
 	void endDocument();
@@ -67,7 +67,7 @@ public:
 	void defineParagraphStyle(const WPXPropertyList&, const WPXPropertyListVector&);
 	void openParagraph(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops);
 	void closeParagraph();
-	
+
 	void defineCharacterStyle(const WPXPropertyList&);
 	void openSpan(const WPXPropertyList &propList);
 	void closeSpan();
@@ -79,13 +79,13 @@ public:
 	void insertField(const WPXString &type, const WPXPropertyList &propList);
 
 	void defineOrderedListLevel(const WPXPropertyList &propList);
-	void defineUnorderedListLevel(const WPXPropertyList &propList);	
+	void defineUnorderedListLevel(const WPXPropertyList &propList);
 	void openOrderedListLevel(const WPXPropertyList &propList);
 	void openUnorderedListLevel(const WPXPropertyList &propList);
 	void closeOrderedListLevel();
 	void closeUnorderedListLevel();
 	void openListElement(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops);
-	void closeListElement();       
+	void closeListElement();
 
 	void openFootnote(const WPXPropertyList &propList);
 	void closeFootnote();
@@ -106,10 +106,10 @@ public:
 
 	void openFrame(const WPXPropertyList & propList);
 	void closeFrame();
-	
+
 	void insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &data);
 	void insertEquation(const WPXPropertyList &propList, const WPXString &data);
-	
+
 	// Register special converter for certain embedded binary objects
 	void registerEmbeddedObjectHandler(const WPXString &mimeType, OdfEmbeddedObject objectHandler);
 

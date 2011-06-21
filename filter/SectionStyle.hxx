@@ -2,7 +2,7 @@
  * change needs a new section) that is needed at the head of an OO document.
  *
  * Copyright (C) 2002-2003 William Lachance (wrlach@gmail.com)
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -21,7 +21,7 @@
  *
  */
 
-/* "This product is not manufactured, approved, or supported by 
+/* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
 #ifndef _SECTIONSTYLE_H

@@ -35,7 +35,7 @@ class OdfDocumentHandler
 public:
 	OdfDocumentHandler() {};
 	virtual ~OdfDocumentHandler() {};
-	
+
 	virtual void startDocument() = 0;
 	virtual void endDocument() = 0;
 	virtual void startElement(const char *psName, const WPXPropertyList &xPropList) = 0;

@@ -13,8 +13,8 @@
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the 
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA  02111-1301 USA
  *
  * For further information visit http://libwpg.sourceforge.net
@@ -37,7 +37,7 @@
 
 // Workaround for the incapacity of draw to have multiple page
 // sizes in the same document. Once that limitation is lifted,
-// remove this 
+// remove this
 #define MULTIPAGE_WORKAROUND 1
 
 static inline double getAngle(double bx, double by)
@@ -62,7 +62,7 @@ static void getEllipticalArcBBox(double x1, double y1,
 		ymax = (y1 > y2 ? y1 : y2);
 		return;
 	}
-	
+
 	// F.6.5.1
 	const double x1prime = cos(phi)*(x1 - x2)/2 + sin(phi)*(y1 - y2)/2;
 	const double y1prime = -sin(phi)*(x1 - x2)/2 + cos(phi)*(y1 - y2)/2;
@@ -74,7 +74,7 @@ static void getEllipticalArcBBox(double x1, double y1,
 	if (radicant < 0.0)
 	{
 		double ratio = rx/ry;
-		double radicant = y1prime*y1prime + x1prime*x1prime/(ratio*ratio);
+		radicant = y1prime*y1prime + x1prime*x1prime/(ratio*ratio);
 		if (radicant < 0.0)
 		{
 			xmin = (x1 < x2 ? x1 : x2);
@@ -93,13 +93,13 @@ static void getEllipticalArcBBox(double x1, double y1,
 		cxprime = factor*rx*y1prime/ry;
 		cyprime = -factor*ry*x1prime/rx;
 	}
-	
+
 	// F.6.5.3
 	double cx = cxprime*cos(phi) - cyprime*sin(phi) + (x1 + x2)/2;
 	double cy = cxprime*sin(phi) + cyprime*cos(phi) + (y1 + y2)/2;
-	
+
 	// now compute bounding box of the whole ellipse
-	
+
 	// Parametrick equation of an ellipse:
 	// x(theta) = cx + rx*cos(theta)*cos(phi) - ry*sin(theta)*sin(phi)
 	// y(theta) = cy + rx*cos(theta)*sin(phi) + ry*sin(theta)*cos(phi)
@@ -107,17 +107,17 @@ static void getEllipticalArcBBox(double x1, double y1,
 	// Compute local extrems
 	// 0 = -rx*sin(theta)*cos(phi) - ry*cos(theta)*sin(phi)
 	// 0 = -rx*sin(theta)*sin(phi) - ry*cos(theta)*cos(phi)
-	
+
 	// Local extrems for X:
 	// theta = -atan(ry*tan(phi)/rx)
 	// and
 	// theta = M_PI -atan(ry*tan(phi)/rx)
-	
+
 	// Local extrems for Y:
 	// theta = atan(ry/(tan(phi)*rx))
 	// and
 	// theta = M_PI + atan(ry/(tan(phi)*rx))
-	
+
 	double txmin, txmax, tymin, tymax;
 
 	// First handle special cases
@@ -158,7 +158,7 @@ static void getEllipticalArcBBox(double x1, double y1,
 		txmin = getAngle(xmin - cx, tmpY - cy);
 		tmpY = cy + rx*cos(txmax)*sin(phi) + ry*sin(txmax)*cos(phi);
 		txmax = getAngle(xmax - cx, tmpY - cy);
-		
+
 
 		tymin = atan(ry/(tan(phi)*rx));
 		tymax = atan(ry/(tan(phi)*rx))+M_PI;
@@ -192,7 +192,7 @@ static void getEllipticalArcBBox(double x1, double y1,
 		std::swap(angle1, angle2);
 		otherArc = true;
 	}
-		
+
 	// Check txmin
 	if ((!otherArc && (angle1 > txmin || angle2 < txmin)) || (otherArc && !(angle1 > txmin || angle2 < txmin)))
 		xmin = x1 < x2 ? x1 : x2;
@@ -231,7 +231,7 @@ public:
 	~OdgGeneratorPrivate();
 	void _writeGraphicsStyle();
 	void _drawPolySomething(const ::WPXPropertyListVector& vertices, bool isClosed);
-	void _drawPath(const WPXPropertyListVector& path);	
+	void _drawPath(const WPXPropertyListVector& path);
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
 
@@ -261,7 +261,7 @@ public:
 OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType):
 	mpHandler(pHandler),
 	miGradientIndex(1),
-	miDashIndex(1), 
+	miDashIndex(1),
 	miGraphicsStyleIndex(1),
 	miPageIndex(1),
 	mfWidth(0.0),
@@ -333,7 +333,7 @@ OdgGenerator::OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 	tmpOfficeDocumentContent.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
 	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
 	if (mpImpl->mxStreamType == ODF_FLAT_XML)
-		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");	
+		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");
 	tmpOfficeDocumentContent.write(mpImpl->mpHandler);
 }
 
@@ -396,11 +396,11 @@ OdgGenerator::~OdgGenerator()
 		{
 			(*iterGraphicsGradientStyles)->write(mpImpl->mpHandler);
 		}
-	
+
 		mpImpl->mpHandler->endElement("office:styles");
 	}
 
-	
+
 	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
 	{
 		TagOpenElement("office:automatic-styles").write(mpImpl->mpHandler);
@@ -463,7 +463,7 @@ OdgGenerator::~OdgGenerator()
 			(*iterPageAutomaticStyles)->write(mpImpl->mpHandler);
 		}
 	}
-#endif	
+#endif
 	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
 	{
 		mpImpl->mpHandler->endElement("office:automatic-styles");
@@ -480,7 +480,7 @@ OdgGenerator::~OdgGenerator()
 		}
 		mpImpl->mpHandler->endElement("office:master-styles");
 	}
-	
+
 	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML))
 	{
 		TagOpenElement("office:body").write(mpImpl->mpHandler);
@@ -491,7 +491,7 @@ OdgGenerator::~OdgGenerator()
 			bodyIter != mpImpl->mBodyElements.end(); bodyIter++)
 		{
 			(*bodyIter)->write(mpImpl->mpHandler);
-		}	
+		}
 
 		mpImpl->mpHandler->endElement("office:drawing");
 		mpImpl->mpHandler->endElement("office:body");
@@ -636,7 +636,7 @@ void OdgGenerator::drawRectangle(const ::WPXPropertyList &propList)
 	else
 		pDrawRectElement->addAttribute("draw:corner-radius", "0.0000in");
 	mpImpl->mBodyElements.push_back(pDrawRectElement);
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:rect"));	
+	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:rect"));
 }
 
 void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
@@ -754,31 +754,31 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 	{
 		if (!path[k]["svg:x"] || !path[k]["svg:y"])
 			continue;
-		px = (px > path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : px; 
-		py = (py > path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : py; 
-		qx = (qx < path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : qx; 
-		qy = (qy < path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : qy; 
+		px = (px > path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : px;
+		py = (py > path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : py;
+		qx = (qx < path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : qx;
+		qy = (qy < path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : qy;
 		if(path[k]["libwpg:path-action"]->getStr() == "C")
 		{
-			px = (px > path[k]["svg:x1"]->getDouble()) ? path[k]["svg:x1"]->getDouble() : px; 
-			py = (py > path[k]["svg:y1"]->getDouble()) ? path[k]["svg:y1"]->getDouble() : py; 
-			qx = (qx < path[k]["svg:x1"]->getDouble()) ? path[k]["svg:x1"]->getDouble() : qx; 
-			qy = (qy < path[k]["svg:y1"]->getDouble()) ? path[k]["svg:y1"]->getDouble() : qy; 
-			px = (px > path[k]["svg:x2"]->getDouble()) ? path[k]["svg:x2"]->getDouble() : px; 
-			py = (py > path[k]["svg:y2"]->getDouble()) ? path[k]["svg:y2"]->getDouble() : py; 
-			qx = (qx < path[k]["svg:x2"]->getDouble()) ? path[k]["svg:x2"]->getDouble() : qx; 
-			qy = (qy < path[k]["svg:y2"]->getDouble()) ? path[k]["svg:y2"]->getDouble() : qy; 
+			px = (px > path[k]["svg:x1"]->getDouble()) ? path[k]["svg:x1"]->getDouble() : px;
+			py = (py > path[k]["svg:y1"]->getDouble()) ? path[k]["svg:y1"]->getDouble() : py;
+			qx = (qx < path[k]["svg:x1"]->getDouble()) ? path[k]["svg:x1"]->getDouble() : qx;
+			qy = (qy < path[k]["svg:y1"]->getDouble()) ? path[k]["svg:y1"]->getDouble() : qy;
+			px = (px > path[k]["svg:x2"]->getDouble()) ? path[k]["svg:x2"]->getDouble() : px;
+			py = (py > path[k]["svg:y2"]->getDouble()) ? path[k]["svg:y2"]->getDouble() : py;
+			qx = (qx < path[k]["svg:x2"]->getDouble()) ? path[k]["svg:x2"]->getDouble() : qx;
+			qy = (qy < path[k]["svg:y2"]->getDouble()) ? path[k]["svg:y2"]->getDouble() : qy;
 		}
 		if(path[k]["libwpg:path-action"]->getStr() == "A")
 		{
 			double xmin, xmax, ymin, ymax;
-			
+
 			getEllipticalArcBBox(lastX, lastY, path[k]["svg:rx"]->getDouble(), path[k]["svg:ry"]->getDouble(),
 			                     2.0*M_PI*(path[k]["libwpg:rotate"] ? path[k]["libwpg:rotate"]->getDouble() : 0.0),
 			                     path[k]["libwpg:large-arc"] ? path[k]["libwpg:large-arc"]->getInt() : 1,
 			                     path[k]["libwpg:sweep"] ? path[k]["libwpg:sweep"]->getInt() : 1,
 			                     path[k]["svg:x"]->getDouble(), path[k]["svg:y"]->getDouble(), xmin, ymin, xmax, ymax);
-			
+
 			px = (px > xmin ? xmin : px);
 			py = (py > ymin ? ymin : py);
 			qx = (qx < xmax ? xmax : qx);
@@ -789,7 +789,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 	}
 	double vw = qx - px;
 	double vh = qy - py;
-		
+
 	_writeGraphicsStyle();
 
 	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
@@ -827,7 +827,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "C")
-		{			
+		{
 			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
 				(int)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
 				(int)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
@@ -835,9 +835,9 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "A")
-		{			
+		{
 			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
-				(int)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0), 
+				(int)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0),
 				(path[i]["libwpg:large-arc"] ? path[i]["libwpg:large-arc"]->getInt() : 1),
 				(path[i]["libwpg:sweep"] ? path[i]["libwpg:sweep"]->getInt() : 1),
 				(unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
@@ -861,8 +861,8 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 	if (!propList["libwpg:mime-type"] && propList["libwpg:mime-type"]->getStr().len() <= 0)
 		return;
 	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
-	
-	
+
+
 	WPXString sValue;
 	if (propList["svg:x"])
 		pDrawFrameElement->addAttribute("svg:x", propList["svg:x"]->getStr());
@@ -873,18 +873,18 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 	if (propList["svg:width"])
 		pDrawFrameElement->addAttribute("svg:width", propList["svg:width"]->getStr());
 	mpImpl->mBodyElements.push_back(pDrawFrameElement);
-	
+
 	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:image"));
-	
+
 	mpImpl->mBodyElements.push_back(new TagOpenElement("office:binary-data"));
-	
+
 	::WPXString base64Binary = binaryData.getBase64Data();
 	mpImpl->mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
-	
+
 	mpImpl->mBodyElements.push_back(new TagCloseElement("office:binary-data"));
-	
+
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:image"));
-	
+
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
@@ -965,7 +965,6 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", mxStyle["svg:stroke-color"]->getStr());
 		if (mxStyle["svg:stroke-opacity"] && mxStyle["svg:stroke-opacity"]->getDouble() != 1.0)
 			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-opacity", mxStyle["svg:stroke-opacity"]->getStr());
-			
 
 		if(mxStyle["libwpg:stroke-solid"] && mxStyle["libwpg:stroke-solid"]->getInt())
 			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "solid");
