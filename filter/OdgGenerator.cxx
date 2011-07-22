@@ -902,6 +902,7 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 
 void OdgGeneratorPrivate::_writeGraphicsStyle()
 {
+	bool bUseOpacityGradient = false;
 #if 0
 	if(mxStyle["libwpg:stroke-solid"] && !mxStyle["libwpg:stroke-solid"]->getInt() && (mxDashArray.count() >=2 ) )
 	{
@@ -933,6 +934,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 #endif
 	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
 	{
+		bUseOpacityGradient = true;
 		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
 		TagOpenElement *pDrawOpacityElement = new TagOpenElement("draw:opacity");
 		if (mxStyle["draw:style"])
@@ -1016,18 +1018,21 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 			else
 				pDrawOpacityElement->addAttribute("draw:end", "100%");
 
+			mGraphicsGradientStyles.push_back(pDrawGradientElement);
+			mGraphicsGradientStyles.push_back(new TagCloseElement("draw:gradient"));
+
 			// Work around a mess in LibreOffice where both opacities of 100% are interpreted as complete transparency
 			// Nevertheless, when one is different, immediately, they are interpreted correctly
 			if (!(mxStyle["libwpg:start-opacity"] && mxStyle["libwpg:end-opacity"]) || (mxStyle["libwpg:start-opacity"]->getDouble() == 1.0 && mxStyle["libwpg:end-opacity"]->getDouble() == 1.0))
 			{
-				pDrawOpacityElement->addAttribute("draw:start", "0%");
-				pDrawOpacityElement->addAttribute("draw:end", "0%");
+				delete pDrawOpacityElement;
+				bUseOpacityGradient = false;
+            }
+			else
+			{
+				mGraphicsGradientStyles.push_back(pDrawOpacityElement);
+				mGraphicsGradientStyles.push_back(new TagCloseElement("draw:opacity"));
 			}
-
-			mGraphicsGradientStyles.push_back(pDrawGradientElement);
-			mGraphicsGradientStyles.push_back(new TagCloseElement("draw:gradient"));
-			mGraphicsGradientStyles.push_back(pDrawOpacityElement);
-			mGraphicsGradientStyles.push_back(new TagCloseElement("draw:opacity"));
 		}
 		else if(mxGradient.count() >= 2)
 		{
@@ -1119,8 +1124,11 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "gradient");
 			sValue.sprintf("Gradient_%i", miGradientIndex-1);
 			pStyleGraphicsPropertiesElement->addAttribute("draw:fill-gradient-name", sValue);
-			sValue.sprintf("Transparency_%i", miGradientIndex-1);
-			pStyleGraphicsPropertiesElement->addAttribute("draw:opacity-name", sValue);
+			if (bUseOpacityGradient)
+			{
+				sValue.sprintf("Transparency_%i", miGradientIndex-1);
+				pStyleGraphicsPropertiesElement->addAttribute("draw:opacity-name", sValue);
+			}
 		}
 		else
 		{
