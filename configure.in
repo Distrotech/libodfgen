@@ -138,6 +138,31 @@ WRITERPERFECTVSD_CXXFLAGS="$WRITERPERFECTVSD_CFLAGS"
 AC_SUBST(WRITERPERFECTVSD_CXXFLAGS)
 AC_SUBST(WRITERPERFECTVSD_LIBS)
 
+test_libvisio=false
+AC_ARG_WITH(libwps,
+	[  --with-libwps           Use libwps for conversion of Microsoft Works Documents],
+	if test "x$withval" = xyes; then
+		test_libwps=true
+	fi
+)
+
+if test "x$test_libwps" = "xtrue"; then
+
+	AC_DEFINE([USE_LIBWPS], [1], [Whether to use libwps for conversion of Microsoft Works Documents])
+
+    PKG_CHECK_MODULES(WRITERPERFECTWPS,[
+        libwps-0.2
+    ])
+
+fi
+
+AM_CONDITIONAL(USE_LIBWPS, test "x$test_libwps" = "xtrue")
+
+
+WRITERPERFECTWPS_CXXFLAGS="$WRITERPERFECTWPS_CFLAGS"
+AC_SUBST(WRITERPERFECTWPS_CXXFLAGS)
+AC_SUBST(WRITERPERFECTWPS_LIBS)
+
 AC_MSG_CHECKING([for native Win32])
 case "$host" in
   *-*-mingw*)
@@ -146,12 +171,14 @@ case "$host" in
     WPD2ODT_WIN32_RESOURCE=wpd2odt-win32res.lo
     WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
     VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
+    WPS2ODT_WIN32_RESOURCE=wps2odt-win32res.lo
     ;;
    *)
     native_win32=no
     WPD2ODT_WIN32_RESOURCE=
     WPG2ODG_WIN32_RESOURCE=
     VSD2ODG_WIN32_RESOURCE=
+    WPS2ODT_WIN32_RESOURCE=
     ;;
 esac
 AC_MSG_RESULT([$native_win32])
@@ -159,6 +186,7 @@ AM_CONDITIONAL(OS_WIN32, test "$native_win32" = yes)
 AC_SUBST(WPD2ODT_WIN32_RESOURCE)
 AC_SUBST(WPG2ODG_WIN32_RESOURCE)
 AC_SUBST(VSD2ODG_WIN32_RESOURCE)
+AC_SUBST(WPS2ODT_WIN32_RESOURCE)
 
 AC_MSG_CHECKING([for Win32 platform in general])
 case "$host" in
@@ -197,6 +225,8 @@ filter/Makefile
 cmdline/Makefile
 cmdline/wpd2odt.rc
 cmdline/wpg2odg.rc
+cmdline/vsd2odg.rc
+cmdline/wps2odt.rc
 ])
 
 case "$debug" in
