@@ -1,3 +1,7 @@
+ACLOCAL_AMFLAGS = -I m4
+
+pkgconfdir = $(libdir)/pkgconfig
+
 SUBDIRS = build filter cmdline
 
 EXTRA_DIST = \

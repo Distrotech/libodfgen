@@ -1,115 +1,78 @@
 if USE_LIBWPG
-writerperfectwpg_program = wpg2odg
-writerperfectwpg_cxxflags = $(WRITERPERFECTWPG_CXXFLAGS)
-writerperfectwpg_ldadd = $(WRITERPERFECTWPG_LIBS)
-else
-writerperfectwpg_program =
-writerperfectwpg_cxxflags =
-writerperfectwpg_ldadd =
+WPG_APP = wpg2odg
+WPG_CFLAGS = $(WRITERPERFECTWPG_CFLAGS)
+WPD_LIBS = $(WRITERPERFECTWPG_LIBS)
 endif
 
 if USE_LIBVISIO
-writerperfectvsd_program = vsd2odg
-writerperfectvsd_cxxflags = $(WRITERPERFECTVSD_CXXFLAGS)
-writerperfectvsd_ldadd = $(WRITERPERFECTVSD_LIBS)
-else
-writerperfectvsd_program =
-writerperfectvsd_cxxflags =
-writerperfectvsd_ldadd =
+VISIO_APP = vsd2odg
+VISIO_CFLAGS = $(WRITERPERFECTVSD_CFLAGS)
+VISIO_LIBS = $(WRITERPERFECTVSD_LIBS)
 endif
 
 if USE_LIBWPS
-writerperfectwps_program = wps2odt
-writerperfectwps_cxxflags = $(WRITERPERFECTWPS_CXXFLAGS)
-writerperfectwps_ldadd = $(WRITERPERFECTWPS_LIBS)
-else
-writerperfectwps_program =
-writerperfectwps_cxxflags =
-writerperfectwps_ldadd =
+WPS_APP = wps2odt
+WPS_CFLAGS = $(WRITERPERFECTWPS_CFLAGS)
+WPS_LIBS = $(WRITERPERFECTWPS_LIBS)
 endif
-
-bin_PROGRAMS = wpd2odt $(writerperfectwpg_program) $(writerperfectvsd_program) $(writerperfectwps_program)
 
 if USE_GSF_OUTPUT
-writerperfectgsf_cxxflags = $(WRITERPERFECTGSF_CXXFLAGS)
-writerperfectgsf_ldadd = $(WRITERPERFECTGSF_LIBS)
-else
-writerperfectgsf_cxxflags =
-writerperfectgsf_ldadd =
+GSF_CFLAGS = $(WRITERPERFECTGSF_CFLAGS)
+GSF_LIBS = $(WRITERPERFECTGSF_LIBS)
 endif
 
-AM_CXXFLAGS = $(WRITERPERFECTCORE_CXXFLAGS) $(writerperfectgsf_cxxflags) $(writerperfectwpg_cxxflags) $(writerperfectwps_cxxflags) $(writerperfectgsf_cxxflags) $(DEBUG_CXXFLAGS) -I$(top_srcdir)/filter -I$(top_srcdir)
+bin_PROGRAMS = wpd2odt $(WPG_APP) $(VISIO_APP) $(WPS_APP)
 
-wpd2odt_DEPENDENCIES = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
-wpd2odt_LDADD = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la $(WRITERPERFECTCORE_LIBS) $(writerperfectwpg_ldadd) $(writerperfectgsf_ldadd)
+COMMON_SRC = \
+	DiskDocumentHandler.hxx \
+	DiskDocumentHandler.cxx \
+	OutputFileHelper.cxx \
+	OutputFileHelper.hxx \
+	StdOutHandler.hxx \
+	StdOutHandler.cxx \
+	FemtoZip.cxx \
+	FemtoZip.hxx
+
+wpd2odt_DEPENDENCIES = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la
+wpd2odt_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
+wpd2odt_LDADD = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(WPG_LIBS) $(GSF_LIBS)
+wpd2odt_SOURCES = \
+	$(COMMON_SRC) \
+	wpd2odt.cxx
 if STATIC_TOOLS
 wpd2odt_LDFLAGS = -all-static
 endif
 
-wpd2odt_SOURCES = \
-	DiskDocumentHandler.hxx \
-	DiskDocumentHandler.cxx \
-	OutputFileHelper.cxx \
-	OutputFileHelper.hxx \
-	StdOutHandler.hxx \
-	StdOutHandler.cxx \
-	FemtoZip.cxx \
-	FemtoZip.hxx \
-	wpd2odt.cxx
-
-wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
-wpg2odg_LDADD = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la $(WRITERPERFECTCORE_LIBS) $(writerperfectwpg_ldadd) $(writerperfectgsf_ldadd)
-if STATIC_TOOLS
-wpg2odg_LDFLAGS = -all-static
-endif
-
-wpg2odg_SOURCES = \
-	DiskDocumentHandler.hxx \
-	DiskDocumentHandler.cxx \
-	OutputFileHelper.cxx \
-	OutputFileHelper.hxx \
-	StdOutHandler.hxx \
-	StdOutHandler.cxx \
-	FemtoZip.cxx \
-	FemtoZip.hxx \
-	wpg2odg.cxx
-
-
-vsd2odg_DEPENDENCIES = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
-vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la $(WRITERPERFECTCORE_LIBS) $(writerperfectvsd_ldadd) $(writerperfectgsf_ldadd)
-vsd2odg_CXXFLAGS = -I../filter $(writerperfectvsd_cxxflags)
-if STATIC_TOOLS
-vsd2odg_LDFLAGS = -all-static
-endif
-
-vsd2odg_SOURCES = \
-	DiskDocumentHandler.hxx \
-	DiskDocumentHandler.cxx \
-	OutputFileHelper.cxx \
-	OutputFileHelper.hxx \
-	StdOutHandler.hxx \
-	StdOutHandler.cxx \
-	FemtoZip.cxx \
-	FemtoZip.hxx \
-	vsd2odg.cxx
-
-
-wps2odt_DEPENDENCIES = @WPS2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la
-wps2odt_LDADD = @WPS2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect-1.la $(WRITERPERFECTCORE_LIBS) $(writerperfectwps_ldadd) $(writerperfectgsf_ldadd)
+wps2odt_DEPENDENCIES = @WPS2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la
+wps2odt_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPS_CFLAGS) $(GSF_CFLAGS)
+wps2odt_LDADD = @WPS2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(WPS_LIBS) $(GSF_LIBS)
+wps2odt_SOURCES = \
+	$(COMMON_SRC) \
+	wps2odt.cxx
 if STATIC_TOOLS
 wps2odt_LDFLAGS = -all-static
 endif
 
-wps2odt_SOURCES = \
-	DiskDocumentHandler.hxx \
-	DiskDocumentHandler.cxx \
-	OutputFileHelper.cxx \
-	OutputFileHelper.hxx \
-	StdOutHandler.hxx \
-	StdOutHandler.cxx \
-	FemtoZip.cxx \
-	FemtoZip.hxx \
-	wps2odt.cxx
+wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la
+wpg2odg_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
+wpg2odg_LDADD = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(WPG_LIBS) $(GSF_LIBS)
+wpg2odg_SOURCES = \
+	$(COMMON_SRC) \
+	wpg2odg.cxx
+if STATIC_TOOLS
+wpg2odg_LDFLAGS = -all-static
+endif
+
+
+vsd2odg_DEPENDENCIES = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la
+vsd2odg_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
+vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(VISIO_LIBS) $(GSF_LIBS)
+if STATIC_TOOLS
+vsd2odg_LDFLAGS = -all-static
+endif
+vsd2odg_SOURCES = \
+	$(COMMON_SRC) \
+	vsd2odg.cxx
 
 if OS_WIN32
 
