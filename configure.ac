@@ -10,7 +10,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([writerperfect_version_major],[0])
 m4_define([writerperfect_version_minor],[8])
-m4_define([writerperfect_version_micro],[0])
+m4_define([writerperfect_version_micro],[1])
 m4_define([writerperfect_version],[writerperfect_version_major.writerperfect_version_minor.writerperfect_version_micro])
 
 # =============
@@ -143,7 +143,7 @@ AM_CONDITIONAL(STATIC_TOOLS, [test "x$enable_static_tools" = "xyes"])
 # ======
 AC_ARG_WITH(libgsf,
 	[AS_HELP_STRING([--with-libgsf],
-		[Do not use libgsf for output of structured files])],
+		[Use libgsf for output of structured files])],
 	[with_libgsf="$withval"],
 	[with_libgsf=no]
 )
