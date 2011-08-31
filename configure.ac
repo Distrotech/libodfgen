@@ -142,14 +142,14 @@ AM_CONDITIONAL(STATIC_TOOLS, [test "x$enable_static_tools" = "xyes"])
 # libgsf
 # ======
 AC_ARG_WITH(libgsf,
-	[AS_HELP_STRING([--without-libgsf],
+	[AS_HELP_STRING([--with-libgsf],
 		[Do not use libgsf for output of structured files])],
 	[with_libgsf="$withval"],
-	[with_libgsf=yes]
+	[with_libgsf=no]
 )
-AM_CONDITIONAL([USE_GSF_OUTPUT], [test "x$with_libgsf" != "xno"])
-AM_CONDITIONAL([GSF_HAS_COMPRESSION_LEVEL], [test "x$with_libgsf" != "xno"])
-AS_IF([test "x$with_libgsf" != "xno"], [
+AM_CONDITIONAL([USE_GSF_OUTPUT], [test "x$with_libgsf" = "xyes"])
+AM_CONDITIONAL([GSF_HAS_COMPRESSION_LEVEL], [test "x$with_libgsf" = "xyes"])
+AS_IF([test "x$with_libgsf" = "xyes"], [
 	PKG_CHECK_MODULES([WRITERPERFECTGSF], [
 		libgsf-1 >= 1.12.0
 		glib-2.0 >= 2.0.0
@@ -197,7 +197,7 @@ AC_ARG_WITH(libvisio,
 	[with_libvisio="$withval"],
 	[with_libvisio=no]
 )
-AM_CONDITIONAL([USE_LIBVISIO], [test "x$with_libvisio" != "xyes"])
+AM_CONDITIONAL([USE_LIBVISIO], [test "x$with_libvisio" = "xyes"])
 AS_IF([test "x$with_libvisio" = "xyes"], [
 	PKG_CHECK_MODULES(WRITERPERFECTVSD, [
 		libvisio-0.0

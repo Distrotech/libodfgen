@@ -34,7 +34,7 @@ COMMON_SRC = \
 	FemtoZip.hxx
 
 wpd2odt_DEPENDENCIES = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la
-wpd2odt_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
+wpd2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
 wpd2odt_LDADD = @WPD2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(WPG_LIBS) $(GSF_LIBS)
 wpd2odt_SOURCES = \
 	$(COMMON_SRC) \
@@ -44,7 +44,7 @@ wpd2odt_LDFLAGS = -all-static
 endif
 
 wps2odt_DEPENDENCIES = @WPS2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la
-wps2odt_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPS_CFLAGS) $(GSF_CFLAGS)
+wps2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPS_CFLAGS) $(GSF_CFLAGS)
 wps2odt_LDADD = @WPS2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(WPS_LIBS) $(GSF_LIBS)
 wps2odt_SOURCES = \
 	$(COMMON_SRC) \
@@ -54,7 +54,7 @@ wps2odt_LDFLAGS = -all-static
 endif
 
 wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la
-wpg2odg_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
+wpg2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
 wpg2odg_LDADD = @WPG2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(WPG_LIBS) $(GSF_LIBS)
 wpg2odg_SOURCES = \
 	$(COMMON_SRC) \
@@ -65,7 +65,7 @@ endif
 
 
 vsd2odg_DEPENDENCIES = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la
-vsd2odg_CXXFLAGS = -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
+vsd2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
 vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(VISIO_LIBS) $(GSF_LIBS)
 if STATIC_TOOLS
 vsd2odg_LDFLAGS = -all-static
