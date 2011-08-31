@@ -34,5 +34,4 @@ libwriterperfect_la_SOURCES = \
 	TextRunStyle.hxx \
 	OdtGenerator.cxx \
 	OdtGenerator.hxx \
-	$(WP_WPG_SOURCES)	
-
+	$(WP_WPG_SOURCES)
