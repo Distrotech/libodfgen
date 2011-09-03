@@ -26,6 +26,7 @@
 StdOutHandler::StdOutHandler() :
 	mbIsTagOpened(false)
 {
+	printf("<?xml version=\"1.0\"?>\n");
 }
 
 void StdOutHandler::startElement(const char *psName, const WPXPropertyList &xPropList)
