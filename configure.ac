@@ -139,18 +139,21 @@ AM_CONDITIONAL(STATIC_TOOLS, [test "x$enable_static_tools" = "xyes"])
 # libgsf
 # ======
 AC_ARG_WITH(libgsf,
-	[AS_HELP_STRING([--with-libgsf],
+	[AS_HELP_STRING([--without-libgsf],
 		[Use libgsf for output of structured files])],
 	[with_libgsf="$withval"],
-	[with_libgsf=no]
+	[with_libgsf=auto]
 )
-AM_CONDITIONAL([USE_GSF_OUTPUT], [test "x$with_libgsf" = "xyes"])
-AM_CONDITIONAL([GSF_HAS_COMPRESSION_LEVEL], [test "x$with_libgsf" = "xyes"])
-AS_IF([test "x$with_libgsf" = "xyes"], [
-	PKG_CHECK_MODULES([WRITERPERFECTGSF], [
-		libgsf-1 >= 1.12.0
-		glib-2.0 >= 2.0.0
-	])
+AS_IF([test "x$with_libgsf" != "xno"], [
+		PKG_CHECK_MODULES(WRITERPERFECTGSF, [
+			libgsf-1 >= 1.12.0
+			glib-2.0 >= 2.0.0
+		], [have_libgsf=yes], [have_libgsf=no])
+	], [have_libgsf=no])
+AM_CONDITIONAL([USE_GSF_OUTPUT], [test "x$have_libgsf" = "xyes"])
+AM_CONDITIONAL([GSF_HAS_COMPRESSION_LEVEL], [test "x$have_libgsf" = "xyes"])
+AS_IF([test "x$have_libgsf" = "xno" -a "x$with_libgsf" = "xyes"], [
+	AC_MSG_ERROR([libgsf requested but not found])
 ])
 
 # ======
@@ -162,11 +165,13 @@ AC_ARG_WITH(libwpg,
 	[with_libwpg="$withval"],
 	[with_libwpg=yes]
 )
-AM_CONDITIONAL([USE_LIBWPG], [test "x$with_libwpg" != "xno"])
 AS_IF([test "x$with_libwpg" != "xno"], [
-	PKG_CHECK_MODULES(WRITERPERFECTWPG, [
-		libwpg-0.2
-	])
+		PKG_CHECK_MODULES(WRITERPERFECTWPG, [libwpg-0.2],
+			[have_libwpg=yes], [have_libwpg=no])
+	], [have_libwpg=no])
+AM_CONDITIONAL([USE_LIBWPG], [test "x$have_libwpg" = "xyes"])
+AS_IF([test "x$have_libwpg" = "xno" -a "x$with_libwpg" = "xyes"], [
+	AC_MSG_ERROR([libwpg requested but not found])
 ])
 
 # ======
@@ -176,29 +181,33 @@ AC_ARG_WITH(libwps,
 	[AS_HELP_STRING([--without-libwps],
 		[Do not use for conversion of Microsoft Works Documents])],
 	[with_libwps="$withval"],
-	[with_libwps=yes]
+	[with_libwps=auto]
 )
-AM_CONDITIONAL([USE_LIBWPS], [test "x$with_libwps" != "xno"])
 AS_IF([test "x$with_libwps" != "xno"], [
-	PKG_CHECK_MODULES(WRITERPERFECTWPS, [
-		libwps-0.2
-	])
+		PKG_CHECK_MODULES(WRITERPERFECTWPS, [libwps-0.2],
+			[have_libwps=yes], [have_libwps=no])
+	], [have_libwps=no])
+AM_CONDITIONAL([USE_LIBWPS], [test "x$have_libwps" = "xyes"])
+AS_IF([test "x$have_libwps" = "xno" -a "x$with_libwps" = "xyes"], [
+	AC_MSG_ERROR([libwps requested but not found])
 ])
 
 # ========
 # libvisio
 # ========
 AC_ARG_WITH(libvisio,
-	[AS_HELP_STRING([--with-libvisio],
+	[AS_HELP_STRING([--without-libvisio],
 		[Use libvisio for conversion of Microsoft Visio Documents])],
 	[with_libvisio="$withval"],
-	[with_libvisio=no]
+	[with_libvisio=auto]
 )
-AM_CONDITIONAL([USE_LIBVISIO], [test "x$with_libvisio" = "xyes"])
-AS_IF([test "x$with_libvisio" = "xyes"], [
-	PKG_CHECK_MODULES(WRITERPERFECTVSD, [
-		libvisio-0.0
-	])
+AS_IF([test "x$with_libvisio" != "xno"], [
+		PKG_CHECK_MODULES(WRITERPERFECTVSD, [libvisio-0.0],
+			[have_libvisio=yes], [have_libvisio=no])
+	], [have_libvisio=no])
+AM_CONDITIONAL([USE_LIBVISIO], [test "x$have_libvisio" = "xyes"])
+AS_IF([test "x$have_libvisio" = "xno" -a "x$with_libvisio" = "xyes"], [
+	AC_MSG_ERROR([libvisio requested but not found])
 ])
 
 # =====================
@@ -226,10 +235,10 @@ AC_MSG_NOTICE([
 ==============================================================================
 Build configuration:
 	debug:           ${enable_debug}
-	libgsf:          ${with_libgsf}
-	libwpg:          ${with_libwpg}
-	libwps:          ${with_libwps}
-	libvisio:        ${with_libvisio}
+	libgsf:          ${have_libgsf}
+	libwpg:          ${have_libwpg}
+	libwps:          ${have_libwps}
+	libvisio:        ${have_libvisio}
 	werror:          ${enable_werror}
 ==============================================================================
 ])
