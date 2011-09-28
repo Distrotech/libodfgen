@@ -11,12 +11,12 @@ URL: http://libwpd.sf.net/
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 License: LGPL
 BuildRequires: gcc-c++ pkgconfig
-BuildRequires: libwpd-devel >= @LIBWPD_REQUIRED_VERSION@
-BuildRequires: libwpg-devel >= @LIBWPG_REQUIRED_VERSION@
-%if %{!?_without_stream:1}%{?_without_stream:0}
+BuildRequires: libwpd-devel >= 0.9
+BuildRequires: libwpg-devel >= 0.2
+BuildRequires: libwpd-devel >= 0.2
+BuildRequires: libvisio-devel >= 0.0
 BuildRequires: glib2-devel >= 2.0.0
 BuildRequires: libgsf-devel >= 1.6.0
-%endif
 
 %description
 Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word Perfect Graphics into OpenDocument Drawing formats.
@@ -24,8 +24,16 @@ Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word P
 %package -n wpd2odt
 Summary: Tool for converting WordPerfect(tm) documents into OpenDocument Text format.
 Group: Applications
+
 %description -n wpd2odt
 Tool for converting Word Perfect documents into OpenDocument Text format.
+
+%package -n wps2odt
+Summary: Tool for converting MS Works documents into OpenDocument Text format
+Group: Applications
+ 
+%description -n wps2odt
+Tool for converting MS Works documents into OpenDocument Text format.
 
 %package -n wpg2odg
 Summary: Tool for converting Word Perfect Graphics into OpenDocument Graphics format
@@ -33,6 +41,13 @@ Group: Applications
  
 %description -n wpg2odg
 Tool for converting Word Perfect Graphics into OpenDocument Graphics format.
+
+%package -n vsd2odg
+Summary: Tool for converting Microsoft Visio documents into OpenDocument Graphics format
+Group: Applications
+ 
+%description -n vsd2odg
+Tool for converting Microsoft Visio documents into OpenDocument Graphics format.
 
 %prep
 %__rm -rf $RPM_BUILD_ROOT
@@ -57,9 +72,17 @@ umask 022
 %defattr(755,root,root,755)
 %{_bindir}/wpd2odt
 
+%files -n wps2odt
+%defattr(755,root,root,755)
+%{_bindir}/wps2odt
+
 %files -n wpg2odg
 %defattr(755,root,root,755)
 %{_bindir}/wpg2odg
+
+%files -n vsd2odg
+%defattr(755,root,root,755)
+%{_bindir}/vsd2odg
 
 %changelog
 * Wed Nov 17 2004 Fridrich Strba <fridrich.strba@bluewin.ch>

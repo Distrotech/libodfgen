@@ -1,4 +1,17 @@
 NEWS:
+0.8.0 -> 0.8.1
+- Consolidate wps2odt into writerperfect. Optionally built if libwps
+  is present at configure time.
+- Add vsd2odg to convert MS Visio documents. Optionally built if
+  libvisio is present at configure time.
+- Refactor the ODT and ODG generators to make them easier reusable.
+- Support for basic text boxes in ODG.
+- Proper support of elliptical arcs including correct bounding box
+  computation.
+- Support for opacity gradients and object shadows in ODG generator.
+- Extended support for colour gradients.
+- Gcc 4.6.x build fixes.
+
 0.7.x -> 0.8.0
 - Generate ODT instead of SXW file format (wpd2sxw -> wpd2odt)
 - Use this module for the wpg2odg command-line tool in order to prevent
@@ -14,7 +27,6 @@ NEWS:
 - Make libgsf dependency optional.
 - Fix a lot of bugs and validity issues with generated ODT/ODG.
 - Convert embedded text in WPG documents.
-
 
 0.7.0 -> 0.7.1
 - Convert table in foot/endnote into normal text because OOo is not
