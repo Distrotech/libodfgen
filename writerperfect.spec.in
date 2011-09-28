@@ -13,7 +13,7 @@ License: LGPL
 BuildRequires: gcc-c++ pkgconfig
 BuildRequires: libwpd-devel >= 0.9
 BuildRequires: libwpg-devel >= 0.2
-BuildRequires: libwpd-devel >= 0.2
+BuildRequires: libwps-devel >= 0.2
 BuildRequires: libvisio-devel >= 0.0
 %if %{!?_without_stream:1}%{?_without_stream:0}
 BuildRequires: glib2-devel >= 2.0.0
