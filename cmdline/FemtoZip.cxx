@@ -376,7 +376,8 @@ public:
 		buffer[19] = (centralDirPos>>24) & 0xff;
 		buffer[20] = 0x00;
 		buffer[21] = 0x00;
-		fwrite(buffer, 1, 22, fhandle);
+		if(fwrite(buffer, 1, 22, fhandle) != 22)
+			errorCode = FemtoZip::ErrorWriteData;
 
 		// that's all, we're done !
 		fclose(fhandle);
