@@ -15,8 +15,10 @@ BuildRequires: libwpd-devel >= 0.9
 BuildRequires: libwpg-devel >= 0.2
 BuildRequires: libwpd-devel >= 0.2
 BuildRequires: libvisio-devel >= 0.0
+%if %{!?_without_stream:1}%{?_without_stream:0}
 BuildRequires: glib2-devel >= 2.0.0
 BuildRequires: libgsf-devel >= 1.6.0
+%endif
 
 %description
 Tools for converting WordPerfect(tm) documents into OpenDocument Text and Word Perfect Graphics into OpenDocument Drawing formats.
