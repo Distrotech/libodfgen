@@ -1098,7 +1098,8 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 
 			// Work around a mess in LibreOffice where both opacities of 100% are interpreted as complete transparency
 			// Nevertheless, when one is different, immediately, they are interpreted correctly
-			if (!(mxStyle["libwpg:start-opacity"] && mxStyle["libwpg:end-opacity"]) || (mxStyle["libwpg:start-opacity"]->getDouble() == 1.0 && mxStyle["libwpg:end-opacity"]->getDouble() == 1.0))
+			if (!(mxStyle["libwpg:start-opacity"] && mxStyle["libwpg:end-opacity"])
+			    || (mxStyle["libwpg:start-opacity"]->getDouble() == 1.0 && mxStyle["libwpg:end-opacity"]->getDouble() == 1.0))
 			{
 				delete pDrawOpacityElement;
 				bUseOpacityGradient = false;
@@ -1234,7 +1235,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	miGraphicsStyleIndex++;
 }
 
-void OdgGenerator::startEmbeddedGraphics(WPXPropertyList const&)
+void OdgGenerator::startEmbeddedGraphics(const WPXPropertyList &)
 {
 }
 
@@ -1242,7 +1243,7 @@ void OdgGenerator::endEmbeddedGraphics()
 {
 }
 
-void OdgGenerator::startTextObject(WPXPropertyList const &propList, WPXPropertyListVector const &)
+void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPropertyListVector&)
 {
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	TagOpenElement *pStyleStyleOpenElement = new TagOpenElement("style:style");
@@ -1342,7 +1343,7 @@ void OdgGenerator::endTextObject()
 	}
 }
 
-void OdgGenerator::startTextLine(WPXPropertyList const &propList)
+void OdgGenerator::startTextLine(const WPXPropertyList &propList)
 {
 	WPXPropertyList *pPersistPropList = new WPXPropertyList(propList);
 	ParagraphStyle *pStyle = 0;
@@ -1377,7 +1378,7 @@ void OdgGenerator::endTextLine()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
 }
 
-void OdgGenerator::startTextSpan(WPXPropertyList const&propList)
+void OdgGenerator::startTextSpan(const WPXPropertyList &propList)
 {
 	if (propList["style:font-name"])
 	{
@@ -1411,7 +1412,7 @@ void OdgGenerator::endTextSpan()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:span"));
 }
 
-void OdgGenerator::insertText(WPXString const &text)
+void OdgGenerator::insertText(const WPXString &text)
 {
 	DocumentElement *pText = new TextElement(text);
 	mpImpl->mBodyElements.push_back(pText);
