@@ -12,6 +12,8 @@ noinst_LTLIBRARIES = libwriterperfect.la
 libwriterperfect_la_CXXFLAGS = $(WRITERPERFECTCORE_CFLAGS) $(WP_WPG_CFLAGS) $(DEBUG_CXXFLAGS)
 libwriterperfect_la_LIBADD  = $(WRITERPERFECTCORE_LIBS) $(WP_WPG_LIBS)
 libwriterperfect_la_SOURCES = \
+	libwriterperfect_filter.hxx \
+	libwriterperfect_filter.cxx \
 	FilterInternal.hxx \
 	Style.hxx \
 	WriterProperties.hxx \
