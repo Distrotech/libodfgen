@@ -110,8 +110,6 @@ class OdtGeneratorPrivate
 public:
 	OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdtGeneratorPrivate();
-  //    void _resetDocumentState();
-  //    bool _parseSourceDocument(WPXInputStream &input, const char *password);
 	bool _writeTargetDocument(OdfDocumentHandler *pHandler);
 	void _writeBegin();
 	void _writeDefaultStyles(OdfDocumentHandler *pHandler);
@@ -132,13 +130,13 @@ public:
 	std::stack<WriterListState> mWriterListStates;
 
 	// paragraph styles
-  ParagraphStyleManager mParagraphManager;
+	ParagraphStyleManager mParagraphManager;
 
 	// span styles
-  SpanStyleManager mSpanManager;
+	SpanStyleManager mSpanManager;
 
 	// font styles
-  FontStyleManager mFontManager;
+	FontStyleManager mFontManager;
 
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
@@ -186,25 +184,25 @@ public:
 };
 
 OdtGeneratorPrivate::OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
-  mpInput(0), 
+	mpInput(0), 
 	mpHandler(pHandler),
 	mbUsed(false),
 	mWriterDocumentStates(),
 	mWriterListStates(),
-  mParagraphManager(), mSpanManager(), mFontManager(),
-  mSectionStyles(), mTableStyles(), mFrameStyles(), mFrameAutomaticStyles(),
-  mObjectHandlers(), mMetaData(),
+	mParagraphManager(), mSpanManager(), mFontManager(),
+	mSectionStyles(), mTableStyles(), mFrameStyles(), mFrameAutomaticStyles(),
+	mObjectHandlers(), mMetaData(),
 	miNumListStyles(0),
-  mBodyElements(),
+	mBodyElements(),
 	mpCurrentContentElements(&mBodyElements),
-  mPageSpans(),
+	mPageSpans(),
 	mpCurrentPageSpan(0),
 	miNumPageStyles(0),
-  mListStyles(),
+	mListStyles(),
 	miObjectNumber(0),
-  mpCurrentTableStyle(0),
+	mpCurrentTableStyle(0),
     mxStreamType(streamType),
-  mpPassword(0)
+	mpPassword(0)
 {
 	mWriterDocumentStates.push(WriterDocumentState());
 	mWriterListStates.push(WriterListState());
