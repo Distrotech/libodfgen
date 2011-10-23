@@ -48,3 +48,46 @@ void FontStyle::write(OdfDocumentHandler *pHandler) const
 	TagCloseElement styleClose("style:font-face");
 	styleClose.write(pHandler);
 }
+
+////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
+void FontStyleManager::clean()
+{
+  for (std::map<WPXString, FontStyle *, ltstr>::iterator iter = mHash.begin();
+       iter != mHash.end(); iter++) {
+    delete(iter->second);
+  }
+  mHash.clear();
+}
+
+void FontStyleManager::writeFontsDeclaration(OdfDocumentHandler *pHandler) const
+{
+  TagOpenElement("office:font-face-decls").write(pHandler);
+  std::map<WPXString, FontStyle *, ltstr>::const_iterator iter;
+  for (std::map<WPXString, FontStyle *, ltstr>::const_iterator iter = mHash.begin();
+       iter != mHash.end(); iter++)
+    {
+      (iter->second)->write(pHandler);
+    }
+
+  TagOpenElement symbolFontOpen("style:font-face");
+  symbolFontOpen.addAttribute("style:name", "StarSymbol");
+  symbolFontOpen.addAttribute("svg:font-family", "StarSymbol");
+  symbolFontOpen.addAttribute("style:font-charset", "x-symbol");
+  symbolFontOpen.write(pHandler);
+  pHandler->endElement("style:font-face");
+
+  pHandler->endElement("office:font-face-decls");
+}
+ 
+WPXString FontStyleManager::findOrAdd(const char *psFontFamily)
+{
+  std::map<WPXString, FontStyle *, ltstr>::const_iterator iter =
+    mHash.find(psFontFamily);
+  if (iter!=mHash.end()) return iter->second->getName();
+
+  // ok create a new font
+  mHash[psFontFamily] = new FontStyle(psFontFamily, psFontFamily);
+  return psFontFamily;
+}
+

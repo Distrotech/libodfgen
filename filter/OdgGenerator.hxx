@@ -27,6 +27,7 @@
 
 #include <libwpd/libwpd.h>
 #include <libwpg/libwpg.h>
+
 #include "OdfDocumentHandler.hxx"
 
 class OdgGeneratorPrivate;
