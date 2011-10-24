@@ -236,8 +236,8 @@ public:
 	OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdgGeneratorPrivate();
 	void _writeGraphicsStyle();
-	void _drawPolySomething(const ::WPXPropertyListVector& vertices, bool isClosed);
-	void _drawPath(const WPXPropertyListVector& path);
+	void _drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed);
+	void _drawPath(const WPXPropertyListVector &path);
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
 
@@ -251,13 +251,13 @@ public:
 	std::vector<DocumentElement *> mPageMasterStyles;
 
 	// paragraph styles
-  ParagraphStyleManager mParagraphManager;
+	ParagraphStyleManager mParagraphManager;
 
 	// span styles
-  SpanStyleManager mSpanManager;
+	SpanStyleManager mSpanManager;
 
 	// font styles
-  FontStyleManager mFontManager;
+	FontStyleManager mFontManager;
 
 	OdfDocumentHandler *mpHandler;
 
@@ -284,11 +284,11 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mGraphicsAutomaticStyles(),
 	mPageAutomaticStyles(),
 	mPageMasterStyles(),
-    mParagraphManager(),
-    mSpanManager(),
-    mFontManager(),
+	mParagraphManager(),
+	mSpanManager(),
+	mFontManager(),
 	mpHandler(pHandler),
-    mxStyle(), mxGradient(),
+	mxStyle(), mxGradient(),
 	miGradientIndex(1),
 	miDashIndex(1),
 	miGraphicsStyleIndex(1),
@@ -314,38 +314,38 @@ OdgGeneratorPrivate::~OdgGeneratorPrivate()
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
-		iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++)
+	        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++)
 	{
 		delete((*iterGraphicsAutomaticStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterGraphicsStrokeDashStyles = mGraphicsStrokeDashStyles.begin();
-		iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++)
+	        iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++)
 	{
 		delete((*iterGraphicsStrokeDashStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterGraphicsGradientStyles = mGraphicsGradientStyles.begin();
-		iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++)
+	        iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++)
 	{
 		delete((*iterGraphicsGradientStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mPageAutomaticStyles.begin();
-		iterPageAutomaticStyles != mPageAutomaticStyles.end(); iterPageAutomaticStyles++)
+	        iterPageAutomaticStyles != mPageAutomaticStyles.end(); iterPageAutomaticStyles++)
 	{
 		delete((*iterPageAutomaticStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterPageMasterStyles = mPageMasterStyles.begin();
-		iterPageMasterStyles != mPageMasterStyles.end(); iterPageMasterStyles++)
+	        iterPageMasterStyles != mPageMasterStyles.end(); iterPageMasterStyles++)
 	{
 		delete((*iterPageMasterStyles));
 	}
 
-    mParagraphManager.clean();
-    mSpanManager.clean();
-    mFontManager.clean();
+	mParagraphManager.clean();
+	mSpanManager.clean();
+	mFontManager.clean();
 }
 
 
@@ -354,11 +354,11 @@ OdgGenerator::OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 {
 	mpImpl->mpHandler->startDocument();
 	TagOpenElement tmpOfficeDocumentContent(
-		(mpImpl->mxStreamType == ODF_FLAT_XML) ? "office:document" : (
-		(mpImpl->mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
-		(mpImpl->mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
-		(mpImpl->mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
-		(mpImpl->mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
+	    (mpImpl->mxStreamType == ODF_FLAT_XML) ? "office:document" : (
+	        (mpImpl->mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
+	            (mpImpl->mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
+	                (mpImpl->mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
+	                    (mpImpl->mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
 	tmpOfficeDocumentContent.addAttribute("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
@@ -401,14 +401,16 @@ OdgGenerator::~OdgGenerator()
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpImpl->mpHandler);
-		WPXString sWidth; sWidth.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxWidth));
+		WPXString sWidth;
+		sWidth.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxWidth));
 		mpImpl->mpHandler->characters(sWidth);
 		mpImpl->mpHandler->endElement("config:config-item");
 
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpImpl->mpHandler);
-		WPXString sHeight; sHeight.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxHeight));
+		WPXString sHeight;
+		sHeight.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxHeight));
 		mpImpl->mpHandler->characters(sHeight);
 		mpImpl->mpHandler->endElement("config:config-item");
 
@@ -423,13 +425,13 @@ OdgGenerator::~OdgGenerator()
 		TagOpenElement("office:styles").write(mpImpl->mpHandler);
 
 		for (std::vector<DocumentElement *>::const_iterator iterGraphicsStrokeDashStyles = mpImpl->mGraphicsStrokeDashStyles.begin();
-			iterGraphicsStrokeDashStyles != mpImpl->mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++)
+		        iterGraphicsStrokeDashStyles != mpImpl->mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++)
 		{
 			(*iterGraphicsStrokeDashStyles)->write(mpImpl->mpHandler);
 		}
 
 		for (std::vector<DocumentElement *>::const_iterator iterGraphicsGradientStyles = mpImpl->mGraphicsGradientStyles.begin();
-			iterGraphicsGradientStyles != mpImpl->mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++)
+		        iterGraphicsGradientStyles != mpImpl->mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++)
 		{
 			(*iterGraphicsGradientStyles)->write(mpImpl->mpHandler);
 		}
@@ -440,7 +442,7 @@ OdgGenerator::~OdgGenerator()
 
 	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
 	{
-      mpImpl->mFontManager.writeFontsDeclaration(mpImpl->mpHandler);
+		mpImpl->mFontManager.writeFontsDeclaration(mpImpl->mpHandler);
 
 		TagOpenElement("office:automatic-styles").write(mpImpl->mpHandler);
 	}
@@ -449,12 +451,12 @@ OdgGenerator::~OdgGenerator()
 	{
 		// writing out the graphics automatic styles
 		for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mpImpl->mGraphicsAutomaticStyles.begin();
-			iterGraphicsAutomaticStyles != mpImpl->mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++)
+		        iterGraphicsAutomaticStyles != mpImpl->mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++)
 		{
 			(*iterGraphicsAutomaticStyles)->write(mpImpl->mpHandler);
 		}
-        mpImpl->mParagraphManager.write(mpImpl->mpHandler);
-        mpImpl->mSpanManager.write(mpImpl->mpHandler);
+		mpImpl->mParagraphManager.write(mpImpl->mpHandler);
+		mpImpl->mSpanManager.write(mpImpl->mpHandler);
 	}
 #ifdef MULTIPAGE_WORKAROUND
 	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
@@ -469,9 +471,11 @@ OdgGenerator::~OdgGenerator()
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-left", "0in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-right", "0in");
 		WPXString sValue;
-		sValue = doubleToString(mpImpl->mfMaxWidth); sValue.append("in");
+		sValue = doubleToString(mpImpl->mfMaxWidth);
+		sValue.append("in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-width", sValue);
-		sValue = doubleToString(mpImpl->mfMaxHeight); sValue.append("in");
+		sValue = doubleToString(mpImpl->mfMaxHeight);
+		sValue.append("in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-height", sValue);
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("style:print-orientation", "portrait");
 		tmpStylePageLayoutPropertiesOpenElement.write(mpImpl->mpHandler);
@@ -499,7 +503,7 @@ OdgGenerator::~OdgGenerator()
 	{
 		// writing out the page automatic styles
 		for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mpImpl->mPageAutomaticStyles.begin();
-			iterPageAutomaticStyles != mpImpl->mPageAutomaticStyles.end(); iterPageAutomaticStyles++)
+		        iterPageAutomaticStyles != mpImpl->mPageAutomaticStyles.end(); iterPageAutomaticStyles++)
 		{
 			(*iterPageAutomaticStyles)->write(mpImpl->mpHandler);
 		}
@@ -515,7 +519,7 @@ OdgGenerator::~OdgGenerator()
 		TagOpenElement("office:master-styles").write(mpImpl->mpHandler);
 
 		for (std::vector<DocumentElement *>::const_iterator pageMasterIter = mpImpl->mPageMasterStyles.begin();
-			pageMasterIter != mpImpl->mPageMasterStyles.end(); pageMasterIter++)
+		        pageMasterIter != mpImpl->mPageMasterStyles.end(); pageMasterIter++)
 		{
 			(*pageMasterIter)->write(mpImpl->mpHandler);
 		}
@@ -529,7 +533,7 @@ OdgGenerator::~OdgGenerator()
 		TagOpenElement("office:drawing").write(mpImpl->mpHandler);
 
 		for (std::vector<DocumentElement *>::const_iterator bodyIter = mpImpl->mBodyElements.begin();
-			bodyIter != mpImpl->mBodyElements.end(); bodyIter++)
+		        bodyIter != mpImpl->mBodyElements.end(); bodyIter++)
 		{
 			(*bodyIter)->write(mpImpl->mpHandler);
 		}
@@ -539,11 +543,11 @@ OdgGenerator::~OdgGenerator()
 	}
 
 	mpImpl->mpHandler->endElement(
-		(mpImpl->mxStreamType == ODF_FLAT_XML) ? "office:document" : (
-		(mpImpl->mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
-		(mpImpl->mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
-		(mpImpl->mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
-		(mpImpl->mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
+	    (mpImpl->mxStreamType == ODF_FLAT_XML) ? "office:document" : (
+	        (mpImpl->mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
+	            (mpImpl->mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
+	                (mpImpl->mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
+	                    (mpImpl->mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
 
 	mpImpl->mpHandler->endDocument();
 
@@ -646,7 +650,7 @@ void OdgGenerator::endGraphics()
 	mpImpl->miPageIndex++;
 }
 
-void OdgGenerator::setStyle(const ::WPXPropertyList & propList, const ::WPXPropertyListVector& gradient)
+void OdgGenerator::setStyle(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &gradient)
 {
 	mpImpl->mxStyle.clear();
 	mpImpl->mxStyle = propList;
@@ -688,9 +692,11 @@ void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
 	WPXString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
-	sValue = doubleToString(2 * propList["svg:rx"]->getDouble()); sValue.append("in");
+	sValue = doubleToString(2 * propList["svg:rx"]->getDouble());
+	sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(2 * propList["svg:ry"]->getDouble()); sValue.append("in");
+	sValue = doubleToString(2 * propList["svg:ry"]->getDouble());
+	sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
 	if (propList["libwpg:rotate"] && propList["libwpg:rotate"]->getDouble() != 0.0)
 	{
@@ -701,39 +707,45 @@ void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
 			rotation -= 360;
 		double radrotation = rotation*M_PI/180.0;
 		double deltax = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
-			+ pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-			- radrotation ) - propList["svg:rx"]->getDouble();
+		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
+		                             - radrotation ) - propList["svg:rx"]->getDouble();
 		double deltay = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
-			+ pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-			- radrotation ) - propList["svg:ry"]->getDouble();
-		sValue = "rotate("; sValue.append(doubleToString(radrotation)); sValue.append(") ");
-		sValue.append("translate("); sValue.append(doubleToString(propList["svg:cx"]->getDouble() - propList["svg:rx"]->getDouble() - deltax));
+		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
+		                             - radrotation ) - propList["svg:ry"]->getDouble();
+		sValue = "rotate(";
+		sValue.append(doubleToString(radrotation));
+		sValue.append(") ");
+		sValue.append("translate(");
+		sValue.append(doubleToString(propList["svg:cx"]->getDouble() - propList["svg:rx"]->getDouble() - deltax));
 		sValue.append("in, ");
-		sValue.append(doubleToString(propList["svg:cy"]->getDouble() - propList["svg:ry"]->getDouble() - deltay)); sValue.append("in)");
+		sValue.append(doubleToString(propList["svg:cy"]->getDouble() - propList["svg:ry"]->getDouble() - deltay));
+		sValue.append("in)");
 		pDrawEllipseElement->addAttribute("draw:transform", sValue);
 	}
 	else
 	{
-		sValue = doubleToString(propList["svg:cx"]->getDouble()-propList["svg:rx"]->getDouble()); sValue.append("in");
+		sValue = doubleToString(propList["svg:cx"]->getDouble()-propList["svg:rx"]->getDouble());
+		sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:x", sValue);
-		sValue = doubleToString(propList["svg:cy"]->getDouble()-propList["svg:ry"]->getDouble()); sValue.append("in");
+		sValue = doubleToString(propList["svg:cy"]->getDouble()-propList["svg:ry"]->getDouble());
+		sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:y", sValue);
 	}
 	mpImpl->mBodyElements.push_back(pDrawEllipseElement);
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
 
-void OdgGenerator::drawPolyline(const ::WPXPropertyListVector& vertices)
+void OdgGenerator::drawPolyline(const ::WPXPropertyListVector &vertices)
 {
 	mpImpl->_drawPolySomething(vertices, false);
 }
 
-void OdgGenerator::drawPolygon(const ::WPXPropertyListVector& vertices)
+void OdgGenerator::drawPolygon(const ::WPXPropertyListVector &vertices)
 {
 	mpImpl->_drawPolySomething(vertices, true);
 }
 
-void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector& vertices, bool isClosed)
+void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed)
 {
 	if(vertices.count() < 2)
 		return;
@@ -777,7 +789,7 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector& vert
 	}
 }
 
-void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
+void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 {
 	if(path.count() == 0)
 		return;
@@ -793,7 +805,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 	double px = 0.0, py = 0.0, qx = 0.0, qy = 0.0;
 	double lastX = 0.0;
 	double lastY = 0.0;
-	
+
 	for(unsigned k = 0; k < path.count(); k++)
 	{
 		if (!path[k]["svg:x"] || !path[k]["svg:y"])
@@ -850,13 +862,17 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 	pDrawPathElement->addAttribute("draw:style-name", sValue);
 	pDrawPathElement->addAttribute("draw:layer", "layout");
-	sValue = doubleToString(px); sValue.append("in");
+	sValue = doubleToString(px);
+	sValue.append("in");
 	pDrawPathElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(py); sValue.append("in");
+	sValue = doubleToString(py);
+	sValue.append("in");
 	pDrawPathElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString((qx - px)); sValue.append("in");
+	sValue = doubleToString((qx - px));
+	sValue.append("in");
 	pDrawPathElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString((qy - py)); sValue.append("in");
+	sValue = doubleToString((qy - py));
+	sValue.append("in");
 	pDrawPathElement->addAttribute("svg:height", sValue);
 	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)(2540*(qx - px)), (unsigned)(2540*(qy - py)));
 	pDrawPathElement->addAttribute("svg:viewBox", sValue);
@@ -869,30 +885,30 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 		{
 			// 2540 is 2.54*1000, 2.54 in = 1 inch
 			sElement.sprintf("M%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "L")
 		{
 			sElement.sprintf("L%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "C")
 		{
 			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
-				(unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
-				(unsigned)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-				(unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "A")
 		{
 			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
-				(unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0),
-				(path[i]["libwpg:large-arc"] ? path[i]["libwpg:large-arc"]->getInt() : 1),
-				(path[i]["libwpg:sweep"] ? path[i]["libwpg:sweep"]->getInt() : 1),
-				(unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			                 (unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0),
+			                 (path[i]["libwpg:large-arc"] ? path[i]["libwpg:large-arc"]->getInt() : 1),
+			                 (path[i]["libwpg:sweep"] ? path[i]["libwpg:sweep"]->getInt() : 1),
+			                 (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["libwpg:path-action"]->getStr() == "Z")
@@ -903,12 +919,12 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector& path)
 	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
-void OdgGenerator::drawPath(const WPXPropertyListVector& path)
+void OdgGenerator::drawPath(const WPXPropertyListVector &path)
 {
 	mpImpl->_drawPath(path);
 }
 
-void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData& binaryData)
+void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData &binaryData)
 {
 	if (!propList["libwpg:mime-type"] && propList["libwpg:mime-type"]->getStr().len() <= 0)
 		return;
@@ -1065,7 +1081,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 			// Work around a mess in LibreOffice where both opacities of 100% are interpreted as complete transparency
 			// Nevertheless, when one is different, immediately, they are interpreted correctly
 			if (!(mxStyle["libwpg:start-opacity"] && mxStyle["libwpg:end-opacity"])
-			    || (mxStyle["libwpg:start-opacity"]->getDouble() == 1.0 && mxStyle["libwpg:end-opacity"]->getDouble() == 1.0))
+			        || (mxStyle["libwpg:start-opacity"]->getDouble() == 1.0 && mxStyle["libwpg:end-opacity"]->getDouble() == 1.0))
 			{
 				delete pDrawOpacityElement;
 				bUseOpacityGradient = false;
@@ -1209,7 +1225,7 @@ void OdgGenerator::endEmbeddedGraphics()
 {
 }
 
-void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPropertyListVector&)
+void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPropertyListVector &)
 {
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	TagOpenElement *pStyleStyleOpenElement = new TagOpenElement("style:style");
@@ -1220,7 +1236,7 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 	pStyleStyleOpenElement->addAttribute("style:family", "graphic");
 	pStyleStyleOpenElement->addAttribute("style:parent-style-name", "standard");
 	mpImpl->mGraphicsAutomaticStyles.push_back(pStyleStyleOpenElement);
-	
+
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);
 	pDrawFrameOpenElement->addAttribute("draw:layer", "layout");
 
@@ -1234,7 +1250,7 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 		pDrawFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
 	if (propList["svg:y"])
 		pDrawFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-	
+
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{
 		if (!propList["fo:min-width"])
@@ -1331,14 +1347,14 @@ void OdgGenerator::endTextObject()
 
 void OdgGenerator::startTextLine(const WPXPropertyList &propList)
 {
-  WPXPropertyList finalPropList(propList);
-  finalPropList.insert("style:parent-style-name", "Standard");
-  WPXString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, WPXPropertyListVector());
+	WPXPropertyList finalPropList(propList);
+	finalPropList.insert("style:parent-style-name", "Standard");
+	WPXString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, WPXPropertyListVector());
 
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
-    pParagraphOpenElement->addAttribute("text:style-name", paragName);
+	pParagraphOpenElement->addAttribute("text:style-name", paragName);
 	mpImpl->mBodyElements.push_back(pParagraphOpenElement);
 }
 
@@ -1349,10 +1365,10 @@ void OdgGenerator::endTextLine()
 
 void OdgGenerator::startTextSpan(const WPXPropertyList &propList)
 {
-  if (propList["style:font-name"])
-    mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
+	if (propList["style:font-name"])
+		mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
 
-    WPXString sName = mpImpl->mSpanManager.findOrAdd(propList);
+	WPXString sName = mpImpl->mSpanManager.findOrAdd(propList);
 
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
 	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());

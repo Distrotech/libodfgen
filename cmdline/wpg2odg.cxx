@@ -30,12 +30,12 @@
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
 const char manifestStr[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-		"<manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\">"
-		" <manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.graphics\" manifest:version=\"1.0\" manifest:full-path=\"/\"/>"
-		" <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>"
-		" <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"settings.xml\"/>"
-		" <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>"
-		"</manifest:manifest>";
+                           "<manifest:manifest xmlns:manifest=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\">"
+                           " <manifest:file-entry manifest:media-type=\"application/vnd.oasis.opendocument.graphics\" manifest:version=\"1.0\" manifest:full-path=\"/\"/>"
+                           " <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"content.xml\"/>"
+                           " <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"settings.xml\"/>"
+                           " <manifest:file-entry manifest:media-type=\"text/xml\" manifest:full-path=\"styles.xml\"/>"
+                           "</manifest:manifest>";
 
 class OdgOutputFileHelper : public OutputFileHelper
 {
@@ -49,7 +49,7 @@ private:
 	{
 		if (!libwpg::WPGraphics::isSupported(input))
 		{
- 			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect Graphics.\n");
+			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect Graphics.\n");
 			return false;
 		}
 		return true;
@@ -62,7 +62,7 @@ private:
 	}
 };
 
-int printUsage(char * name)
+int printUsage(char *name)
 {
 	fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", name);
 	fprintf(stderr, "USAGE : Where <infile> is the WordPerfect Graphics source image\n");
@@ -102,12 +102,14 @@ int main (int argc, char *argv[])
 
 	OdgOutputFileHelper helper(szOutFile, 0);
 
-	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0)) {
+	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0))
+	{
 		fprintf(stderr, "ERROR : Couldn't write mimetype\n");
 		return 1;
 	}
 
-	if (!helper.writeChildFile("META-INF/manifest.xml", manifestStr)) {
+	if (!helper.writeChildFile("META-INF/manifest.xml", manifestStr))
+	{
 		fprintf(stderr, "ERROR : Couldn't write manifest\n");
 		return 1;
 	}
@@ -126,8 +128,8 @@ int main (int argc, char *argv[])
 
 	if (!helper.writeConvertedContent("content.xml", szInputFile, szOutFile ? ODF_CONTENT_XML : ODF_FLAT_XML))
 	{
-	        fprintf(stderr, "ERROR : Couldn't write document content\n");
-	        return 1;
+		fprintf(stderr, "ERROR : Couldn't write document content\n");
+		return 1;
 	}
 
 	return 0;

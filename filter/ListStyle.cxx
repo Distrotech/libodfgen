@@ -38,7 +38,7 @@ void OrderedListStyle::updateListLevel(const int iLevel, const WPXPropertyList &
 	if (iLevel < 0)
 		return;
 	if (!isListLevelDefined(iLevel))
-	    setListLevel(iLevel, new OrderedListLevelStyle(xPropList));
+		setListLevel(iLevel, new OrderedListLevelStyle(xPropList));
 }
 
 void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) const
@@ -107,7 +107,8 @@ void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) co
 	if (mPropList["text:bullet-char"] && (mPropList["text:bullet-char"]->getStr().len()))
 	{
 		// The following is needed because the odf format does not accept bullet chars longer than one character
-		WPXString::Iter i(mPropList["text:bullet-char"]->getStr()); i.rewind();
+		WPXString::Iter i(mPropList["text:bullet-char"]->getStr());
+		i.rewind();
 		WPXString sEscapedString(".");
 		if (i.next())
 			sEscapedString = WPXString(i(), true);
@@ -143,7 +144,8 @@ ListStyle::ListStyle(const char *psName, const int iListID) :
 
 ListStyle::~ListStyle()
 {
-	for (int i=0; i<WP6_NUM_LIST_LEVELS; i++) {
+	for (int i=0; i<WP6_NUM_LIST_LEVELS; i++)
+	{
 		if (mppListLevels[i])
 			delete(mppListLevels[i]);
 	}
@@ -173,7 +175,8 @@ void ListStyle::write(OdfDocumentHandler *pHandler) const
 	listStyleOpenElement.addAttribute("style:name", getName());
 	listStyleOpenElement.write(pHandler);
 
-	for (int i=0; i<WP6_NUM_LIST_LEVELS; i++) {
+	for (int i=0; i<WP6_NUM_LIST_LEVELS; i++)
+	{
 		if (mppListLevels[i] != 0)
 			mppListLevels[i]->write(pHandler, i);
 	}

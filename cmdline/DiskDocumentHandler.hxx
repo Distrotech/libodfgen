@@ -34,23 +34,23 @@
 
 class DiskOdfDocumentHandler : public OdfDocumentHandler
 {
-  public:
+public:
 #ifdef USE_GSF_OUTPUT
-        DiskOdfDocumentHandler(GsfOutput *pOutput);
+	DiskOdfDocumentHandler(GsfOutput *pOutput);
 #else
-        DiskOdfDocumentHandler(FemtoZip *pOutput);
+	DiskOdfDocumentHandler(FemtoZip *pOutput);
 #endif
-        virtual void startDocument() {}
-        virtual void endDocument();
-        virtual void startElement(const char *psName, const WPXPropertyList &xPropList);
-        virtual void endElement(const char *psName);
-        virtual void characters(const WPXString &sCharacters);
+	virtual void startDocument() {}
+	virtual void endDocument();
+	virtual void startElement(const char *psName, const WPXPropertyList &xPropList);
+	virtual void endElement(const char *psName);
+	virtual void characters(const WPXString &sCharacters);
 
-  private:
+private:
 #ifdef USE_GSF_OUTPUT
-        GsfOutput *mpOutput;
+	GsfOutput *mpOutput;
 #else
-        FemtoZip *mpOutput;
+	FemtoZip *mpOutput;
 #endif
 	bool mbIsTagOpened;
 	WPXString msOpenedTagName;

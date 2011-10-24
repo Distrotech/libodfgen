@@ -29,7 +29,7 @@ DiskOdfDocumentHandler::DiskOdfDocumentHandler(GsfOutput *pOutput) :
 #define PUTSTRING(M) mpOutput->writeString(M)
 DiskOdfDocumentHandler::DiskOdfDocumentHandler(FemtoZip *pOutput) :
 #endif
-        mpOutput(pOutput),
+	mpOutput(pOutput),
 	mbIsTagOpened(false)
 {
 }
@@ -43,11 +43,11 @@ void DiskOdfDocumentHandler::startElement(const char *psName, const WPXPropertyL
 	}
 	PUTSTRING("<");
 	PUTSTRING(psName);
-        WPXPropertyList::Iter i(xPropList);
-        for (i.rewind(); i.next(); )
-        {
-                // filter out libwpd elements
-                if (strncmp(i.key(), "libwpd", 6) != 0)
+	WPXPropertyList::Iter i(xPropList);
+	for (i.rewind(); i.next(); )
+	{
+		// filter out libwpd elements
+		if (strncmp(i.key(), "libwpd", 6) != 0)
 		{
 			PUTSTRING(" ");
 			PUTSTRING(i.key());
@@ -56,7 +56,7 @@ void DiskOdfDocumentHandler::startElement(const char *psName, const WPXPropertyL
 			PUTSTRING("\"");
 		}
 
-        }
+	}
 	mbIsTagOpened = true;
 	msOpenedTagName.sprintf("%s", psName);
 }

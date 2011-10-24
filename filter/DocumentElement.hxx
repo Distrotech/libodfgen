@@ -47,7 +47,10 @@ class TagElement : public DocumentElement
 public:
 	virtual ~TagElement() {}
 	TagElement(const WPXString &szTagName) : msTagName(szTagName) {}
-	const WPXString & getTagName() const { return msTagName; }
+	const WPXString &getTagName() const
+	{
+		return msTagName;
+	}
 	virtual void print() const;
 private:
 	WPXString msTagName;
@@ -56,7 +59,7 @@ private:
 class TagOpenElement : public TagElement
 {
 public:
-    TagOpenElement(const WPXString &szTagName) : TagElement(szTagName), maAttrList() {}
+	TagOpenElement(const WPXString &szTagName) : TagElement(szTagName), maAttrList() {}
 	virtual ~TagOpenElement() {}
 	void addAttribute(const WPXString &szAttributeName, const WPXString &sAttributeValue);
 	virtual void write(OdfDocumentHandler *pHandler) const;

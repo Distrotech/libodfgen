@@ -41,12 +41,12 @@ class FemtoZip
 {
 public:
 
-	explicit FemtoZip(const char* zipfile);
+	explicit FemtoZip(const char *zipfile);
 	~FemtoZip();
 
-	void createEntry(const char* name, int compressionLevel = 3);
+	void createEntry(const char *name, int compressionLevel = 3);
 
-	void writeString(const char* str);
+	void writeString(const char *str);
 
 	void closeEntry();
 
@@ -64,10 +64,10 @@ public:
 
 private:
 	// no copy and assign allowed
-	FemtoZip(const FemtoZip&);
-	FemtoZip& operator=(const FemtoZip&);
+	FemtoZip(const FemtoZip &);
+	FemtoZip &operator=(const FemtoZip &);
 
-	FemtoZipPrivate* d;
+	FemtoZipPrivate *d;
 };
 
 #endif // FEMTOZIP_H

@@ -40,7 +40,7 @@ public:
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
-        WPXPropertyList mPropList;
+	WPXPropertyList mPropList;
 	WPXPropertyListVector mColumns;
 };
 #endif

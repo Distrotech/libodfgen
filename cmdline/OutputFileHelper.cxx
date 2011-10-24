@@ -49,7 +49,7 @@ struct OutputFileHelperImpl
 };
 
 
-OutputFileHelper::OutputFileHelper(const char* outFileName, const char *password) :
+OutputFileHelper::OutputFileHelper(const char *outFileName, const char *password) :
 #ifdef USE_GSF_OUTPUT
 	m_impl(new OutputFileHelperImpl(password))
 #else
@@ -64,35 +64,41 @@ OutputFileHelper::OutputFileHelper(const char* outFileName, const char *password
 	gsf_init ();
 
 	if (!outFileName)
-	        pOutput = 0;
+		pOutput = 0;
 	else
 	{
-	        pOutput = GSF_OUTPUT(gsf_output_stdio_new (outFileName, &err));
-	        if (pOutput == 0) {
-			if (err) {
-	                	g_warning ("'%s' error: %s", outFileName, err->message);
-	                        g_error_free (err);
+		pOutput = GSF_OUTPUT(gsf_output_stdio_new (outFileName, &err));
+		if (pOutput == 0)
+		{
+			if (err)
+			{
+				g_warning ("'%s' error: %s", outFileName, err->message);
+				g_error_free (err);
 			}
 			gsf_shutdown ();
-	        }
-		else {
+		}
+		else
+		{
 			if (err)
 				g_error_free (err);
 			err = 0;
-	        	m_impl->mpOutfile = GSF_OUTFILE(gsf_outfile_zip_new (pOutput, &err));
-	        	if (m_impl->mpOutfile == 0) {
-				if (err) {
-		                	g_warning ("'%s' error: %s",
-						"gsf_outfile_zip_new", err->message);
-	                        	g_error_free (err);
+			m_impl->mpOutfile = GSF_OUTFILE(gsf_outfile_zip_new (pOutput, &err));
+			if (m_impl->mpOutfile == 0)
+			{
+				if (err)
+				{
+					g_warning ("'%s' error: %s",
+					           "gsf_outfile_zip_new", err->message);
+					g_error_free (err);
 				}
 				gsf_shutdown ();
 			}
-			else {
+			else
+			{
 				if (err)
 					g_error_free (err);
 				err = 0;
-			        g_object_unref (pOutput);
+				g_object_unref (pOutput);
 			}
 		}
 	}
@@ -109,7 +115,7 @@ OutputFileHelper::~OutputFileHelper()
 		fprintf(stderr, "ERROR : Couldn't close outfile\n");
 
 	if (m_impl->mpOutfile)
-	        g_object_unref (m_impl->mpOutfile);
+		g_object_unref (m_impl->mpOutfile);
 
 	gsf_shutdown ();
 #else
@@ -129,7 +135,7 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 	if (0 != (child = gsf_outfile_new_child  (m_impl->mpOutfile, childFileName, FALSE)))
 	{
 		bool res = gsf_output_puts (child, str) &&
-			gsf_output_close (child);
+		           gsf_output_close (child);
 		g_object_unref (child);
 		return res;
 	}
@@ -155,13 +161,13 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 #ifdef USE_GSF_OUTPUT
 	GsfOutput *child;
 #ifdef GSF_HAS_COMPRESSION_LEVEL
-	if (0 != (child = gsf_outfile_new_child_full  (m_impl->mpOutfile, childFileName, FALSE,"compression-level", compression_level, (void*)0)))
+	if (0 != (child = gsf_outfile_new_child_full  (m_impl->mpOutfile, childFileName, FALSE,"compression-level", compression_level, (void *)0)))
 #else
 	if (0 != (child = gsf_outfile_new_child  (m_impl->mpOutfile, childFileName, FALSE)))
 #endif
 	{
 		bool res = gsf_output_puts (child, str) &&
-			gsf_output_close (child);
+		           gsf_output_close (child);
 		g_object_unref (child);
 		return res;
 	}
@@ -169,13 +175,13 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 #else
 	m_impl->mpOutfile->createEntry(childFileName, 0); // only storing without compressing works with FemtoZip
 	if (m_impl->mpOutfile->errorCode())
-	    return false;
+		return false;
 	m_impl->mpOutfile->writeString(str);
 	if (m_impl->mpOutfile->errorCode())
-	    return false;
+		return false;
 	m_impl->mpOutfile->closeEntry();
 	if (m_impl->mpOutfile->errorCode())
-	    return false;
+		return false;
 	return true;
 #endif
 }
@@ -184,8 +190,8 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 {
 	WPXFileStream input(inFileName);
 
- 	if (!_isSupportedFormat(&input, m_impl->mpPassword))
- 		return false;
+	if (!_isSupportedFormat(&input, m_impl->mpPassword))
+		return false;
 
 	input.seek(0, WPX_SEEK_SET);
 
@@ -194,8 +200,8 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 	GsfOutput *pContentChild = 0;
 	if (m_impl->mpOutfile)
 	{
-	        pContentChild = gsf_outfile_new_child(m_impl->mpOutfile, childFileName, FALSE);
-	        pHandler = new DiskOdfDocumentHandler(pContentChild); // WLACH_REFACTORING: rename to DiskHandler
+		pContentChild = gsf_outfile_new_child(m_impl->mpOutfile, childFileName, FALSE);
+		pHandler = new DiskOdfDocumentHandler(pContentChild); // WLACH_REFACTORING: rename to DiskHandler
 #else
 	if (m_impl->mpOutfile)
 	{
@@ -206,15 +212,15 @@ bool OutputFileHelper::writeConvertedContent(const char *childFileName, const ch
 #endif
 	}
 	else
-	        pHandler = new StdOutHandler();
+		pHandler = new StdOutHandler();
 
 	bool bRetVal = _convertDocument(&input, m_impl->mpPassword, pHandler, m_impl->mpOutfile ? streamType : ODF_FLAT_XML);
 
 #ifdef USE_GSF_OUTPUT
 	if (pContentChild)
 	{
-	        gsf_output_close(pContentChild);
-	        g_object_unref(G_OBJECT (pContentChild));
+		gsf_output_close(pContentChild);
+		g_object_unref(G_OBJECT (pContentChild));
 	}
 
 #else

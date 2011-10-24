@@ -37,13 +37,13 @@ void StdOutHandler::startElement(const char *psName, const WPXPropertyList &xPro
 		mbIsTagOpened = false;
 	}
 	printf("<%s", psName);
-        WPXPropertyList::Iter i(xPropList);
-        for (i.rewind(); i.next(); )
-        {
-                // filter out libwpd elements
-                if (strncmp(i.key(), "libwpd", 6) != 0)
-                        printf(" %s=\"%s\"", i.key(), i()->getStr().cstr());
-        }
+	WPXPropertyList::Iter i(xPropList);
+	for (i.rewind(); i.next(); )
+	{
+		// filter out libwpd elements
+		if (strncmp(i.key(), "libwpd", 6) != 0)
+			printf(" %s=\"%s\"", i.key(), i()->getStr().cstr());
+	}
 	mbIsTagOpened = true;
 	msOpenedTagName.sprintf("%s", psName);
 }
@@ -78,7 +78,7 @@ void StdOutHandler::characters(const WPXString &sCharacters)
 		printf(">");
 		mbIsTagOpened = false;
 	}
-        WPXString sEscapedCharacters(sCharacters, true);
+	WPXString sEscapedCharacters(sCharacters, true);
 	printf("%s", sEscapedCharacters.cstr());
 }
 

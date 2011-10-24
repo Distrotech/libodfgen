@@ -48,7 +48,7 @@ public:
 	OrderedListLevelStyle(const WPXPropertyList &xPropList);
 	void write(OdfDocumentHandler *pHandler, int iLevel) const;
 private:
-        WPXPropertyList mPropList;
+	WPXPropertyList mPropList;
 };
 
 class UnorderedListLevelStyle : public ListLevelStyle
@@ -57,7 +57,7 @@ public:
 	UnorderedListLevelStyle(const WPXPropertyList &xPropList);
 	void write(OdfDocumentHandler *pHandler, int iLevel) const;
 private:
-        WPXPropertyList mPropList;
+	WPXPropertyList mPropList;
 };
 
 class ListStyle : public Style
@@ -67,7 +67,10 @@ public:
 	virtual ~ListStyle();
 	virtual void updateListLevel(const int iLevel, const WPXPropertyList &xPropList) = 0;
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	int getListID() { return miListID; }
+	int getListID()
+	{
+		return miListID;
+	}
 	bool isListLevelDefined(int iLevel) const;
 
 protected:

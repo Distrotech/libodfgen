@@ -34,14 +34,14 @@
 
 class WPXPropertyList;
 
-WPXString propListToStyleKey(const WPXPropertyList & xPropList);
+WPXString propListToStyleKey(const WPXPropertyList &xPropList);
 
 struct ltstr
 {
-    bool operator()(const WPXString & s1, const WPXString & s2) const
-    {
-        return strcmp(s1.cstr(), s2.cstr()) < 0;
-    }
+	bool operator()(const WPXString &s1, const WPXString &s2) const
+	{
+		return strcmp(s1.cstr(), s2.cstr()) < 0;
+	}
 };
 
 

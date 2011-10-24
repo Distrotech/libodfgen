@@ -30,18 +30,18 @@
 
 #include "libwriterperfect_filter.hxx"
 
-WPXString propListToStyleKey(const WPXPropertyList & xPropList)
+WPXString propListToStyleKey(const WPXPropertyList &xPropList)
 {
-    WPXString sKey;
-    WPXPropertyList::Iter i(xPropList);
-    for (i.rewind(); i.next(); )
-    {
-        WPXString sProp;
-        sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
-        sKey.append(sProp);
-    }
+	WPXString sKey;
+	WPXPropertyList::Iter i(xPropList);
+	for (i.rewind(); i.next(); )
+	{
+		WPXString sProp;
+		sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
+		sKey.append(sProp);
+	}
 
-    return sKey;
+	return sKey;
 }
 
 

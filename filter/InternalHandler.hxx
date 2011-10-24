@@ -41,8 +41,8 @@ public:
 	void endElement(const char *psName);
 	void characters(const WPXString &sCharacters);
 private:
-    InternalHandler(InternalHandler const &orig) : mpElements(0) { *this = orig; }
-    InternalHandler &operator=(InternalHandler const &) { mpElements=0L; return *this; }
+	InternalHandler(const InternalHandler &);
+	InternalHandler &operator=(const InternalHandler &);
 	std::vector<DocumentElement *> *mpElements;
 };
 #endif

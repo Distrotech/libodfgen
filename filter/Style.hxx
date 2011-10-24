@@ -34,44 +34,60 @@
 class TopLevelElementStyle
 {
 public:
-	TopLevelElementStyle() : mpsMasterPageName(0) { }
-	virtual ~TopLevelElementStyle() { if (mpsMasterPageName) delete mpsMasterPageName; }
-	void setMasterPageName(WPXString &sMasterPageName) { mpsMasterPageName = new WPXString(sMasterPageName); }
-	const WPXString * getMasterPageName() const { return mpsMasterPageName; }
+	TopLevelElementStyle() : mpsMasterPageName(0) {}
+	virtual ~TopLevelElementStyle()
+	{
+		if (mpsMasterPageName) delete mpsMasterPageName;
+	}
+	void setMasterPageName(WPXString &sMasterPageName)
+	{
+		mpsMasterPageName = new WPXString(sMasterPageName);
+	}
+	const WPXString *getMasterPageName() const
+	{
+		return mpsMasterPageName;
+	}
 
 private:
-    TopLevelElementStyle(TopLevelElementStyle const &orig) : mpsMasterPageName(0) { *this = orig; }
-    TopLevelElementStyle &operator=(TopLevelElementStyle const &) { mpsMasterPageName=0L; return *this; }
+	TopLevelElementStyle(const TopLevelElementStyle &);
+	TopLevelElementStyle &operator=(const TopLevelElementStyle &);
 	WPXString *mpsMasterPageName;
 };
 
 class Style
 {
- public:
+public:
 	Style(const WPXString &psName) : msName(psName) {}
 	virtual ~Style() {}
 
 	virtual void write(OdfDocumentHandler *) const {};
-	const WPXString &getName() const { return msName; }
+	const WPXString &getName() const
+	{
+		return msName;
+	}
 
- private:
+private:
 	WPXString msName;
 };
 
 class StyleManager
 {
 public:
-  StyleManager() {}
-  virtual ~StyleManager() {}
+	StyleManager() {}
+	virtual ~StyleManager() {}
 
-  virtual void clean() {};
-  virtual void write(OdfDocumentHandler *) const = 0;
- 
+	virtual void clean() {};
+	virtual void write(OdfDocumentHandler *) const = 0;
+
 private:
-  // forbide copy constructor/operator
-  StyleManager(StyleManager const &orig) { *this = orig; }
-  StyleManager &operator=(StyleManager const &) {
-    return *this;
-  }
+	// forbide copy constructor/operator
+	StyleManager(StyleManager const &orig)
+	{
+		*this = orig;
+	}
+	StyleManager &operator=(StyleManager const &)
+	{
+		return *this;
+	}
 };
 #endif
