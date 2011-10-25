@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* Style: A base class from which all other styles are inherited, includes
  * a name.
  *
@@ -91,3 +92,5 @@ private:
 	}
 };
 #endif
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

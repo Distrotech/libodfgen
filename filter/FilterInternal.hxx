@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* FilterInternal: Debugging information
  *
  * Copyright (C) 2002-2003 William Lachance (wrlach@gmail.com)
@@ -35,3 +36,5 @@ const double fDefaultPageWidth = 8.5f; // inches (OOo required default: we will 
 const double fDefaultPageHeight = 11.0; // inches
 
 #endif
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

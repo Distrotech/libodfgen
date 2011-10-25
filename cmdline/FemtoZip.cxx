@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* FemtoZip - superlightweight C++ module to create a compressed ZIP archive
    Copyright (C) 2005-2006 Ariya Hidayat <ariya@kde.org>
 
@@ -613,3 +614,5 @@ int FemtoZip::errorCode() const
 }
 
 #endif
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* FontStyle: Stores (and writes) font-based information that is needed at
  * the head of an OO document.
  *
@@ -74,3 +75,5 @@ protected:
 };
 
 #endif
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

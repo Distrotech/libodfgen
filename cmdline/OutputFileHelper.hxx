@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* writerperfect:
  *
  * Copyright (C) 2007 Fridrich Strba (fridrich.strba@bluewin.ch)
@@ -42,3 +43,5 @@ private:
 };
 
 #endif
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

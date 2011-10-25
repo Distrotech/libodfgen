@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* DocumentElement: The items we are collecting to be put into the Writer
  * document: paragraph and spans of text, as well as section breaks.
  *
@@ -98,3 +99,5 @@ private:
 };
 
 #endif
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

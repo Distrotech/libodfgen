@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* libwpg
  * Copyright (C) 2006 Ariya Hidayat (ariya@kde.org)
  *
@@ -67,3 +68,5 @@ private:
 };
 
 #endif // __ODGEXPORTER_HXX__
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

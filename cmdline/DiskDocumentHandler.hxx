@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* writerperfect:
  *
  * Copyright (C) 2002-2004 William Lachance (wrlach@gmail.com)
@@ -56,3 +57,5 @@ private:
 	WPXString msOpenedTagName;
 };
 #endif
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

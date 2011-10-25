@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* femtozip - superlightweight class to create a compressed ZIP archive
    Copyright (C) 2005-2006 Ariya Hidayat <ariya@kde.org>
 
@@ -73,3 +74,5 @@ private:
 #endif // FEMTOZIP_H
 
 #endif // USE_GSF_OUTPUT
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
