@@ -224,7 +224,7 @@ WPXString ParagraphStyleManager::findOrAdd(WPXPropertyList const &propList, WPXP
 	if (iter!=mHash.end()) return iter->second->getName();
 
 	// ok create a new list
-	WRITER_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hasKey.cstr()));
+	WRITER_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
 
 	WPXString sName;
 	sName.sprintf("S%i", mHash.size());
@@ -261,7 +261,7 @@ WPXString SpanStyleManager::findOrAdd(WPXPropertyList const &propList)
 	if (iter!=mHash.end()) return iter->second->getName();
 
 	// ok create a new list
-	WRITER_DEBUG_MSG(("SpanStyleManager::findOrAdd: Span Hash Key: %s\n", hasKey.cstr()));
+	WRITER_DEBUG_MSG(("SpanStyleManager::findOrAdd: Span Hash Key: %s\n", hashKey.cstr()));
 
 	WPXString sName;
 	sName.sprintf("Span%i", mHash.size());
