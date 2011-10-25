@@ -307,38 +307,38 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 OdgGeneratorPrivate::~OdgGeneratorPrivate()
 {
 
-	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); iterBody++)
+	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); ++iterBody)
 	{
 		delete (*iterBody);
 		(*iterBody) = 0;
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
-	        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++)
+	        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
 	{
 		delete((*iterGraphicsAutomaticStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterGraphicsStrokeDashStyles = mGraphicsStrokeDashStyles.begin();
-	        iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++)
+	        iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); ++iterGraphicsStrokeDashStyles)
 	{
 		delete((*iterGraphicsStrokeDashStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterGraphicsGradientStyles = mGraphicsGradientStyles.begin();
-	        iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++)
+	        iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); ++iterGraphicsGradientStyles)
 	{
 		delete((*iterGraphicsGradientStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mPageAutomaticStyles.begin();
-	        iterPageAutomaticStyles != mPageAutomaticStyles.end(); iterPageAutomaticStyles++)
+	        iterPageAutomaticStyles != mPageAutomaticStyles.end(); ++iterPageAutomaticStyles)
 	{
 		delete((*iterPageAutomaticStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterPageMasterStyles = mPageMasterStyles.begin();
-	        iterPageMasterStyles != mPageMasterStyles.end(); iterPageMasterStyles++)
+	        iterPageMasterStyles != mPageMasterStyles.end(); ++iterPageMasterStyles)
 	{
 		delete((*iterPageMasterStyles));
 	}
@@ -425,13 +425,13 @@ OdgGenerator::~OdgGenerator()
 		TagOpenElement("office:styles").write(mpImpl->mpHandler);
 
 		for (std::vector<DocumentElement *>::const_iterator iterGraphicsStrokeDashStyles = mpImpl->mGraphicsStrokeDashStyles.begin();
-		        iterGraphicsStrokeDashStyles != mpImpl->mGraphicsStrokeDashStyles.end(); iterGraphicsStrokeDashStyles++)
+		        iterGraphicsStrokeDashStyles != mpImpl->mGraphicsStrokeDashStyles.end(); ++iterGraphicsStrokeDashStyles)
 		{
 			(*iterGraphicsStrokeDashStyles)->write(mpImpl->mpHandler);
 		}
 
 		for (std::vector<DocumentElement *>::const_iterator iterGraphicsGradientStyles = mpImpl->mGraphicsGradientStyles.begin();
-		        iterGraphicsGradientStyles != mpImpl->mGraphicsGradientStyles.end(); iterGraphicsGradientStyles++)
+		        iterGraphicsGradientStyles != mpImpl->mGraphicsGradientStyles.end(); ++iterGraphicsGradientStyles)
 		{
 			(*iterGraphicsGradientStyles)->write(mpImpl->mpHandler);
 		}
@@ -451,7 +451,7 @@ OdgGenerator::~OdgGenerator()
 	{
 		// writing out the graphics automatic styles
 		for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mpImpl->mGraphicsAutomaticStyles.begin();
-		        iterGraphicsAutomaticStyles != mpImpl->mGraphicsAutomaticStyles.end(); iterGraphicsAutomaticStyles++)
+		        iterGraphicsAutomaticStyles != mpImpl->mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
 		{
 			(*iterGraphicsAutomaticStyles)->write(mpImpl->mpHandler);
 		}
@@ -503,7 +503,7 @@ OdgGenerator::~OdgGenerator()
 	{
 		// writing out the page automatic styles
 		for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mpImpl->mPageAutomaticStyles.begin();
-		        iterPageAutomaticStyles != mpImpl->mPageAutomaticStyles.end(); iterPageAutomaticStyles++)
+		        iterPageAutomaticStyles != mpImpl->mPageAutomaticStyles.end(); ++iterPageAutomaticStyles)
 		{
 			(*iterPageAutomaticStyles)->write(mpImpl->mpHandler);
 		}
@@ -519,7 +519,7 @@ OdgGenerator::~OdgGenerator()
 		TagOpenElement("office:master-styles").write(mpImpl->mpHandler);
 
 		for (std::vector<DocumentElement *>::const_iterator pageMasterIter = mpImpl->mPageMasterStyles.begin();
-		        pageMasterIter != mpImpl->mPageMasterStyles.end(); pageMasterIter++)
+		        pageMasterIter != mpImpl->mPageMasterStyles.end(); ++pageMasterIter)
 		{
 			(*pageMasterIter)->write(mpImpl->mpHandler);
 		}
@@ -533,7 +533,7 @@ OdgGenerator::~OdgGenerator()
 		TagOpenElement("office:drawing").write(mpImpl->mpHandler);
 
 		for (std::vector<DocumentElement *>::const_iterator bodyIter = mpImpl->mBodyElements.begin();
-		        bodyIter != mpImpl->mBodyElements.end(); bodyIter++)
+		        bodyIter != mpImpl->mBodyElements.end(); ++bodyIter)
 		{
 			(*bodyIter)->write(mpImpl->mpHandler);
 		}
@@ -770,7 +770,7 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector &vert
 		::WPXPropertyListVector path;
 		::WPXPropertyList element;
 
-		for (unsigned long ii = 0; ii < vertices.count(); ii++)
+		for (unsigned long ii = 0; ii < vertices.count(); ++ii)
 		{
 			element = vertices[ii];
 			if (ii == 0)
@@ -806,7 +806,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	double lastX = 0.0;
 	double lastY = 0.0;
 
-	for(unsigned k = 0; k < path.count(); k++)
+	for(unsigned k = 0; k < path.count(); ++k)
 	{
 		if (!path[k]["svg:x"] || !path[k]["svg:y"])
 			continue;
@@ -878,7 +878,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	pDrawPathElement->addAttribute("svg:viewBox", sValue);
 
 	sValue.clear();
-	for(unsigned i = 0; i < path.count(); i++)
+	for(unsigned i = 0; i < path.count(); ++i)
 	{
 		WPXString sElement;
 		if (path[i]["libwpg:path-action"]->getStr() == "M")
