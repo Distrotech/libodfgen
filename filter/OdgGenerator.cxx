@@ -1004,7 +1004,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	}
 
 	if (mxStyle["draw:marker-start-path"])
-	{ 
+	{
 		WPXString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
 		sValue.sprintf("StartMarker_%i", miStartMarkerIndex);
@@ -1270,7 +1270,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 		pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end", sValue);
 		if (mxStyle["draw:marker-end-width"])
 			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-width", mxStyle["draw:marker-end-width"]->getStr());
-		else	
+		else
 			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-width", "0.118in");
 	}
 
