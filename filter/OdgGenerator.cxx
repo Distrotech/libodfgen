@@ -245,6 +245,7 @@ public:
 	// graphics styles
 	std::vector<DocumentElement *> mGraphicsStrokeDashStyles;
 	std::vector<DocumentElement *> mGraphicsGradientStyles;
+	std::vector<DocumentElement *> mGraphicsMarkerStyles;
 	std::vector<DocumentElement *> mGraphicsAutomaticStyles;
 
 	// page styles
@@ -264,7 +265,10 @@ public:
 
 	::WPXPropertyList mxStyle;
 	::WPXPropertyListVector mxGradient;
+	::WPXPropertyListVector mxMarker;
 	int miGradientIndex;
+	int miStartMarkerIndex;
+	int miEndMarkerIndex;
 	int miDashIndex;
 	int miGraphicsStyleIndex;
 	int miPageIndex;
@@ -290,7 +294,10 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mFontManager(),
 	mpHandler(pHandler),
 	mxStyle(), mxGradient(),
+	mxMarker(),
 	miGradientIndex(1),
+	miStartMarkerIndex(1),
+	miEndMarkerIndex(1),
 	miDashIndex(1),
 	miGraphicsStyleIndex(1),
 	miPageIndex(1),
@@ -330,6 +337,12 @@ OdgGeneratorPrivate::~OdgGeneratorPrivate()
 	        iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); ++iterGraphicsGradientStyles)
 	{
 		delete((*iterGraphicsGradientStyles));
+	}
+
+	for (std::vector<DocumentElement *>::iterator iterGraphicsMarkerStyles = mGraphicsMarkerStyles.begin();
+	        iterGraphicsMarkerStyles != mGraphicsMarkerStyles.end(); ++iterGraphicsMarkerStyles)
+	{
+		delete((*iterGraphicsMarkerStyles));
 	}
 
 	for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mPageAutomaticStyles.begin();
@@ -437,6 +450,11 @@ OdgGenerator::~OdgGenerator()
 			(*iterGraphicsGradientStyles)->write(mpImpl->mpHandler);
 		}
 
+		for (std::vector<DocumentElement *>::const_iterator iterGraphicsMarkerStyles = mpImpl->mGraphicsMarkerStyles.begin();
+		        iterGraphicsMarkerStyles != mpImpl->mGraphicsMarkerStyles.end(); ++iterGraphicsMarkerStyles)
+		{
+			(*iterGraphicsMarkerStyles)->write(mpImpl->mpHandler);
+		}
 		mpImpl->mpHandler->endElement("office:styles");
 	}
 
@@ -985,6 +1003,31 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 		mGraphicsStrokeDashStyles.push_back(new TagCloseElement("draw:stroke-dash"));
 	}
 
+	if (mxStyle["draw:marker-start-path"])
+	{ 
+		WPXString sValue;
+		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
+		sValue.sprintf("StartMarker_%i", miStartMarkerIndex);
+		pDrawMarkerElement->addAttribute("draw:name", sValue);
+		if (mxStyle["draw:marker-start-viewbox"])
+			pDrawMarkerElement->addAttribute("svg:viewBox", mxStyle["draw:marker-start-viewbox"]->getStr());
+		pDrawMarkerElement->addAttribute("svg:d", mxStyle["draw:marker-start-path"]->getStr());
+		mGraphicsMarkerStyles.push_back(pDrawMarkerElement);
+		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
+	}
+	if(mxStyle["draw:marker-end-path"])
+	{
+		WPXString sValue;
+		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
+		sValue.sprintf("EndMarker_%i", miEndMarkerIndex);
+		pDrawMarkerElement->addAttribute("draw:name", sValue);
+		if (mxStyle["draw:marker-end-viewbox"])
+			pDrawMarkerElement->addAttribute("svg:viewBox", mxStyle["draw:marker-end-viewbox"]->getStr());
+		pDrawMarkerElement->addAttribute("svg:d", mxStyle["draw:marker-end-path"]->getStr());
+		mGraphicsMarkerStyles.push_back(pDrawMarkerElement);
+		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
+	}
+
 	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
 	{
 		bUseOpacityGradient = true;
@@ -1209,6 +1252,26 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 			else
 				pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
 		}
+	}
+
+
+	if(mxStyle["draw:marker-start-path"])
+	{
+		sValue.sprintf("StartMarker_%i", miStartMarkerIndex++);
+		pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start", sValue);
+		if (mxStyle["draw:marker-start-width"])
+			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start-width", mxStyle["draw:marker-start-width"]->getStr());
+		else
+			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start-width", "0.118in");
+	}
+	if (mxStyle["draw:marker-end-path"])
+	{
+		sValue.sprintf("EndMarker_%i", miEndMarkerIndex++);
+		pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end", sValue);
+		if (mxStyle["draw:marker-end-width"])
+			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-width", mxStyle["draw:marker-end-width"]->getStr());
+		else	
+			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-width", "0.118in");
 	}
 
 	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
