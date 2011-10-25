@@ -82,14 +82,8 @@ public:
 
 private:
 	// forbide copy constructor/operator
-	StyleManager(StyleManager const &orig)
-	{
-		*this = orig;
-	}
-	StyleManager &operator=(StyleManager const &)
-	{
-		return *this;
-	}
+	StyleManager(const StyleManager &);
+	StyleManager &operator=(const StyleManager &);
 };
 #endif
 
