@@ -62,7 +62,6 @@ void FontStyleManager::clean()
 void FontStyleManager::writeFontsDeclaration(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement("office:font-face-decls").write(pHandler);
-	std::map<WPXString, FontStyle *, ltstr>::const_iterator iter;
 	for (std::map<WPXString, FontStyle *, ltstr>::const_iterator iter = mHash.begin();
 	        iter != mHash.end(); ++iter)
 	{
@@ -81,8 +80,7 @@ void FontStyleManager::writeFontsDeclaration(OdfDocumentHandler *pHandler) const
 
 WPXString FontStyleManager::findOrAdd(const char *psFontFamily)
 {
-	std::map<WPXString, FontStyle *, ltstr>::const_iterator iter =
-	    mHash.find(psFontFamily);
+	std::map<WPXString, FontStyle *, ltstr>::const_iterator iter = mHash.find(psFontFamily);
 	if (iter!=mHash.end()) return iter->second->getName();
 
 	// ok create a new font
