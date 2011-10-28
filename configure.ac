@@ -210,6 +210,49 @@ AS_IF([test "x$have_libvisio" = "xno" -a "x$with_libvisio" = "xyes"], [
 	AC_MSG_ERROR([libvisio requested but not found])
 ])
 
+# ========
+# shared_ptr implementation
+# ========
+AC_ARG_WITH(sharedptr,
+	[AS_HELP_STRING([--with-sharedptr=boost|c++11|tr1],
+		[Use Boost|std::memory|std::tr1::memory for shared ptr implementation])],
+	[with_sharedptr="$withval"],
+	[with_sharedptr=boost]
+)
+AS_IF([test "x$with_sharedptr" == "xc++11"], [
+		AC_COMPILE_IFELSE([
+			AC_LANG_PROGRAM(
+			[[#include <memory>]],
+			[[std::shared_ptr<int> p;]]
+      	)],
+		[AC_DEFINE([SHAREDPTR_STD],[1],[Use C++11 implementation of shared_ptr])],
+		[AC_MSG_ERROR(Could not find C++11 implementation of shared_ptr)],
+		[[#include <memory>]])
+	]
+)
+AS_IF([test "x$with_sharedptr" == "xtr1"], [
+		AC_COMPILE_IFELSE([
+			AC_LANG_PROGRAM(
+			[[#include <tr1/memory>]],
+			[[std::tr1::shared_ptr<int> p;]]
+      	)],
+		[AC_DEFINE([SHAREDPTR_TR1],[1],[Use TR1 implementation of shared_ptr])],
+		[AC_MSG_ERROR(Could not find TR1 implementation of shared_ptr)],
+		[[#include <tr1/memory>]])
+	]
+)
+AS_IF([test "x$with_sharedptr" == "xboost"], [
+		AC_COMPILE_IFELSE([
+			AC_LANG_PROGRAM(
+			[[#include <boost/shared_ptr.hpp>]],
+			[[boost::shared_ptr<int> p;]]
+      	)],
+		[AC_DEFINE([SHAREDPTR_BOOST],[1],[Use Boost implementation of shared_ptr],
+		[AC_MSG_ERROR(Could not find Boost implementation of shared_ptr)])])
+	]
+)
+
+
 # =====================
 # Prepare all .in files
 # =====================

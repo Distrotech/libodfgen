@@ -93,6 +93,10 @@ SOURCE=..\..\filter\FontStyle.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\filter\FilterInternal.cxx
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\filter\ListStyle.cxx
 # End Source File
 # Begin Source File
@@ -158,10 +162,6 @@ SOURCE=..\..\filter\TextRunStyle.hxx
 # Begin Source File
 
 SOURCE=..\..\filter\WordPerfectCollector.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\filter\WriterProperties.hxx
 # End Source File
 # End Group
 # End Target
