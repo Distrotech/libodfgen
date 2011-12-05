@@ -69,12 +69,14 @@ AS_CASE([$host],
 		WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
 		VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
 		WPS2ODT_WIN32_RESOURCE=wps2odt-win32res.lo
+		CDR2ODG_WIN32_RESOURCE=cdr2odg-win32res.lo
 	], [
 		native_win32=no
 		WPD2ODT_WIN32_RESOURCE=
 		WPG2ODG_WIN32_RESOURCE=
 		VSD2ODG_WIN32_RESOURCE=
 		WPS2ODT_WIN32_RESOURCE=
+		CDR2ODG_WIN32_RESOURCE=
 	]
 )
 AC_MSG_RESULT([$native_win32])
@@ -83,6 +85,7 @@ AC_SUBST(WPD2ODT_WIN32_RESOURCE)
 AC_SUBST(WPG2ODG_WIN32_RESOURCE)
 AC_SUBST(VSD2ODG_WIN32_RESOURCE)
 AC_SUBST(WPS2ODT_WIN32_RESOURCE)
+AC_SUBST(CDR2ODG_WIN32_RESOURCE)
 
 AC_MSG_CHECKING([for Win32 platform in general])
 AS_CASE([$host],
@@ -208,6 +211,24 @@ AS_IF([test "x$with_libvisio" != "xno"], [
 AM_CONDITIONAL([USE_LIBVISIO], [test "x$have_libvisio" = "xyes"])
 AS_IF([test "x$have_libvisio" = "xno" -a "x$with_libvisio" = "xyes"], [
 	AC_MSG_ERROR([libvisio requested but not found])
+])
+
+# ========
+# libcdr
+# ========
+AC_ARG_WITH(libcdr,
+	[AS_HELP_STRING([--without-libcdr],
+		[Use libcdr for conversion of Corel Draw Documents])],
+	[with_libcdr="$withval"],
+	[with_libcdr=auto]
+)
+AS_IF([test "x$with_libcdr" != "xno"], [
+		PKG_CHECK_MODULES(WRITERPERFECTCDR, [libcdr-0.0],
+			[have_libcdr=yes], [have_libcdr=no])
+	], [have_libcdr=no])
+AM_CONDITIONAL([USE_LIBCDR], [test "x$have_libcdr" = "xyes"])
+AS_IF([test "x$have_libcdr" = "xno" -a "x$with_libcdr" = "xyes"], [
+	AC_MSG_ERROR([libcdr requested but not found])
 ])
 
 # ========

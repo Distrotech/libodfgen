@@ -16,12 +16,18 @@ WPS_CFLAGS = $(WRITERPERFECTWPS_CFLAGS)
 WPS_LIBS = $(WRITERPERFECTWPS_LIBS)
 endif
 
+if USE_LIBCDR
+CDR_APP = cdr2odg
+CDR_CFLAGS = $(WRITERPERFECTCDR_CFLAGS)
+CDR_LIBS = $(WRITERPERFECTCDR_LIBS)
+endif
+
 if USE_GSF_OUTPUT
 GSF_CFLAGS = $(WRITERPERFECTGSF_CFLAGS)
 GSF_LIBS = $(WRITERPERFECTGSF_LIBS)
 endif
 
-bin_PROGRAMS = wpd2odt $(WPG_APP) $(VISIO_APP) $(WPS_APP)
+bin_PROGRAMS = wpd2odt $(WPG_APP) $(VISIO_APP) $(WPS_APP) $(CDR_APP)
 
 COMMON_SRC = \
 	DiskDocumentHandler.hxx \
@@ -74,6 +80,16 @@ vsd2odg_SOURCES = \
 	$(COMMON_SRC) \
 	vsd2odg.cxx
 
+cdr2odg_DEPENDENCIES = @CDR2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la
+cdr2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(CDR_CFLAGS) $(GSF_CFLAGS)
+cdr2odg_LDADD = @CDR2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect.la $(WRITERPERFECTCORE_LIBS) $(CDR_LIBS) $(GSF_LIBS)
+if STATIC_TOOLS
+cdr2odg_LDFLAGS = -all-static
+endif
+cdr2odg_SOURCES = \
+	$(COMMON_SRC) \
+	cdr2odg.cxx
+
 if OS_WIN32
 
 @WPD2ODT_WIN32_RESOURCE@ : wpd2odt.rc $(wpd2odt_OBJECTS)
@@ -91,4 +107,8 @@ if OS_WIN32
 @WPS2ODT_WIN32_RESOURCE@ : wps2odt.rc $(wps2odt_OBJECTS)
 	chmod +x $(top_srcdir)/build/win32/*compile-resource
 	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource wps2odt.rc @WPS2ODT_WIN32_RESOURCE@
+
+@CDR2ODG_WIN32_RESOURCE@ : cdr2odg.rc $(cdr2odg_OBJECTS)
+	chmod +x $(top_srcdir)/build/win32/*compile-resource
+	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource cdr2odg.rc @CDR2ODG_WIN32_RESOURCE@
 endif 
