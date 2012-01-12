@@ -8,4 +8,7 @@ wp?2od?-win32res.lo
 vsd2odg
 vsd2odg.rc
 vsd2odg-win32res.lo
+cdr2odg
+cdr2odg.rc
+cdr2odg-win32res.lo
 *.o
