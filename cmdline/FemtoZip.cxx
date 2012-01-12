@@ -248,7 +248,8 @@ public:
 			FZ_DEBUG(("automatically closing last entry %s", currentEntry->name));
 			closeEntry();
 		}
-
+		if(!fhandle)
+			return;
 		unsigned long centralDirPos = ftell(fhandle);
 		unsigned short entryCount = 0;
 		FemtoZipEntry *entry = entryList;
