@@ -521,7 +521,7 @@ public:
 		if(errorCode != FemtoZip::NoError)
 			return;
 
-		if(fhandle == 0)
+		if(!fhandle)
 		{
 			FZ_DEBUG(("closeEntry error: file already closed"));
 			return;
@@ -557,7 +557,7 @@ public:
 		if(errorCode != FemtoZip::NoError)
 			return;
 
-		if(fhandle == 0)
+		if(!fhandle)
 		{
 			FZ_DEBUG(("writeData error: file already closed"));
 			return;
