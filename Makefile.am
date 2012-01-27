@@ -16,8 +16,8 @@ distclean-local:
 	rm -rf *.cache *~ *.out
 
 rpm: dist
-	rpmbuild -ta $(PACKAGE)-$(VERSION).tar.gz
-	@rm -f $(PACKAGE)-$(VERSION).tar.gz
+	rpmbuild --nodeps -ta $(PACKAGE)-$(VERSION).tar.gz
+	@rm -f $(PACKAGE)-$(VERSION).tar.*
 
 zip: install
 	@sh writerperfect-zip
