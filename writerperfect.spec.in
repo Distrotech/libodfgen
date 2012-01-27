@@ -51,6 +51,20 @@ Group: Applications
 %description -n vsd2odg
 Tool for converting Microsoft Visio documents into OpenDocument Graphics format.
 
+%package -n cdr2odg
+Summary: Tool for converting Corel Draw documents into OpenDocument Graphics format
+Group: Applications
+ 
+%description -n cdr2odg
+Tool for converting Corel Draw documents into OpenDocument Graphics format.
+
+%package -n pub2odg
+Summary: Tool for converting Microsoft Publisher documents into OpenDocument Graphics format
+Group: Applications
+ 
+%description -n pub2odg
+Tool for converting Microsoft Publisher documents into OpenDocument Graphics format.
+
 %prep
 %__rm -rf $RPM_BUILD_ROOT
 
@@ -85,6 +99,14 @@ umask 022
 %files -n vsd2odg
 %defattr(755,root,root,755)
 %{_bindir}/vsd2odg
+
+%files -n cdr2odg
+%defattr(755,root,root,755)
+%{_bindir}/cdr2odg
+
+%files -n pub2odg
+%defattr(755,root,root,755)
+%{_bindir}/pub2odg
 
 %changelog
 * Wed Nov 17 2004 Fridrich Strba <fridrich.strba@bluewin.ch>
