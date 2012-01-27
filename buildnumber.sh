@@ -4,7 +4,12 @@
 # needs the script createBuildNumber.pl to be in the same directory.
 
 { ./createBuildNumber.pl \
-	wpd2odt/wpd2odt-build.stamp 
+	cmdline/cdr2odt-build.stamp \
+	cmdline/pub2odt-build.stamp \
+	cmdline/vsd2odt-build.stamp \
+	cmdline/wpd2odt-build.stamp \
+	cmdline/wpg2odt-build.stamp \
+	cmdline/wps2odt-build.stamp 
 #Success
 exit 0
 }
