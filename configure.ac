@@ -70,6 +70,7 @@ AS_CASE([$host],
 		VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
 		WPS2ODT_WIN32_RESOURCE=wps2odt-win32res.lo
 		CDR2ODG_WIN32_RESOURCE=cdr2odg-win32res.lo
+		PUB2ODG_WIN32_RESOURCE=pub2odg-win32res.lo
 	], [
 		native_win32=no
 		WPD2ODT_WIN32_RESOURCE=
@@ -77,6 +78,7 @@ AS_CASE([$host],
 		VSD2ODG_WIN32_RESOURCE=
 		WPS2ODT_WIN32_RESOURCE=
 		CDR2ODG_WIN32_RESOURCE=
+		PUB2ODG_WIN32_RESOURCE=
 	]
 )
 AC_MSG_RESULT([$native_win32])
@@ -86,6 +88,7 @@ AC_SUBST(WPG2ODG_WIN32_RESOURCE)
 AC_SUBST(VSD2ODG_WIN32_RESOURCE)
 AC_SUBST(WPS2ODT_WIN32_RESOURCE)
 AC_SUBST(CDR2ODG_WIN32_RESOURCE)
+AC_SUBST(PUB2ODG_WIN32_RESOURCE)
 
 AC_MSG_CHECKING([for Win32 platform in general])
 AS_CASE([$host],
@@ -232,6 +235,24 @@ AS_IF([test "x$have_libcdr" = "xno" -a "x$with_libcdr" = "xyes"], [
 ])
 
 # ========
+# libmspub
+# ========
+AC_ARG_WITH(libmspub,
+	[AS_HELP_STRING([--without-libmspub],
+		[Use libmspub for conversion of Microsoft Publisher Documents])],
+	[with_libmspub="$withval"],
+	[with_libmspub=auto]
+)
+AS_IF([test "x$with_libmspub" != "xno"], [
+		PKG_CHECK_MODULES(WRITERPERFECTPUB, [libmspub-0.0],
+			[have_libmspub=yes], [have_libmspub=no])
+	], [have_libmspub=no])
+AM_CONDITIONAL([USE_LIBMSPUB], [test "x$have_libmspub" = "xyes"])
+AS_IF([test "x$have_libmspub" = "xno" -a "x$with_libmspub" = "xyes"], [
+	AC_MSG_ERROR([libmspub requested but not found])
+])
+
+# ========
 # shared_ptr implementation
 # ========
 AC_ARG_WITH(sharedptr,
@@ -285,9 +306,11 @@ build/Makefile
 build/win32/Makefile
 filter/Makefile
 cmdline/Makefile
+cmdline/cdr2odg.rc
+cmdline/pub2odg.rc
+cmdline/vsd2odg.rc
 cmdline/wpd2odt.rc
 cmdline/wpg2odg.rc
-cmdline/vsd2odg.rc
 cmdline/wps2odt.rc
 ])
 AC_OUTPUT
