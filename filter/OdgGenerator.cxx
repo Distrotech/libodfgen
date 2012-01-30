@@ -858,7 +858,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 			qx = (qx < path[k]["svg:x2"]->getDouble()) ? path[k]["svg:x2"]->getDouble() : qx;
 			qy = (qy < path[k]["svg:y2"]->getDouble()) ? path[k]["svg:y2"]->getDouble() : qy;
 		}
-		if(path[k]["libwpg:path-action"]->getStr() == "C")
+		if(path[k]["libwpg:path-action"]->getStr() == "Q")
 		{
 			px = (px > path[k]["svg:x1"]->getDouble()) ? path[k]["svg:x1"]->getDouble() : px;
 			py = (py > path[k]["svg:y1"]->getDouble()) ? path[k]["svg:y1"]->getDouble() : py;
