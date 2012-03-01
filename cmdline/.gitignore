@@ -11,4 +11,7 @@ vsd2odg-win32res.lo
 cdr2odg
 cdr2odg.rc
 cdr2odg-win32res.lo
+pub2odg
+pub2odg.rc
+pub2odg-win32res.lo
 *.o
