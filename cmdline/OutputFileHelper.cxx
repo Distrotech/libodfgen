@@ -155,7 +155,11 @@ bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str
 #endif
 }
 
+#if defined(USE_GSF_OUTPUT) && defined(GSF_HAS_COMPRESSION_LEVEL)
 bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str, const char compression_level)
+#else
+bool OutputFileHelper::writeChildFile(const char *childFileName, const char *str, const char )
+#endif
 {
 	if (!m_impl->mpOutfile)
 		return true;

@@ -24,7 +24,7 @@
 #include <OdfDocumentHandler.hxx>
 
 class WPXInputStream;
-class OutputFileHelperImpl;
+struct OutputFileHelperImpl;
 
 class OutputFileHelper
 {
