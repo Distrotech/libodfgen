@@ -150,7 +150,7 @@ private:
 		return true;
 	}
 
-	static bool handleEmbeddedWPG(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType)
+	static bool handleEmbeddedWPGObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType)
 	{
 #ifdef USE_LIBWPG
 		OdgGenerator exporter(pHandler, streamType);
@@ -166,10 +166,29 @@ private:
 #endif
 	}
 
+	static bool handleEmbeddedWPGImage(const WPXBinaryData &input, WPXBinaryData &output)
+	{
+#ifdef USE_LIBWPG
+		WPXString svgOutput;
+		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
+
+		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(input.getDataStream())))
+			fileFormat = libwpg::WPG_WPG1;
+
+		if (!libwpg::WPGraphics::generateSVG(const_cast<WPXInputStream *>(input.getDataStream()), svgOutput, fileFormat))
+			return false;
+
+		output.clear();
+		output.append((unsigned char *)svgOutput.cstr(), strlen(svgOutput.cstr()));
+#endif
+		return true;
+	}
+
 	bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType)
 	{
 		OdtGenerator collector(handler, streamType);
-		collector.registerEmbeddedObjectHandler("image/x-wpg", &handleEmbeddedWPG);
+		collector.registerEmbeddedObjectHandler("image/x-wpg", &handleEmbeddedWPGObject);
+		collector.registerEmbeddedImageHandler("image/x-wpg", &handleEmbeddedWPGImage);
 		if (WPD_OK == WPDocument::parse(input, &collector, password))
 			return true;
 		return false;
