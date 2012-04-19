@@ -70,6 +70,7 @@ AS_CASE([$host],
 		VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
 		WPS2ODT_WIN32_RESOURCE=wps2odt-win32res.lo
 		CDR2ODG_WIN32_RESOURCE=cdr2odg-win32res.lo
+		CMX2ODG_WIN32_RESOURCE=cmx2odg-win32res.lo
 		PUB2ODG_WIN32_RESOURCE=pub2odg-win32res.lo
 	], [
 		native_win32=no
@@ -78,6 +79,7 @@ AS_CASE([$host],
 		VSD2ODG_WIN32_RESOURCE=
 		WPS2ODT_WIN32_RESOURCE=
 		CDR2ODG_WIN32_RESOURCE=
+		CMX2ODG_WIN32_RESOURCE=
 		PUB2ODG_WIN32_RESOURCE=
 	]
 )
@@ -88,6 +90,7 @@ AC_SUBST(WPG2ODG_WIN32_RESOURCE)
 AC_SUBST(VSD2ODG_WIN32_RESOURCE)
 AC_SUBST(WPS2ODT_WIN32_RESOURCE)
 AC_SUBST(CDR2ODG_WIN32_RESOURCE)
+AC_SUBST(CMX2ODG_WIN32_RESOURCE)
 AC_SUBST(PUB2ODG_WIN32_RESOURCE)
 
 AC_MSG_CHECKING([for Win32 platform in general])
@@ -226,7 +229,7 @@ AC_ARG_WITH(libcdr,
 	[with_libcdr=auto]
 )
 AS_IF([test "x$with_libcdr" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTCDR, [libcdr-0.0],
+		PKG_CHECK_MODULES(WRITERPERFECTCDR, [libcdr-0.0 >= 0.0.5],
 			[have_libcdr=yes], [have_libcdr=no])
 	], [have_libcdr=no])
 AM_CONDITIONAL([USE_LIBCDR], [test "x$have_libcdr" = "xyes"])
@@ -307,6 +310,7 @@ build/win32/Makefile
 filter/Makefile
 cmdline/Makefile
 cmdline/cdr2odg.rc
+cmdline/cmx2odg.rc
 cmdline/pub2odg.rc
 cmdline/vsd2odg.rc
 cmdline/wpd2odt.rc
@@ -322,10 +326,12 @@ AC_MSG_NOTICE([
 ==============================================================================
 Build configuration:
 	debug:           ${enable_debug}
+	libcdr:          ${have_libcdr}
 	libgsf:          ${have_libgsf}
+	libmspub:        ${have_libmspub}
+	libvisio:        ${have_libvisio}
 	libwpg:          ${have_libwpg}
 	libwps:          ${have_libwps}
-	libvisio:        ${have_libvisio}
 	werror:          ${enable_werror}
 ==============================================================================
 ])
