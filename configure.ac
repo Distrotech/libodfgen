@@ -72,6 +72,7 @@ AS_CASE([$host],
 		CDR2ODG_WIN32_RESOURCE=cdr2odg-win32res.lo
 		CMX2ODG_WIN32_RESOURCE=cmx2odg-win32res.lo
 		PUB2ODG_WIN32_RESOURCE=pub2odg-win32res.lo
+		MWAW2ODT_WIN32_RESOURCE=mwaw2odt-win32res.lo
 	], [
 		native_win32=no
 		WPD2ODT_WIN32_RESOURCE=
@@ -81,6 +82,7 @@ AS_CASE([$host],
 		CDR2ODG_WIN32_RESOURCE=
 		CMX2ODG_WIN32_RESOURCE=
 		PUB2ODG_WIN32_RESOURCE=
+		MWAW2ODT_WIN32_RESOURCE=
 	]
 )
 AC_MSG_RESULT([$native_win32])
@@ -92,6 +94,7 @@ AC_SUBST(WPS2ODT_WIN32_RESOURCE)
 AC_SUBST(CDR2ODG_WIN32_RESOURCE)
 AC_SUBST(CMX2ODG_WIN32_RESOURCE)
 AC_SUBST(PUB2ODG_WIN32_RESOURCE)
+AC_SUBST(MWAW2ODT_WIN32_RESOURCE)
 
 AC_MSG_CHECKING([for Win32 platform in general])
 AS_CASE([$host],
@@ -255,6 +258,24 @@ AS_IF([test "x$have_libmspub" = "xno" -a "x$with_libmspub" = "xyes"], [
 	AC_MSG_ERROR([libmspub requested but not found])
 ])
 
+# ======
+# libmwaw
+# ======
+AC_ARG_WITH(libmwaw,
+	[AS_HELP_STRING([--without-libmwaw],
+		[Do not use for conversion of Mac Classic Text Documents (MacWrite(tm), WriteNow(tm), ...)])],
+	[with_libmwaw="$withval"],
+	[with_libmwaw=auto]
+)
+AS_IF([test "x$with_libmwaw" != "xno"], [
+		PKG_CHECK_MODULES(WRITERPERFECTMWAW, [libmwaw-0.0],
+			[have_libmwaw=yes], [have_libmwaw=no])
+	], [have_libmwaw=no])
+AM_CONDITIONAL([USE_LIBMWAW], [test "x$have_libmwaw" = "xyes"])
+AS_IF([test "x$have_libmwaw" = "xno" -a "x$with_libmwaw" = "xyes"], [
+	AC_MSG_ERROR([libmwaw requested but not found])
+])
+
 # ========
 # shared_ptr implementation
 # ========
@@ -311,6 +332,7 @@ filter/Makefile
 cmdline/Makefile
 cmdline/cdr2odg.rc
 cmdline/cmx2odg.rc
+cmdline/mwaw2odt.rc
 cmdline/pub2odg.rc
 cmdline/vsd2odg.rc
 cmdline/wpd2odt.rc
@@ -329,6 +351,7 @@ Build configuration:
 	libcdr:          ${have_libcdr}
 	libgsf:          ${have_libgsf}
 	libmspub:        ${have_libmspub}
+	libmwaw:         ${have_libmwaw}
 	libvisio:        ${have_libvisio}
 	libwpg:          ${have_libwpg}
 	libwps:          ${have_libwps}

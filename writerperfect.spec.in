@@ -17,6 +17,7 @@ BuildRequires: libwps-devel >= 0.2
 BuildRequires: libvisio-devel >= 0.0
 BuildRequires: libcdr-devel >= 0.0
 BuildRequires: libmspub-devel >= 0.0
+BuildRequires: libmwaw-devel >= 0.0
 %if %{!?_without_stream:1}%{?_without_stream:0}
 BuildRequires: glib2-devel >= 2.0.0
 BuildRequires: libgsf-devel >= 1.6.0
@@ -67,6 +68,13 @@ Group: Applications
 %description -n pub2odg
 Tool for converting Microsoft Publisher documents into OpenDocument Graphics format.
 
+%package -n mwaw2odt
+Summary: Tool for converting some Mac Classic Text Documents (MacWrite(tm), WriteNow(tm), ...) into OpenDocument Text format.
+Group: Applications
+ 
+%description -n mwaw2odt
+Tool for converting some Mac Classic Text Documents (MacWrite(tm), WriteNow(tm), ...) into OpenDocument Text format.
+
 %prep
 %__rm -rf $RPM_BUILD_ROOT
 
@@ -109,6 +117,10 @@ umask 022
 %files -n pub2odg
 %defattr(755,root,root,755)
 %{_bindir}/pub2odg
+
+%files -n mwaw2odt
+%defattr(755,root,root,755)
+%{_bindir}/mwaw2odt
 
 %changelog
 * Wed Nov 17 2004 Fridrich Strba <fridrich.strba@bluewin.ch>

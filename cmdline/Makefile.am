@@ -28,12 +28,18 @@ PUB_CFLAGS = $(WRITERPERFECTPUB_CFLAGS)
 PUB_LIBS = $(WRITERPERFECTPUB_LIBS)
 endif
 
+if USE_LIBMWAW
+MWAW_APP = mwaw2odt
+MWAW_CFLAGS = $(WRITERPERFECTMWAW_CFLAGS)
+MWAW_LIBS = $(WRITERPERFECTMWAW_LIBS)
+endif
+
 if USE_GSF_OUTPUT
 GSF_CFLAGS = $(WRITERPERFECTGSF_CFLAGS)
 GSF_LIBS = $(WRITERPERFECTGSF_LIBS)
 endif
 
-bin_PROGRAMS = wpd2odt $(WPG_APP) $(VISIO_APP) $(WPS_APP) $(CDR_APP) $(PUB_APP)
+bin_PROGRAMS = wpd2odt $(WPG_APP) $(VISIO_APP) $(WPS_APP) $(CDR_APP) $(PUB_APP) $(MWAW_APP)
 
 noinst_LTLIBRARIES = libhelper.la
 libhelper_la_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(WP_WPG_CFLAGS) $(DEBUG_CXXFLAGS)
@@ -112,6 +118,17 @@ endif
 pub2odg_SOURCES = \
 	pub2odg.cxx
 
+mwaw2odt_DEPENDENCIES = @MWAW2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la libhelper.la
+mwaw2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(MWAW_CFLAGS) $(GSF_CFLAGS)
+mwaw2odt_LDADD = @MWAW2ODT_WIN32_RESOURCE@ ../filter/libwriterperfect.la libhelper.la $(WRITERPERFECTCORE_LIBS) $(MWAW_LIBS) $(GSF_LIBS)
+mwaw2odt_SOURCES = \
+	mwawObjectHandler.hxx \
+	mwawObjectHandler.cxx \
+	mwaw2odt.cxx
+if STATIC_TOOLS
+mwaw2odt_LDFLAGS = -all-static
+endif
+
 if OS_WIN32
 
 @WPD2ODT_WIN32_RESOURCE@ : wpd2odt.rc $(wpd2odt_OBJECTS)
@@ -141,4 +158,9 @@ if OS_WIN32
 @PUB2ODG_WIN32_RESOURCE@ : pub2odg.rc $(pub2odg_OBJECTS)
 	chmod +x $(top_srcdir)/build/win32/*compile-resource
 	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource pub2odg.rc @PUB2ODG_WIN32_RESOURCE@
+
+@MWAW2ODT_WIN32_RESOURCE@ : mwaw2odt.rc $(mwaw2odt_OBJECTS)
+	chmod +x $(top_srcdir)/build/win32/*compile-resource
+	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource mwaw2odt.rc @MWAW2ODT_WIN32_RESOURCE@
+
 endif 

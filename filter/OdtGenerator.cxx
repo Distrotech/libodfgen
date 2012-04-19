@@ -1149,6 +1149,9 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 	if (propList["style:wrap"])
 		frameStylePropertiesOpenElement->addAttribute("style:wrap", propList["style:wrap"]->getStr());
 
+	if (propList["style:run-through"])
+		frameStylePropertiesOpenElement->addAttribute("style:run-through", propList["style:run-through"]->getStr());
+
 	mpImpl->mFrameStyles.push_back(frameStylePropertiesOpenElement);
 
 	mpImpl->mFrameStyles.push_back(new TagCloseElement("style:graphic-properties"));
