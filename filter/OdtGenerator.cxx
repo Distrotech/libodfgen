@@ -859,7 +859,7 @@ void OdtGenerator::openFootnote(const WPXPropertyList &propList)
 		pOpenFootCitation->addAttribute("text:label", tmpString);
 	}
 	mpImpl->mpCurrentContentElements->push_back(pOpenFootCitation);
-	
+
 	if (propList["text:label"])
 		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["text:label"]->getStr().cstr()));
 	else if (propList["libwpd:number"])
