@@ -355,6 +355,7 @@ Build configuration:
 	libvisio:        ${have_libvisio}
 	libwpg:          ${have_libwpg}
 	libwps:          ${have_libwps}
+	sharedptr:       ${with_sharedptr}
 	werror:          ${enable_werror}
 ==============================================================================
 ])
