@@ -9,7 +9,8 @@
 	cmdline/vsd2odt-build.stamp \
 	cmdline/wpd2odt-build.stamp \
 	cmdline/wpg2odt-build.stamp \
-	cmdline/wps2odt-build.stamp 
+	cmdline/wps2odt-build.stamp \
+	filter/libwriterperfect-build.stamp
 #Success
 exit 0
 }

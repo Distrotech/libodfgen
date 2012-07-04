@@ -66,6 +66,7 @@ AS_CASE([$host],
 	[*-*-mingw*], [
 		native_win32=yes
 		AC_CHECK_TOOL(WINDRES, windres)
+		LIBWRITERPERFECT_WIN32_RESOURCE=libwriterperfect-win32res.lo
 		WPD2ODT_WIN32_RESOURCE=wpd2odt-win32res.lo
 		WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
 		VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
@@ -76,6 +77,7 @@ AS_CASE([$host],
 		MWAW2ODT_WIN32_RESOURCE=mwaw2odt-win32res.lo
 	], [
 		native_win32=no
+		LIBWRITERPERFECT_WIN32_RESOURCE=
 		WPD2ODT_WIN32_RESOURCE=
 		WPG2ODG_WIN32_RESOURCE=
 		VSD2ODG_WIN32_RESOURCE=
@@ -88,6 +90,7 @@ AS_CASE([$host],
 )
 AC_MSG_RESULT([$native_win32])
 AM_CONDITIONAL([OS_WIN32], [test "x$native_win32" = "xyes"])
+AC_SUBST(LIBWRITERPERFECT_WIN32_RESOURCE)
 AC_SUBST(WPD2ODT_WIN32_RESOURCE)
 AC_SUBST(WPG2ODG_WIN32_RESOURCE)
 AC_SUBST(VSD2ODG_WIN32_RESOURCE)
@@ -365,6 +368,7 @@ writerperfect-zip
 build/Makefile
 build/win32/Makefile
 filter/Makefile
+filter/libwriterperfect.rc
 cmdline/Makefile
 cmdline/cdr2odg.rc
 cmdline/cmx2odg.rc
