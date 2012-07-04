@@ -117,6 +117,36 @@ AS_IF([test x"$enable_werror" != "xno"], [
 	CFLAGS="$CFLAGS -Werror"
 	CXXFLAGS="$CXXFLAGS -Werror"
 ])
+# Courtesy of Glib: Ensure MSVC-compatible struct packing convention
+# is used when compiling for Win32 with gcc.
+AS_IF([test "x$native_win32" = "xyes"], [
+	AC_CHECK_TOOL(WINDRES, windres)
+	AS_IF([test x"$GCC" = xyes], [
+		AC_MSG_CHECKING([how to get MSVC-compatible struct packing])
+		AS_IF([test -z "$ac_cv_prog_CC"], [
+			our_gcc="$CC"
+		], [
+			our_gcc="$ac_cv_prog_CC"
+		])
+		AS_IF([$our_gcc -v --help 2>/dev/null | grep ms-bitfields >/dev/null], [
+			msnative_struct="-mms-bitfields"
+			CFLAGS="$CFLAGS $msnative_struct"
+			CXXFLAGS="$CXXFLAGS $msnative_struct"
+			AC_MSG_RESULT([${msnative_struct}])
+		], [
+			AC_MSG_RESULT([no way])
+			AC_MSG_WARN([produced libraries might be incompatible with MSVC-compiled code])
+		])
+	])
+	CFLAGS="$CFLAGS -Wall -Wextra -pedantic"
+	CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wshadow -pedantic"
+], [
+	AS_IF([test x"$GCC" = xyes], [
+		# Be tough with warnings and produce less careless code
+		CFLAGS="$CFLAGS -Wall -Wextra -pedantic"
+		CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wshadow -pedantic"
+	])
+])
 
 # ============
 # Debug switch
