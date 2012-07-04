@@ -33,9 +33,7 @@
 #include "OutputFileHelper.hxx"
 
 #include "OdtGenerator.hxx"
-#ifdef USE_LIBWPG
 #include "OdgGenerator.hxx"
-#endif
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.text";
 
@@ -152,7 +150,6 @@ private:
 
 	static bool handleEmbeddedWPGObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType)
 	{
-#ifdef USE_LIBWPG
 		OdgGenerator exporter(pHandler, streamType);
 
 		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
@@ -161,14 +158,10 @@ private:
 			fileFormat = libwpg::WPG_WPG1;
 
 		return libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat);
-#else
-		return true;
-#endif
 	}
 
 	static bool handleEmbeddedWPGImage(const WPXBinaryData &input, WPXBinaryData &output)
 	{
-#ifdef USE_LIBWPG
 		WPXString svgOutput;
 		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
 
@@ -180,7 +173,7 @@ private:
 
 		output.clear();
 		output.append((unsigned char *)svgOutput.cstr(), strlen(svgOutput.cstr()));
-#endif
+
 		return true;
 	}
 

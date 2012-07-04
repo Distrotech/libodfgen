@@ -19,4 +19,5 @@ mkinstalldirs
 stamp-h1
 writerperfect.spec
 writerperfect-zip
+libwriterperfect-*.pc
 *.out

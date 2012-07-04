@@ -23,8 +23,8 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
-#ifndef __ODGEXPORTER_HXX__
-#define __ODGEXPORTER_HXX__
+#ifndef __ODGGENERATOR_HXX__
+#define __ODGGENERATOR_HXX__
 
 #include <libwpd/libwpd.h>
 #include <libwpg/libwpg.h>
@@ -67,6 +67,6 @@ private:
 	OdgGeneratorPrivate *mpImpl;
 };
 
-#endif // __ODGEXPORTER_HXX__
+#endif // __ODGGENERATOR_HXX__
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

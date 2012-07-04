@@ -1,23 +1,24 @@
-if USE_LIBWPG
-WP_WPG_SOURCES = \
-	OdgGenerator.cxx \
-	OdgGenerator.hxx
-WP_WPG_CFLAGS = \
-	$(WRITERPERFECTWPG_CFLAGS)
-WP_WPG_LIBS = \
-	$(WRITERPERFECTWPG_LIBS)
-endif
 
-noinst_LTLIBRARIES = libwriterperfect.la
-libwriterperfect_la_CXXFLAGS = $(WRITERPERFECTCORE_CFLAGS) $(WP_WPG_CFLAGS) $(DEBUG_CXXFLAGS)
-libwriterperfect_la_LIBADD  = $(WRITERPERFECTCORE_LIBS) $(WP_WPG_LIBS)
-libwriterperfect_la_SOURCES = \
+lib_LTLIBRARIES = libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la
+
+libwriterperfect_@WRITERPERFECT_MAJOR_VERSION@_@WRITERPERFECT_MINOR_VERSION@_includedir = \
+	$(includedir)/libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@/libwriterperfect
+
+libwriterperfect_@WRITERPERFECT_MAJOR_VERSION@_@WRITERPERFECT_MINOR_VERSION@_include_HEADERS = \
+	OdfDocumentHandler.hxx \
+	OdtGenerator.hxx \
+	OdgGenerator.hxx
+
+libwriterperfect_@WRITERPERFECT_MAJOR_VERSION@_@WRITERPERFECT_MINOR_VERSION@_la_CXXFLAGS = $(WRITERPERFECTCORE_CFLAGS) $(DEBUG_CXXFLAGS)
+
+libwriterperfect_@WRITERPERFECT_MAJOR_VERSION@_@WRITERPERFECT_MINOR_VERSION@_la_LIBADD  = $(WRITERPERFECTCORE_LIBS)
+
+libwriterperfect_@WRITERPERFECT_MAJOR_VERSION@_@WRITERPERFECT_MINOR_VERSION@_la_SOURCES = \
 	FilterInternal.hxx \
 	FilterInternal.cxx \
 	Style.hxx \
 	DocumentElement.cxx \
 	DocumentElement.hxx \
-	OdfDocumentHandler.hxx \
 	FontStyle.cxx \
 	FontStyle.hxx \
 	InternalHandler.cxx \
@@ -33,5 +34,4 @@ libwriterperfect_la_SOURCES = \
 	TextRunStyle.cxx \
 	TextRunStyle.hxx \
 	OdtGenerator.cxx \
-	OdtGenerator.hxx \
-	$(WP_WPG_SOURCES)
+	OdgGenerator.cxx

@@ -39,6 +39,7 @@ PKG_PROG_PKG_CONFIG([0.20])
 PKG_CHECK_MODULES([WRITERPERFECTCORE],[
     libwpd-0.9
     libwpd-stream-0.9
+	libwpg-0.2
 ])
 
 # =================================
@@ -166,24 +167,6 @@ AM_CONDITIONAL([USE_GSF_OUTPUT], [test "x$have_libgsf" = "xyes"])
 AM_CONDITIONAL([GSF_HAS_COMPRESSION_LEVEL], [test "x$have_libgsf" = "xyes"])
 AS_IF([test "x$have_libgsf" = "xno" -a "x$with_libgsf" = "xyes"], [
 	AC_MSG_ERROR([libgsf requested but not found])
-])
-
-# ======
-# libwpg
-# ======
-AC_ARG_WITH(libwpg,
-	[AS_HELP_STRING([--without-libwpg],
-		[Do not use libwpg for conversion of WordPerfect Graphics (embedded images will not be converted)])],
-	[with_libwpg="$withval"],
-	[with_libwpg=yes]
-)
-AS_IF([test "x$with_libwpg" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTWPG, [libwpg-0.2],
-			[have_libwpg=yes], [have_libwpg=no])
-	], [have_libwpg=no])
-AM_CONDITIONAL([USE_LIBWPG], [test "x$have_libwpg" = "xyes"])
-AS_IF([test "x$have_libwpg" = "xno" -a "x$with_libwpg" = "xyes"], [
-	AC_MSG_ERROR([libwpg requested but not found])
 ])
 
 # ======
@@ -345,6 +328,7 @@ AS_IF([test "x$with_sharedptr" = "xboost"], [
 # Prepare all .in files
 # =====================
 AC_CONFIG_FILES([
+libwriterperfect-0.8.pc
 Makefile
 writerperfect.spec
 writerperfect-zip
@@ -379,7 +363,6 @@ Build configuration:
 	libmspub:        ${have_libmspub}
 	libmwaw:         ${have_libmwaw}
 	libvisio:        ${have_libvisio}
-	libwpg:          ${have_libwpg}
 	libwps:          ${have_libwps}
 	shared_ptr:      ${with_sharedptr}
 	werror:          ${enable_werror}

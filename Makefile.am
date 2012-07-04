@@ -4,6 +4,8 @@ pkgconfdir = $(libdir)/pkgconfig
 
 SUBDIRS = build filter cmdline lo
 
+pkgconf_DATA = libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.pc
+
 EXTRA_DIST = \
 	writerperfect.spec.in \
 	writerperfect.spec \
