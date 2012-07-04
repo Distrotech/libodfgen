@@ -360,6 +360,10 @@ cmdline/vsd2odg.rc
 cmdline/wpd2odt.rc
 cmdline/wpg2odg.rc
 cmdline/wps2odt.rc
+lo/Makefile
+lo/draw/Makefile
+lo/stream/Makefile
+lo/writer/Makefile
 ])
 AC_OUTPUT
 

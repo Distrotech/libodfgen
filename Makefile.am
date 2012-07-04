@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 pkgconfdir = $(libdir)/pkgconfig
 
-SUBDIRS = build filter cmdline
+SUBDIRS = build filter cmdline lo
 
 EXTRA_DIST = \
 	writerperfect.spec.in \
