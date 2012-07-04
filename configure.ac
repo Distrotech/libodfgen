@@ -7,7 +7,7 @@ AC_PREREQ([2.65])
 # ====================
 m4_define([writerperfect_version_major],[0])
 m4_define([writerperfect_version_minor],[8])
-m4_define([writerperfect_version_micro],[1])
+m4_define([writerperfect_version_micro],[2])
 m4_define([writerperfect_version],[writerperfect_version_major.writerperfect_version_minor.writerperfect_version_micro])
 
 # =============
