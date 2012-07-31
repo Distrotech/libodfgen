@@ -25,7 +25,7 @@
 #include <stdio.h>
 
 StdOutHandler::StdOutHandler() :
-	mbIsTagOpened(false)
+	mbIsTagOpened(false), msOpenedTagName()
 {
 	printf("<?xml version=\"1.0\"?>\n");
 }

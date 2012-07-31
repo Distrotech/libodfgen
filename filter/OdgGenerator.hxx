@@ -64,6 +64,9 @@ public:
 	void insertText(const ::WPXString &str);
 
 private:
+	OdgGenerator(OdgGenerator const &);
+	OdgGenerator &operator=(OdgGenerator const &);
+
 	OdgGeneratorPrivate *mpImpl;
 };
 

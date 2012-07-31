@@ -120,6 +120,8 @@ public:
 	OdfEmbeddedObject _findEmbeddedObjectHandler(const WPXString &mimeType);
 	OdfEmbeddedImage _findEmbeddedImageHandler(const WPXString &mimeType);
 
+	WPXString _getFrameName(WPXString val="");
+
 	OdfDocumentHandler *mpHandler;
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
 
@@ -146,6 +148,8 @@ public:
 	std::vector<DocumentElement *> mFrameStyles;
 
 	std::vector<DocumentElement *> mFrameAutomaticStyles;
+
+	std::map<WPXString, WPXString, ltstr> mFrameLabelMap;
 
 	// embedded object handlers
 	std::map<WPXString, OdfEmbeddedObject, ltstr > mObjectHandlers;
@@ -188,7 +192,8 @@ OdtGeneratorPrivate::OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mWriterDocumentStates(),
 	mWriterListStates(),
 	mParagraphManager(), mSpanManager(), mFontManager(),
-	mSectionStyles(), mTableStyles(), mFrameStyles(), mFrameAutomaticStyles(),
+	mSectionStyles(), mTableStyles(),
+	mFrameStyles(), mFrameAutomaticStyles(), mFrameLabelMap(),
 	mObjectHandlers(), mImageHandlers(), mMetaData(),
 	miNumListStyles(0),
 	mBodyElements(),
@@ -276,6 +281,18 @@ OdfEmbeddedImage OdtGeneratorPrivate::_findEmbeddedImageHandler(const WPXString 
 		return i->second;
 
 	return 0;
+}
+
+WPXString OdtGeneratorPrivate::_getFrameName(WPXString val)
+{
+	bool hasLabel = val.cstr() && val.len();
+	if (hasLabel && mFrameLabelMap.find(val) != mFrameLabelMap.end())
+		return mFrameLabelMap.find(val)->second;
+	WPXString res;
+	res.sprintf("Object%i", miObjectNumber++);
+	if (hasLabel)
+		mFrameLabelMap[val]=res;
+	return res;
 }
 
 OdtGenerator::OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
@@ -1234,7 +1251,10 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	drawFrameOpenElement->addAttribute("draw:style-name", frameAutomaticStyleName);
 	WPXString objectName;
-	objectName.sprintf("Object%i", mpImpl->miObjectNumber++);
+	if (propList["libwpd:frame-name"])
+		objectName=mpImpl->_getFrameName(propList["libwpd:frame-name"]->getStr());
+	else
+		objectName=mpImpl->_getFrameName();
 	drawFrameOpenElement->addAttribute("draw:name", objectName);
 	if (propList["text:anchor-type"])
 		drawFrameOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
@@ -1261,6 +1281,9 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	if (propList["style:rel-height"])
 		drawFrameOpenElement->addAttribute("style:rel-height", propList["style:rel-height"]->getStr());
+
+	if (propList["draw:z-index"])
+		drawFrameOpenElement->addAttribute("draw:z-index", propList["draw:z-index"]->getStr());
 
 	mpImpl->mpCurrentContentElements->push_back(drawFrameOpenElement);
 
@@ -1346,13 +1369,20 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 	}
 }
 
-void OdtGenerator::openTextBox(const WPXPropertyList &)
+void OdtGenerator::openTextBox(const WPXPropertyList &propList)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Text box without a frame simply doesn't make sense for us
 		return;
 	mpImpl->mWriterListStates.push(WriterListState());
 	mpImpl->mWriterDocumentStates.push(WriterDocumentState());
-	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:text-box"));
+	TagOpenElement *textBoxOpenElement = new TagOpenElement("draw:text-box");
+	if (propList["libwpd:next-frame-name"])
+	{
+		WPXString frameName("");
+		frameName = mpImpl->_getFrameName(propList["libwpd:next-frame-name"]->getStr());
+		textBoxOpenElement->addAttribute("draw:chain-next-name", frameName);
+	}
+	mpImpl->mpCurrentContentElements->push_back(textBoxOpenElement);
 	mpImpl->mWriterDocumentStates.top().mbInTextBox = true;
 	mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
 }

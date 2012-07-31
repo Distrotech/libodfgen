@@ -184,8 +184,8 @@ public:
 	FemtoZipEntry *next;
 
 	FemtoZipEntry(const char *n, int cl):
-		compressionLevel(cl), uncompressedSize(0), compressedSize(0),
-		headerPos(0), timeStamp(0), dateStamp(0),
+		name(0), compressionLevel(cl), uncompressedSize(0),
+		compressedSize(0), headerPos(0), timeStamp(0), dateStamp(0),
 		crc32(0xffffffffL),   // pre-condition, all bits are '1'
 		next(0)
 	{
@@ -196,6 +196,9 @@ public:
 	{
 		free(name);
 	}
+private:
+	FemtoZipEntry(FemtoZipEntry const &);
+	FemtoZipEntry &operator=(FemtoZipEntry const &);
 };
 
 class FemtoZipPrivate
@@ -582,7 +585,7 @@ public:
 
 
 
-FemtoZip::FemtoZip(const char *zipfile)
+FemtoZip::FemtoZip(const char *zipfile) : d(0)
 {
 	d = new FemtoZipPrivate;
 	d->createZip(zipfile);

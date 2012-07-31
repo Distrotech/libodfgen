@@ -48,6 +48,8 @@ public:
 	virtual void characters(const WPXString &sCharacters);
 
 private:
+	DiskOdfDocumentHandler(DiskOdfDocumentHandler const &);
+	DiskOdfDocumentHandler &operator=(DiskOdfDocumentHandler const &);
 #ifdef USE_GSF_OUTPUT
 	GsfOutput *mpOutput;
 #else

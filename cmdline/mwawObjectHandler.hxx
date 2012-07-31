@@ -36,8 +36,6 @@
 #include <libwpd/WPXProperty.h>
 #include <libwpd/WPXString.h>
 
-#include <libmwaw/TMWAWPropertyHandler.hxx>
-
 class OdfDocumentHandler;
 
 namespace MWAWObjectHandlerInternal
@@ -95,10 +93,10 @@ protected:
 
 }
 
-class MWAWObjectHandler : public TMWAWPropertyHandler
+class MWAWObjectHandler : public MWAWPropertyHandler
 {
 public:
-	MWAWObjectHandler(OdfDocumentHandler *output) : TMWAWPropertyHandler(), m_document(), m_output(output) { }
+	MWAWObjectHandler(OdfDocumentHandler *output) : MWAWPropertyHandler(), m_document(), m_output(output) { }
 	~MWAWObjectHandler() {};
 
 	void startDocument()
@@ -124,6 +122,9 @@ public:
 	}
 
 private:
+	MWAWObjectHandler(MWAWObjectHandler const &);
+	MWAWObjectHandler operator=(MWAWObjectHandler const &);
+
 	MWAWObjectHandlerInternal::Document m_document;
 	OdfDocumentHandler *m_output;
 };

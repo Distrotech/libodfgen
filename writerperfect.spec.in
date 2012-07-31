@@ -17,7 +17,7 @@ BuildRequires: libwps-devel >= 0.2
 BuildRequires: libvisio-devel >= 0.0
 BuildRequires: libcdr-devel >= 0.0
 BuildRequires: libmspub-devel >= 0.0
-BuildRequires: libmwaw-devel >= 0.0
+BuildRequires: libmwaw-devel >= 0.1
 %if %{!?_without_stream:1}%{?_without_stream:0}
 BuildRequires: glib2-devel >= 2.0.0
 BuildRequires: libgsf-devel >= 1.6.0

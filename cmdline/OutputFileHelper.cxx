@@ -40,13 +40,16 @@
 
 struct OutputFileHelperImpl
 {
-	OutputFileHelperImpl(const char *password) : mpPassword(password) {}
+	OutputFileHelperImpl(const char *password) : mpOutfile(0), mpPassword(password) {}
 #ifdef USE_GSF_OUTPUT
 	GsfOutfile *mpOutfile;
 #else
 	FemtoZip *mpOutfile;
 #endif
 	const char *mpPassword;
+private:
+	OutputFileHelperImpl(OutputFileHelperImpl const &);
+	OutputFileHelperImpl &operator=(OutputFileHelperImpl const &);
 };
 
 

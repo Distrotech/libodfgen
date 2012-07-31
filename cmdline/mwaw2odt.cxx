@@ -129,15 +129,15 @@ public:
 private:
 	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
 	{
-		IMWAWDocument::DocumentType type;
-		IMWAWDocument::DocumentKind kind;
-		IMWAWConfidence confidence = IMWAWDocument::isFileFormatSupported(input, type, kind);
-		if (confidence == IMWAW_CONFIDENCE_NONE)
+		MWAWDocument::DocumentType type;
+		MWAWDocument::DocumentKind kind;
+		MWAWConfidence confidence = MWAWDocument::isFileFormatSupported(input, type, kind);
+		if (confidence == MWAW_CONFIDENCE_NONE)
 		{
 			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Mac Classic document.\n");
 			return false;
 		}
-		if (kind != IMWAWDocument::K_TEXT && kind != IMWAWDocument::K_PRESENTATION)
+		if (kind != MWAWDocument::K_TEXT && kind != MWAWDocument::K_PRESENTATION)
 		{
 			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Mac Classic text document.\n");
 			return false;
@@ -166,7 +166,7 @@ private:
 	{
 		OdtGenerator collector(handler, streamType);
 		collector.registerEmbeddedObjectHandler("image/mwaw-odg", &handleEmbeddedMWAWObject);
-		if (IMWAW_OK == IMWAWDocument::parse(input, &collector))
+		if (MWAW_OK == MWAWDocument::parse(input, &collector))
 			return true;
 		return false;
 	}

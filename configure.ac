@@ -284,7 +284,7 @@ AC_ARG_WITH(libmwaw,
 	[with_libmwaw=auto]
 )
 AS_IF([test "x$with_libmwaw" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTMWAW, [libmwaw-0.0],
+		PKG_CHECK_MODULES(WRITERPERFECTMWAW, [libmwaw-0.1],
 			[have_libmwaw=yes], [have_libmwaw=no])
 	], [have_libmwaw=no])
 AM_CONDITIONAL([USE_LIBMWAW], [test "x$have_libmwaw" = "xyes"])

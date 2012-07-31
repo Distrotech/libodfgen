@@ -117,6 +117,9 @@ public:
 	void registerEmbeddedImageHandler(const WPXString &mimeType, OdfEmbeddedImage imageHandler);
 
 private:
+	OdtGenerator(OdtGenerator const &);
+	OdtGenerator &operator=(OdtGenerator const &);
+
 	OdtGeneratorPrivate *mpImpl;
 };
 #endif

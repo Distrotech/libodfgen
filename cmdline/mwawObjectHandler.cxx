@@ -45,10 +45,10 @@
 namespace MWAWObjectHandlerInternal
 {
 //! Internal: creates the string "f pt"
-static std::string getStringPt(float f)
+static std::string getStringPt(double f)
 {
 	std::stringstream s;
-	s << f << "pt";
+	s << float(f) << "pt";
 	return s.str();
 }
 static double getSizeInPt(WPXProperty const &prop)
@@ -109,42 +109,42 @@ bool Shape::read(const char *psName, WPXPropertyList const &xPropList, int stylI
 		else
 		{
 			char const *key = i.key();
-			int len = strlen(key);
-			bool ok = len > 1, generic = false;
+			int len = (int) strlen(key);
+			bool readOk = len > 1, generic = false;
 			std::vector<double> *which = 0L;
-			if (ok && strncmp(i.key(),"x",1)==0)
+			if (readOk && strncmp(i.key(),"x",1)==0)
 			{
 				which = &m_x;
 				key++;
 			}
-			else if (ok && strncmp(i.key(),"y",1)==0)
+			else if (readOk && strncmp(i.key(),"y",1)==0)
 			{
 				which = &m_y;
 				key++;
 			}
-			else if (ok && strncmp(i.key(),"angle",5)==0)
+			else if (readOk && strncmp(i.key(),"angle",5)==0)
 			{
 				which = &m_angle;
 				key+=5;
-				ok = len>5;
+				readOk = len>5;
 				generic=true;
 			}
-			else ok = false;
+			else readOk = false;
 
 			long w;
-			if (ok)
+			if (readOk)
 			{
 				char *res;
 				w = strtol(key, &res, 10);
-				ok = (*res=='\0') && (w >= 0);
+				readOk = (*res=='\0') && (w >= 0);
 			}
-			if (ok)
+			if (readOk)
 			{
-				if (int(which->size()) < w+1) which->resize(w+1,0.0);
+				if (int(which->size()) < w+1) which->resize(size_t(w)+1,0.0);
 				double unit = generic ? 1./72.0 : 1.0;
-				(*which)[w] = getSizeInPt(*i()) * unit;
+				(*which)[size_t(w)] = getSizeInPt(*i()) * unit;
 			}
-			if (!ok)
+			if (!readOk)
 			{
 				WRITER_DEBUG_MSG(("MWAWObjectHandlerInternal::Shape::read: find an unknown key '%s'\n",i.key()));
 			}
@@ -274,15 +274,15 @@ bool Shape::drawCircle(OdfDocumentHandler *output) const
 	list.insert("svg:y",getStringPt(m_y[0]).c_str());
 	list.insert("svg:width",getStringPt(m_w).c_str());
 	list.insert("svg:height",getStringPt(m_h).c_str());
-	if (m_w == m_h)
-	{
-		output->startElement("draw:circle", list);
-		output->endElement("draw:circle");
-	}
-	else
+	if (m_w < m_h || m_w > m_h)
 	{
 		output->startElement("draw:ellipse", list);
 		output->endElement("draw:ellipse");
+	}
+	else
+	{
+		output->startElement("draw:circle", list);
+		output->endElement("draw:circle");
 	}
 	return true;
 }
@@ -325,15 +325,15 @@ bool Shape::drawArc(OdfDocumentHandler *output) const
 	s << maxAngl;
 	list.insert("draw:end-angle", s.str().c_str());
 
-	if (m_w == m_h)
-	{
-		output->startElement("draw:circle", list);
-		output->endElement("draw:circle");
-	}
-	else
+	if (m_w < m_h || m_w > m_h)
 	{
 		output->startElement("draw:ellipse", list);
 		output->endElement("draw:ellipse");
+	}
+	else
+	{
+		output->startElement("draw:circle", list);
+		output->endElement("draw:circle");
 	}
 	return true;
 }
@@ -355,7 +355,7 @@ bool Shape::drawPolygon(OdfDocumentHandler *output) const
 	list.insert("svg:width",getStringPt(m_w).c_str());
 	list.insert("svg:height",getStringPt(m_h).c_str());
 
-	int numPt = m_x.size();
+	size_t numPt = m_x.size();
 
 	float const unit = 1; //35.2777; // convert in centimeters
 	s.str("");
@@ -363,7 +363,7 @@ bool Shape::drawPolygon(OdfDocumentHandler *output) const
 	list.insert("svg:viewBox", s.str().c_str());
 
 	s.str("");
-	for (int i = 0; i < numPt; i++)
+	for (size_t i = 0; i < numPt; i++)
 	{
 		if (i) s << " ";
 		s << int(m_x[i]*unit) << "," << int(m_y[i]*unit);
@@ -407,7 +407,7 @@ bool Document::open(const char *psName, WPXPropertyList const &xPropList)
 	}
 	else
 	{
-		int id = styles.size();
+		int id = int(styles.size());
 		Shape shape;
 		if (shape.read(psName, xPropList, id ? id-1 : 0))
 		{
@@ -566,8 +566,8 @@ void Document::write(OdfDocumentHandler *output)
 		}
 
 		// -- the styles
-		for (int i = 0; i < int(styles.size()) ; i++)
-			writeStyle(output, styles[i], i);
+		for (size_t i = 0; i < styles.size() ; i++)
+			writeStyle(output, styles[i], int(i));
 
 		output->endElement("office:automatic-styles");
 	}
@@ -598,7 +598,7 @@ void Document::write(OdfDocumentHandler *output)
 
 			output->startElement("draw:page", list);
 
-			for (int i = 0; i < int(shapes.size()) ; i++)
+			for (size_t i = 0; i < shapes.size() ; i++)
 				shapes[i].write(output);
 
 			output->endElement("draw:page");

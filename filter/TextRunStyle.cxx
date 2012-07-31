@@ -88,6 +88,8 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 			propList.insert("fo:text-indent", i()->getStr());
 		else if (strcmp(i.key(), "fo:line-height") == 0)
 			propList.insert("fo:line-height", i()->getStr());
+		else if (strcmp(i.key(), "fo:line-height-at-least") == 0)
+			propList.insert("fo:line-height-at-least", i()->getStr());
 		else if (strcmp(i.key(), "fo:break-before") == 0)
 			propList.insert("fo:break-before", i()->getStr());
 		else if (strcmp(i.key(), "fo:text-align") == 0)

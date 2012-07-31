@@ -40,6 +40,10 @@ private:
 	virtual bool _isSupportedFormat(WPXInputStream *input, const char *password) = 0;
 	virtual bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType) = 0;
 	OutputFileHelperImpl *m_impl;
+
+private:
+	OutputFileHelper(OutputFileHelper const &);
+	OutputFileHelper &operator=(OutputFileHelper const &);
 };
 
 #endif

@@ -31,7 +31,8 @@ DiskOdfDocumentHandler::DiskOdfDocumentHandler(GsfOutput *pOutput) :
 DiskOdfDocumentHandler::DiskOdfDocumentHandler(FemtoZip *pOutput) :
 #endif
 	mpOutput(pOutput),
-	mbIsTagOpened(false)
+	mbIsTagOpened(false),
+	msOpenedTagName()
 {
 }
 
