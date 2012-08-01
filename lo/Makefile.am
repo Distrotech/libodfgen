@@ -1,2 +1,0 @@
-SUBDIRS = draw stream writer
-

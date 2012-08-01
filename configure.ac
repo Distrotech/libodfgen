@@ -70,6 +70,7 @@ AS_CASE([$host],
 		WPD2ODT_WIN32_RESOURCE=wpd2odt-win32res.lo
 		WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
 		VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
+		VSS2ODG_WIN32_RESOURCE=vss2odg-win32res.lo
 		WPS2ODT_WIN32_RESOURCE=wps2odt-win32res.lo
 		CDR2ODG_WIN32_RESOURCE=cdr2odg-win32res.lo
 		CMX2ODG_WIN32_RESOURCE=cmx2odg-win32res.lo
@@ -81,6 +82,7 @@ AS_CASE([$host],
 		WPD2ODT_WIN32_RESOURCE=
 		WPG2ODG_WIN32_RESOURCE=
 		VSD2ODG_WIN32_RESOURCE=
+		VSS2ODG_WIN32_RESOURCE=
 		WPS2ODT_WIN32_RESOURCE=
 		CDR2ODG_WIN32_RESOURCE=
 		CMX2ODG_WIN32_RESOURCE=
@@ -94,6 +96,7 @@ AC_SUBST(LIBWRITERPERFECT_WIN32_RESOURCE)
 AC_SUBST(WPD2ODT_WIN32_RESOURCE)
 AC_SUBST(WPG2ODG_WIN32_RESOURCE)
 AC_SUBST(VSD2ODG_WIN32_RESOURCE)
+AC_SUBST(VSS2ODG_WIN32_RESOURCE)
 AC_SUBST(WPS2ODT_WIN32_RESOURCE)
 AC_SUBST(CDR2ODG_WIN32_RESOURCE)
 AC_SUBST(CMX2ODG_WIN32_RESOURCE)
@@ -233,7 +236,13 @@ AS_IF([test "x$with_libvisio" != "xno"], [
 		PKG_CHECK_MODULES(WRITERPERFECTVSD, [libvisio-0.0],
 			[have_libvisio=yes], [have_libvisio=no])
 	], [have_libvisio=no])
+
+AS_IF([test "have_libvisio" != "xno"], [
+		PKG_CHECK_EXISTS([libvisio-0.0 >= 0.0.20],
+			[build_vss=yes], [build_vss=no])
+	], [build_vss=no])
 AM_CONDITIONAL([USE_LIBVISIO], [test "x$have_libvisio" = "xyes"])
+AM_CONDITIONAL([BUILD_VSS], [test "x$build_vss" = "xyes"])
 AS_IF([test "x$have_libvisio" = "xno" -a "x$with_libvisio" = "xyes"], [
 	AC_MSG_ERROR([libvisio requested but not found])
 ])
@@ -375,13 +384,10 @@ cmdline/cmx2odg.rc
 cmdline/mwaw2odt.rc
 cmdline/pub2odg.rc
 cmdline/vsd2odg.rc
+cmdline/vss2odg.rc
 cmdline/wpd2odt.rc
 cmdline/wpg2odg.rc
 cmdline/wps2odt.rc
-lo/Makefile
-lo/draw/Makefile
-lo/stream/Makefile
-lo/writer/Makefile
 ])
 AC_OUTPUT
 
@@ -397,6 +403,7 @@ Build configuration:
 	libmspub:        ${have_libmspub}
 	libmwaw:         ${have_libmwaw}
 	libvisio:        ${have_libvisio}
+	build_vss:       ${build_vss}
 	libwps:          ${have_libwps}
 	shared_ptr:      ${with_sharedptr}
 	werror:          ${enable_werror}

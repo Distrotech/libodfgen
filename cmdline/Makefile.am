@@ -1,7 +1,12 @@
 if USE_LIBVISIO
-VISIO_APP = vsd2odg
-VISIO_CFLAGS = $(WRITERPERFECTVSD_CFLAGS)
-VISIO_LIBS = $(WRITERPERFECTVSD_LIBS)
+VSD_APP = vsd2odg
+VSD_CFLAGS = $(WRITERPERFECTVSD_CFLAGS)
+VSD_LIBS = $(WRITERPERFECTVSD_LIBS)
+
+if BUILD_VSS
+VSS_APP = vss2odg
+endif
+
 endif
 
 if USE_LIBWPS
@@ -33,7 +38,7 @@ GSF_CFLAGS = $(WRITERPERFECTGSF_CFLAGS)
 GSF_LIBS = $(WRITERPERFECTGSF_LIBS)
 endif
 
-bin_PROGRAMS = wpd2odt wpg2odg $(VISIO_APP) $(WPS_APP) $(CDR_APP) $(PUB_APP) $(MWAW_APP)
+bin_PROGRAMS = wpd2odt wpg2odg $(VSD_APP) $(VSS_APP) $(WPS_APP) $(CDR_APP) $(PUB_APP) $(MWAW_APP)
 
 noinst_LTLIBRARIES = libhelper.la
 libhelper_la_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(DEBUG_CXXFLAGS)
@@ -77,13 +82,22 @@ endif
 
 
 vsd2odg_DEPENDENCIES = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-vsd2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
-vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WRITERPERFECTCORE_LIBS) $(VISIO_LIBS) $(GSF_LIBS)
+vsd2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(VSD_CFLAGS) $(GSF_CFLAGS)
+vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WRITERPERFECTCORE_LIBS) $(VSD_LIBS) $(GSF_LIBS)
 if STATIC_TOOLS
 vsd2odg_LDFLAGS = -all-static
 endif
 vsd2odg_SOURCES = \
 	vsd2odg.cxx
+
+vss2odg_DEPENDENCIES = @VSS2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+vss2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(VSD_CFLAGS) $(GSF_CFLAGS)
+vss2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WRITERPERFECTCORE_LIBS) $(VSD_LIBS) $(GSF_LIBS)
+if STATIC_TOOLS
+vss2odg_LDFLAGS = -all-static
+endif
+vss2odg_SOURCES = \
+	vss2odg.cxx
 
 cdr2odg_DEPENDENCIES = @CDR2ODG_WIN32_RESOURCE@ ../filter/libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
 cdr2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WRITERPERFECTCORE_CFLAGS) $(CDR_CFLAGS) $(GSF_CFLAGS)
@@ -136,6 +150,10 @@ if OS_WIN32
 @VSD2ODG_WIN32_RESOURCE@ : vsd2odg.rc $(vsd2odg_OBJECTS)
 	chmod +x $(top_srcdir)/build/win32/*compile-resource
 	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource vsd2odg.rc @VSD2ODG_WIN32_RESOURCE@
+
+@VSS2ODG_WIN32_RESOURCE@ : vss2odg.rc $(vss2odg_OBJECTS)
+	chmod +x $(top_srcdir)/build/win32/*compile-resource
+	WINDRES=@WINDRES@ $(top_srcdir)/build/win32/lt-compile-resource vss2odg.rc @VSS2ODG_WIN32_RESOURCE@
 
 @WPS2ODT_WIN32_RESOURCE@ : wps2odt.rc $(wps2odt_OBJECTS)
 	chmod +x $(top_srcdir)/build/win32/*compile-resource

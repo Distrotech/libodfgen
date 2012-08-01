@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 pkgconfdir = $(libdir)/pkgconfig
 
-SUBDIRS = build filter cmdline lo
+SUBDIRS = build filter cmdline
 
 pkgconf_DATA = libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.pc
 
