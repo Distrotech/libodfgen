@@ -131,30 +131,6 @@ static unsigned long crc_table[256] =
 #endif
 
 
-#ifdef FEMTOZIP_DEBUG
-static void hexdump(unsigned long len, const void *data)
-{
-	const unsigned char *ptr = (const unsigned char *) data;
-	printf("%ld bytes:\n", len);
-	while(len)
-	{
-		unsigned long j = (len > 16) ? 16 : len;
-		for(unsigned i = 0; i < 16; i++)
-			if( i < j ) printf("%02x ", ptr[i] );
-			else printf("   ");
-		printf("    ");
-		for(unsigned i = 0; i < 16; i++ )
-			if( i < j ) printf("%c", (ptr[i] > 31) ? ptr[i] : '.');
-			else printf("   ");
-		printf("\n");
-		len -= j;
-		ptr += j;
-	}
-	printf("\n");
-}
-#endif
-
-
 // see http://www.concentric.net/~Ttwang/tech/inthash.htm
 static inline unsigned short hash(unsigned short key, unsigned short hashSize)
 {
