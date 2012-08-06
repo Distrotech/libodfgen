@@ -1102,6 +1102,15 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 		mpImpl->mxStyle.insert("style:mirror", "horizontal");
 	else
 		mpImpl->mxStyle.insert("style:mirror", "none");
+	if (propList["draw:color-mode"])
+	    mpImpl->mxStyle.insert("draw:color-mode", propList["draw:color-mode"]->getStr());
+	if (propList["draw:red"])
+	    mpImpl->mxStyle.insert("draw:red", propList["draw:red"]->getStr());
+	if (propList["draw:green"])
+	    mpImpl->mxStyle.insert("draw:green", propList["draw:green"]->getStr());
+	if (propList["draw:blue"])
+	    mpImpl->mxStyle.insert("draw:blue", propList["draw:blue"]->getStr());
+
 
 	mpImpl->_writeGraphicsStyle();
 
@@ -1397,6 +1406,15 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	mGraphicsAutomaticStyles.push_back(pStyleStyleElement);
 
 	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
+
+	if (mxStyle["draw:color-mode"] && mxStyle["draw:color-mode"]->getStr().len() > 0)
+	    pStyleGraphicsPropertiesElement->addAttribute("draw:color-mode", mxStyle["draw:color-mode"]->getStr());
+	if (mxStyle["draw:red"] && mxStyle["draw:red"]->getStr().len() > 0)
+	    pStyleGraphicsPropertiesElement->addAttribute("draw:red", mxStyle["draw:red"]->getStr());
+	if (mxStyle["draw:green"] && mxStyle["draw:green"]->getStr().len() > 0)
+	    pStyleGraphicsPropertiesElement->addAttribute("draw:green", mxStyle["draw:green"]->getStr());
+	if (mxStyle["draw:blue"] && mxStyle["draw:blue"]->getStr().len() > 0)
+	    pStyleGraphicsPropertiesElement->addAttribute("draw:blue", mxStyle["draw:blue"]->getStr());
 
 	if (mxStyle["draw:stroke"] && mxStyle["draw:stroke"]->getStr() == "none")
 		pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "none");
