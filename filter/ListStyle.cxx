@@ -34,14 +34,6 @@ OrderedListLevelStyle::OrderedListLevelStyle(const WPXPropertyList &xPropList) :
 {
 }
 
-void OrderedListStyle::updateListLevel(const int iLevel, const WPXPropertyList &xPropList)
-{
-	if (iLevel < 0)
-		return;
-	if (!isListLevelDefined(iLevel))
-		setListLevel(iLevel, new OrderedListLevelStyle(xPropList));
-}
-
 void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) const
 {
 	WPXString sLevel;
@@ -88,14 +80,6 @@ void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) cons
 UnorderedListLevelStyle::UnorderedListLevelStyle(const WPXPropertyList &xPropList)
 	: mPropList(xPropList)
 {
-}
-
-void UnorderedListStyle::updateListLevel(const int iLevel, const WPXPropertyList &xPropList)
-{
-	if (iLevel < 0)
-		return;
-	if (!isListLevelDefined(iLevel))
-		setListLevel(iLevel, new UnorderedListLevelStyle(xPropList));
 }
 
 void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) const
@@ -168,6 +152,19 @@ void ListStyle::setListLevel(int iLevel, ListLevelStyle *iListLevelStyle)
 	// update?
 	if (!mppListLevels[iLevel])
 		mppListLevels[iLevel] = iListLevelStyle;
+}
+
+void ListStyle::updateListLevel(const int iLevel, const WPXPropertyList &xPropList, bool ordered)
+{
+	if (iLevel < 0)
+		return;
+	if (!isListLevelDefined(iLevel))
+	{
+		if (ordered)
+			setListLevel(iLevel, new OrderedListLevelStyle(xPropList));
+		else
+			setListLevel(iLevel, new UnorderedListLevelStyle(xPropList));
+	}
 }
 
 void ListStyle::write(OdfDocumentHandler *pHandler) const
