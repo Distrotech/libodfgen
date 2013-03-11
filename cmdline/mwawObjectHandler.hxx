@@ -44,7 +44,7 @@ class Shape
 {
 public:
 	Shape() : m_type(BAD), m_styleId(-1), m_w(0), m_h(0), m_rw(0), m_rh(0),
-		m_x(), m_y(), m_angle()
+		m_x(), m_y(), m_angle(), m_path("")
 	{
 	}
 	bool read(const char *psName, WPXPropertyList const &xPropList, int styleId);
@@ -59,14 +59,16 @@ protected:
 	bool drawRectangle(OdfDocumentHandler *output) const;
 	bool drawCircle(OdfDocumentHandler *output) const;
 	bool drawArc(OdfDocumentHandler *output) const;
-	bool drawPolygon(OdfDocumentHandler *output) const;
+	bool drawPath(OdfDocumentHandler *output) const;
+	bool drawPolygon(OdfDocumentHandler *output, bool is2D) const;
 
-	enum Type { LINE, RECTANGLE, CIRCLE, ARC, POLYGON, BAD } m_type;
+	enum Type { LINE, RECTANGLE, CIRCLE, ARC, PATH, POLYLINE, POLYGON, BAD } m_type;
 
 	int m_styleId;
 	double m_w,m_h, m_rw, m_rh;
 	std::vector<double> m_x,m_y;
 	std::vector<double> m_angle;
+	std::string m_path;
 };
 
 class Document

@@ -126,8 +126,7 @@ public:
 		OutputFileHelper(outFileName, password) {};
 	~OdtOutputFileHelper() {};
 
-private:
-	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
+	static bool isSupportedFormat(WPXInputStream *input)
 	{
 		MWAWDocument::DocumentType type;
 		MWAWDocument::DocumentKind kind;
@@ -144,6 +143,11 @@ private:
 		}
 
 		return true;
+	}
+private:
+	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
+	{
+		return isSupportedFormat(input);
 	}
 
 #if MWAW_GRAPHIC_EXPORT==1
@@ -208,6 +212,12 @@ int main (int argc, char *argv[])
 	if (!szInputFile)
 		return printUsage(argv[0]);
 
+	if (1)
+	{
+		WPXFileStream input(szInputFile);
+		if (!OdtOutputFileHelper::isSupportedFormat(&input))
+			return 1;
+	}
 	if (szOutFile && stdOutput)
 		szOutFile = 0;
 

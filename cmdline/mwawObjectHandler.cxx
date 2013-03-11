@@ -96,6 +96,8 @@ bool Shape::read(const char *psName, WPXPropertyList const &xPropList, int stylI
 	else if (strcmp(psName,"drawRectangle")==0) m_type = RECTANGLE;
 	else if (strcmp(psName,"drawCircle")==0) m_type = CIRCLE;
 	else if (strcmp(psName,"drawArc")==0) m_type = ARC;
+	else if (strcmp(psName,"drawPath")==0) m_type = PATH;
+	else if (strcmp(psName,"drawPolyline")==0) m_type = POLYLINE;
 	else if (strcmp(psName,"drawPolygon")==0) m_type = POLYGON;
 	else return false;
 
@@ -106,6 +108,11 @@ bool Shape::read(const char *psName, WPXPropertyList const &xPropList, int stylI
 		else if (strcmp(i.key(), "h") == 0) m_h = getSizeInPt(*i());
 		else if (strcmp(i.key(), "rw") == 0) m_rw = getSizeInPt(*i());
 		else if (strcmp(i.key(), "rh") == 0) m_rh = getSizeInPt(*i());
+		else if (strcmp(i.key(), "path") == 0)
+		{
+			if (i()->getStr().len())
+				m_path = i()->getStr().cstr();
+		}
 		else
 		{
 			char const *key = i.key();
@@ -161,7 +168,9 @@ bool Shape::write(OdfDocumentHandler *output) const
 	else if (m_type == RECTANGLE) return drawRectangle(output);
 	else if (m_type == CIRCLE) return drawCircle(output);
 	else if (m_type == ARC) return drawArc(output);
-	else if (m_type == POLYGON) return drawPolygon(output);
+	else if (m_type == PATH) return drawPath(output);
+	else if (m_type == POLYLINE) return drawPolygon(output, false);
+	else if (m_type == POLYGON) return drawPolygon(output, true);
 
 	return false;
 }
@@ -338,7 +347,7 @@ bool Shape::drawArc(OdfDocumentHandler *output) const
 	return true;
 }
 
-bool Shape::drawPolygon(OdfDocumentHandler *output) const
+bool Shape::drawPolygon(OdfDocumentHandler *output, bool is2D) const
 {
 	if (m_x.size() < 1 || m_y.size() != m_x.size())
 	{
@@ -369,8 +378,42 @@ bool Shape::drawPolygon(OdfDocumentHandler *output) const
 		s << int(m_x[i]*unit) << "," << int(m_y[i]*unit);
 	}
 	list.insert("draw:points", s.str().c_str());
-	output->startElement("draw:polyline", list);
-	output->endElement("draw:polyline");
+	if (!is2D)
+	{
+		output->startElement("draw:polyline", list);
+		output->endElement("draw:polyline");
+	}
+	else
+	{
+		output->startElement("draw:polygon", list);
+		output->endElement("draw:polygon");
+	}
+	return true;
+}
+
+bool Shape::drawPath(OdfDocumentHandler *output) const
+{
+	if (m_path.length()==0 || m_w <= 0 || m_h <= 0)
+	{
+		WRITER_DEBUG_MSG(("MWAWObjectHandlerInternal::Shape::drawPath: PB\n"));
+		return false;
+	}
+
+	WPXPropertyList list;
+	list.insert("draw:text-style-name","P1");
+	list.insert("draw:layer","layout");
+	list.insert("draw:style-name",getStyleName(m_styleId).c_str());
+	list.insert("svg:x","0pt");
+	list.insert("svg:y","0pt");
+	list.insert("svg:width",getStringPt(m_w).c_str());
+	list.insert("svg:height",getStringPt(m_h).c_str());
+	std::stringstream s;
+	s << "0 0 " << int(m_w) << " " << int(m_h);
+	list.insert("svg:viewBox", s.str().c_str());
+	list.insert("svg:d",m_path.c_str());
+
+	output->startElement("draw:path", list);
+	output->endElement("draw:path");
 	return true;
 }
 
