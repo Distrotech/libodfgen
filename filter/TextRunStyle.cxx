@@ -88,8 +88,8 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 			propList.insert("fo:text-indent", i()->getStr());
 		else if (strcmp(i.key(), "fo:line-height") == 0)
 			propList.insert("fo:line-height", i()->getStr());
-		else if (strcmp(i.key(), "fo:line-height-at-least") == 0)
-			propList.insert("fo:line-height-at-least", i()->getStr());
+		else if (strcmp(i.key(), "style:line-height-at-least") == 0)
+			propList.insert("style:line-height-at-least", i()->getStr());
 		else if (strcmp(i.key(), "fo:break-before") == 0)
 			propList.insert("fo:break-before", i()->getStr());
 		else if (strcmp(i.key(), "fo:text-align") == 0)
@@ -98,6 +98,8 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 			propList.insert("fo:text-align-last", i()->getStr());
 		else if (strcmp(i.key(), "style:page-number") == 0)
 			propList.insert("style:page-number", i()->getStr());
+		else if (strcmp(i.key(), "fo:background-color") == 0)
+			propList.insert("fo:background-color", i()->getStr());
 		else if (strncmp(i.key(), "fo:border", 9) == 0)
 		{
 			if (strcmp(i.key(), "fo:border") == 0 ||
@@ -107,6 +109,10 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 			        strcmp(i.key(), "fo:border-bottom") == 0)
 				propList.insert(i.key(), i()->getStr());
 		}
+		else if (strcmp(i.key(), "fo:keep-together") == 0)
+			propList.insert("fo:keep-together", i()->getStr());
+		else if (strcmp(i.key(), "fo:keep-with-next") == 0)
+			propList.insert("fo:keep-with-next", i()->getStr());
 	}
 
 	propList.insert("style:justify-single-word", "false");
@@ -243,7 +249,7 @@ WPXString ParagraphStyleManager::findOrAdd(const WPXPropertyList &propList, cons
 shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const WPXString &name) const
 {
 	std::map<WPXString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
-	= mStyleHash.find(name);
+	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<ParagraphStyle>();
 	return iter->second;
 }
@@ -284,7 +290,7 @@ WPXString SpanStyleManager::findOrAdd(const WPXPropertyList &propList)
 shared_ptr<SpanStyle> const SpanStyleManager::get(const WPXString &name) const
 {
 	std::map<WPXString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
-	= mStyleHash.find(name);
+	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<SpanStyle>();
 	return iter->second;
 }
