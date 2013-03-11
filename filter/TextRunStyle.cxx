@@ -249,7 +249,7 @@ WPXString ParagraphStyleManager::findOrAdd(const WPXPropertyList &propList, cons
 shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const WPXString &name) const
 {
 	std::map<WPXString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
-	    = mStyleHash.find(name);
+	= mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<ParagraphStyle>();
 	return iter->second;
 }
@@ -290,7 +290,7 @@ WPXString SpanStyleManager::findOrAdd(const WPXPropertyList &propList)
 shared_ptr<SpanStyle> const SpanStyleManager::get(const WPXString &name) const
 {
 	std::map<WPXString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
-	    = mStyleHash.find(name);
+	= mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<SpanStyle>();
 	return iter->second;
 }
