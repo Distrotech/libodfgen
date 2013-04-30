@@ -17,7 +17,7 @@ m4
 missing
 mkinstalldirs
 stamp-h1
-writerperfect.spec
-writerperfect-zip
+libodfgen.spec
+libodfgen-zip
 libodfgen-*.pc
 *.out

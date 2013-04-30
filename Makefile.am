@@ -4,7 +4,7 @@ pkgconfdir = $(libdir)/pkgconfig
 
 
 
-SUBDIRS = build libodfgen tools
+SUBDIRS = build libodfgen
 
 pkgconf_DATA = libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@.pc
 
