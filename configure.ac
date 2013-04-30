@@ -223,8 +223,8 @@ libodfgen.spec
 libodfgen-zip
 build/Makefile
 build/win32/Makefile
-libodfgen/Makefile
-libodfgen/libodfgen.rc
+src/Makefile
+src/libodfgen.rc
 ])
 AC_OUTPUT
 
