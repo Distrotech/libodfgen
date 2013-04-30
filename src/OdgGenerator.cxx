@@ -258,22 +258,6 @@ static inline double cubicBase(double t, double a, double b, double c, double d)
 	return (1.0-t)*(1.0-t)*(1.0-t)*a + 3.0*(1.0-t)*(1.0-t)*t*b + 3.0*(1.0-t)*t*t*c + t*t*t*d;
 }
 
-#if 0
-static std::vector<double> cubicExtremes(double a, double b, double c, double d)
-{
-	std::vector<double> vec;
-	double u = -a + 2*b - c;
-	double v = sqrt((-a*(c-d) + b*b - b*(c+d) + c*c));
-	double w = -a + 3.0*b - 3.0*c + d;
-	if (w != 0.0)
-	{
-		vec.push_back((u-v)/w);
-		vec.push_back((u+v)/w);
-	}
-	return vec;
-}
-#endif
-
 static void getCubicBezierBBox(double x0, double y0, double x1, double y1, double x2, double y2, double x, double y,
                                double &xmin, double &ymin, double &xmax, double &ymax)
 {
@@ -282,29 +266,6 @@ static void getCubicBezierBBox(double x0, double y0, double x1, double y1, doubl
 	ymin = y0 < y ? y0 : y;
 	ymax = y0 > y ? y0 : y;
 
-#if 0
-	std::vector<double> extremes = cubicExtremes(x0, x1, x2, x);
-	for(std::vector<double>::iterator iterX = extremes.begin(); iterX != extremes.end(); ++iterX)
-	{
-		if(*iterX >= 0 && *iterX <= 1)
-		{
-			double tmpx = cubicBase(*iterX, x0, x1, x2, x);
-			xmin = tmpx < xmin ? tmpx : xmin;
-			xmax = tmpx > xmax ? tmpx : xmax;
-		}
-	}
-
-	extremes = cubicExtremes(y0, y1, y2, y);
-	for(std::vector<double>::iterator iterY = extremes.begin(); iterY != extremes.end(); ++iterY)
-	{
-		if(*iterY>=0.0 && *iterY<=1.0)
-		{
-			double tmpy = cubicBase(*iterY, y0, y1, y2, y);
-			ymin = tmpy < ymin ? tmpy : ymin;
-			ymax = tmpy > ymax ? tmpy : ymax;
-		}
-	}
-#else
 	for (double t = 0.0; t <= 1.0; t+=0.01)
 	{
 		double tmpx = cubicBase(t, x0, x1, x2, x);
@@ -314,7 +275,6 @@ static void getCubicBezierBBox(double x0, double y0, double x1, double y1, doubl
 		ymin = tmpy < ymin ? tmpy : ymin;
 		ymax = tmpy > ymax ? tmpy : ymax;
 	}
-#endif
 }
 
 
@@ -783,7 +743,6 @@ void OdgGenerator::startGraphics(const ::WPXPropertyList &propList)
 
 
 	TagOpenElement *pStyleDrawingPagePropertiesOpenElement = new TagOpenElement("style:drawing-page-properties");
-	// pStyleDrawingPagePropertiesOpenElement->addAttribute("draw:background-size", "border");
 	pStyleDrawingPagePropertiesOpenElement->addAttribute("draw:fill", "none");
 	mpImpl->mPageAutomaticStyles.push_back(pStyleDrawingPagePropertiesOpenElement);
 
@@ -1106,6 +1065,12 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 		mpImpl->mxStyle.insert("style:mirror", "none");
 	if (propList["draw:color-mode"])
 		mpImpl->mxStyle.insert("draw:color-mode", propList["draw:color-mode"]->getStr());
+	if (propList["draw:luminance"])
+		mpImpl->mxStyle.insert("draw:luminance", propList["draw:luminance"]->getStr());
+	if (propList["draw:contrast"])
+		mpImpl->mxStyle.insert("draw:contrast", propList["draw:contrast"]->getStr());
+	if (propList["draw:gamma"])
+		mpImpl->mxStyle.insert("draw:gamma", propList["draw:gamma"]->getStr());
 	if (propList["draw:red"])
 		mpImpl->mxStyle.insert("draw:red", propList["draw:red"]->getStr());
 	if (propList["draw:green"])
@@ -1417,6 +1382,12 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 
 	if (mxStyle["draw:color-mode"] && mxStyle["draw:color-mode"]->getStr().len() > 0)
 		pStyleGraphicsPropertiesElement->addAttribute("draw:color-mode", mxStyle["draw:color-mode"]->getStr());
+	if (mxStyle["draw:luminance"] && mxStyle["draw:luminance"]->getStr().len() > 0)
+		pStyleGraphicsPropertiesElement->addAttribute("draw:luminance", mxStyle["draw:luminance"]->getStr());
+	if (mxStyle["draw:contrast"] && mxStyle["draw:contrast"]->getStr().len() > 0)
+		pStyleGraphicsPropertiesElement->addAttribute("draw:contrast", mxStyle["draw:contrast"]->getStr());
+	if (mxStyle["draw:gamma"] && mxStyle["draw:gamma"]->getStr().len() > 0)
+		pStyleGraphicsPropertiesElement->addAttribute("draw:gamma", mxStyle["draw:gamma"]->getStr());
 	if (mxStyle["draw:red"] && mxStyle["draw:red"]->getStr().len() > 0)
 		pStyleGraphicsPropertiesElement->addAttribute("draw:red", mxStyle["draw:red"]->getStr());
 	if (mxStyle["draw:green"] && mxStyle["draw:green"]->getStr().len() > 0)

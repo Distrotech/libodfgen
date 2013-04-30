@@ -23,8 +23,9 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#ifndef _DOCUMENTELEMENT_H
-#define _DOCUMENTELEMENT_H
+#ifndef _DOCUMENTELEMENT_HXX_
+#define _DOCUMENTELEMENT_HXX_
+
 #include <libwpd/libwpd.h>
 #include <libwpd/WPXProperty.h>
 #include <libwpd/WPXString.h>

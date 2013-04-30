@@ -22,8 +22,9 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
-#ifndef _SECTIONSTYLE_H
-#define _SECTIONSTYLE_H
+#ifndef _SECTIONSTYLE_HXX_
+#define _SECTIONSTYLE_HXX_
+
 #include <libwpd/libwpd.h>
 #include <libwpd/WPXPropertyListVector.h>
 

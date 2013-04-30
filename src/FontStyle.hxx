@@ -22,8 +22,8 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
-#ifndef _FONTSTYLE_H
-#define _FONTSTYLE_H
+#ifndef _FONTSTYLE_HXX_
+#define _FONTSTYLE_HXX_
 #include <map>
 
 #include <libwpd/libwpd.h>

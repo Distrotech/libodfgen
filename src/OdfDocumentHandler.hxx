@@ -22,8 +22,8 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
-#ifndef _DOCUMENTHANDLER_H
-#define _DOCUMENTHANDLER_H
+#ifndef _ODFDOCUMENTHANDLER_HXX_
+#define _ODFDOCUMENTHANDLER_HXX_
 #include <libwpd/libwpd.h>
 
 enum OdfStreamType { ODF_FLAT_XML, ODF_CONTENT_XML, ODF_STYLES_XML, ODF_SETTINGS_XML, ODF_META_XML };

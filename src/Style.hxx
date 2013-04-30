@@ -23,8 +23,8 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#ifndef _STYLE_H
-#define _STYLE_H
+#ifndef _STYLE_HXX_
+#define _STYLE_HXX_
 #include <libwpd/libwpd.h>
 
 #include "DocumentElement.hxx"

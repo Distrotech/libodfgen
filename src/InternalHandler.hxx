@@ -23,8 +23,9 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#ifndef _INTERNALHANDLER_H
-#define _INTERNALHANDLER_H
+#ifndef _INTERNALHANDLER_HXX_
+#define _INTERNALHANDLER_HXX_
+
 #include <libwpd/libwpd.h>
 #include <libwpd/WPXProperty.h>
 #include <libwpd/WPXString.h>

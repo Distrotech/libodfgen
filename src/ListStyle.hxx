@@ -22,15 +22,13 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
-#ifndef _LISTSTYLE_H
-#define _LISTSTYLE_H
+#ifndef _LISTSTYLE_HXX_
+#define _LISTSTYLE_HXX_
 #include <libwpd/libwpd.h>
 
 #define WP6_NUM_LIST_LEVELS 8 // see WP6FileStructure.h (we shouldn't need to reference this)
 
 #include "Style.hxx"
-
-class DocumentElement;
 
 class ListLevelStyle
 {

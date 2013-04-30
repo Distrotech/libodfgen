@@ -24,8 +24,8 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#ifndef _ODTGENERATOR_H
-#define _ODTGENERATOR_H
+#ifndef _ODTGENERATOR_HXX_
+#define _ODTGENERATOR_HXX_
 
 #include <libwpd/libwpd.h>
 
