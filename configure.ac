@@ -29,16 +29,19 @@ AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_LIBTOOL
-AC_LIBTOOL_WIN32_DLL
+LT_INIT([win32-dll disable-static pic-only])
+AC_CANONICAL_HOST
 PKG_PROG_PKG_CONFIG([0.20])
 
 # ====================
 # Find additional apps
 # ====================
-PKG_CHECK_MODULES([WRITERPERFECTCORE],[
-    libwpd-0.9
-    libwpd-stream-0.9
+PKG_CHECK_MODULES([WPD],[
+	libwpd-0.9
+	libwpd-stream-0.9
+])
+
+PKG_CHECK_MODULES([WPG],[
 	libwpg-0.2
 ])
 
@@ -66,7 +69,7 @@ AS_CASE([$host],
 	[*-*-mingw*], [
 		native_win32=yes
 		AC_CHECK_TOOL(WINDRES, windres)
-		LIBWRITERPERFECT_WIN32_RESOURCE=libwriterperfect-win32res.lo
+		LIBWRITERPERFECT_WIN32_RESOURCE=libodfgen-win32res.lo
 		WPD2ODT_WIN32_RESOURCE=wpd2odt-win32res.lo
 		WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
 		VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
@@ -169,21 +172,6 @@ AS_IF([test "x$enable_debug" = "xyes"], [
 ])
 AC_SUBST(DEBUG_CXXFLAGS)
 
-# ============
-# Static tools
-# ============
-AC_ARG_ENABLE([static-tools],
-	[AS_HELP_STRING([--enable-static-tools], [Link tools (binaries) statically])],
-	[enable_static_tools="$enableval"],
-	[enable_static_tools=no]
-)
-AS_IF([test "x$enable_static_tools" = "xyes"], [
-	enable_static="yes"
-], [
-	AC_DISABLE_STATIC
-])
-AM_CONDITIONAL(STATIC_TOOLS, [test "x$enable_static_tools" = "xyes"])
-
 # ======
 # libgsf
 # ======
@@ -194,7 +182,7 @@ AC_ARG_WITH(libgsf,
 	[with_libgsf=auto]
 )
 AS_IF([test "x$with_libgsf" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTGSF, [
+		PKG_CHECK_MODULES(GSF, [
 			libgsf-1 >= 1.12.0
 			glib-2.0 >= 2.0.0
 		], [have_libgsf=yes], [have_libgsf=no])
@@ -215,7 +203,7 @@ AC_ARG_WITH(libwps,
 	[with_libwps=auto]
 )
 AS_IF([test "x$with_libwps" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTWPS, [libwps-0.2],
+		PKG_CHECK_MODULES(WPS, [libwps-0.2],
 			[have_libwps=yes], [have_libwps=no])
 	], [have_libwps=no])
 AM_CONDITIONAL([USE_LIBWPS], [test "x$have_libwps" = "xyes"])
@@ -233,7 +221,7 @@ AC_ARG_WITH(libvisio,
 	[with_libvisio=auto]
 )
 AS_IF([test "x$with_libvisio" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTVSD, [libvisio-0.0],
+		PKG_CHECK_MODULES(VISIO, [libvisio-0.0],
 			[have_libvisio=yes], [have_libvisio=no])
 	], [have_libvisio=no])
 
@@ -257,7 +245,7 @@ AC_ARG_WITH(libcdr,
 	[with_libcdr=auto]
 )
 AS_IF([test "x$with_libcdr" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTCDR, [libcdr-0.0 >= 0.0.5],
+		PKG_CHECK_MODULES(CDR, [libcdr-0.0 >= 0.0.5],
 			[have_libcdr=yes], [have_libcdr=no])
 	], [have_libcdr=no])
 AM_CONDITIONAL([USE_LIBCDR], [test "x$have_libcdr" = "xyes"])
@@ -275,7 +263,7 @@ AC_ARG_WITH(libmspub,
 	[with_libmspub=auto]
 )
 AS_IF([test "x$with_libmspub" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTPUB, [libmspub-0.0],
+		PKG_CHECK_MODULES(MSPUB, [libmspub-0.0],
 			[have_libmspub=yes], [have_libmspub=no])
 	], [have_libmspub=no])
 AM_CONDITIONAL([USE_LIBMSPUB], [test "x$have_libmspub" = "xyes"])
@@ -293,7 +281,7 @@ AC_ARG_WITH(libmwaw,
 	[with_libmwaw=auto]
 )
 AS_IF([test "x$with_libmwaw" != "xno"], [
-		PKG_CHECK_MODULES(WRITERPERFECTMWAW, [libmwaw-0.1],
+		PKG_CHECK_MODULES(MWAW, [libmwaw-0.1],
 			[have_libmwaw=yes], [have_libmwaw=no])
 	], [have_libmwaw=no])
 AM_CONDITIONAL([USE_LIBMWAW], [test "x$have_libmwaw" = "xyes"])
@@ -370,14 +358,14 @@ AS_IF([test "x$with_sharedptr" = "xboost"], [
 # Prepare all .in files
 # =====================
 AC_CONFIG_FILES([
-libwriterperfect-0.8.pc
+libodfgen-0.8.pc
 Makefile
 writerperfect.spec
 writerperfect-zip
 build/Makefile
 build/win32/Makefile
 filter/Makefile
-filter/libwriterperfect.rc
+filter/libodfgen.rc
 cmdline/Makefile
 cmdline/cdr2odg.rc
 cmdline/cmx2odg.rc

@@ -4,6 +4,7 @@ Makefile.in
 .libs
 ???2odg
 ???2odt
+mwaw2odt
 *.exe
 *.rc
 *.o

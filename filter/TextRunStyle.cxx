@@ -1,28 +1,23 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
-/* TextRunStyle: Stores (and writes) paragraph/span-style-based information
- * (e.g.: a paragraph might be bold) that is needed at the head of an OO
- * document.
+/* writerperfect
+ * Version: MPL 2.0 / LGPLv2.1+
  *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * Major Contributor(s):
  * Copyright (C) 2002-2004 William Lachance (wrlach@gmail.com)
- * Copyright (C) 2004 Net Integration Technologies, Inc. (http://www.net-itech.com)
  * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * For minor contributions see the git repository.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ * Alternatively, the contents of this file may be used under the terms
+ * of the GNU Lesser General Public License Version 2.1 or later
+ * (LGPLv2.1+), in which case the provisions of the LGPLv2.1+ are
+ * applicable instead of those above.
  *
  * For further information visit http://libwpd.sourceforge.net
- *
  */
 
 /* "This product is not manufactured, approved, or supported by
@@ -249,7 +244,7 @@ WPXString ParagraphStyleManager::findOrAdd(const WPXPropertyList &propList, cons
 shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const WPXString &name) const
 {
 	std::map<WPXString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
-	= mStyleHash.find(name);
+	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<ParagraphStyle>();
 	return iter->second;
 }
@@ -290,7 +285,7 @@ WPXString SpanStyleManager::findOrAdd(const WPXPropertyList &propList)
 shared_ptr<SpanStyle> const SpanStyleManager::get(const WPXString &name) const
 {
 	std::map<WPXString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
-	= mStyleHash.find(name);
+	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<SpanStyle>();
 	return iter->second;
 }

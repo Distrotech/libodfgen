@@ -2,9 +2,11 @@ ACLOCAL_AMFLAGS = -I m4
 
 pkgconfdir = $(libdir)/pkgconfig
 
+
+
 SUBDIRS = build filter cmdline
 
-pkgconf_DATA = libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.pc
+pkgconf_DATA = libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.pc
 
 EXTRA_DIST = \
 	writerperfect.spec.in \
@@ -12,7 +14,7 @@ EXTRA_DIST = \
 	writerperfect-zip.in \
 	autogen.sh \
 	config.h.in \
-	NEWS README
+	NEWS README COPYING.MPL COPYING.LGPL
 
 distclean-local:
 	rm -rf *.cache *~ *.out

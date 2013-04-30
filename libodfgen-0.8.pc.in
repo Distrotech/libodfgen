@@ -3,7 +3,7 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
                                                                        
-Name: libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@
+Name: libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@
 Description: ODF Generators from libwpd and libwpg APIs
 Version: @VERSION@
 Requires: libwpd-0.9 libwpg-0.2

@@ -1,25 +1,22 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
-/*
+/* writerperfect
+ * Version: MPL 2.0 / LGPLv2.1+
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * Major Contributor(s):
  * Copyright (C) 2004 William Lachance (wlach@interlog.com)
- * Copyright (C) 2004 Net Integration Technologies (http://www.net-itech.com)
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
+ * For minor contributions see the git repository.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Alternatively, the contents of this file may be used under the terms
+ * of the GNU Lesser General Public License Version 2.1 or later
+ * (LGPLv2.1+), in which case the provisions of the LGPLv2.1+ are
+ * applicable instead of those above.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
- * 02111-1307, USA.
- *
- *  Contributor(s): Martin Gallwey (gallwey@sun.com)
- *
+ * For further information visit http://libwpd.sourceforge.net
  */
 
 /* "This product is not manufactured, approved, or supported by

@@ -1,26 +1,22 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
-/* SectionStyle: Stores (and writes) section-based information (e.g.: a column
- * break needs a new section) that is needed at the head of an OO document and
- * is referenced throughout the entire document
+/* writerperfect
+ * Version: MPL 2.0 / LGPLv2.1+
  *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * Major Contributor(s):
  * Copyright (C) 2002-2003 William Lachance (wrlach@gmail.com)
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * For minor contributions see the git repository.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+ * Alternatively, the contents of this file may be used under the terms
+ * of the GNU Lesser General Public License Version 2.1 or later
+ * (LGPLv2.1+), in which case the provisions of the LGPLv2.1+ are
+ * applicable instead of those above.
  *
  * For further information visit http://libwpd.sourceforge.net
- *
  */
 
 /* "This product is not manufactured, approved, or supported by
@@ -91,7 +87,7 @@ int PageSpan::getSpan() const
 	return 0; // should never happen
 }
 
-void PageSpan::setHeaderContent(std::vector<DocumentElement *> * pHeaderContent)
+void PageSpan::setHeaderContent(std::vector<DocumentElement *> *pHeaderContent)
 {
 	if (mpHeaderContent)
 	{
@@ -105,7 +101,7 @@ void PageSpan::setHeaderContent(std::vector<DocumentElement *> * pHeaderContent)
 	mpHeaderContent = pHeaderContent;
 }
 
-void PageSpan::setFooterContent(std::vector<DocumentElement *> * pFooterContent)
+void PageSpan::setFooterContent(std::vector<DocumentElement *> *pFooterContent)
 {
 	if (mpFooterContent)
 	{
@@ -119,7 +115,7 @@ void PageSpan::setFooterContent(std::vector<DocumentElement *> * pFooterContent)
 	mpFooterContent = pFooterContent;
 }
 
-void PageSpan::setHeaderLeftContent(std::vector<DocumentElement *> * pHeaderContent)
+void PageSpan::setHeaderLeftContent(std::vector<DocumentElement *> *pHeaderContent)
 {
 	if (mpHeaderLeftContent)
 	{
@@ -133,7 +129,7 @@ void PageSpan::setHeaderLeftContent(std::vector<DocumentElement *> * pHeaderCont
 	mpHeaderLeftContent = pHeaderContent;
 }
 
-void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> * pFooterContent)
+void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> *pFooterContent)
 {
 	if (mpFooterLeftContent)
 	{
@@ -244,7 +240,7 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 }
 
 void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
-                                  const std::vector<DocumentElement *> & headerFooterContent,
+                                  const std::vector<DocumentElement *> &headerFooterContent,
                                   OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement headerFooterOpen(headerFooterTagName);

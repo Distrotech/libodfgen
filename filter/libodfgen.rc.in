@@ -14,11 +14,11 @@ VS_VERSION_INFO VERSIONINFO
       BLOCK "040904B0"
       BEGIN
 	VALUE "CompanyName", "The libwpd developer community"
-	VALUE "FileDescription", "libwriterperfect"
+	VALUE "FileDescription", "libodfgen"
 	VALUE "FileVersion", "@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.@WRITERPERFECT_MICRO_VERSION@.BUILDNUMBER"
-	VALUE "InternalName", "libwriterperfect"
+	VALUE "InternalName", "libodfgen"
 	VALUE "LegalCopyright", "Copyright (C) 2002-2004 William Lachance, Marc Maurer, Fridrich Strba, other contributers"
-	VALUE "OriginalFilename", "libwriterperfect-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.dll"
+	VALUE "OriginalFilename", "libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.dll"
 	VALUE "ProductName", "writerperfect"
 	VALUE "ProductVersion", "@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.@WRITERPERFECT_MICRO_VERSION@"
       END
