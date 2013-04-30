@@ -23,14 +23,14 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
-#ifndef _TABLESTYLE_H
-#define _TABLESTYLE_H
+
+#ifndef _TABLESTYLE_HXX_
+#define _TABLESTYLE_HXX_
 #include <libwpd/libwpd.h>
 #include <vector>
 
 #include "Style.hxx"
 
-class DocumentElement;
 class OdfDocumentHandler;
 
 class TableCellStyle : public Style

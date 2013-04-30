@@ -23,6 +23,7 @@
 /* "This product is not manufactured, approved, or supported by
  * Corel Corporation or Corel Corporation Limited."
  */
+
 #include <math.h>
 #include "FilterInternal.hxx"
 #include "TableStyle.hxx"

@@ -24,8 +24,8 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#ifndef _TEXTRUNSTYLE_H
-#define _TEXTRUNSTYLE_H
+#ifndef _TEXTRUNSTYLE_HXX_
+#define _TEXTRUNSTYLE_HXX_
 
 #include <map>
 
@@ -35,8 +35,6 @@
 
 #include "Style.hxx"
 
-class TagOpenElement;
-class DocumentElement;
 class OdfDocumentHandler;
 
 class ParagraphStyle
