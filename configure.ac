@@ -364,8 +364,8 @@ writerperfect.spec
 writerperfect-zip
 build/Makefile
 build/win32/Makefile
-filter/Makefile
-filter/libodfgen.rc
+libodfgen/Makefile
+libodfgen/libodfgen.rc
 cmdline/Makefile
 cmdline/cdr2odg.rc
 cmdline/cmx2odg.rc

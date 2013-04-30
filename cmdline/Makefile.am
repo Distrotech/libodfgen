@@ -26,7 +26,7 @@ endif
 bin_PROGRAMS = wpd2odt wpg2odg $(VSD_APP) $(VSS_APP) $(WPS_APP) $(CDR_APP) $(PUB_APP) $(MWAW_APP)
 
 noinst_LTLIBRARIES = libhelper.la
-libhelper_la_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_FLAGS) $(GSF_CFLAGS) $(DEBUG_CXXFLAGS)
+libhelper_la_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_FLAGS) $(GSF_CFLAGS) $(DEBUG_CXXFLAGS)
 libhelper_la_SOURCES = \
 	DiskDocumentHandler.hxx \
 	DiskDocumentHandler.cxx \
@@ -37,58 +37,58 @@ libhelper_la_SOURCES = \
 	FemtoZip.cxx \
 	FemtoZip.hxx
 
-wpd2odt_DEPENDENCIES = @WPD2ODT_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-wpd2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
-wpd2odt_LDADD = @WPD2ODT_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WPG_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+wpd2odt_DEPENDENCIES = @WPD2ODT_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+wpd2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
+wpd2odt_LDADD = @WPD2ODT_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WPG_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 wpd2odt_SOURCES = \
 	wpd2odt.cxx
 
-wps2odt_DEPENDENCIES = @WPS2ODT_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-wps2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPS_CFLAGS) $(GSF_CFLAGS)
-wps2odt_LDADD = @WPS2ODT_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WPS_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+wps2odt_DEPENDENCIES = @WPS2ODT_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+wps2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPS_CFLAGS) $(GSF_CFLAGS)
+wps2odt_LDADD = @WPS2ODT_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WPS_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 wps2odt_SOURCES = \
 	wps2odt.cxx
 
-wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-wpg2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
-wpg2odg_LDADD = @WPG2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WPG_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+wpg2odg_DEPENDENCIES = @WPG2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+wpg2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(GSF_CFLAGS)
+wpg2odg_LDADD = @WPG2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(WPG_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 wpg2odg_SOURCES = \
 	wpg2odg.cxx
 
 
-vsd2odg_DEPENDENCIES = @VSD2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-vsd2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
-vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(VISIO_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+vsd2odg_DEPENDENCIES = @VSD2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+vsd2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
+vsd2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(VISIO_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 vsd2odg_SOURCES = \
 	vsd2odg.cxx
 
-vss2odg_DEPENDENCIES = @VSS2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-vss2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
-vss2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(VISIO_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+vss2odg_DEPENDENCIES = @VSS2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+vss2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(VISIO_CFLAGS) $(GSF_CFLAGS)
+vss2odg_LDADD = @VSD2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(VISIO_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 vss2odg_SOURCES = \
 	vss2odg.cxx
 
-cdr2odg_DEPENDENCIES = @CDR2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-cdr2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(CDR_CFLAGS) $(GSF_CFLAGS)
-cdr2odg_LDADD = @CDR2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(CDR_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+cdr2odg_DEPENDENCIES = @CDR2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+cdr2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(CDR_CFLAGS) $(GSF_CFLAGS)
+cdr2odg_LDADD = @CDR2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(CDR_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 cdr2odg_SOURCES = \
 	cdr2odg.cxx
 
-cmx2odg_DEPENDENCIES = @CMX2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-cmx2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(CDR_CFLAGS) $(GSF_CFLAGS)
-cmx2odg_LDADD = @CDR2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(CDR_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+cmx2odg_DEPENDENCIES = @CMX2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+cmx2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(CDR_CFLAGS) $(GSF_CFLAGS)
+cmx2odg_LDADD = @CDR2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(CDR_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 cmx2odg_SOURCES = \
 	cmx2odg.cxx
 
-pub2odg_DEPENDENCIES = @PUB2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-pub2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(MSPUB_CFLAGS) $(GSF_CFLAGS)
-pub2odg_LDADD = @PUB2ODG_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(MSPUB_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+pub2odg_DEPENDENCIES = @PUB2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+pub2odg_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(MSPUB_CFLAGS) $(GSF_CFLAGS)
+pub2odg_LDADD = @PUB2ODG_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(MSPUB_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 pub2odg_SOURCES = \
 	pub2odg.cxx
 
-mwaw2odt_DEPENDENCIES = @MWAW2ODT_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
-mwaw2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../filter/ $(WPD_CFLAGS) $(MWAW_CFLAGS) $(GSF_CFLAGS)
-mwaw2odt_LDADD = @MWAW2ODT_WIN32_RESOURCE@ ../filter/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(MWAW_LIBS) $(WPD_LIBS) $(GSF_LIBS)
+mwaw2odt_DEPENDENCIES = @MWAW2ODT_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la
+mwaw2odt_CXXFLAGS = -I$(top_srcdir)/filter -I../libodfgen/ $(WPD_CFLAGS) $(MWAW_CFLAGS) $(GSF_CFLAGS)
+mwaw2odt_LDADD = @MWAW2ODT_WIN32_RESOURCE@ ../libodfgen/libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.la libhelper.la $(MWAW_LIBS) $(WPD_LIBS) $(GSF_LIBS)
 mwaw2odt_SOURCES = \
 	mwawObjectHandler.hxx \
 	mwawObjectHandler.cxx \

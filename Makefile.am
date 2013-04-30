@@ -4,7 +4,7 @@ pkgconfdir = $(libdir)/pkgconfig
 
 
 
-SUBDIRS = build filter cmdline
+SUBDIRS = build libodfgen cmdline
 
 pkgconf_DATA = libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.pc
 
