@@ -9,22 +9,12 @@ SUBDIRS = build src
 pkgconf_DATA = libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@.pc
 
 EXTRA_DIST = \
-	libodfgen.spec.in \
-	libodfgen.spec \
-	libodfgen-zip.in \
 	autogen.sh \
 	config.h.in \
 	NEWS README COPYING.MPL COPYING.LGPL
 
 distclean-local:
 	rm -rf *.cache *~ *.out
-
-rpm: dist
-	rpmbuild --nodeps -ta $(PACKAGE)-$(VERSION).tar.gz
-	@rm -f $(PACKAGE)-$(VERSION).tar.*
-
-zip: install
-	@sh writerperfect-zip
 
 dist-hook:
 	git log --date=short --pretty="format:@%cd  %an  <%ae>  [%H]%n%n%s%n%n%e%b" | sed -e "s|^\([^@]\)|\t\1|" -e "s|^@||" >$(distdir)/ChangeLog
