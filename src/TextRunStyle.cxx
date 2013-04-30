@@ -33,7 +33,8 @@
 
 #include <string.h>
 
-namespace {
+namespace
+{
 
 WPXString propListToStyleKey(const WPXPropertyList &xPropList)
 {
