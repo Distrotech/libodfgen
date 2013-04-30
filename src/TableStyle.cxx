@@ -96,7 +96,9 @@ void TableRowStyle::write(OdfDocumentHandler *pHandler) const
 TableStyle::TableStyle(const WPXPropertyList &xPropList, const WPXPropertyListVector &columns, const char *psName) :
 	Style(psName),
 	mPropList(xPropList),
-	mColumns(columns)
+	mColumns(columns),
+	mTableCellStyles(),
+	mTableRowStyles()
 {
 }
 

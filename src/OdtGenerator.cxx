@@ -42,10 +42,9 @@
 #include "InternalHandler.hxx"
 
 // the state we use for writing the final document
-typedef struct _WriterDocumentState WriterDocumentState;
-struct _WriterDocumentState
+struct WriterDocumentState
 {
-	_WriterDocumentState();
+	WriterDocumentState();
 
 	bool mbFirstElement;
 	bool mbFirstParagraphInPageSpan;
@@ -59,10 +58,9 @@ struct _WriterDocumentState
 };
 
 // list state
-typedef struct _WriterListState WriterListState;
-struct _WriterListState
+struct WriterListState
 {
-	_WriterListState();
+	WriterListState();
 
 	ListStyle *mpCurrentListStyle;
 	unsigned int miCurrentListLevel;
@@ -77,7 +75,7 @@ struct _WriterListState
 
 enum WriterListType { unordered, ordered };
 
-_WriterDocumentState::_WriterDocumentState() :
+WriterDocumentState::WriterDocumentState() :
 	mbFirstElement(true),
 	mbFirstParagraphInPageSpan(true),
 	mbInFakeSection(false),
@@ -90,7 +88,7 @@ _WriterDocumentState::_WriterDocumentState() :
 {
 }
 
-_WriterListState::_WriterListState() :
+WriterListState::WriterListState() :
 	mpCurrentListStyle(0),
 	miCurrentListLevel(0),
 	miLastListLevel(0),
@@ -191,6 +189,10 @@ public:
 	const OdfStreamType mxStreamType;
 
 	const char *mpPassword;
+
+private:
+	OdtGeneratorPrivate(const OdtGeneratorPrivate &);
+	OdtGeneratorPrivate &operator=(const OdtGeneratorPrivate &);
 
 };
 

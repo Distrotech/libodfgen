@@ -47,6 +47,8 @@ protected:
 	void _writeHeaderFooter(const char *headerFooterTagName, const std::vector<DocumentElement *> &headerFooterContent,
 	                        OdfDocumentHandler *pHandler) const;
 private:
+	PageSpan(const PageSpan &);
+	PageSpan &operator=(const PageSpan &);
 	WPXPropertyList mxPropList;
 	std::vector<DocumentElement *> *mpHeaderContent;
 	std::vector<DocumentElement *> *mpFooterContent;

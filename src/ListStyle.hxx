@@ -74,8 +74,9 @@ protected:
 	void setListLevel(int iLevel, ListLevelStyle *iListLevelStyle);
 
 private:
+	ListStyle(const ListStyle &);
+	ListStyle &operator=(const ListStyle &);
 	ListLevelStyle *mppListLevels[WP6_NUM_LIST_LEVELS];
-	int miNumListLevels;
 	const int miListID;
 };
 
