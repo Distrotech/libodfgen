@@ -31,15 +31,6 @@
 #include <config.h>
 #endif
 
-// used by FontStyle.cxx
-#define IMP_DEFAULT_FONT_PITCH "variable"
-
-#if 0
-const double fDefaultSideMargin = 1.0; // inches
-const double fDefaultPageWidth = 8.5f; // inches (OOo required default: we will handle this later)
-const double fDefaultPageHeight = 11.0; // inches
-#endif
-
 #ifdef DEBUG
 #include <stdio.h>
 #define WRITER_DEBUG_MSG(M) printf M
@@ -58,9 +49,6 @@ using std::shared_ptr;
 using boost::shared_ptr;
 #endif
 
-
-class WPXPropertyList;
-WPXString propListToStyleKey(const WPXPropertyList &xPropList);
 
 struct ltstr
 {

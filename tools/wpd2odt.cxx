@@ -24,17 +24,18 @@
 #include <config.h>
 #endif
 
+#ifdef TOOLS_VERSION
+#define TOOLS_VERSION
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
 #include <libwpd/libwpd.h>
-#include <libmwaw/libmwaw.hxx>
-
-#include "mwawObjectHandler.hxx"
 
 #include "OutputFileHelper.hxx"
 
-#include "OdtGenerator.hxx"
+#include <libodfgen/libodfgen.hxx>
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.text";
 
@@ -125,51 +126,65 @@ public:
 		OutputFileHelper(outFileName, password) {};
 	~OdtOutputFileHelper() {};
 
-	static bool isSupportedFormat(WPXInputStream *input)
-	{
-		MWAWDocument::DocumentType type;
-		MWAWDocument::DocumentKind kind;
-		MWAWConfidence confidence = MWAWDocument::isFileFormatSupported(input, type, kind);
-		if (confidence == MWAW_CONFIDENCE_NONE)
-		{
-			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Mac Classic document.\n");
-			return false;
-		}
-		if (kind != MWAWDocument::K_TEXT && kind != MWAWDocument::K_PRESENTATION)
-		{
-			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Mac Classic text document.\n");
-			return false;
-		}
-
-		return true;
-	}
 private:
-	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
+	bool _isSupportedFormat(WPXInputStream *input, const char *password)
 	{
-		return isSupportedFormat(input);
-	}
+		WPDConfidence confidence = WPDocument::isFileFormatSupported(input);
+		if (WPD_CONFIDENCE_EXCELLENT != confidence && WPD_CONFIDENCE_SUPPORTED_ENCRYPTION != confidence)
+		{
+			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid WordPerfect document.\n");
+			return false;
+		}
+		if (WPD_CONFIDENCE_SUPPORTED_ENCRYPTION == confidence && !password)
+		{
+			fprintf(stderr, "ERROR: The WordPerfect document is encrypted and you did not give us a password.\n");
+			return false;
+		}
+		if (confidence == WPD_CONFIDENCE_SUPPORTED_ENCRYPTION && password && (WPD_PASSWORD_MATCH_OK != WPDocument::verifyPassword(input, password)))
+		{
+			fprintf(stderr, "ERROR: The WordPerfect document is encrypted and we either\n");
+			fprintf(stderr, "ERROR: don't know how to decrypt it or the given password is wrong.\n");
+			return false;
+		}
 
-#if MWAW_GRAPHIC_EXPORT==1
-	static bool handleEmbeddedMWAWObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType)
-	{
-		MWAWObjectHandler tmpHandler(pHandler);
-		tmpHandler.startDocument();
-		if (!tmpHandler.checkData(data) || !tmpHandler.readData(data)) return false;
-		tmpHandler.endDocument();
 		return true;
 	}
-#else
-	static bool handleEmbeddedMWAWObject(const WPXBinaryData &, OdfDocumentHandler *,  const OdfStreamType)
+
+	static bool handleEmbeddedWPGObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType streamType)
 	{
+		OdgGenerator exporter(pHandler, streamType);
+
+		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
+
+		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(data.getDataStream())))
+			fileFormat = libwpg::WPG_WPG1;
+
+		return libwpg::WPGraphics::parse(const_cast<WPXInputStream *>(data.getDataStream()), &exporter, fileFormat);
+	}
+
+	static bool handleEmbeddedWPGImage(const WPXBinaryData &input, WPXBinaryData &output)
+	{
+		WPXString svgOutput;
+		libwpg::WPGFileFormat fileFormat = libwpg::WPG_AUTODETECT;
+
+		if (!libwpg::WPGraphics::isSupported(const_cast<WPXInputStream *>(input.getDataStream())))
+			fileFormat = libwpg::WPG_WPG1;
+
+		if (!libwpg::WPGraphics::generateSVG(const_cast<WPXInputStream *>(input.getDataStream()), svgOutput, fileFormat))
+			return false;
+
+		output.clear();
+		output.append((unsigned char *)svgOutput.cstr(), strlen(svgOutput.cstr()));
+
 		return true;
 	}
-#endif
 
-	bool _convertDocument(WPXInputStream *input, const char * /* password */, OdfDocumentHandler *handler, const OdfStreamType streamType)
+	bool _convertDocument(WPXInputStream *input, const char *password, OdfDocumentHandler *handler, const OdfStreamType streamType)
 	{
 		OdtGenerator collector(handler, streamType);
-		collector.registerEmbeddedObjectHandler("image/mwaw-odg", &handleEmbeddedMWAWObject);
-		if (MWAW_OK == MWAWDocument::parse(input, &collector))
+		collector.registerEmbeddedObjectHandler("image/x-wpg", &handleEmbeddedWPGObject);
+		collector.registerEmbeddedImageHandler("image/x-wpg", &handleEmbeddedWPGImage);
+		if (WPD_OK == WPDocument::parse(input, &collector, password))
 			return true;
 		return false;
 	}
@@ -178,14 +193,17 @@ private:
 
 int printUsage(char *name)
 {
-	fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", name);
-	fprintf(stderr, "USAGE : Where <infile> is the Mac Classic text source document\n");
+	fprintf(stderr, "USAGE : %s [--stdout] --password <password> <infile> [outfile]\n", name);
+	fprintf(stderr, "USAGE : Where <infile> is the WordPerfect source document\n");
 	fprintf(stderr, "USAGE : and [outfile] is the odt target document. Alternately,\n");
 	fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
 	fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
+	fprintf(stderr, "USAGE : pass '--password <password>' to try to decrypt password\n");
+	fprintf(stderr, "USAGE : protected documents.\n");
 	fprintf(stderr, "USAGE : \n");
 	return 1;
 }
+
 
 int main (int argc, char *argv[])
 {
@@ -195,10 +213,18 @@ int main (int argc, char *argv[])
 	char *szInputFile = 0;
 	char *szOutFile = 0;
 	bool stdOutput = false;
+	char *password = 0;
 
 	for (int i = 1; i < argc; i++)
 	{
-		if (!strcmp(argv[i], "--stdout"))
+		if (!strcmp(argv[i], "--password"))
+		{
+			if (i < argc - 1)
+				password = argv[++i];
+		}
+		else if (!strncmp(argv[i], "--password=", 11))
+			password = &argv[i][11];
+		else if (!strcmp(argv[i], "--stdout"))
 			stdOutput = true;
 		else if (!szInputFile && strncmp(argv[i], "--", 2))
 			szInputFile = argv[i];
@@ -211,16 +237,10 @@ int main (int argc, char *argv[])
 	if (!szInputFile)
 		return printUsage(argv[0]);
 
-	if (1)
-	{
-		WPXFileStream input(szInputFile);
-		if (!OdtOutputFileHelper::isSupportedFormat(&input))
-			return 1;
-	}
 	if (szOutFile && stdOutput)
 		szOutFile = 0;
 
-	OdtOutputFileHelper helper(szOutFile, 0);
+	OdtOutputFileHelper helper(szOutFile, password);
 
 	if (!helper.writeChildFile("mimetype", mimetypeStr, (char)0))
 	{

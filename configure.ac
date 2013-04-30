@@ -5,15 +5,19 @@ AC_PREREQ([2.65])
 # ====================
 # Version informations
 # ====================
-m4_define([writerperfect_version_major],[0])
-m4_define([writerperfect_version_minor],[8])
-m4_define([writerperfect_version_micro],[2])
-m4_define([writerperfect_version],[writerperfect_version_major.writerperfect_version_minor.writerperfect_version_micro])
+m4_define([libodfgen_version_major],[0])
+m4_define([libodfgen_version_minor],[1])
+m4_define([libodfgen_version_micro],[0])
+m4_define([libodfgen_version],[libodfgen_version_major.libodfgen_version_minor.libodfgen_version_micro])
+m4_define([tools_version_major],[0])
+m4_define([tools_version_minor],[8])
+m4_define([tools_version_micro],[3])
+m4_define([tools_version],[tools_version_major.tools_version_minor.tools_version_micro])
 
 # =============
 # Automake init
 # =============
-AC_INIT([writerperfect],[writerperfect_version])
+AC_INIT([libodfgen],[libodfgen_version])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE([1.11 foreign dist-xz dist-bzip2])
@@ -40,25 +44,28 @@ PKG_CHECK_MODULES([WPD],[
 	libwpd-0.9
 	libwpd-stream-0.9
 ])
+AC_SUBST([WPD_CFLAGS])
+AC_SUBST([WPD_LIGS])
 
 PKG_CHECK_MODULES([WPG],[
 	libwpg-0.2
 ])
+AC_SUBST([WPG_CFLAGS])
+AC_SUBST([WPG_LIGS])
 
 # =================================
 # Libtool/Version Makefile settings
 # =================================
-AC_SUBST(WRITERPERFECT_MAJOR_VERSION, [writerperfect_version_major])
-AC_SUBST(WRITERPERFECT_MINOR_VERSION, [writerperfect_version_minor])
-AC_SUBST(WRITERPERFECT_MICRO_VERSION, [writerperfect_version_micro])
-AC_SUBST(WRITERPERFECT_VERSION, [writerperfect_version])
-# AC_SUBST(LT_RELEASE, [writerperfect_version_major.writerperfect_version_minor])
-LT_CURRENT=`expr 100 '*' writerperfect_version_major + writerperfect_version_minor`
+AC_SUBST(LIBODFGEN_MAJOR_VERSION, [libodfgen_version_major])
+AC_SUBST(LIBODFGEN_MINOR_VERSION, [libodfgen_version_minor])
+AC_SUBST(LIBODFGEN_MICRO_VERSION, [libodfgen_version_micro])
+# AC_SUBST(LT_RELEASE, [libodfgen_version_major.libodfgen_version_minor])
+LT_CURRENT=`expr 100 '*' libodfgen_version_major + libodfgen_version_minor`
 # For 1.0.0 comment the first line and uncomment the second
 LT_AGE=0
-# LT_AGE=writerperfect_version_minor
+# LT_AGE=libodfgen_version_minor
 AC_SUBST(LT_CURRENT)
-AC_SUBST(LT_REVISION, [writerperfect_version_micro])
+AC_SUBST(LT_REVISION, [libodfgen_version_micro])
 AC_SUBST(LT_AGE)
 
 # ==========================
@@ -69,7 +76,7 @@ AS_CASE([$host],
 	[*-*-mingw*], [
 		native_win32=yes
 		AC_CHECK_TOOL(WINDRES, windres)
-		LIBWRITERPERFECT_WIN32_RESOURCE=libodfgen-win32res.lo
+		LIBODFGEN_WIN32_RESOURCE=libodfgen-win32res.lo
 		WPD2ODT_WIN32_RESOURCE=wpd2odt-win32res.lo
 		WPG2ODG_WIN32_RESOURCE=wpg2odg-win32res.lo
 		VSD2ODG_WIN32_RESOURCE=vsd2odg-win32res.lo
@@ -81,7 +88,7 @@ AS_CASE([$host],
 		MWAW2ODT_WIN32_RESOURCE=mwaw2odt-win32res.lo
 	], [
 		native_win32=no
-		LIBWRITERPERFECT_WIN32_RESOURCE=
+		LIBODFGEN_WIN32_RESOURCE=
 		WPD2ODT_WIN32_RESOURCE=
 		WPG2ODG_WIN32_RESOURCE=
 		VSD2ODG_WIN32_RESOURCE=
@@ -95,7 +102,7 @@ AS_CASE([$host],
 )
 AC_MSG_RESULT([$native_win32])
 AM_CONDITIONAL([OS_WIN32], [test "x$native_win32" = "xyes"])
-AC_SUBST(LIBWRITERPERFECT_WIN32_RESOURCE)
+AC_SUBST(LIBODFGEN_WIN32_RESOURCE)
 AC_SUBST(WPD2ODT_WIN32_RESOURCE)
 AC_SUBST(WPG2ODG_WIN32_RESOURCE)
 AC_SUBST(VSD2ODG_WIN32_RESOURCE)
@@ -360,22 +367,22 @@ AS_IF([test "x$with_sharedptr" = "xboost"], [
 AC_CONFIG_FILES([
 libodfgen-0.8.pc
 Makefile
-writerperfect.spec
-writerperfect-zip
+libodfgen.spec
+libodfgen-zip
 build/Makefile
 build/win32/Makefile
 libodfgen/Makefile
 libodfgen/libodfgen.rc
-cmdline/Makefile
-cmdline/cdr2odg.rc
-cmdline/cmx2odg.rc
-cmdline/mwaw2odt.rc
-cmdline/pub2odg.rc
-cmdline/vsd2odg.rc
-cmdline/vss2odg.rc
-cmdline/wpd2odt.rc
-cmdline/wpg2odg.rc
-cmdline/wps2odt.rc
+tools/Makefile
+tools/cdr2odg.rc
+tools/cmx2odg.rc
+tools/mwaw2odt.rc
+tools/pub2odg.rc
+tools/vsd2odg.rc
+tools/vss2odg.rc
+tools/wpd2odt.rc
+tools/wpg2odg.rc
+tools/wps2odt.rc
 ])
 AC_OUTPUT
 

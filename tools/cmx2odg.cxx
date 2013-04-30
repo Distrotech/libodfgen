@@ -20,14 +20,22 @@
  * For further information visit http://libwpd.sourceforge.net
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef TOOLS_VERSION
+#define TOOLS_VERSION
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
-#include <libmspub/libmspub.h>
+#include <libcdr/libcdr.h>
+
+#include <libodfgen/libodfgen.hxx>
 
 #include "OutputFileHelper.hxx"
-
-#include "OdgGenerator.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 
@@ -49,9 +57,9 @@ public:
 private:
 	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
 	{
-		if (!libmspub::MSPUBDocument::isSupported(input))
+		if (!libcdr::CMXDocument::isSupported(input))
 		{
-			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Microsoft Publisher Document.\n");
+			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Corel Presentation Exchage document.\n");
 			return false;
 		}
 		return true;
@@ -60,14 +68,14 @@ private:
 	bool _convertDocument(WPXInputStream *input, const char * /* password */, OdfDocumentHandler *handler, OdfStreamType streamType)
 	{
 		OdgGenerator exporter(handler, streamType);
-		return libmspub::MSPUBDocument::parse(input, &exporter);
+		return libcdr::CMXDocument::parse(input, &exporter);
 	}
 };
 
 int printUsage(char *name)
 {
 	fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", name);
-	fprintf(stderr, "USAGE : Where <infile> is the Microsoft Publisher source document\n");
+	fprintf(stderr, "USAGE : Where <infile> is the Corel Presentation Exchange source document\n");
 	fprintf(stderr, "USAGE : and [outfile] is the odg target document. Alternately,\n");
 	fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
 	fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");

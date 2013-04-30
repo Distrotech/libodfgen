@@ -22,7 +22,6 @@
 
 #ifndef _DISKDOCUMENTHANDLER_H
 #define _DISKDOCUMENTHANDLER_H
-#include "DocumentElement.hxx"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -33,6 +32,8 @@
 #else
 #include "FemtoZip.hxx"
 #endif
+
+#include <libodfgen/libodfgen.hxx>
 
 class DiskOdfDocumentHandler : public OdfDocumentHandler
 {

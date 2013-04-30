@@ -33,6 +33,24 @@
 
 #include <string.h>
 
+namespace {
+
+WPXString propListToStyleKey(const WPXPropertyList &xPropList)
+{
+	WPXString sKey;
+	WPXPropertyList::Iter i(xPropList);
+	for (i.rewind(); i.next(); )
+	{
+		WPXString sProp;
+		sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
+		sKey.append(sProp);
+	}
+
+	return sKey;
+}
+
+} // anonymous namespace
+
 ParagraphStyle::ParagraphStyle(const WPXPropertyList &pPropList, const WPXPropertyListVector &xTabStops, const WPXString &sName) :
 	mpPropList(pPropList),
 	mxTabStops(xTabStops),

@@ -20,14 +20,22 @@
  * For further information visit http://libwpd.sourceforge.net
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef TOOLS_VERSION
+#define TOOLS_VERSION
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
 #include <libcdr/libcdr.h>
 
-#include "OutputFileHelper.hxx"
+#include <libodfgen/libodfgen.hxx>
 
-#include "OdgGenerator.hxx"
+#include "OutputFileHelper.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.graphics";
 

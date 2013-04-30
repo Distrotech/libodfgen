@@ -24,15 +24,21 @@
 #include <config.h>
 #endif
 
+#ifdef TOOLS_VERSION
+#define TOOLS_VERSION
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
 #include <libwpd/libwpd.h>
-#include <libwps/libwps.h>
+#include <libmwaw/libmwaw.hxx>
+
+#include <libodfgen/libodfgen.hxx>
+
+#include "mwawObjectHandler.hxx"
 
 #include "OutputFileHelper.hxx"
-
-#include "OdtGenerator.hxx"
 
 const char mimetypeStr[] = "application/vnd.oasis.opendocument.text";
 
@@ -123,23 +129,51 @@ public:
 		OutputFileHelper(outFileName, password) {};
 	~OdtOutputFileHelper() {};
 
-private:
-	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
+	static bool isSupportedFormat(WPXInputStream *input)
 	{
-		WPSConfidence confidence = WPSDocument::isFileFormatSupported(input);
-		if (confidence == WPS_CONFIDENCE_NONE || confidence == WPS_CONFIDENCE_POOR)
+		MWAWDocument::DocumentType type;
+		MWAWDocument::DocumentKind kind;
+		MWAWConfidence confidence = MWAWDocument::isFileFormatSupported(input, type, kind);
+		if (confidence == MWAW_CONFIDENCE_NONE)
 		{
-			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Microsoft Works document.\n");
+			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Mac Classic document.\n");
+			return false;
+		}
+		if (kind != MWAWDocument::K_TEXT && kind != MWAWDocument::K_PRESENTATION)
+		{
+			fprintf(stderr, "ERROR: We have no confidence that you are giving us a valid Mac Classic text document.\n");
 			return false;
 		}
 
 		return true;
 	}
+private:
+	bool _isSupportedFormat(WPXInputStream *input, const char * /* password */)
+	{
+		return isSupportedFormat(input);
+	}
+
+#if MWAW_GRAPHIC_EXPORT==1
+	static bool handleEmbeddedMWAWObject(const WPXBinaryData &data, OdfDocumentHandler *pHandler,  const OdfStreamType)
+	{
+		MWAWObjectHandler tmpHandler(pHandler);
+		tmpHandler.startDocument();
+		if (!tmpHandler.checkData(data) || !tmpHandler.readData(data)) return false;
+		tmpHandler.endDocument();
+		return true;
+	}
+#else
+	static bool handleEmbeddedMWAWObject(const WPXBinaryData &, OdfDocumentHandler *,  const OdfStreamType)
+	{
+		return true;
+	}
+#endif
 
 	bool _convertDocument(WPXInputStream *input, const char * /* password */, OdfDocumentHandler *handler, const OdfStreamType streamType)
 	{
 		OdtGenerator collector(handler, streamType);
-		if (WPS_OK == WPSDocument::parse(input, &collector))
+		collector.registerEmbeddedObjectHandler("image/mwaw-odg", &handleEmbeddedMWAWObject);
+		if (MWAW_OK == MWAWDocument::parse(input, &collector))
 			return true;
 		return false;
 	}
@@ -148,8 +182,8 @@ private:
 
 int printUsage(char *name)
 {
-	fprintf(stderr, "USAGE : %s [--stdout] --password <password> <infile> [outfile]\n", name);
-	fprintf(stderr, "USAGE : Where <infile> is the MS Works source document\n");
+	fprintf(stderr, "USAGE : %s [--stdout] <infile> [outfile]\n", name);
+	fprintf(stderr, "USAGE : Where <infile> is the Mac Classic text source document\n");
 	fprintf(stderr, "USAGE : and [outfile] is the odt target document. Alternately,\n");
 	fprintf(stderr, "USAGE : pass '--stdout' or simply omit the [outfile] to pipe the\n");
 	fprintf(stderr, "USAGE : resultant document as flat XML to standard output\n");
@@ -181,6 +215,12 @@ int main (int argc, char *argv[])
 	if (!szInputFile)
 		return printUsage(argv[0]);
 
+	if (1)
+	{
+		WPXFileStream input(szInputFile);
+		if (!OdtOutputFileHelper::isSupportedFormat(&input))
+			return 1;
+	}
 	if (szOutFile && stdOutput)
 		szOutFile = 0;
 

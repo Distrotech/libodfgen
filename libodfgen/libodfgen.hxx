@@ -7,8 +7,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * Major Contributor(s):
- * Copyright (C) 2002-2004 William Lachance (wrlach@gmail.com)
- * Copyright (C) 2004 Fridrich Strba (fridrich.strba@bluewin.ch)
+ * Copyright (C) 2013 Fridrich Strba <fridrich.strba@bluewin.ch>
+ * Copyright (C) 2011 Eilidh McAdam <tibbylickle@gmail.com>
  *
  * For minor contributions see the git repository.
  *
@@ -20,26 +20,15 @@
  * For further information visit http://libwpd.sourceforge.net
  */
 
-/* "This product is not manufactured, approved, or supported by
- * Corel Corporation or Corel Corporation Limited."
- */
+#ifndef __LIBODFGEN_HXX__
+#define __LIBODFGEN_HXX__
 
-#include <libwpd/WPXPropertyList.h>
+#include <libwpd/libwpd.h>
+#include <libwpg/libwpg.h>
+#include "OdfDocumentHandler.hxx"
+#include "OdtGenerator.hxx"
+#include "OdgGenerator.hxx"
 
-#include "FilterInternal.hxx"
-
-WPXString propListToStyleKey(const WPXPropertyList &xPropList)
-{
-	WPXString sKey;
-	WPXPropertyList::Iter i(xPropList);
-	for (i.rewind(); i.next(); )
-	{
-		WPXString sProp;
-		sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
-		sKey.append(sProp);
-	}
-
-	return sKey;
-}
+#endif
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

@@ -22,7 +22,8 @@
 
 #ifndef _STDOUTHANDLER_H
 #define _STDOUTHANDLER_H
-#include "DocumentElement.hxx"
+
+#include <libodfgen/libodfgen.hxx>
 
 class StdOutHandler : public OdfDocumentHandler
 {

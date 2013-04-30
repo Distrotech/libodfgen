@@ -45,7 +45,6 @@ public:
 
 private:
 	WPXString msFontFamily;
-	WPXString msFontPitch;
 };
 
 class FontStyleManager : public StyleManager

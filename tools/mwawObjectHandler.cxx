@@ -34,8 +34,9 @@
 #include <sstream>
 #include <string>
 
-#include "OdfDocumentHandler.hxx"
-#include "FilterInternal.hxx"
+#include <libodfgen/libodfgen.hxx>
+
+#include <libodfgen/FilterInternal.hxx>
 
 namespace MWAWObjectHandlerInternal
 {

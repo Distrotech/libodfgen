@@ -4,14 +4,14 @@ pkgconfdir = $(libdir)/pkgconfig
 
 
 
-SUBDIRS = build libodfgen cmdline
+SUBDIRS = build libodfgen tools
 
-pkgconf_DATA = libodfgen-@WRITERPERFECT_MAJOR_VERSION@.@WRITERPERFECT_MINOR_VERSION@.pc
+pkgconf_DATA = libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@.pc
 
 EXTRA_DIST = \
-	writerperfect.spec.in \
-	writerperfect.spec \
-	writerperfect-zip.in \
+	libodfgen.spec.in \
+	libodfgen.spec \
+	libodfgen-zip.in \
 	autogen.sh \
 	config.h.in \
 	NEWS README COPYING.MPL COPYING.LGPL

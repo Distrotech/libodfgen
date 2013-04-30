@@ -22,7 +22,7 @@
 #ifndef _OUTPUTFILEHELPER_HXX
 #define _OUTPUTFILEHELPER_HXX
 
-#include <OdfDocumentHandler.hxx>
+#include <libodfgen/libodfgen.hxx>
 
 class WPXInputStream;
 struct OutputFileHelperImpl;
