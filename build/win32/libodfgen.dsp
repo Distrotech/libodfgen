@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GR /GX /O2 /I "..\..\..\include\glib-2.0" /I "..\..\..\lib\glib-2.0\include" /I "..\..\..\include\libgsf-1" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GR /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /I "..\..\..\include\glib-2.0" /I "..\..\..\lib\glib-2.0\include" /I "..\..\..\include\libgsf-1" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GR /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -85,39 +85,43 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\filter\DocumentElement.cxx
+SOURCE=..\..\src\DocumentElement.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\FontStyle.cxx
+SOURCE=..\..\src\FontStyle.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\FilterInternal.cxx
+SOURCE=..\..\src\InternalHandler.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\ListStyle.cxx
+SOURCE=..\..\src\ListStyle.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\PageSpan.cxx
+SOURCE=..\..\src\OdgGenerator.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\SectionStyle.cxx
+SOURCE=..\..\src\OdtGenerator.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\TableStyle.cxx
+SOURCE=..\..\src\PageSpan.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\TextRunStyle.cxx
+SOURCE=..\..\src\SectionStyle.cxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\WordPerfectCollector.cxx
+SOURCE=..\..\src\TableStyle.cxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\TextRunStyle.cxx
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -125,43 +129,59 @@ SOURCE=..\..\filter\WordPerfectCollector.cxx
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\filter\DocumentElement.hxx
+SOURCE=..\..\src\DocumentElement.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\FilterInternal.hxx
+SOURCE=..\..\src\FilterInternal.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\FontStyle.hxx
+SOURCE=..\..\src\FontStyle.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\ListStyle.hxx
+SOURCE=..\..\src\InternalHandler.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\PageSpan.hxx
+SOURCE=..\..\src\libodfgen.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\SectionStyle.hxx
+SOURCE=..\..\src\ListStyle.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\Style.hxx
+SOURCE=..\..\src\OdfDocumentHandler.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\TableStyle.hxx
+SOURCE=..\..\src\OdgGenerator.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\TextRunStyle.hxx
+SOURCE=..\..\src\OdtGenerator.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\filter\WordPerfectCollector.hxx
+SOURCE=..\..\src\PageSpan.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\SectionStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\Style.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\TableStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\TextRunStyle.hxx
 # End Source File
 # End Group
 # End Target
