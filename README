@@ -5,31 +5,18 @@ sequence of commands:
 
 ./configure ; make ; su -c 'make install'
 
-Note that this assumes that you have development versions of glib (>= 2.0.0),
-libgsf (>= 1.6.0), and libwpd (0.6.1) installed. I also assume that
-you have pkgconfig installed.
+Note that this assumes that you have development versions of libwpd (>= 0.9.0),
+libwpg (>= 0.2.0) installed. Eventually you should have boost headers if you
+choose to compile using boost smart pointers.
 
-This will make + install a single executable: wpd2odt. You may use it
-on the command line as follows:
+You will also need to have pkgconfig installed, for the build system to find
+both libwpd and libwpg.
 
-USAGE:
-
-wpd2odt <infile> <outfile>
-
-Where <infile> is a WordPerfect(tm) 6 (or greater document) and
-<outfile> is the name of the target odt document, which wpd2odt will
-create.
-
-TROUBLESHOOTING:
-
-You may need to add libwpd's pc to your pkgconfig path, if
-/usr/local/lib/pkgconfig is not present. Try setting this environment
-variable on the commandline (using bash):
-
-export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
+This will make + install a libodfgen library and all files needed to use the
+library from your code.
 
 LINKS:
 
-glib is available at http://www.gtk.org
-libgsf is available at ftp://ftp.gnome.org/pub/GNOME/sources/libgsf
 libwpd is available at http://libwpd.sf.net
+libwpg is available at http://libwpg.sf.net
+boost is available at http://www.boost.org
