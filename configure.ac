@@ -70,7 +70,6 @@ AC_MSG_CHECKING([for native Win32])
 AS_CASE([$host],
 	[*-*-mingw*], [
 		native_win32=yes
-		AC_CHECK_TOOL(WINDRES, windres)
 		LIBODFGEN_WIN32_RESOURCE=libodfgen-win32res.lo
 	], [
 		native_win32=no
