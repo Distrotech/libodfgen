@@ -61,7 +61,7 @@ public:
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	int getNumColumns() const
 	{
-		return mColumns.count();
+		return (int)mColumns.count();
 	}
 	void addTableCellStyle(TableCellStyle *pTableCellStyle)
 	{
@@ -69,7 +69,7 @@ public:
 	}
 	int getNumTableCellStyles()
 	{
-		return mTableCellStyles.size();
+		return (int)mTableCellStyles.size();
 	}
 	void addTableRowStyle(TableRowStyle *pTableRowStyle)
 	{
@@ -77,7 +77,7 @@ public:
 	}
 	int getNumTableRowStyles()
 	{
-		return mTableRowStyles.size();
+		return (int)mTableRowStyles.size();
 	}
 private:
 	WPXPropertyList mPropList;

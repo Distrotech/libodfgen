@@ -412,7 +412,7 @@ void OdtGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 	{
 		bool bLastPage;
 		(i == (mPageSpans.size() - 1)) ? bLastPage = true : bLastPage = false;
-		mPageSpans[i]->writeMasterPages(pageNumber, i, bLastPage, pHandler);
+		mPageSpans[i]->writeMasterPages(pageNumber, (int)i, bLastPage, pHandler);
 		pageNumber += mPageSpans[i]->getSpan();
 	}
 	pHandler->endElement("office:master-styles");
@@ -422,7 +422,7 @@ void OdtGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 {
 	for (unsigned int i=0; i<mPageSpans.size(); ++i)
 	{
-		mPageSpans[i]->writePageLayout(i, pHandler);
+		mPageSpans[i]->writePageLayout((int)i, pHandler);
 	}
 }
 
@@ -602,7 +602,7 @@ void OdtGenerator::closeFooter()
 
 void OdtGenerator::openSection(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
 {
-	int iNumColumns = columns.count();
+	size_t iNumColumns = columns.count();
 	double fSectionMarginLeft = 0.0;
 	double fSectionMarginRight = 0.0;
 	if (propList["fo:margin-left"])
