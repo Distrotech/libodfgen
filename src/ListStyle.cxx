@@ -125,26 +125,26 @@ void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) co
 
 ListStyle::ListStyle(const char *psName, const int iListID) :
 	Style(psName),
+	mxListLevels(),
 	miListID(iListID)
 {
-	for (int i=0; i<WP6_NUM_LIST_LEVELS; ++i)
-		mppListLevels[i] = 0;
-
 }
 
 ListStyle::~ListStyle()
 {
-	for (int i=0; i<WP6_NUM_LIST_LEVELS; ++i)
+	for (std::map<int, ListLevelStyle *>::iterator iter = mxListLevels.begin();
+	        iter != mxListLevels.end(); ++iter)
 	{
-		if (mppListLevels[i])
-			delete(mppListLevels[i]);
+		if (iter->second)
+			delete(iter->second);
 	}
 
 }
 
 bool ListStyle::isListLevelDefined(int iLevel) const
 {
-	if (!mppListLevels[iLevel])
+	std::map<int, ListLevelStyle *>::const_iterator iter = mxListLevels.find(iLevel);
+	if (iter == mxListLevels.end() || !iter->second)
 		return false;
 
 	return true;
@@ -155,8 +155,8 @@ void ListStyle::setListLevel(int iLevel, ListLevelStyle *iListLevelStyle)
 	// can't uncomment this next line without adding some extra logic.
 	// figure out which is best: use the initial message, or constantly
 	// update?
-	if (!mppListLevels[iLevel])
-		mppListLevels[iLevel] = iListLevelStyle;
+	if (!isListLevelDefined(iLevel))
+		mxListLevels[iLevel] = iListLevelStyle;
 }
 
 void ListStyle::updateListLevel(const int iLevel, const WPXPropertyList &xPropList, bool ordered)
@@ -178,10 +178,11 @@ void ListStyle::write(OdfDocumentHandler *pHandler) const
 	listStyleOpenElement.addAttribute("style:name", getName());
 	listStyleOpenElement.write(pHandler);
 
-	for (int i=0; i<WP6_NUM_LIST_LEVELS; ++i)
+	for (std::map<int, ListLevelStyle *>::const_iterator iter = mxListLevels.begin();
+	        iter != mxListLevels.end(); ++iter)
 	{
-		if (mppListLevels[i])
-			mppListLevels[i]->write(pHandler, i);
+		if (iter->second)
+			iter->second->write(pHandler, iter->first);
 	}
 
 	pHandler->endElement("text:list-style");

@@ -24,9 +24,9 @@
  */
 #ifndef _LISTSTYLE_HXX_
 #define _LISTSTYLE_HXX_
-#include <libwpd/libwpd.h>
 
-#define WP6_NUM_LIST_LEVELS 8 // see WP6FileStructure.h (we shouldn't need to reference this)
+#include <map>
+#include <libwpd/libwpd.h>
 
 #include "Style.hxx"
 
@@ -74,7 +74,7 @@ protected:
 private:
 	ListStyle(const ListStyle &);
 	ListStyle &operator=(const ListStyle &);
-	ListLevelStyle *mppListLevels[WP6_NUM_LIST_LEVELS];
+	std::map<int, ListLevelStyle *> mxListLevels;
 	const int miListID;
 };
 

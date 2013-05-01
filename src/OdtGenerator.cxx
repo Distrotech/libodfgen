@@ -61,6 +61,7 @@ struct WriterDocumentState
 struct WriterListState
 {
 	WriterListState();
+	WriterListState(const WriterListState &state);
 
 	ListStyle *mpCurrentListStyle;
 	unsigned int miCurrentListLevel;
@@ -71,6 +72,8 @@ struct WriterListState
 	std::stack<bool> mbListElementOpened;
 	// a map id -> last list style defined with such id
 	std::map<int, ListStyle *> mIdListStyleMap;
+private:
+	WriterListState &operator=(const WriterListState &state);
 };
 
 enum WriterListType { unordered, ordered };
@@ -97,6 +100,18 @@ WriterListState::WriterListState() :
 	mbListElementParagraphOpened(false),
 	mbListElementOpened(),
 	mIdListStyleMap()
+{
+}
+
+WriterListState::WriterListState(const WriterListState &state) :
+	mpCurrentListStyle(state.mpCurrentListStyle),
+	miCurrentListLevel(state.miCurrentListLevel),
+	miLastListLevel(state.miCurrentListLevel),
+	miLastListNumber(state.miLastListNumber),
+	mbListContinueNumbering(state.mbListContinueNumbering),
+	mbListElementParagraphOpened(state.mbListElementParagraphOpened),
+	mbListElementOpened(state.mbListElementOpened),
+	mIdListStyleMap(state.mIdListStyleMap)
 {
 }
 

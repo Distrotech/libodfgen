@@ -352,6 +352,11 @@ public:
 	bool mbIsTextBox;
 	bool mbIsTextLine;
 	bool mbIsTextOnPath;
+
+private:
+	OdgGeneratorPrivate(const OdgGeneratorPrivate &);
+	OdgGeneratorPrivate &operator=(const OdgGeneratorPrivate &);
+
 };
 
 OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType):
@@ -359,6 +364,7 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mGraphicsStrokeDashStyles(),
 	mGraphicsGradientStyles(),
 	mGraphicsBitmapStyles(),
+	mGraphicsMarkerStyles(),
 	mGraphicsAutomaticStyles(),
 	mPageAutomaticStyles(),
 	mPageMasterStyles(),
