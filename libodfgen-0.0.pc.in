@@ -4,7 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
                                                                        
 Name: libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@
-Description: Library for parsing the visio file format structure
+Description: Library to generate ODF documents from libwpd's and libwpg's api calls
 Version: @VERSION@
 Requires: libwpd-0.9 libwpg-0.2
 Libs: -L${libdir} -lodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@
