@@ -280,23 +280,10 @@ static void getCubicBezierBBox(double x0, double y0, double x1, double y1, doubl
 
 static WPXString doubleToString(const double value)
 {
-	WPXString tempString;
-	tempString.sprintf("%.4f", value);
-#ifndef __ANDROID__
-	std::string decimalPoint(localeconv()->decimal_point);
-#else
-	std::string decimalPoint(".");
-#endif
-	if (decimalPoint.empty() || (decimalPoint == "."))
-		return tempString;
-	std::string stringValue(tempString.cstr());
-	if (!stringValue.empty())
-	{
-		std::string::size_type pos;
-		while ((pos = stringValue.find(decimalPoint)) != std::string::npos)
-			stringValue.replace(pos,decimalPoint.size(),".");
-	}
-	return WPXString(stringValue.c_str());
+	WPXProperty *prop = newDoubleProp(value);
+	WPXString retVal = prop->getStr();
+	delete prop;
+	return retVal;
 }
 
 } // anonymous namespace
