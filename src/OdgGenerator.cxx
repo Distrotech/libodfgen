@@ -282,7 +282,7 @@ static WPXString doubleToString(const double value)
 {
 	WPXString tempString;
 	tempString.sprintf("%.4f", value);
-#ifndef ANDROID
+#ifndef __ANDROID__
 	std::string decimalPoint(localeconv()->decimal_point);
 #else
 	std::string decimalPoint(".");
