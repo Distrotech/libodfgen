@@ -280,7 +280,7 @@ static void getCubicBezierBBox(double x0, double y0, double x1, double y1, doubl
 
 static WPXString doubleToString(const double value)
 {
-	WPXProperty *prop = newDoubleProp(value);
+	WPXProperty *prop = WPXPropertyFactory::newDoubleProp(value);
 	WPXString retVal = prop->getStr();
 	delete prop;
 	return retVal;
