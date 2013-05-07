@@ -245,7 +245,7 @@ AS_IF([test "x$with_sharedptr" = "xboost"], [
 # Prepare all .in files
 # =====================
 AC_CONFIG_FILES([
-libodfgen-0.0.pc
+libodfgen-$LIBODFGEN_MAJOR_VERSION.$LIBODFGEN_MINOR_VERSION.pc:libodfgen.pc.in
 Makefile
 build/Makefile
 build/win32/Makefile
