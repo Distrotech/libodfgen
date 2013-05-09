@@ -648,8 +648,7 @@ OdgGenerator::~OdgGenerator()
 
 	mpImpl->mpHandler->endDocument();
 
-	if (mpImpl)
-		delete mpImpl;
+	delete mpImpl;
 }
 
 void OdgGenerator::startGraphics(const ::WPXPropertyList &propList)
