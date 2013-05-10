@@ -31,7 +31,7 @@
 #include <libwpd/WPXString.h>
 #include <vector>
 
-#include "OdfDocumentHandler.hxx"
+#include <libodfgen/libodfgen.hxx>
 
 class DocumentElement
 {

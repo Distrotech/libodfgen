@@ -29,8 +29,8 @@
 #include <libwpd/libwpd.h>
 #include <libwpd/WPXProperty.h>
 #include <libwpd/WPXString.h>
+#include <libodfgen/libodfgen.hxx>
 #include "DocumentElement.hxx"
-#include "OdfDocumentHandler.hxx"
 
 class InternalHandler : public OdfDocumentHandler
 {

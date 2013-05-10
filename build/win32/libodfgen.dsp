@@ -145,7 +145,7 @@ SOURCE=..\..\src\InternalHandler.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\libodfgen.hxx
+SOURCE=..\..\inc\libodfgen\libodfgen.hxx
 # End Source File
 # Begin Source File
 
@@ -153,15 +153,15 @@ SOURCE=..\..\src\ListStyle.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\OdfDocumentHandler.hxx
+SOURCE=..\..\inc\libodfgen\OdfDocumentHandler.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\OdgGenerator.hxx
+SOURCE=..\..\inc\libodfgen\OdgGenerator.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\OdtGenerator.hxx
+SOURCE=..\..\inc\libodfgen\OdtGenerator.hxx
 # End Source File
 # Begin Source File
 

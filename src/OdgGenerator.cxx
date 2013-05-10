@@ -24,11 +24,10 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include "FilterInternal.hxx"
+#include <libodfgen/libodfgen.hxx>
 
-#include "OdgGenerator.hxx"
+#include "FilterInternal.hxx"
 #include "DocumentElement.hxx"
-#include "OdfDocumentHandler.hxx"
 #include "TextRunStyle.hxx"
 #include "FontStyle.hxx"
 #include <locale.h>

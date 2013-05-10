@@ -10,12 +10,12 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_includedir = \
 	$(includedir)/libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@/libodfgen
 
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_include_HEADERS = \
-	OdfDocumentHandler.hxx \
-	OdtGenerator.hxx \
-	OdgGenerator.hxx \
-	libodfgen.hxx
+	$(top_srcdir)/inc/libodfgen/OdfDocumentHandler.hxx \
+	$(top_srcdir)/inc/libodfgen/OdtGenerator.hxx \
+	$(top_srcdir)/inc/libodfgen/OdgGenerator.hxx \
+	$(top_srcdir)/inc/libodfgen/libodfgen.hxx
 
-AM_CXXFLAGS = $(WPD_CFLAGS) $(WPG_CFLAGS) $(DEBUG_CXXFLAGS)
+AM_CXXFLAGS = -I$(top_srcdir)/inc/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(DEBUG_CXXFLAGS)
 
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_LIBADD = @LIBODFGEN_WIN32_RESOURCE@ $(WPD_LIBS)
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_DEPENDENCIES = @LIBODFGEN_WIN32_RESOURCE@

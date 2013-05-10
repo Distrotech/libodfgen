@@ -24,7 +24,6 @@
  */
 
 #include "DocumentElement.hxx"
-#include "OdfDocumentHandler.hxx"
 #include "FilterInternal.hxx"
 #include <string.h>
 

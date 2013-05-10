@@ -30,7 +30,8 @@
 #include <stack>
 #include <string>
 
-#include "OdtGenerator.hxx"
+#include <libodfgen/libodfgen.hxx>
+
 #include "DocumentElement.hxx"
 #include "TextRunStyle.hxx"
 #include "FontStyle.hxx"

@@ -249,6 +249,8 @@ libodfgen-$LIBODFGEN_MAJOR_VERSION.$LIBODFGEN_MINOR_VERSION.pc:libodfgen.pc.in
 Makefile
 build/Makefile
 build/win32/Makefile
+inc/Makefile
+inc/libodfgen/Makefile
 src/Makefile
 src/libodfgen.rc
 ])
