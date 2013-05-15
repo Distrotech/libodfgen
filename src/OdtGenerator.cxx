@@ -1319,14 +1319,16 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	// check if the frame has border, background attributes
 	static char const *(bordersString[])=
-	{"fo:border","fo:border-top","fo:border-left","fo:border-bottom","fo:border-right"};
-	for (int b = 0; b < 5; b++)
+	{
+		"fo:border","fo:border-top","fo:border-left","fo:border-bottom","fo:border-right",
+		"style:border-line-width","style:border-line-width-top","style:border-line-width-left",
+		"style:border-line-width-bottom","style:border-line-width-right"
+	};
+	for (int b = 0; b < 10; b++)
 	{
 		if (propList[bordersString[b]])
 			frameAutomaticStylePropertiesElement->addAttribute(bordersString[b], propList[bordersString[b]]->getStr());
 	}
-	if (propList["style:border-line-width"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:border-line-width", propList["style:border-line-width"]->getStr());
 	if (propList["fo:background-color"])
 		frameAutomaticStylePropertiesElement->addAttribute("fo:background-color", propList["fo:background-color"]->getStr());
 	if (propList["style:background-transparency"])

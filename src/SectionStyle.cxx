@@ -48,18 +48,41 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 	styleOpen.addAttribute("style:family", "section");
 	styleOpen.write(pHandler);
 
-	// if the number of columns is <= 1, we will never come here. This is only an additional check
-	// style properties
-	pHandler->startElement("style:section-properties", mPropList);
+	WPXPropertyList propList;
+	WPXPropertyList::Iter p(mPropList);
+	for (p.rewind(); p.next(); )
+	{
+		if (strncmp(p.key(), "libwpd:", 7) != 0)
+			propList.insert(p.key(), p()->getStr());
+	}
+	pHandler->startElement("style:section-properties", propList);
 
 	// column properties
 	WPXPropertyList columnProps;
 
+	// if the number of columns is <= 1, we will never come here. This is only an additional check
+	// style properties
 	if (mColumns.count() > 1)
 	{
 		columnProps.insert("fo:column-count", (int)mColumns.count());
 		pHandler->startElement("style:columns", columnProps);
 
+		if (mPropList["libwpd:colsep-width"] && mPropList["libwpd:colsep-color"])
+		{
+			WPXPropertyList columnSeparator;
+			columnSeparator.insert("style:width", mPropList["libwpd:colsep-width"]->getStr());
+			columnSeparator.insert("style:color", mPropList["libwpd:colsep-color"]->getStr());
+			if (mPropList["libwpd:colsep-height"])
+				columnSeparator.insert("style:height", mPropList["libwpd:colsep-height"]->getStr());
+			else
+				columnSeparator.insert("style:height", "100%");
+			if (mPropList["libwpd:colsep-vertical-align"])
+				columnSeparator.insert("style:vertical-align", mPropList["libwpd:colsep-vertical-align"]->getStr());
+			else
+				columnSeparator.insert("style:vertical-align", "middle");
+			pHandler->startElement("style:column-sep", columnSeparator);
+			pHandler->endElement("style:column-sep");
+		}
 		WPXPropertyListVector::Iter i(mColumns);
 		for (i.rewind(); i.next();)
 		{

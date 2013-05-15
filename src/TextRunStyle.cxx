@@ -110,6 +110,15 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 			propList.insert("style:page-number", i()->getStr());
 		else if (strcmp(i.key(), "fo:background-color") == 0)
 			propList.insert("fo:background-color", i()->getStr());
+		else if (strncmp(i.key(), "style:border-line-width", 23) == 0)
+		{
+			if (strcmp(i.key(), "style:border-line-width") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-left") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-right") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-top") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-bottom") == 0)
+				propList.insert(i.key(), i()->getStr());
+		}
 		else if (strncmp(i.key(), "fo:border", 9) == 0)
 		{
 			if (strcmp(i.key(), "fo:border") == 0 ||
