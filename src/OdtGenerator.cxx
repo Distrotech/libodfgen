@@ -1252,9 +1252,13 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	if (propList["svg:width"])
 		frameStylePropertiesOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	else if (propList["fo:min-width"])
+		frameStylePropertiesOpenElement->addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
 
 	if (propList["svg:height"])
 		frameStylePropertiesOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+	else if (propList["fo:min-height"])
+		frameStylePropertiesOpenElement->addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
 
 	if (propList["style:rel-width"])
 		frameStylePropertiesOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
@@ -1371,9 +1375,13 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	if (propList["svg:width"])
 		drawFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	else if (propList["fo:min-width"])
+		drawFrameOpenElement->addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
 
 	if (propList["svg:height"])
 		drawFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+	else if (propList["fo:min-height"])
+		drawFrameOpenElement->addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
 
 	if (propList["style:rel-width"])
 		drawFrameOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
