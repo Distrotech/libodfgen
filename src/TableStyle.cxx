@@ -59,6 +59,15 @@ void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 	{
 		if (strlen(i.key()) > 2 && strncmp(i.key(), "fo", 2) == 0)
 			stylePropList.insert(i.key(), i()->clone());
+		else if (strlen(i.key()) > 22  && strncmp(i.key(), "style:border-line-width", 23) == 0)
+		{
+			if (strcmp(i.key(), "style:border-line-width") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-left") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-right") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-top") == 0 ||
+			        strcmp(i.key(), "style:border-line-width-bottom") == 0)
+				stylePropList.insert(i.key(), i()->clone());
+		}
 		else if (strcmp(i.key(), "style:vertical-align")==0)
 			stylePropList.insert(i.key(), i()->clone());
 	}
@@ -133,6 +142,8 @@ void TableStyle::write(OdfDocumentHandler *pHandler) const
 		stylePropertiesOpen.addAttribute("style:width", mPropList["style:width"]->getStr());
 	if (mPropList["fo:break-before"])
 		stylePropertiesOpen.addAttribute("fo:break-before", mPropList["fo:break-before"]->getStr());
+	if (mPropList["table:border-model"])
+		stylePropertiesOpen.addAttribute("table:border-model", mPropList["table:border-model"]->getStr());
 	stylePropertiesOpen.write(pHandler);
 
 	pHandler->endElement("style:table-properties");
