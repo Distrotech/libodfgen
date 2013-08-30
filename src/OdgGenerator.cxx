@@ -295,6 +295,8 @@ public:
 	void _writeGraphicsStyle();
 	void _drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const WPXPropertyListVector &path);
+	//! returns the document type
+	std::string getDocumentType() const;
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
 
@@ -434,17 +436,30 @@ OdgGeneratorPrivate::~OdgGeneratorPrivate()
 	mFontManager.clean();
 }
 
+std::string OdgGeneratorPrivate::getDocumentType() const
+{
+	switch(mxStreamType)
+	{
+	case ODF_FLAT_XML:
+		return "office:document";
+	case ODF_CONTENT_XML:
+		return "office:document-content";
+	case ODF_STYLES_XML:
+		return "office:document-styles";
+	case ODF_SETTINGS_XML:
+		return "office:document-settings";
+	case ODF_META_XML:
+		return "office:document-meta";
+	default:
+		return "office:document";
+	}
+}
 
 OdgGenerator::OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType):
 	mpImpl(new OdgGeneratorPrivate(pHandler, streamType))
 {
 	mpImpl->mpHandler->startDocument();
-	TagOpenElement tmpOfficeDocumentContent(
-	    (mpImpl->mxStreamType == ODF_FLAT_XML) ? "office:document" : (
-	        (mpImpl->mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
-	            (mpImpl->mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
-	                (mpImpl->mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
-	                    (mpImpl->mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
+	TagOpenElement tmpOfficeDocumentContent(mpImpl->getDocumentType().c_str());
 	tmpOfficeDocumentContent.addAttribute("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
@@ -639,12 +654,7 @@ OdgGenerator::~OdgGenerator()
 		mpImpl->mpHandler->endElement("office:body");
 	}
 
-	mpImpl->mpHandler->endElement(
-	    (mpImpl->mxStreamType == ODF_FLAT_XML) ? "office:document" : (
-	        (mpImpl->mxStreamType == ODF_CONTENT_XML) ? "office:document-content" : (
-	            (mpImpl->mxStreamType == ODF_STYLES_XML) ? "office:document-styles" : (
-	                (mpImpl->mxStreamType == ODF_SETTINGS_XML) ? "office:document-settings" : (
-	                    (mpImpl->mxStreamType == ODF_META_XML) ? "office:document-meta" : "office:document" )))));
+	mpImpl->mpHandler->endElement(mpImpl->getDocumentType().c_str());
 
 	mpImpl->mpHandler->endDocument();
 
