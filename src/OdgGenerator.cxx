@@ -1508,6 +1508,8 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	{
 		sValue.sprintf("StartMarker_%i", miStartMarkerIndex++);
 		pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start", sValue);
+		if (mxStyle["draw:marker-start-center"])
+			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start-center", mxStyle["draw:marker-start-center"]->getStr());
 		if (mxStyle["draw:marker-start-width"])
 			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start-width", mxStyle["draw:marker-start-width"]->getStr());
 		else
@@ -1517,6 +1519,8 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	{
 		sValue.sprintf("EndMarker_%i", miEndMarkerIndex++);
 		pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end", sValue);
+		if (mxStyle["draw:marker-end-center"])
+			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-center", mxStyle["draw:marker-end-center"]->getStr());
 		if (mxStyle["draw:marker-end-width"])
 			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-width", mxStyle["draw:marker-end-width"]->getStr());
 		else
