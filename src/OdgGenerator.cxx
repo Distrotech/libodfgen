@@ -777,6 +777,12 @@ void OdgGenerator::endLayer()
 
 void OdgGenerator::drawRectangle(const ::WPXPropertyList &propList)
 {
+	if (!propList["svg:x"] || !propList["svg:y"] ||
+	        !propList["svg:width"] || !propList["svg:height"])
+	{
+		WRITER_DEBUG_MSG(("OdgGenerator::drawRectangle: position undefined\n"));
+		return;
+	}
 	mpImpl->_writeGraphicsStyle();
 	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
 	WPXString sValue;
@@ -797,6 +803,11 @@ void OdgGenerator::drawRectangle(const ::WPXPropertyList &propList)
 
 void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
 {
+	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
+	{
+		WRITER_DEBUG_MSG(("OdgGenerator::drawEllipse: position undefined\n"));
+		return;
+	}
 	mpImpl->_writeGraphicsStyle();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
 	WPXString sValue;
@@ -862,6 +873,11 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector &vert
 
 	if(vertices.count() == 2)
 	{
+		if (!vertices[0]["svg:x"]||!vertices[0]["svg:y"]||!vertices[1]["svg:x"]||!vertices[1]["svg:y"])
+		{
+			WRITER_DEBUG_MSG(("OdgGeneratorPrivate::_drawPolySomething: some vertices are not defined\n"));
+			return;
+		}
 		_writeGraphicsStyle();
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
 		WPXString sValue;
@@ -918,7 +934,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 
 	for(unsigned k = 0; k < path.count(); ++k)
 	{
-		if (!path[k]["svg:x"] || !path[k]["svg:y"])
+		if (!path[k]["svg:x"] || !path[k]["svg:y"] || !path[k]["libwpg:path-action"])
 			continue;
 		if (isFirstPoint)
 		{
@@ -1000,6 +1016,8 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	sValue.clear();
 	for(unsigned i = 0; i < path.count(); ++i)
 	{
+		if (!path[i]["libwpg:path-action"])
+			continue;
 		WPXString sElement;
 		if (path[i]["libwpg:path-action"]->getStr() == "M")
 		{
