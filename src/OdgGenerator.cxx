@@ -931,53 +931,103 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	double px = 0.0, py = 0.0, qx = 0.0, qy = 0.0;
 	double lastX = 0.0;
 	double lastY = 0.0;
+	double lastPrevX = 0.0;
+	double lastPrevY = 0.0;
 
 	for(unsigned k = 0; k < path.count(); ++k)
 	{
-		if (!path[k]["svg:x"] || !path[k]["svg:y"] || !path[k]["libwpg:path-action"])
+		if (!path[k]["libwpg:path-action"])
 			continue;
+		std::string action=path[k]["libwpg:path-action"]->getStr().cstr();
+		if (action.length()!=1 || action[0]=='Z') continue;
+
+		bool coordOk=path[k]["svg:x"]&&path[k]["svg:y"];
+		bool coord1Ok=coordOk && path[k]["svg:x1"]&&path[k]["svg:y1"];
+		bool coord2Ok=coord1Ok && path[k]["svg:x2"]&&path[k]["svg:y2"];
+		double x=lastX, y=lastY;
 		if (isFirstPoint)
 		{
-			px = path[k]["svg:x"]->getDouble();
-			py = path[k]["svg:y"]->getDouble();
-			qx = px;
-			qy = py;
-			lastX = px;
-			lastY = py;
+			if (!coordOk)
+			{
+				WRITER_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: the first point has no coordinate\n"));
+				continue;
+			}
+			qx = px = x = path[k]["svg:x"]->getDouble();
+			qy = py = y = path[k]["svg:y"]->getDouble();
+			lastPrevX = lastX = px;
+			lastPrevY = lastY = py;
 			isFirstPoint = false;
 		}
-		px = (px > path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : px;
-		py = (py > path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : py;
-		qx = (qx < path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : qx;
-		qy = (qy < path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : qy;
+		else
+		{
+			if (path[k]["svg:x"]) x=path[k]["svg:x"]->getDouble();
+			if (path[k]["svg:y"]) y=path[k]["svg:y"]->getDouble();
+			px = (px > x) ? x : px;
+			py = (py > y) ? y : py;
+			qx = (qx < x) ? x : qx;
+			qy = (qy < y) ? y : qy;
+		}
 
 		double xmin=px, xmax=qx, ymin=py, ymax=qy;
+		bool lastPrevSet=false;
 
-		if(path[k]["libwpg:path-action"]->getStr() == "C")
+		if(action[0] == 'C' && coord2Ok)
 		{
 			getCubicBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
 			                   path[k]["svg:x2"]->getDouble(), path[k]["svg:y2"]->getDouble(),
-			                   path[k]["svg:x"]->getDouble(), path[k]["svg:y"]->getDouble(), xmin, ymin, xmax, ymax);
+			                   x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-path[k]["svg:x2"]->getDouble();
+			lastPrevY=2*y-path[k]["svg:y2"]->getDouble();
 		}
-		if(path[k]["libwpg:path-action"]->getStr() == "Q")
+		else if(action[0] == 'S' && coord1Ok)
+		{
+			getCubicBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
+			                   path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
+			                   x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
+			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
+		}
+		else if(action[0] == 'Q' && coord1Ok)
 		{
 			getQuadraticBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
-			                       path[k]["svg:x"]->getDouble(), path[k]["svg:y"]->getDouble(), xmin, ymin, xmax, ymax);
+			                       x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
+			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
 		}
-		if(path[k]["libwpg:path-action"]->getStr() == "A")
+		else if(action[0] == 'T' && coordOk)
+		{
+			getQuadraticBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
+			                       x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-lastPrevX;
+			lastPrevY=2*y-lastPrevY;
+		}
+		else if(action[0] == 'A' && coordOk && path[k]["svg:rx"] && path[k]["svg:ry"])
 		{
 			getEllipticalArcBBox(lastX, lastY, path[k]["svg:rx"]->getDouble(), path[k]["svg:ry"]->getDouble(),
 			                     path[k]["libwpg:rotate"] ? path[k]["libwpg:rotate"]->getDouble() : 0.0,
 			                     path[k]["libwpg:large-arc"] ? path[k]["libwpg:large-arc"]->getInt() : 1,
 			                     path[k]["libwpg:sweep"] ? path[k]["libwpg:sweep"]->getInt() : 1,
-			                     path[k]["svg:x"]->getDouble(), path[k]["svg:y"]->getDouble(), xmin, ymin, xmax, ymax);
+			                     x, y, xmin, ymin, xmax, ymax);
+		}
+		else if (action[0] != 'M' && action[0] != 'L' && action[0] != 'H' && action[0] != 'V')
+		{
+			WRITER_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: problem reading a path\n"));
 		}
 		px = (px > xmin ? xmin : px);
 		py = (py > ymin ? ymin : py);
 		qx = (qx < xmax ? xmax : qx);
 		qy = (qy < ymax ? ymax : qy);
-		lastX = path[k]["svg:x"]->getDouble();
-		lastY = path[k]["svg:y"]->getDouble();
+		lastX = x;
+		lastY = y;
+		if (!lastPrevSet)
+		{
+			lastPrevX=lastX;
+			lastPrevY=lastY;
+		}
 	}
 
 
