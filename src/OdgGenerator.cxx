@@ -951,28 +951,18 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 		qx = (qx < path[k]["svg:x"]->getDouble()) ? path[k]["svg:x"]->getDouble() : qx;
 		qy = (qy < path[k]["svg:y"]->getDouble()) ? path[k]["svg:y"]->getDouble() : qy;
 
-		double xmin, xmax, ymin, ymax;
+		double xmin=px, xmax=qx, ymin=py, ymax=qy;
 
 		if(path[k]["libwpg:path-action"]->getStr() == "C")
 		{
 			getCubicBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
 			                   path[k]["svg:x2"]->getDouble(), path[k]["svg:y2"]->getDouble(),
 			                   path[k]["svg:x"]->getDouble(), path[k]["svg:y"]->getDouble(), xmin, ymin, xmax, ymax);
-
-			px = (px > xmin ? xmin : px);
-			py = (py > ymin ? ymin : py);
-			qx = (qx < xmax ? xmax : qx);
-			qy = (qy < ymax ? ymax : qy);
 		}
 		if(path[k]["libwpg:path-action"]->getStr() == "Q")
 		{
 			getQuadraticBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
 			                       path[k]["svg:x"]->getDouble(), path[k]["svg:y"]->getDouble(), xmin, ymin, xmax, ymax);
-
-			px = (px > xmin ? xmin : px);
-			py = (py > ymin ? ymin : py);
-			qx = (qx < xmax ? xmax : qx);
-			qy = (qy < ymax ? ymax : qy);
 		}
 		if(path[k]["libwpg:path-action"]->getStr() == "A")
 		{
@@ -981,12 +971,11 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 			                     path[k]["libwpg:large-arc"] ? path[k]["libwpg:large-arc"]->getInt() : 1,
 			                     path[k]["libwpg:sweep"] ? path[k]["libwpg:sweep"]->getInt() : 1,
 			                     path[k]["svg:x"]->getDouble(), path[k]["svg:y"]->getDouble(), xmin, ymin, xmax, ymax);
-
-			px = (px > xmin ? xmin : px);
-			py = (py > ymin ? ymin : py);
-			qx = (qx < xmax ? xmax : qx);
-			qy = (qy < ymax ? ymax : qy);
 		}
+		px = (px > xmin ? xmin : px);
+		py = (py > ymin ? ymin : py);
+		qx = (qx < xmax ? xmax : qx);
+		qy = (qy < ymax ? ymax : qy);
 		lastX = path[k]["svg:x"]->getDouble();
 		lastY = path[k]["svg:y"]->getDouble();
 	}
@@ -1018,21 +1007,37 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	{
 		if (!path[i]["libwpg:path-action"])
 			continue;
+		std::string action=path[i]["libwpg:path-action"]->getStr().cstr();
+		if (action.length()!=1) continue;
+		bool coordOk=path[i]["svg:x"]&&path[i]["svg:y"];
+		bool coord1Ok=coordOk && path[i]["svg:x1"]&&path[i]["svg:y1"];
+		bool coord2Ok=coord1Ok && path[i]["svg:x2"]&&path[i]["svg:y2"];
 		WPXString sElement;
-		if (path[i]["libwpg:path-action"]->getStr() == "M")
+		// 2540 is 2.54*1000, 2.54 in = 1 inch
+		if (path[i]["svg:x"] && action[0] == 'H')
 		{
-			// 2540 is 2.54*1000, 2.54 in = 1 inch
-			sElement.sprintf("M%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+			sElement.sprintf("H%i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540));
+			sValue.append(sElement);
+		}
+		else if (path[i]["svg:y"] && action[0] == 'V')
+		{
+			sElement.sprintf("V%i", (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (coordOk && (action[0] == 'M' || action[0] == 'L' || action[0] == 'T'))
+		{
+			sElement.sprintf("%c%i %i", action[0], (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
 			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
-		else if (path[i]["libwpg:path-action"]->getStr() == "L")
+		else if (coord1Ok && (action[0] == 'Q' || action[0] == 'S'))
 		{
-			sElement.sprintf("L%i %i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+			sElement.sprintf("%c%i %i %i %i %i %i", action[0], (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
 			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
-		else if (path[i]["libwpg:path-action"]->getStr() == "C")
+		else if (coord2Ok && action[0] == 'C')
 		{
 			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
 			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
@@ -1040,14 +1045,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
-		else if (path[i]["libwpg:path-action"]->getStr() == "Q")
-		{
-			sElement.sprintf("Q%i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
-			sValue.append(sElement);
-		}
-		else if (path[i]["libwpg:path-action"]->getStr() == "A")
+		else if (coordOk && path[i]["svg:rx"] && path[i]["svg:ry"] && action[0] == 'A')
 		{
 			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
 			                 (unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0),
@@ -1056,7 +1054,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 			                 (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
-		else if (path[i]["libwpg:path-action"]->getStr() == "Z")
+		else if (action[0] == 'Z')
 			sValue.append(" Z");
 	}
 	pDrawPathElement->addAttribute("svg:d", sValue);
