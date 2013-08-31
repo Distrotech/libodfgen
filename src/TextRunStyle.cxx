@@ -65,7 +65,7 @@ ParagraphStyle::~ParagraphStyle()
 
 void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 {
-	ODFGEN_DEBUG_MSG(("Writing a paragraph style..\n"));
+	ODFGEN_DEBUG_MSG(("ParagraphStyle: Writing a paragraph style..\n"));
 
 	WPXPropertyList propList;
 	propList.insert("style:name", msName.cstr());
@@ -171,7 +171,7 @@ SpanStyle::SpanStyle(const char *psName, const WPXPropertyList &xPropList) :
 
 void SpanStyle::write(OdfDocumentHandler *pHandler) const
 {
-	ODFGEN_DEBUG_MSG(("Writing a span style..\n"));
+	ODFGEN_DEBUG_MSG(("SpanStyle: Writing a span style..\n"));
 	WPXPropertyList styleOpenList;
 	styleOpenList.insert("style:name", getName());
 	styleOpenList.insert("style:family", "text");
