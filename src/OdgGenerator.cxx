@@ -780,7 +780,7 @@ void OdgGenerator::drawRectangle(const ::WPXPropertyList &propList)
 	if (!propList["svg:x"] || !propList["svg:y"] ||
 	        !propList["svg:width"] || !propList["svg:height"])
 	{
-		WRITER_DEBUG_MSG(("OdgGenerator::drawRectangle: position undefined\n"));
+		ODFGEN_DEBUG_MSG(("OdgGenerator::drawRectangle: position undefined\n"));
 		return;
 	}
 	mpImpl->_writeGraphicsStyle();
@@ -805,7 +805,7 @@ void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
 {
 	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
 	{
-		WRITER_DEBUG_MSG(("OdgGenerator::drawEllipse: position undefined\n"));
+		ODFGEN_DEBUG_MSG(("OdgGenerator::drawEllipse: position undefined\n"));
 		return;
 	}
 	mpImpl->_writeGraphicsStyle();
@@ -875,7 +875,7 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector &vert
 	{
 		if (!vertices[0]["svg:x"]||!vertices[0]["svg:y"]||!vertices[1]["svg:x"]||!vertices[1]["svg:y"])
 		{
-			WRITER_DEBUG_MSG(("OdgGeneratorPrivate::_drawPolySomething: some vertices are not defined\n"));
+			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::_drawPolySomething: some vertices are not defined\n"));
 			return;
 		}
 		_writeGraphicsStyle();
@@ -949,7 +949,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 		{
 			if (!coordOk)
 			{
-				WRITER_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: the first point has no coordinate\n"));
+				ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: the first point has no coordinate\n"));
 				continue;
 			}
 			qx = px = x = path[k]["svg:x"]->getDouble();
@@ -1015,7 +1015,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 		}
 		else if (action[0] != 'M' && action[0] != 'L' && action[0] != 'H' && action[0] != 'V')
 		{
-			WRITER_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: problem reading a path\n"));
+			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: problem reading a path\n"));
 		}
 		px = (px > xmin ? xmin : px);
 		py = (py > ymin ? ymin : py);

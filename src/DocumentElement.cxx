@@ -29,7 +29,7 @@
 
 void TagElement::print() const
 {
-	WRITER_DEBUG_MSG(("%s\n", msTagName.cstr()));
+	ODFGEN_DEBUG_MSG(("%s\n", msTagName.cstr()));
 }
 
 void TagOpenElement::write(OdfDocumentHandler *pHandler) const
@@ -49,14 +49,14 @@ void TagOpenElement::addAttribute(const WPXString &szAttributeName, const WPXStr
 
 void TagCloseElement::write(OdfDocumentHandler *pHandler) const
 {
-	WRITER_DEBUG_MSG(("TagCloseElement: write (%s)\n", getTagName().cstr()));
+	ODFGEN_DEBUG_MSG(("TagCloseElement: write (%s)\n", getTagName().cstr()));
 
 	pHandler->endElement(getTagName().cstr());
 }
 
 void CharDataElement::write(OdfDocumentHandler *pHandler) const
 {
-	WRITER_DEBUG_MSG(("TextElement: write\n"));
+	ODFGEN_DEBUG_MSG(("TextElement: write\n"));
 	pHandler->characters(msData);
 }
 

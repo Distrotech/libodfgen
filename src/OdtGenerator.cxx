@@ -241,9 +241,9 @@ OdtGeneratorPrivate::OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 OdtGeneratorPrivate::~OdtGeneratorPrivate()
 {
 	// clean up the mess we made
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Cleaning up our mess..\n"));
+	ODFGEN_DEBUG_MSG(("WriterWordPerfect: Cleaning up our mess..\n"));
 
-	WRITER_DEBUG_MSG(("Destroying the body elements\n"));
+	ODFGEN_DEBUG_MSG(("Destroying the body elements\n"));
 	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); ++iterBody)
 	{
 		delete (*iterBody);
@@ -429,12 +429,12 @@ void OdtGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 
 bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 {
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Printing out the header stuff..\n"));
+	ODFGEN_DEBUG_MSG(("WriterWordPerfect: Document Body: Printing out the header stuff..\n"));
 
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Start Document\n"));
+	ODFGEN_DEBUG_MSG(("WriterWordPerfect: Document Body: Start Document\n"));
 	mpHandler->startDocument();
 
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: preamble\n"));
+	ODFGEN_DEBUG_MSG(("WriterWordPerfect: Document Body: preamble\n"));
 	WPXPropertyList docContentPropList;
 	docContentPropList.insert("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	docContentPropList.insert("xmlns:meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
@@ -473,7 +473,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	// write out the font styles
 	mFontManager.writeFontsDeclaration(mpHandler);
 
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the styles..\n"));
+	ODFGEN_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the styles..\n"));
 
 	// write default styles
 	_writeDefaultStyles(mpHandler);
@@ -516,7 +516,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 
 	_writeMasterPages(pHandler);
 
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the document..\n"));
+	ODFGEN_DEBUG_MSG(("WriterWordPerfect: Document Body: Writing out the document..\n"));
 	// writing out the document
 	TagOpenElement("office:body").write(mpHandler);
 	TagOpenElement("office:text").write(mpHandler);
@@ -525,7 +525,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	{
 		(*iterBodyElements)->write(pHandler);
 	}
-	WRITER_DEBUG_MSG(("WriterWordPerfect: Document Body: Finished writing all doc els..\n"));
+	ODFGEN_DEBUG_MSG(("WriterWordPerfect: Document Body: Finished writing all doc els..\n"));
 
 	pHandler->endElement("office:text");
 	pHandler->endElement("office:body");
@@ -731,7 +731,7 @@ void OdtGeneratorPrivate::_retrieveListStyle(int id)
 		return;
 	}
 
-	WRITER_DEBUG_MSG(("impossible to find a list with id=%d\n",id));
+	ODFGEN_DEBUG_MSG(("impossible to find a list with id=%d\n",id));
 }
 
 void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
@@ -753,7 +753,7 @@ void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
 	        (propList["libwpd:level"] && propList["libwpd:level"]->getInt()==1 &&
 	         (propList["text:start-value"] && propList["text:start-value"]->getInt() != int(mpImpl->mWriterListStates.top().miLastListNumber+1))))
 	{
-		WRITER_DEBUG_MSG(("Attempting to create a new ordered list style (listid: %i)\n", id));
+		ODFGEN_DEBUG_MSG(("Attempting to create a new ordered list style (listid: %i)\n", id));
 		WPXString sName;
 		sName.sprintf("OL%i", mpImpl->miNumListStyles);
 		mpImpl->miNumListStyles++;
@@ -787,7 +787,7 @@ void OdtGenerator::defineUnorderedListLevel(const WPXPropertyList &propList)
 
 	if (pListStyle == 0)
 	{
-		WRITER_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", id));
+		ODFGEN_DEBUG_MSG(("Attempting to create a new unordered list style (listid: %i)\n", id));
 		WPXString sName;
 		sName.sprintf("UL%i", mpImpl->miNumListStyles);
 		mpImpl->miNumListStyles++;
@@ -879,7 +879,7 @@ void OdtGeneratorPrivate::_closeListLevel()
 	if (mWriterListStates.top().mbListElementOpened.empty())
 	{
 		// this implies that openListLevel was not called, so it is better to stop here
-		WRITER_DEBUG_MSG(("attempting to close an unexisting level\n"));
+		ODFGEN_DEBUG_MSG(("attempting to close an unexisting level\n"));
 		return;
 	}
 	if (mWriterListStates.top().mbListElementOpened.top())
@@ -1093,7 +1093,7 @@ void OdtGenerator::openTableRow(const WPXPropertyList &propList)
 		return;
 	if (!mpImpl->mpCurrentTableStyle)
 	{
-		WRITER_DEBUG_MSG(("OdtGenerator::openTableRow called with no table\n"));
+		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableRow called with no table\n"));
 		return;
 	}
 	if (propList["libwpd:is-header-row"] && (propList["libwpd:is-header-row"]->getInt()))
@@ -1131,7 +1131,7 @@ void OdtGenerator::openTableCell(const WPXPropertyList &propList)
 		return;
 	if (!mpImpl->mpCurrentTableStyle)
 	{
-		WRITER_DEBUG_MSG(("OdtGenerator::openTableCell called with no table\n"));
+		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableCell called with no table\n"));
 		return;
 	}
 

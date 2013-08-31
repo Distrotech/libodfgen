@@ -33,9 +33,9 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-#define WRITER_DEBUG_MSG(M) printf M
+#define ODFGEN_DEBUG_MSG(M) printf M
 #else
-#define WRITER_DEBUG_MSG(M)
+#define ODFGEN_DEBUG_MSG(M)
 #endif
 
 #if defined(SHAREDPTR_TR1)

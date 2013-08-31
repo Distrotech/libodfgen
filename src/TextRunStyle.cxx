@@ -65,7 +65,7 @@ ParagraphStyle::~ParagraphStyle()
 
 void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 {
-	WRITER_DEBUG_MSG(("Writing a paragraph style..\n"));
+	ODFGEN_DEBUG_MSG(("Writing a paragraph style..\n"));
 
 	WPXPropertyList propList;
 	propList.insert("style:name", msName.cstr());
@@ -171,7 +171,7 @@ SpanStyle::SpanStyle(const char *psName, const WPXPropertyList &xPropList) :
 
 void SpanStyle::write(OdfDocumentHandler *pHandler) const
 {
-	WRITER_DEBUG_MSG(("Writing a span style..\n"));
+	ODFGEN_DEBUG_MSG(("Writing a span style..\n"));
 	WPXPropertyList styleOpenList;
 	styleOpenList.insert("style:name", getName());
 	styleOpenList.insert("style:family", "text");
@@ -255,7 +255,7 @@ WPXString ParagraphStyleManager::findOrAdd(const WPXPropertyList &propList, cons
 	if (iter!=mNameHash.end()) return iter->second;
 
 	// ok create a new list
-	WRITER_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
+	ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
 
 	WPXString sName;
 	sName.sprintf("S%i", mStyleHash.size());
@@ -296,7 +296,7 @@ WPXString SpanStyleManager::findOrAdd(const WPXPropertyList &propList)
 	if (iter!=mNameHash.end()) return iter->second;
 
 	// ok create a new list
-	WRITER_DEBUG_MSG(("SpanStyleManager::findOrAdd: Span Hash Key: %s\n", hashKey.cstr()));
+	ODFGEN_DEBUG_MSG(("SpanStyleManager::findOrAdd: Span Hash Key: %s\n", hashKey.cstr()));
 
 	WPXString sName;
 	sName.sprintf("Span%i", mStyleHash.size());
