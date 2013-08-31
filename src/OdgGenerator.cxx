@@ -292,6 +292,8 @@ class OdgGeneratorPrivate
 public:
 	OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdgGeneratorPrivate();
+	/** update a graphic style element */
+	void _updateGraphicPropertiesElement(TagOpenElement &element, ::WPXPropertyList const &style, ::WPXPropertyListVector const &gradient);
 	void _writeGraphicsStyle();
 	void _drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const WPXPropertyListVector &path);
@@ -324,7 +326,6 @@ public:
 
 	::WPXPropertyList mxStyle;
 	::WPXPropertyListVector mxGradient;
-	::WPXPropertyListVector mxMarker;
 	int miGradientIndex;
 	int miBitmapIndex;
 	int miStartMarkerIndex;
@@ -361,7 +362,6 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mFontManager(),
 	mpHandler(pHandler),
 	mxStyle(), mxGradient(),
-	mxMarker(),
 	miGradientIndex(1),
 	miBitmapIndex(1),
 	miStartMarkerIndex(1),
@@ -1224,65 +1224,84 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 
 void OdgGeneratorPrivate::_writeGraphicsStyle()
 {
+	TagOpenElement *pStyleStyleElement = new TagOpenElement("style:style");
+	WPXString sValue;
+	sValue.sprintf("gr%i",  miGraphicsStyleIndex);
+	pStyleStyleElement->addAttribute("style:name", sValue);
+	pStyleStyleElement->addAttribute("style:family", "graphic");
+	pStyleStyleElement->addAttribute("style:parent-style-name", "standard");
+	mGraphicsAutomaticStyles.push_back(pStyleStyleElement);
+
+	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
+	_updateGraphicPropertiesElement(*pStyleGraphicsPropertiesElement, mxStyle, mxGradient);
+	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
+	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
+
+	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:style"));
+	miGraphicsStyleIndex++;
+}
+
+void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::WPXPropertyList const &style, ::WPXPropertyListVector const &gradient)
+{
 	bool bUseOpacityGradient = false;
 
-	if (mxStyle["draw:stroke"] && mxStyle["draw:stroke"]->getStr() == "dash")
+	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
 	{
 		TagOpenElement *pDrawStrokeDashElement = new TagOpenElement("draw:stroke-dash");
 		WPXString sValue;
 		sValue.sprintf("Dash_%i", miDashIndex++);
 		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
-		if (mxStyle["svg:stoke-linecap"])
-			pDrawStrokeDashElement->addAttribute("draw:style", mxStyle["svg:stroke-linecap"]->getStr());
+		if (style["svg:stoke-linecap"])
+			pDrawStrokeDashElement->addAttribute("draw:style", style["svg:stroke-linecap"]->getStr());
 		else
 			pDrawStrokeDashElement->addAttribute("draw:style", "rect");
-		if (mxStyle["draw:distance"])
-			pDrawStrokeDashElement->addAttribute("draw:distance", mxStyle["draw:distance"]->getStr());
-		if (mxStyle["draw:dots1"])
-			pDrawStrokeDashElement->addAttribute("draw:dots1", mxStyle["draw:dots1"]->getStr());
-		if (mxStyle["draw:dots1-length"])
-			pDrawStrokeDashElement->addAttribute("draw:dots1-length", mxStyle["draw:dots1-length"]->getStr());
-		if (mxStyle["draw:dots2"])
-			pDrawStrokeDashElement->addAttribute("draw:dots2", mxStyle["draw:dots2"]->getStr());
-		if (mxStyle["draw:dots2-length"])
-			pDrawStrokeDashElement->addAttribute("draw:dots2-length", mxStyle["draw:dots2-length"]->getStr());
+		if (style["draw:distance"])
+			pDrawStrokeDashElement->addAttribute("draw:distance", style["draw:distance"]->getStr());
+		if (style["draw:dots1"])
+			pDrawStrokeDashElement->addAttribute("draw:dots1", style["draw:dots1"]->getStr());
+		if (style["draw:dots1-length"])
+			pDrawStrokeDashElement->addAttribute("draw:dots1-length", style["draw:dots1-length"]->getStr());
+		if (style["draw:dots2"])
+			pDrawStrokeDashElement->addAttribute("draw:dots2", style["draw:dots2"]->getStr());
+		if (style["draw:dots2-length"])
+			pDrawStrokeDashElement->addAttribute("draw:dots2-length", style["draw:dots2-length"]->getStr());
 		mGraphicsStrokeDashStyles.push_back(pDrawStrokeDashElement);
 		mGraphicsStrokeDashStyles.push_back(new TagCloseElement("draw:stroke-dash"));
 	}
 
-	if (mxStyle["draw:marker-start-path"])
+	if (style["draw:marker-start-path"])
 	{
 		WPXString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
 		sValue.sprintf("StartMarker_%i", miStartMarkerIndex);
 		pDrawMarkerElement->addAttribute("draw:name", sValue);
-		if (mxStyle["draw:marker-start-viewbox"])
-			pDrawMarkerElement->addAttribute("svg:viewBox", mxStyle["draw:marker-start-viewbox"]->getStr());
-		pDrawMarkerElement->addAttribute("svg:d", mxStyle["draw:marker-start-path"]->getStr());
+		if (style["draw:marker-start-viewbox"])
+			pDrawMarkerElement->addAttribute("svg:viewBox", style["draw:marker-start-viewbox"]->getStr());
+		pDrawMarkerElement->addAttribute("svg:d", style["draw:marker-start-path"]->getStr());
 		mGraphicsMarkerStyles.push_back(pDrawMarkerElement);
 		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
 	}
-	if(mxStyle["draw:marker-end-path"])
+	if(style["draw:marker-end-path"])
 	{
 		WPXString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
 		sValue.sprintf("EndMarker_%i", miEndMarkerIndex);
 		pDrawMarkerElement->addAttribute("draw:name", sValue);
-		if (mxStyle["draw:marker-end-viewbox"])
-			pDrawMarkerElement->addAttribute("svg:viewBox", mxStyle["draw:marker-end-viewbox"]->getStr());
-		pDrawMarkerElement->addAttribute("svg:d", mxStyle["draw:marker-end-path"]->getStr());
+		if (style["draw:marker-end-viewbox"])
+			pDrawMarkerElement->addAttribute("svg:viewBox", style["draw:marker-end-viewbox"]->getStr());
+		pDrawMarkerElement->addAttribute("svg:d", style["draw:marker-end-path"]->getStr());
 		mGraphicsMarkerStyles.push_back(pDrawMarkerElement);
 		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
 	}
 
-	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
+	if(style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
 	{
 		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
 		TagOpenElement *pDrawOpacityElement = new TagOpenElement("draw:opacity");
-		if (mxStyle["draw:style"])
+		if (style["draw:style"])
 		{
-			pDrawGradientElement->addAttribute("draw:style", mxStyle["draw:style"]->getStr());
-			pDrawOpacityElement->addAttribute("draw:style", mxStyle["draw:style"]->getStr());
+			pDrawGradientElement->addAttribute("draw:style", style["draw:style"]->getStr());
+			pDrawOpacityElement->addAttribute("draw:style", style["draw:style"]->getStr());
 		}
 		else
 		{
@@ -1296,7 +1315,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 		pDrawOpacityElement->addAttribute("draw:name", sValue);
 
 		// ODG angle unit is 0.1 degree
-		double angle = mxStyle["draw:angle"] ? mxStyle["draw:angle"]->getDouble() : 0.0;
+		double angle = style["draw:angle"] ? style["draw:angle"]->getDouble() : 0.0;
 		while(angle < 0)
 			angle += 360;
 		while(angle > 360)
@@ -1305,17 +1324,17 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 		pDrawGradientElement->addAttribute("draw:angle", sValue);
 		pDrawOpacityElement->addAttribute("draw:angle", sValue);
 
-		if (!mxGradient.count())
+		if (!gradient.count())
 		{
-			if (mxStyle["draw:start-color"])
-				pDrawGradientElement->addAttribute("draw:start-color", mxStyle["draw:start-color"]->getStr());
-			if (mxStyle["draw:end-color"])
-				pDrawGradientElement->addAttribute("draw:end-color", mxStyle["draw:end-color"]->getStr());
+			if (style["draw:start-color"])
+				pDrawGradientElement->addAttribute("draw:start-color", style["draw:start-color"]->getStr());
+			if (style["draw:end-color"])
+				pDrawGradientElement->addAttribute("draw:end-color", style["draw:end-color"]->getStr());
 
-			if (mxStyle["draw:border"])
+			if (style["draw:border"])
 			{
-				pDrawGradientElement->addAttribute("draw:border", mxStyle["draw:border"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:border", mxStyle["draw:border"]->getStr());
+				pDrawGradientElement->addAttribute("draw:border", style["draw:border"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:border", style["draw:border"]->getStr());
 			}
 			else
 			{
@@ -1323,45 +1342,45 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 				pDrawOpacityElement->addAttribute("draw:border", "0%");
 			}
 
-			if (mxStyle["svg:cx"])
+			if (style["svg:cx"])
 			{
-				pDrawGradientElement->addAttribute("draw:cx", mxStyle["svg:cx"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cx", mxStyle["svg:cx"]->getStr());
+				pDrawGradientElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
 			}
-			else if (mxStyle["draw:cx"])
+			else if (style["draw:cx"])
 			{
-				pDrawGradientElement->addAttribute("draw:cx", mxStyle["draw:cx"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cx", mxStyle["draw:cx"]->getStr());
-			}
-
-			if (mxStyle["svg:cy"])
-			{
-				pDrawGradientElement->addAttribute("draw:cy", mxStyle["svg:cy"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cy", mxStyle["svg:cy"]->getStr());
-			}
-			else if (mxStyle["draw:cx"])
-			{
-				pDrawGradientElement->addAttribute("draw:cx", mxStyle["svg:cx"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cx", mxStyle["svg:cx"]->getStr());
+				pDrawGradientElement->addAttribute("draw:cx", style["draw:cx"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:cx", style["draw:cx"]->getStr());
 			}
 
-			if (mxStyle["draw:start-intensity"])
-				pDrawGradientElement->addAttribute("draw:start-intensity", mxStyle["draw:start-intensity"]->getStr());
+			if (style["svg:cy"])
+			{
+				pDrawGradientElement->addAttribute("draw:cy", style["svg:cy"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:cy", style["svg:cy"]->getStr());
+			}
+			else if (style["draw:cx"])
+			{
+				pDrawGradientElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
+			}
+
+			if (style["draw:start-intensity"])
+				pDrawGradientElement->addAttribute("draw:start-intensity", style["draw:start-intensity"]->getStr());
 			else
 				pDrawGradientElement->addAttribute("draw:start-intensity", "100%");
 
-			if (mxStyle["draw:end-intensity"])
-				pDrawGradientElement->addAttribute("draw:end-intensity", mxStyle["draw:end-intensity"]->getStr());
+			if (style["draw:end-intensity"])
+				pDrawGradientElement->addAttribute("draw:end-intensity", style["draw:end-intensity"]->getStr());
 			else
 				pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
 
-			if (mxStyle["libwpg:start-opacity"])
-				pDrawOpacityElement->addAttribute("draw:start", mxStyle["libwpg:start-opacity"]->getStr());
+			if (style["libwpg:start-opacity"])
+				pDrawOpacityElement->addAttribute("draw:start", style["libwpg:start-opacity"]->getStr());
 			else
 				pDrawOpacityElement->addAttribute("draw:start", "100%");
 
-			if (mxStyle["libwpg:end-opacity"])
-				pDrawOpacityElement->addAttribute("draw:end", mxStyle["libwpg:end-opacity"]->getStr());
+			if (style["libwpg:end-opacity"])
+				pDrawOpacityElement->addAttribute("draw:end", style["libwpg:end-opacity"]->getStr());
 			else
 				pDrawOpacityElement->addAttribute("draw:end", "100%");
 
@@ -1370,35 +1389,35 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 
 			// Work around a mess in LibreOffice where both opacities of 100% are interpreted as complete transparency
 			// Nevertheless, when one is different, immediately, they are interpreted correctly
-			if (mxStyle["libwpg:start-opacity"] && mxStyle["libwpg:end-opacity"]
-			        && (mxStyle["libwpg:start-opacity"]->getDouble() != 1.0 || mxStyle["libwpg:end-opacity"]->getDouble() != 1.0))
+			if (style["libwpg:start-opacity"] && style["libwpg:end-opacity"]
+			        && (style["libwpg:start-opacity"]->getDouble() != 1.0 || style["libwpg:end-opacity"]->getDouble() != 1.0))
 			{
 				bUseOpacityGradient = true;
 				mGraphicsGradientStyles.push_back(pDrawOpacityElement);
 				mGraphicsGradientStyles.push_back(new TagCloseElement("draw:opacity"));
 			}
 		}
-		else if(mxGradient.count() >= 2)
+		else if(gradient.count() >= 2)
 		{
 			sValue.sprintf("%i", (unsigned)(angle*10));
 			pDrawGradientElement->addAttribute("draw:angle", sValue);
 
-			pDrawGradientElement->addAttribute("draw:start-color", mxGradient[1]["svg:stop-color"]->getStr());
-			pDrawGradientElement->addAttribute("draw:end-color", mxGradient[0]["svg:stop-color"]->getStr());
-			if (mxStyle["svg:cx"])
-				pDrawGradientElement->addAttribute("draw:cx", mxStyle["svg:cx"]->getStr());
-			if (mxStyle["svg:cy"])
-				pDrawGradientElement->addAttribute("draw:cy", mxStyle["svg:cy"]->getStr());
-			if (mxGradient[1]["svg:stop-opacity"])
+			pDrawGradientElement->addAttribute("draw:start-color", gradient[1]["svg:stop-color"]->getStr());
+			pDrawGradientElement->addAttribute("draw:end-color", gradient[0]["svg:stop-color"]->getStr());
+			if (style["svg:cx"])
+				pDrawGradientElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
+			if (style["svg:cy"])
+				pDrawGradientElement->addAttribute("draw:cy", style["svg:cy"]->getStr());
+			if (gradient[1]["svg:stop-opacity"])
 			{
-				pDrawOpacityElement->addAttribute("draw:start", mxGradient[1]["svg:stop-opacity"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:start", gradient[1]["svg:stop-opacity"]->getStr());
 				bUseOpacityGradient = true;
 			}
 			else
 				pDrawOpacityElement->addAttribute("draw:start", "100%");
-			if (mxGradient[0]["svg:stop-opacity"])
+			if (gradient[0]["svg:stop-opacity"])
 			{
-				pDrawOpacityElement->addAttribute("draw:end", mxGradient[0]["svg:stop-opacity"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:end", gradient[0]["svg:stop-opacity"]->getStr());
 				bUseOpacityGradient = true;
 			}
 			else
@@ -1414,7 +1433,7 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 		}
 		else
 		{
-			/* if mxGradient.count() == 1 for some reason we would leak
+			/* if gradient.count() == 1 for some reason we would leak
 			 * pDrawGradientElement
 			 */
 			delete pDrawGradientElement;
@@ -1423,8 +1442,8 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 			delete pDrawOpacityElement;
 	}
 
-	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "bitmap" &&
-	        mxStyle["draw:fill-image"] && mxStyle["libwpg:mime-type"])
+	if(style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap" &&
+	        style["draw:fill-image"] && style["libwpg:mime-type"])
 	{
 		TagOpenElement *pDrawBitmapElement = new TagOpenElement("draw:fill-image");
 		WPXString sValue;
@@ -1432,174 +1451,163 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 		pDrawBitmapElement->addAttribute("draw:name", sValue);
 		mGraphicsBitmapStyles.push_back(pDrawBitmapElement);
 		mGraphicsBitmapStyles.push_back(new TagOpenElement("office:binary-data"));
-		mGraphicsBitmapStyles.push_back(new CharDataElement(mxStyle["draw:fill-image"]->getStr()));
+		mGraphicsBitmapStyles.push_back(new CharDataElement(style["draw:fill-image"]->getStr()));
 		mGraphicsBitmapStyles.push_back(new TagCloseElement("office:binary-data"));
 		mGraphicsBitmapStyles.push_back(new TagCloseElement("draw:fill-image"));
 	}
 
-	TagOpenElement *pStyleStyleElement = new TagOpenElement("style:style");
+	if (style["draw:color-mode"] && style["draw:color-mode"]->getStr().len() > 0)
+		element.addAttribute("draw:color-mode", style["draw:color-mode"]->getStr());
+	if (style["draw:luminance"] && style["draw:luminance"]->getStr().len() > 0)
+		element.addAttribute("draw:luminance", style["draw:luminance"]->getStr());
+	if (style["draw:contrast"] && style["draw:contrast"]->getStr().len() > 0)
+		element.addAttribute("draw:contrast", style["draw:contrast"]->getStr());
+	if (style["draw:gamma"] && style["draw:gamma"]->getStr().len() > 0)
+		element.addAttribute("draw:gamma", style["draw:gamma"]->getStr());
+	if (style["draw:red"] && style["draw:red"]->getStr().len() > 0)
+		element.addAttribute("draw:red", style["draw:red"]->getStr());
+	if (style["draw:green"] && style["draw:green"]->getStr().len() > 0)
+		element.addAttribute("draw:green", style["draw:green"]->getStr());
+	if (style["draw:blue"] && style["draw:blue"]->getStr().len() > 0)
+		element.addAttribute("draw:blue", style["draw:blue"]->getStr());
+
 	WPXString sValue;
-	sValue.sprintf("gr%i",  miGraphicsStyleIndex);
-	pStyleStyleElement->addAttribute("style:name", sValue);
-	pStyleStyleElement->addAttribute("style:family", "graphic");
-	pStyleStyleElement->addAttribute("style:parent-style-name", "standard");
-	mGraphicsAutomaticStyles.push_back(pStyleStyleElement);
-
-	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
-
-	if (mxStyle["draw:color-mode"] && mxStyle["draw:color-mode"]->getStr().len() > 0)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:color-mode", mxStyle["draw:color-mode"]->getStr());
-	if (mxStyle["draw:luminance"] && mxStyle["draw:luminance"]->getStr().len() > 0)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:luminance", mxStyle["draw:luminance"]->getStr());
-	if (mxStyle["draw:contrast"] && mxStyle["draw:contrast"]->getStr().len() > 0)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:contrast", mxStyle["draw:contrast"]->getStr());
-	if (mxStyle["draw:gamma"] && mxStyle["draw:gamma"]->getStr().len() > 0)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:gamma", mxStyle["draw:gamma"]->getStr());
-	if (mxStyle["draw:red"] && mxStyle["draw:red"]->getStr().len() > 0)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:red", mxStyle["draw:red"]->getStr());
-	if (mxStyle["draw:green"] && mxStyle["draw:green"]->getStr().len() > 0)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:green", mxStyle["draw:green"]->getStr());
-	if (mxStyle["draw:blue"] && mxStyle["draw:blue"]->getStr().len() > 0)
-		pStyleGraphicsPropertiesElement->addAttribute("draw:blue", mxStyle["draw:blue"]->getStr());
-
-	if (mxStyle["draw:stroke"] && mxStyle["draw:stroke"]->getStr() == "none")
-		pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "none");
+	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "none")
+		element.addAttribute("draw:stroke", "none");
 	else
 	{
-		if (mxStyle["svg:stroke-width"])
-			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-width", mxStyle["svg:stroke-width"]->getStr());
+		if (style["svg:stroke-width"])
+			element.addAttribute("svg:stroke-width", style["svg:stroke-width"]->getStr());
 
-		if (mxStyle["svg:stroke-color"])
-			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-color", mxStyle["svg:stroke-color"]->getStr());
+		if (style["svg:stroke-color"])
+			element.addAttribute("svg:stroke-color", style["svg:stroke-color"]->getStr());
 
-		if (mxStyle["svg:stroke-opacity"])
-			pStyleGraphicsPropertiesElement->addAttribute("svg:stroke-opacity", mxStyle["svg:stroke-opacity"]->getStr());
+		if (style["svg:stroke-opacity"])
+			element.addAttribute("svg:stroke-opacity", style["svg:stroke-opacity"]->getStr());
 
-		if (mxStyle["svg:stroke-linejoin"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke-linejoin", mxStyle["svg:stroke-linejoin"]->getStr());
+		if (style["svg:stroke-linejoin"])
+			element.addAttribute("draw:stroke-linejoin", style["svg:stroke-linejoin"]->getStr());
 
-		if (mxStyle["svg:stroke-linecap"])
-			pStyleGraphicsPropertiesElement->addAttribute("svg:stoke-linecap", mxStyle["svg:stroke-linecap"]->getStr());
+		if (style["svg:stroke-linecap"])
+			element.addAttribute("svg:stoke-linecap", style["svg:stroke-linecap"]->getStr());
 
-		if (mxStyle["draw:stroke"] && mxStyle["draw:stroke"]->getStr() == "dash")
+		if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
 		{
-			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "dash");
+			element.addAttribute("draw:stroke", "dash");
 			sValue.sprintf("Dash_%i", miDashIndex-1);
-			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke-dash", sValue);
+			element.addAttribute("draw:stroke-dash", sValue);
 		}
 		else
-			pStyleGraphicsPropertiesElement->addAttribute("draw:stroke", "solid");
+			element.addAttribute("draw:stroke", "solid");
 	}
 
-	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "none")
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "none");
+	if(style["draw:fill"] && style["draw:fill"]->getStr() == "none")
+		element.addAttribute("draw:fill", "none");
 	else
 	{
-		if (mxStyle["draw:shadow"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:shadow", mxStyle["draw:shadow"]->getStr());
+		if (style["draw:shadow"])
+			element.addAttribute("draw:shadow", style["draw:shadow"]->getStr());
 		else
-			pStyleGraphicsPropertiesElement->addAttribute("draw:shadow", "hidden");
-		if (mxStyle["draw:shadow-offset-x"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:shadow-offset-x", mxStyle["draw:shadow-offset-x"]->getStr());
-		if (mxStyle["draw:shadow-offset-y"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:shadow-offset-y", mxStyle["draw:shadow-offset-y"]->getStr());
-		if (mxStyle["draw:shadow-color"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:shadow-color", mxStyle["draw:shadow-color"]->getStr());
-		if (mxStyle["draw:shadow-opacity"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:shadow-opacity", mxStyle["draw:shadow-opacity"]->getStr());
-		if (mxStyle["svg:fill-rule"])
-			pStyleGraphicsPropertiesElement->addAttribute("svg:fill-rule", mxStyle["svg:fill-rule"]->getStr());
+			element.addAttribute("draw:shadow", "hidden");
+		if (style["draw:shadow-offset-x"])
+			element.addAttribute("draw:shadow-offset-x", style["draw:shadow-offset-x"]->getStr());
+		if (style["draw:shadow-offset-y"])
+			element.addAttribute("draw:shadow-offset-y", style["draw:shadow-offset-y"]->getStr());
+		if (style["draw:shadow-color"])
+			element.addAttribute("draw:shadow-color", style["draw:shadow-color"]->getStr());
+		if (style["draw:shadow-opacity"])
+			element.addAttribute("draw:shadow-opacity", style["draw:shadow-opacity"]->getStr());
+		if (style["svg:fill-rule"])
+			element.addAttribute("svg:fill-rule", style["svg:fill-rule"]->getStr());
 	}
 
-	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "solid")
+	if(style["draw:fill"] && style["draw:fill"]->getStr() == "solid")
 	{
-		pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
-		if (mxStyle["draw:fill-color"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", mxStyle["draw:fill-color"]->getStr());
-		if (mxStyle["draw:opacity"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:opacity", mxStyle["draw:opacity"]->getStr());
+		element.addAttribute("draw:fill", "solid");
+		if (style["draw:fill-color"])
+			element.addAttribute("draw:fill-color", style["draw:fill-color"]->getStr());
+		if (style["draw:opacity"])
+			element.addAttribute("draw:opacity", style["draw:opacity"]->getStr());
 	}
 
-	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "gradient")
+	if(style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
 	{
-		if (!mxGradient.count() || mxGradient.count() >= 2)
+		if (!gradient.count() || gradient.count() >= 2)
 		{
-			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "gradient");
+			element.addAttribute("draw:fill", "gradient");
 			sValue.sprintf("Gradient_%i", miGradientIndex-1);
-			pStyleGraphicsPropertiesElement->addAttribute("draw:fill-gradient-name", sValue);
+			element.addAttribute("draw:fill-gradient-name", sValue);
 			if (bUseOpacityGradient)
 			{
 				sValue.sprintf("Transparency_%i", miGradientIndex-1);
-				pStyleGraphicsPropertiesElement->addAttribute("draw:opacity-name", sValue);
+				element.addAttribute("draw:opacity-name", sValue);
 			}
 		}
 		else
 		{
-			if (mxGradient[0]["svg:stop-color"])
+			if (gradient[0]["svg:stop-color"])
 			{
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill-color", mxGradient[0]["svg:stop-color"]->getStr());
+				element.addAttribute("draw:fill", "solid");
+				element.addAttribute("draw:fill-color", gradient[0]["svg:stop-color"]->getStr());
 			}
 			else
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "solid");
+				element.addAttribute("draw:fill", "solid");
 		}
 	}
 
-	if(mxStyle["draw:fill"] && mxStyle["draw:fill"]->getStr() == "bitmap")
+	if(style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap")
 	{
-		if (mxStyle["draw:fill-image"] && mxStyle["libwpg:mime-type"])
+		if (style["draw:fill-image"] && style["libwpg:mime-type"])
 		{
-			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "bitmap");
+			element.addAttribute("draw:fill", "bitmap");
 			sValue.sprintf("Bitmap_%i", miBitmapIndex-1);
-			pStyleGraphicsPropertiesElement->addAttribute("draw:fill-image-name", sValue);
-			if (mxStyle["svg:width"])
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill-image-width", mxStyle["svg:width"]->getStr());
-			if (mxStyle["svg:height"])
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill-image-height", mxStyle["svg:height"]->getStr());
-			if (mxStyle["style:repeat"])
-				pStyleGraphicsPropertiesElement->addAttribute("style:repeat", mxStyle["style:repeat"]->getStr());
-			if (mxStyle["draw:fill-image-ref-point"])
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill-image-ref-point", mxStyle["draw:fill-image-ref-point"]->getStr());
-			if (mxStyle["draw:fill-image-ref-point-x"])
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill-image-ref-point-x", mxStyle["draw:fill-image-ref-point-x"]->getStr());
-			if (mxStyle["draw:fill-image-ref-point-y"])
-				pStyleGraphicsPropertiesElement->addAttribute("draw:fill-image-ref-point-y", mxStyle["draw:fill-image-ref-point-y"]->getStr());
+			element.addAttribute("draw:fill-image-name", sValue);
+			if (style["draw:fill-image-width"])
+				element.addAttribute("draw:fill-image-width", style["draw:fill-image-width"]->getStr());
+			else if (style["svg:width"])
+				element.addAttribute("draw:fill-image-width", style["svg:width"]->getStr());
+			if (style["draw:fill-image-height"])
+				element.addAttribute("draw:fill-image-height", style["draw:fill-image-height"]->getStr());
+			else if (style["svg:height"])
+				element.addAttribute("draw:fill-image-height", style["svg:height"]->getStr());
+			if (style["style:repeat"])
+				element.addAttribute("style:repeat", style["style:repeat"]->getStr());
+			if (style["draw:fill-image-ref-point"])
+				element.addAttribute("draw:fill-image-ref-point", style["draw:fill-image-ref-point"]->getStr());
+			if (style["draw:fill-image-ref-point-x"])
+				element.addAttribute("draw:fill-image-ref-point-x", style["draw:fill-image-ref-point-x"]->getStr());
+			if (style["draw:fill-image-ref-point-y"])
+				element.addAttribute("draw:fill-image-ref-point-y", style["draw:fill-image-ref-point-y"]->getStr());
 		}
 		else
-			pStyleGraphicsPropertiesElement->addAttribute("draw:fill", "none");
+			element.addAttribute("draw:fill", "none");
 	}
 
 
-	if(mxStyle["draw:marker-start-path"])
+	if(style["draw:marker-start-path"])
 	{
 		sValue.sprintf("StartMarker_%i", miStartMarkerIndex++);
-		pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start", sValue);
-		if (mxStyle["draw:marker-start-center"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start-center", mxStyle["draw:marker-start-center"]->getStr());
-		if (mxStyle["draw:marker-start-width"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start-width", mxStyle["draw:marker-start-width"]->getStr());
+		element.addAttribute("draw:marker-start", sValue);
+		if (style["draw:marker-start-center"])
+			element.addAttribute("draw:marker-start-center", style["draw:marker-start-center"]->getStr());
+		if (style["draw:marker-start-width"])
+			element.addAttribute("draw:marker-start-width", style["draw:marker-start-width"]->getStr());
 		else
-			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-start-width", "0.118in");
+			element.addAttribute("draw:marker-start-width", "0.118in");
 	}
-	if (mxStyle["draw:marker-end-path"])
+	if (style["draw:marker-end-path"])
 	{
 		sValue.sprintf("EndMarker_%i", miEndMarkerIndex++);
-		pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end", sValue);
-		if (mxStyle["draw:marker-end-center"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-center", mxStyle["draw:marker-end-center"]->getStr());
-		if (mxStyle["draw:marker-end-width"])
-			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-width", mxStyle["draw:marker-end-width"]->getStr());
+		element.addAttribute("draw:marker-end", sValue);
+		if (style["draw:marker-end-center"])
+			element.addAttribute("draw:marker-end-center", style["draw:marker-end-center"]->getStr());
+		if (style["draw:marker-end-width"])
+			element.addAttribute("draw:marker-end-width", style["draw:marker-end-width"]->getStr());
 		else
-			pStyleGraphicsPropertiesElement->addAttribute("draw:marker-end-width", "0.118in");
+			element.addAttribute("draw:marker-end-width", "0.118in");
 	}
-	if (mxStyle["style:mirror"])
-		pStyleGraphicsPropertiesElement->addAttribute("style:mirror", mxStyle["style:mirror"]->getStr());
-
-	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
-	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
-
-	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:style"));
-	miGraphicsStyleIndex++;
+	if (style["style:mirror"])
+		element.addAttribute("style:mirror", style["style:mirror"]->getStr());
 }
 
 void OdgGenerator::startEmbeddedGraphics(const WPXPropertyList &)
@@ -1610,7 +1618,7 @@ void OdgGenerator::endEmbeddedGraphics()
 {
 }
 
-void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPropertyListVector &)
+void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPropertyListVector &/*path*/)
 {
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	TagOpenElement *pStyleStyleOpenElement = new TagOpenElement("style:style");
@@ -1619,17 +1627,19 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 	sValue.sprintf("gr%i",  mpImpl->miGraphicsStyleIndex++);
 	pStyleStyleOpenElement->addAttribute("style:name", sValue);
 	pStyleStyleOpenElement->addAttribute("style:family", "graphic");
-	pStyleStyleOpenElement->addAttribute("style:parent-style-name", "standard");
+	pStyleStyleOpenElement->addAttribute("style:parent-style-name", "standart");
 	mpImpl->mGraphicsAutomaticStyles.push_back(pStyleStyleOpenElement);
 
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);
 	pDrawFrameOpenElement->addAttribute("draw:layer", "layout");
 
 	TagOpenElement *pStyleGraphicPropertiesOpenElement = new TagOpenElement("style:graphic-properties");
-	pStyleGraphicPropertiesOpenElement->addAttribute("draw:stroke", "none");
-	pStyleGraphicPropertiesOpenElement->addAttribute("svg:stroke-color", "#000000");
-	pStyleGraphicPropertiesOpenElement->addAttribute("draw:fill", "none");
-	pStyleGraphicPropertiesOpenElement->addAttribute("draw:fill-color", "#ffffff");
+	WPXPropertyList styleList(propList);
+	if (!propList["draw:stroke"])
+		styleList.insert("draw:stroke", "none");
+	if (!propList["draw:fill"])
+		styleList.insert("draw:fill", "none");
+	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList, WPXPropertyListVector());
 
 	double x = 0.0;
 	double y = 0.0;
@@ -1714,22 +1724,6 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 		pDrawFrameOpenElement->addAttribute("draw:textarea-vertical-align", propList["draw:textarea-vertical-align"]->getStr());
 		pStyleGraphicPropertiesOpenElement->addAttribute("draw:textarea-vertical-align", propList["draw:textarea-vertical-align"]->getStr());
 	}
-	if (propList["draw:fill"])
-	{
-		pDrawFrameOpenElement->addAttribute("draw:fill", propList["draw:fill"]->getStr());
-		pStyleGraphicPropertiesOpenElement->addAttribute("draw:fill", propList["draw:fill"]->getStr());
-	}
-	if (propList["draw:fill-color"])
-	{
-		pDrawFrameOpenElement->addAttribute("draw:fill-color", propList["draw:fill-color"]->getStr());
-		pStyleGraphicPropertiesOpenElement->addAttribute("draw:fill-color", propList["draw:fill-color"]->getStr());
-	}
-	if (propList["draw:opacity"])
-	{
-		pDrawFrameOpenElement->addAttribute("draw:opacity", propList["draw:opacity"]->getStr());
-		pStyleGraphicPropertiesOpenElement->addAttribute("draw:opacity", propList["draw:opacity"]->getStr());
-	}
-
 	WPXProperty *svg_x = WPXPropertyFactory::newInchProp(x);
 	WPXProperty *svg_y = WPXPropertyFactory::newInchProp(y);
 	if (angle != 0.0)
