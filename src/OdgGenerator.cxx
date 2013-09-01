@@ -1082,7 +1082,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 		}
 		else if (coord1Ok && (action[0] == 'Q' || action[0] == 'S'))
 		{
-			sElement.sprintf("%c%i %i %i %i %i %i", action[0], (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
+			sElement.sprintf("%c%i %i %i %i", action[0], (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
 			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
 			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
