@@ -1627,7 +1627,7 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 	sValue.sprintf("gr%i",  mpImpl->miGraphicsStyleIndex++);
 	pStyleStyleOpenElement->addAttribute("style:name", sValue);
 	pStyleStyleOpenElement->addAttribute("style:family", "graphic");
-	pStyleStyleOpenElement->addAttribute("style:parent-style-name", "standart");
+	pStyleStyleOpenElement->addAttribute("style:parent-style-name", "standard");
 	mpImpl->mGraphicsAutomaticStyles.push_back(pStyleStyleOpenElement);
 
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);
