@@ -39,6 +39,7 @@ public:
 	}
 	void setMasterPageName(WPXString &sMasterPageName)
 	{
+		if (mpsMasterPageName) delete mpsMasterPageName;
 		mpsMasterPageName = new WPXString(sMasterPageName);
 	}
 	const WPXString *getMasterPageName() const
