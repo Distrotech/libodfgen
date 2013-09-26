@@ -140,7 +140,7 @@ public:
 	OdfEmbeddedObject _findEmbeddedObjectHandler(const WPXString &mimeType);
 	OdfEmbeddedImage _findEmbeddedImageHandler(const WPXString &mimeType);
 
-	WPXString _getFrameName(WPXString val="");
+	unsigned _getObjectId(WPXString val="");
 
 	OdfDocumentHandler *mpHandler;
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
@@ -169,7 +169,7 @@ public:
 
 	std::vector<DocumentElement *> mFrameAutomaticStyles;
 
-	std::map<WPXString, WPXString, ltstr> mFrameLabelMap;
+	std::map<WPXString, unsigned, ltstr> mFrameIdMap;
 
 	// embedded object handlers
 	std::map<WPXString, OdfEmbeddedObject, ltstr > mObjectHandlers;
@@ -219,7 +219,7 @@ OdtGeneratorPrivate::OdtGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mWriterListStates(),
 	mParagraphManager(), mSpanManager(), mFontManager(),
 	mSectionStyles(), mTableStyles(),
-	mFrameStyles(), mFrameAutomaticStyles(), mFrameLabelMap(),
+	mFrameStyles(), mFrameAutomaticStyles(), mFrameIdMap(),
 	mObjectHandlers(), mImageHandlers(), mMetaData(),
 	miNumListStyles(0),
 	mBodyElements(),
@@ -310,16 +310,15 @@ OdfEmbeddedImage OdtGeneratorPrivate::_findEmbeddedImageHandler(const WPXString 
 	return 0;
 }
 
-WPXString OdtGeneratorPrivate::_getFrameName(WPXString val)
+unsigned OdtGeneratorPrivate::_getObjectId(WPXString val)
 {
 	bool hasLabel = val.cstr() && val.len();
-	if (hasLabel && mFrameLabelMap.find(val) != mFrameLabelMap.end())
-		return mFrameLabelMap.find(val)->second;
-	WPXString res;
-	res.sprintf("Object%i", miObjectNumber++);
+	if (hasLabel && mFrameIdMap.find(val) != mFrameIdMap.end())
+		return mFrameIdMap.find(val)->second;
+	unsigned id=miObjectNumber++;
 	if (hasLabel)
-		mFrameLabelMap[val]=res;
-	return res;
+		mFrameIdMap[val]=id;
+	return id;
 }
 
 OdtGenerator::OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
@@ -1228,7 +1227,12 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 	// First, let's create a Frame Style for this box
 	TagOpenElement *frameStyleOpenElement = new TagOpenElement("style:style");
 	WPXString frameStyleName;
-	frameStyleName.sprintf("GraphicFrame_%i", mpImpl->miObjectNumber);
+	unsigned objectId = 0;
+	if (propList["libwpd:frame-name"])
+		objectId= mpImpl->_getObjectId(propList["libwpd:frame-name"]->getStr());
+	else
+		objectId= mpImpl->_getObjectId("");
+	frameStyleName.sprintf("GraphicFrame_%i", objectId);
 	frameStyleOpenElement->addAttribute("style:name", frameStyleName);
 	frameStyleOpenElement->addAttribute("style:family", "graphic");
 
@@ -1287,7 +1291,7 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 	// Now, let's create an automatic style for this frame
 	TagOpenElement *frameAutomaticStyleElement = new TagOpenElement("style:style");
 	WPXString frameAutomaticStyleName;
-	frameAutomaticStyleName.sprintf("fr%i", mpImpl->miObjectNumber);
+	frameAutomaticStyleName.sprintf("fr%i", objectId);
 	frameAutomaticStyleElement->addAttribute("style:name", frameAutomaticStyleName);
 	frameAutomaticStyleElement->addAttribute("style:family", "graphic");
 	frameAutomaticStyleElement->addAttribute("style:parent-style-name", frameStyleName);
@@ -1354,10 +1358,7 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	drawFrameOpenElement->addAttribute("draw:style-name", frameAutomaticStyleName);
 	WPXString objectName;
-	if (propList["libwpd:frame-name"])
-		objectName=mpImpl->_getFrameName(propList["libwpd:frame-name"]->getStr());
-	else
-		objectName=mpImpl->_getFrameName();
+	objectName.sprintf("Object%i", objectId);
 	drawFrameOpenElement->addAttribute("draw:name", objectName);
 	if (propList["text:anchor-type"])
 		drawFrameOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
@@ -1485,8 +1486,9 @@ void OdtGenerator::openTextBox(const WPXPropertyList &propList)
 	TagOpenElement *textBoxOpenElement = new TagOpenElement("draw:text-box");
 	if (propList["libwpd:next-frame-name"])
 	{
-		WPXString frameName("");
-		frameName = mpImpl->_getFrameName(propList["libwpd:next-frame-name"]->getStr());
+		WPXString frameName;
+		unsigned id=mpImpl->_getObjectId(propList["libwpd:next-frame-name"]->getStr());
+		frameName.sprintf("Object%i", id);
 		textBoxOpenElement->addAttribute("draw:chain-next-name", frameName);
 	}
 	mpImpl->mpCurrentContentElements->push_back(textBoxOpenElement);
