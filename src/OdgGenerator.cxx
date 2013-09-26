@@ -1639,29 +1639,10 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 		styleList.insert("draw:stroke", "none");
 	if (!propList["draw:fill"])
 		styleList.insert("draw:fill", "none");
+	// the transformation is managed latter, so even if this changes nothing...
+	if (propList["libwpg:rotate"])
+		styleList.insert("libwpg:rotate", 0);
 	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList, WPXPropertyListVector());
-
-	double x = 0.0;
-	double y = 0.0;
-	double height = 0.0;
-	double width = 0.0;
-	if (propList["svg:x"])
-		x = propList["svg:x"]->getDouble();
-	if (propList["svg:y"])
-		y = propList["svg:y"]->getDouble();
-	if (propList["svg:width"])
-		width = propList["svg:width"]->getDouble();
-	if (propList["svg:height"])
-		height = propList["svg:height"]->getDouble();
-
-	double angle(propList["libwpg:rotate"] ? - M_PI * propList["libwpg:rotate"]->getDouble() / 180.0 : 0.0);
-	if (angle != 0.0)
-	{
-		double deltax((width*cos(angle)+height*sin(angle)-width)/2.0);
-		double deltay((-width*sin(angle)+height*cos(angle)-height)/2.0);
-		x -= deltax;
-		y -= deltay;
-	}
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{
@@ -1723,6 +1704,32 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 	{
 		pDrawFrameOpenElement->addAttribute("draw:textarea-vertical-align", propList["draw:textarea-vertical-align"]->getStr());
 		pStyleGraphicPropertiesOpenElement->addAttribute("draw:textarea-vertical-align", propList["draw:textarea-vertical-align"]->getStr());
+	}
+
+	double x = 0.0;
+	double y = 0.0;
+	if (propList["svg:x"])
+		x = propList["svg:x"]->getDouble();
+	if (propList["svg:y"])
+		y = propList["svg:y"]->getDouble();
+	double angle(propList["libwpg:rotate"] ? - M_PI * propList["libwpg:rotate"]->getDouble() / 180.0 : 0.0);
+	if (angle != 0.0)
+	{
+		// compute position: make sure that the center position remains invariant
+		double width = 0.0;
+		double height = 0.0;
+		if (propList["libwpg:rotate-cx"])
+			width = 2.0*(propList["libwpg:rotate-cx"]->getDouble()-x);
+		else if (propList["svg:width"])
+			width = propList["svg:width"]->getDouble();
+		if (propList["libwpg:rotate-cy"])
+			height = 2.0*(propList["libwpg:rotate-cy"]->getDouble()-y);
+		else if (propList["svg:height"])
+			height = propList["svg:height"]->getDouble();
+		double deltax((width*cos(angle)+height*sin(angle)-width)/2.0);
+		double deltay((-width*sin(angle)+height*cos(angle)-height)/2.0);
+		x -= deltax;
+		y -= deltay;
 	}
 	WPXProperty *svg_x = WPXPropertyFactory::newInchProp(x);
 	WPXProperty *svg_y = WPXPropertyFactory::newInchProp(y);
