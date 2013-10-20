@@ -1325,14 +1325,15 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 	if (propList["fo:max-height"])
 		frameAutomaticStylePropertiesElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
 
-	// check if the frame has border, background attributes
+	// check if the frame has border, shadow, background attributes
 	static char const *(bordersString[])=
 	{
 		"fo:border","fo:border-top","fo:border-left","fo:border-bottom","fo:border-right",
 		"style:border-line-width","style:border-line-width-top","style:border-line-width-left",
-		"style:border-line-width-bottom","style:border-line-width-right"
+		"style:border-line-width-bottom","style:border-line-width-right",
+		"style:shadow"
 	};
-	for (int b = 0; b < 10; b++)
+	for (int b = 0; b < 11; b++)
 	{
 		if (propList[bordersString[b]])
 			frameAutomaticStylePropertiesElement->addAttribute(bordersString[b], propList[bordersString[b]]->getStr());
