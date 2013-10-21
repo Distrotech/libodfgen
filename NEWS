@@ -1,0 +1,19 @@
+libodfgen 0.0.3
+
+- handle more table properties
+- more SVG path commands
+- allow to define center of rotation for a textbox
+- make linked text boxes more robust
+- add support for generating presentations (libkeynote)
+
+libodfgen 0.0.2
+
+- move public headers to inc/
+
+libodfgen 0.0.1
+
+- build fixes
+
+libodfgen 0.0.0
+
+- initial release
