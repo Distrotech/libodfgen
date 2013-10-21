@@ -48,6 +48,23 @@ PKG_CHECK_MODULES([WPG],[
 AC_SUBST([WPG_CFLAGS])
 AC_SUBST([WPG_LIGS])
 
+AC_ARG_ENABLE([odpgen],
+	[AS_HELP_STRING([--enable-odpgen],
+		[Enable generation of presentations (using libkeynote interface).])],
+	[enable_odpgen=$enableval],
+	[enable_odpgen=no]
+)
+
+AS_IF([test x"$enable_odpgen" != "xno"],[
+    PKG_CHECK_MODULES([KEYNOTE],[
+		libkeynote-0.0
+    ])
+    AC_SUBST([KEYNOTE_CFLAGS])
+    AC_SUBST([KEYNOTE_LIBS])
+
+	AC_DEFINE([ENABLE_ODPGEN],[1],[Enable generation of presentations (using libkeynote interface).])
+])
+
 # =================================
 # Libtool/Version Makefile settings
 # =================================
@@ -263,6 +280,7 @@ AC_MSG_NOTICE([
 ==============================================================================
 Build configuration:
 	debug:           ${enable_debug}
+        pres. support:   ${enable_libkeynote}
 	shared_ptr:      ${with_sharedptr}
 	werror:          ${enable_werror}
 ==============================================================================

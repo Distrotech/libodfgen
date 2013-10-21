@@ -28,6 +28,7 @@
 #include "OdfDocumentHandler.hxx"
 #include "OdtGenerator.hxx"
 #include "OdgGenerator.hxx"
+#include "OdpGenerator.hxx"
 
 #endif
 

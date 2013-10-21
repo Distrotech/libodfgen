@@ -13,9 +13,10 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_include_HEADERS = 
 	$(top_srcdir)/inc/libodfgen/OdfDocumentHandler.hxx \
 	$(top_srcdir)/inc/libodfgen/OdtGenerator.hxx \
 	$(top_srcdir)/inc/libodfgen/OdgGenerator.hxx \
+	$(top_srcdir)/inc/libodfgen/OdpGenerator.hxx \
 	$(top_srcdir)/inc/libodfgen/libodfgen.hxx
 
-AM_CXXFLAGS = -I$(top_srcdir)/inc/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(DEBUG_CXXFLAGS)
+AM_CXXFLAGS = -I$(top_srcdir)/inc/ $(WPD_CFLAGS) $(WPG_CFLAGS) $(KEYNOTE_CFLAGS) $(DEBUG_CXXFLAGS)
 
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_LIBADD = @LIBODFGEN_WIN32_RESOURCE@ $(WPD_LIBS)
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_DEPENDENCIES = @LIBODFGEN_WIN32_RESOURCE@
@@ -40,6 +41,7 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
 	TableStyle.hxx \
 	TextRunStyle.cxx \
 	TextRunStyle.hxx \
+	OdpGenerator.cxx \
 	OdtGenerator.cxx \
 	OdgGenerator.cxx
 
