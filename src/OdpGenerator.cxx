@@ -118,6 +118,7 @@ public:
 	bool mbIsTextBox;
 	bool mbIsTextLine;
 	bool mbIsTextOnPath;
+	bool mInComment;
 
 private:
 	OdpGeneratorPrivate(const OdpGeneratorPrivate &);
@@ -153,7 +154,8 @@ OdpGeneratorPrivate::OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mxStreamType(streamType),
 	mbIsTextBox(false),
 	mbIsTextLine(false),
-	mbIsTextOnPath(false)
+	mbIsTextOnPath(false),
+	mInComment(false)
 {
 }
 
@@ -1687,12 +1689,43 @@ void OdpGenerator::closeTable()
 {
 }
 
-void OdpGenerator::startComment(const ::WPXPropertyList &/*propList*/)
+void OdpGenerator::startComment(const ::WPXPropertyList &propList)
 {
+	if (mpImpl->mInComment)
+	{
+		ODFGEN_DEBUG_MSG(("a comment within a comment?!\n"));
+		return;
+	}
+
+	mpImpl->mInComment = true;
+
+	TagOpenElement *const commentElement = new TagOpenElement("officeooo:annotation");
+	// WARNING: this is not ODF!
+	commentElement->addAttribute("xmlns:officeooo", "http://openoffice.org/2009/office");
+
+	// position & size
+	if (propList["svg:x"])
+		commentElement->addAttribute("svg:x", doubleToString(72 * propList["svg:x"]->getDouble()));
+	if (propList["svg:y"])
+		commentElement->addAttribute("svg:y", doubleToString(72 * propList["svg:y"]->getDouble()));
+	if (propList["svg:width"])
+		commentElement->addAttribute("svg:width", doubleToString(72 * propList["svg:width"]->getDouble()));
+	if (propList["svg:height"])
+		commentElement->addAttribute("svg:height", doubleToString(72 * propList["svg:height"]->getDouble()));
+
+	mpImpl->mBodyElements.push_back(commentElement);
 }
 
 void OdpGenerator::endComment()
 {
+	if (!mpImpl->mInComment)
+	{
+		ODFGEN_DEBUG_MSG(("there is no comment to close\n"));
+		return;
+	}
+
+	mpImpl->mInComment = false;
+	mpImpl->mBodyElements.push_back(new TagCloseElement("office:annotation"));
 }
 
 void OdpGenerator::startNotes(const ::WPXPropertyList &/*propList*/)
