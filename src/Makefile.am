@@ -29,6 +29,8 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
 	DocumentElement.hxx \
 	FontStyle.cxx \
 	FontStyle.hxx \
+	GraphicFunctions.cxx \
+	GraphicFunctions.hxx \
 	InternalHandler.cxx \
 	InternalHandler.hxx \
 	ListStyle.cxx \
