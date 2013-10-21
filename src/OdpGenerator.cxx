@@ -33,6 +33,7 @@
 #include "FilterInternal.hxx"
 #include "DocumentElement.hxx"
 #include "GraphicFunctions.hxx"
+#include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 #include "FontStyle.hxx"
 #include <locale.h>
@@ -99,6 +100,10 @@ public:
 	// font styles
 	FontStyleManager mFontManager;
 
+	// table styles
+	std::vector<TableStyle *> mTableStyles;
+	TableStyle *mpCurrentTableStyle;
+
 	OdfDocumentHandler *mpHandler;
 
 	::WPXPropertyList mxStyle;
@@ -119,6 +124,8 @@ public:
 	bool mbIsTextLine;
 	bool mbIsTextOnPath;
 	bool mInComment;
+	bool mHeaderRow;
+	bool mTableCellOpened;
 
 private:
 	OdpGeneratorPrivate(const OdpGeneratorPrivate &);
@@ -138,6 +145,8 @@ OdpGeneratorPrivate::OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mParagraphManager(),
 	mSpanManager(),
 	mFontManager(),
+	mTableStyles(),
+	mpCurrentTableStyle(0),
 	mpHandler(pHandler),
 	mxStyle(), mxGradient(),
 	miGradientIndex(1),
@@ -155,7 +164,9 @@ OdpGeneratorPrivate::OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mbIsTextBox(false),
 	mbIsTextLine(false),
 	mbIsTextOnPath(false),
-	mInComment(false)
+	mInComment(false),
+	mHeaderRow(false),
+	mTableCellOpened(false)
 {
 }
 
@@ -1661,32 +1672,144 @@ void OdpGenerator::closeListElement()
 {
 }
 
-void OdpGenerator::openTable(const ::WPXPropertyList &/*propList*/, const ::WPXPropertyListVector &/*columns*/)
+void OdpGenerator::openTable(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &columns)
 {
+	if (mpImpl->mInComment)
+		return;
+
+	WPXString sTableName;
+	sTableName.sprintf("Table%i", mpImpl->mTableStyles.size());
+
+	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
+	// state which is transmitted inside the page. could this lead to unacceptable behaviour?
+	// WLACH_REFACTORING: characterize this behaviour, probably should nip it at the bud within libwpd
+	TableStyle *pTableStyle = new TableStyle(propList, columns, sTableName.cstr());
+
+	mpImpl->mTableStyles.push_back(pTableStyle);
+
+	mpImpl->mpCurrentTableStyle = pTableStyle;
+
+	TagOpenElement *pTableOpenElement = new TagOpenElement("table:table");
+
+	pTableOpenElement->addAttribute("table:name", sTableName.cstr());
+	pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
+	mpImpl->mBodyElements.push_back(pTableOpenElement);
+
+	for (int i=0; i<pTableStyle->getNumColumns(); ++i)
+	{
+		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
+		WPXString sColumnStyleName;
+		sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
+		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
+		mpImpl->mBodyElements.push_back(pTableColumnOpenElement);
+
+		TagCloseElement *pTableColumnCloseElement = new TagCloseElement("table:table-column");
+		mpImpl->mBodyElements.push_back(pTableColumnCloseElement);
+	}
 }
 
-void OdpGenerator::openTableRow(const ::WPXPropertyList &/*propList*/)
+void OdpGenerator::openTableRow(const ::WPXPropertyList &propList)
 {
+	if (mpImpl->mInComment)
+		return;
+
+	if (!mpImpl->mpCurrentTableStyle)
+	{
+		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableRow called with no table\n"));
+		return;
+	}
+
+	if (propList["libwpd:is-header-row"] && (propList["libwpd:is-header-row"]->getInt()))
+	{
+		mpImpl->mBodyElements.push_back(new TagOpenElement("table:table-header-rows"));
+		mpImpl->mHeaderRow = true;
+	}
+
+	WPXString sTableRowStyleName;
+	sTableRowStyleName.sprintf("%s.Row%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableRowStyles());
+	TableRowStyle *pTableRowStyle = new TableRowStyle(propList, sTableRowStyleName.cstr());
+	mpImpl->mpCurrentTableStyle->addTableRowStyle(pTableRowStyle);
+
+	TagOpenElement *pTableRowOpenElement = new TagOpenElement("table:table-row");
+	pTableRowOpenElement->addAttribute("table:style-name", sTableRowStyleName);
+	mpImpl->mBodyElements.push_back(pTableRowOpenElement);
 }
 
 void OdpGenerator::closeTableRow()
 {
+	if (mpImpl->mInComment || !mpImpl->mpCurrentTableStyle)
+		return;
+
+	mpImpl->mBodyElements.push_back(new TagCloseElement("table:table-row"));
+	if (mpImpl->mHeaderRow)
+	{
+		mpImpl->mBodyElements.push_back(new TagCloseElement("table:table-header-rows"));
+		mpImpl->mHeaderRow = false;
+	}
 }
 
-void OdpGenerator::openTableCell(const ::WPXPropertyList &/*propList*/)
+void OdpGenerator::openTableCell(const ::WPXPropertyList &propList)
 {
+	if (!mpImpl->mpCurrentTableStyle)
+	{
+		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableCell called with no table\n"));
+		return;
+	}
+
+	if (mpImpl->mTableCellOpened)
+	{
+		ODFGEN_DEBUG_MSG(("a table cell in a table cell?!\n"));
+		return;
+	}
+
+	WPXString sTableCellStyleName;
+	sTableCellStyleName.sprintf( "%s.Cell%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableCellStyles());
+	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
+	mpImpl->mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
+
+	TagOpenElement *pTableCellOpenElement = new TagOpenElement("table:table-cell");
+	pTableCellOpenElement->addAttribute("table:style-name", sTableCellStyleName);
+	if (propList["table:number-columns-spanned"])
+		pTableCellOpenElement->addAttribute("table:number-columns-spanned",
+		                                    propList["table:number-columns-spanned"]->getStr().cstr());
+	if (propList["table:number-rows-spanned"])
+		pTableCellOpenElement->addAttribute("table:number-rows-spanned",
+		                                    propList["table:number-rows-spanned"]->getStr().cstr());
+	mpImpl->mBodyElements.push_back(pTableCellOpenElement);
+
+	mpImpl->mTableCellOpened = true;
 }
 
 void OdpGenerator::closeTableCell()
 {
+	if (mpImpl->mInComment || !mpImpl->mpCurrentTableStyle)
+		return;
+
+	if (!mpImpl->mTableCellOpened)
+	{
+		ODFGEN_DEBUG_MSG(("no table cell is opened\n"));
+		return;
+	}
+
+	mpImpl->mBodyElements.push_back(new TagCloseElement("table:table-cell"));
+	mpImpl->mTableCellOpened = false;
 }
 
 void OdpGenerator::insertCoveredTableCell(const ::WPXPropertyList &/*propList*/)
 {
+	if (mpImpl->mInComment || !mpImpl->mpCurrentTableStyle)
+		return;
+
+	mpImpl->mBodyElements.push_back(new TagOpenElement("table:covered-table-cell"));
+	mpImpl->mBodyElements.push_back(new TagCloseElement("table:covered-table-cell"));
 }
 
 void OdpGenerator::closeTable()
 {
+	if (!mpImpl->mInComment)
+	{
+		mpImpl->mBodyElements.push_back(new TagCloseElement("table:table"));
+	}
 }
 
 void OdpGenerator::startComment(const ::WPXPropertyList &propList)
