@@ -70,6 +70,35 @@ static WPXString doubleToString(const double value)
 namespace
 {
 
+struct GeneratorState
+{
+	bool mbIsTextBox;
+	bool mbIsTextLine;
+	bool mbIsTextOnPath;
+	bool mInComment;
+	bool mHeaderRow;
+	bool mTableCellOpened;
+	bool mInNotes;
+
+	GeneratorState();
+};
+
+GeneratorState::GeneratorState()
+	: mbIsTextBox(false)
+	, mbIsTextLine(false)
+	, mbIsTextOnPath(false)
+	, mInComment(false)
+	, mHeaderRow(false)
+	, mTableCellOpened(false)
+	, mInNotes(false)
+{
+}
+
+}
+
+namespace
+{
+
 // list state
 struct ListState
 {
@@ -159,16 +188,9 @@ public:
 
 	const OdfStreamType mxStreamType;
 
-	// document state
+	// generator state
+	GeneratorState mState;
 	std::stack<ListState> mListStates;
-
-	bool mbIsTextBox;
-	bool mbIsTextLine;
-	bool mbIsTextOnPath;
-	bool mInComment;
-	bool mHeaderRow;
-	bool mTableCellOpened;
-	bool mInNotes;
 
 private:
 	OdpGeneratorPrivate(const OdpGeneratorPrivate &);
@@ -204,14 +226,8 @@ OdpGeneratorPrivate::OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mfHeight(0.0),
 	mfMaxHeight(0.0),
 	mxStreamType(streamType),
-	mListStates(),
-	mbIsTextBox(false),
-	mbIsTextLine(false),
-	mbIsTextOnPath(false),
-	mInComment(false),
-	mHeaderRow(false),
-	mTableCellOpened(false),
-	mInNotes(false)
+	mState(),
+	mListStates()
 {
 }
 
@@ -1656,16 +1672,16 @@ void OdpGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 	mpImpl->mGraphicsAutomaticStyles.push_back(pStyleGraphicPropertiesOpenElement);
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:style"));
-	mpImpl->mbIsTextBox = true;
+	mpImpl->mState.mbIsTextBox = true;
 }
 
 void OdpGenerator::endTextObject()
 {
-	if (mpImpl->mbIsTextBox)
+	if (mpImpl->mState.mbIsTextBox)
 	{
 		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:text-box"));
 		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
-		mpImpl->mbIsTextBox = false;
+		mpImpl->mState.mbIsTextBox = false;
 	}
 }
 
@@ -1808,7 +1824,7 @@ void OdpGenerator::closeListElement()
 
 void OdpGenerator::openTable(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &columns)
 {
-	if (mpImpl->mInComment)
+	if (mpImpl->mState.mInComment)
 		return;
 
 	WPXString sTableName;
@@ -1844,7 +1860,7 @@ void OdpGenerator::openTable(const ::WPXPropertyList &propList, const ::WPXPrope
 
 void OdpGenerator::openTableRow(const ::WPXPropertyList &propList)
 {
-	if (mpImpl->mInComment)
+	if (mpImpl->mState.mInComment)
 		return;
 
 	if (!mpImpl->mpCurrentTableStyle)
@@ -1856,7 +1872,7 @@ void OdpGenerator::openTableRow(const ::WPXPropertyList &propList)
 	if (propList["libwpd:is-header-row"] && (propList["libwpd:is-header-row"]->getInt()))
 	{
 		mpImpl->mBodyElements.push_back(new TagOpenElement("table:table-header-rows"));
-		mpImpl->mHeaderRow = true;
+		mpImpl->mState.mHeaderRow = true;
 	}
 
 	WPXString sTableRowStyleName;
@@ -1871,14 +1887,14 @@ void OdpGenerator::openTableRow(const ::WPXPropertyList &propList)
 
 void OdpGenerator::closeTableRow()
 {
-	if (mpImpl->mInComment || !mpImpl->mpCurrentTableStyle)
+	if (mpImpl->mState.mInComment || !mpImpl->mpCurrentTableStyle)
 		return;
 
 	mpImpl->mBodyElements.push_back(new TagCloseElement("table:table-row"));
-	if (mpImpl->mHeaderRow)
+	if (mpImpl->mState.mHeaderRow)
 	{
 		mpImpl->mBodyElements.push_back(new TagCloseElement("table:table-header-rows"));
-		mpImpl->mHeaderRow = false;
+		mpImpl->mState.mHeaderRow = false;
 	}
 }
 
@@ -1890,7 +1906,7 @@ void OdpGenerator::openTableCell(const ::WPXPropertyList &propList)
 		return;
 	}
 
-	if (mpImpl->mTableCellOpened)
+	if (mpImpl->mState.mTableCellOpened)
 	{
 		ODFGEN_DEBUG_MSG(("a table cell in a table cell?!\n"));
 		return;
@@ -1911,27 +1927,27 @@ void OdpGenerator::openTableCell(const ::WPXPropertyList &propList)
 		                                    propList["table:number-rows-spanned"]->getStr().cstr());
 	mpImpl->mBodyElements.push_back(pTableCellOpenElement);
 
-	mpImpl->mTableCellOpened = true;
+	mpImpl->mState.mTableCellOpened = true;
 }
 
 void OdpGenerator::closeTableCell()
 {
-	if (mpImpl->mInComment || !mpImpl->mpCurrentTableStyle)
+	if (mpImpl->mState.mInComment || !mpImpl->mpCurrentTableStyle)
 		return;
 
-	if (!mpImpl->mTableCellOpened)
+	if (!mpImpl->mState.mTableCellOpened)
 	{
 		ODFGEN_DEBUG_MSG(("no table cell is opened\n"));
 		return;
 	}
 
 	mpImpl->mBodyElements.push_back(new TagCloseElement("table:table-cell"));
-	mpImpl->mTableCellOpened = false;
+	mpImpl->mState.mTableCellOpened = false;
 }
 
 void OdpGenerator::insertCoveredTableCell(const ::WPXPropertyList &/*propList*/)
 {
-	if (mpImpl->mInComment || !mpImpl->mpCurrentTableStyle)
+	if (mpImpl->mState.mInComment || !mpImpl->mpCurrentTableStyle)
 		return;
 
 	mpImpl->mBodyElements.push_back(new TagOpenElement("table:covered-table-cell"));
@@ -1940,7 +1956,7 @@ void OdpGenerator::insertCoveredTableCell(const ::WPXPropertyList &/*propList*/)
 
 void OdpGenerator::closeTable()
 {
-	if (!mpImpl->mInComment)
+	if (!mpImpl->mState.mInComment)
 	{
 		mpImpl->mBodyElements.push_back(new TagCloseElement("table:table"));
 	}
@@ -1948,13 +1964,13 @@ void OdpGenerator::closeTable()
 
 void OdpGenerator::startComment(const ::WPXPropertyList &propList)
 {
-	if (mpImpl->mInComment)
+	if (mpImpl->mState.mInComment)
 	{
 		ODFGEN_DEBUG_MSG(("a comment within a comment?!\n"));
 		return;
 	}
 
-	mpImpl->mInComment = true;
+	mpImpl->mState.mInComment = true;
 
 	TagOpenElement *const commentElement = new TagOpenElement("officeooo:annotation");
 	// WARNING: this is not ODF!
@@ -1975,19 +1991,19 @@ void OdpGenerator::startComment(const ::WPXPropertyList &propList)
 
 void OdpGenerator::endComment()
 {
-	if (!mpImpl->mInComment)
+	if (!mpImpl->mState.mInComment)
 	{
 		ODFGEN_DEBUG_MSG(("there is no comment to close\n"));
 		return;
 	}
 
-	mpImpl->mInComment = false;
+	mpImpl->mState.mInComment = false;
 	mpImpl->mBodyElements.push_back(new TagCloseElement("office:annotation"));
 }
 
 void OdpGenerator::startNotes(const ::WPXPropertyList &/*propList*/)
 {
-	if (mpImpl->mInNotes)
+	if (mpImpl->mState.mInNotes)
 	{
 		ODFGEN_DEBUG_MSG(("notes in notes?!\n"));
 		return;
@@ -2003,12 +2019,12 @@ void OdpGenerator::startNotes(const ::WPXPropertyList &/*propList*/)
 
 	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:text-box"));
 
-	mpImpl->mInNotes = true;
+	mpImpl->mState.mInNotes = true;
 }
 
 void OdpGenerator::endNotes()
 {
-	if (!mpImpl->mInNotes)
+	if (!mpImpl->mState.mInNotes)
 	{
 		ODFGEN_DEBUG_MSG(("no notes opened\n"));
 		return;
