@@ -48,11 +48,11 @@ PKG_CHECK_MODULES([WPG],[
 AC_SUBST([WPG_CFLAGS])
 AC_SUBST([WPG_LIGS])
 
-PKG_CHECK_MODULES([KEYNOTE],[
-	libkeynote-0.0
+PKG_CHECK_MODULES([ETONYEK],[
+	libetonyek-0.0
 ])
-AC_SUBST([KEYNOTE_CFLAGS])
-AC_SUBST([KEYNOTE_LIBS])
+AC_SUBST([ETONYEK_CFLAGS])
+AC_SUBST([ETONYEK_LIBS])
 
 # =================================
 # Libtool/Version Makefile settings

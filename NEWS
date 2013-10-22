@@ -4,7 +4,7 @@ libodfgen 0.0.3
 - more SVG path commands
 - allow to define center of rotation for a textbox
 - make linked text boxes more robust
-- add support for generating presentations (libkeynote)
+- add support for generating presentations (using libetonyek)
 
 libodfgen 0.0.2
 

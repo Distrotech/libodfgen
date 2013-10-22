@@ -25,13 +25,13 @@
 #ifndef LIBODFGEN_ODPGENERATOR_HXX_INCLUDED
 #define LIBODFGEN_ODPGENERATOR_HXX_INCLUDED
 
-#include <libkeynote/libkeynote.h>
+#include <libetonyek/libetonyek.h>
 
 #include "OdfDocumentHandler.hxx"
 
 class OdpGeneratorPrivate;
 
-class OdpGenerator : public libkeynote::KEYPresentationInterface
+class OdpGenerator : public libetonyek::KEYPresentationInterface
 {
 public:
 	OdpGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
