@@ -24,10 +24,6 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include "config.h"
-
-#if defined ENABLE_ODPGEN
-
 #include <libodfgen/libodfgen.hxx>
 
 #include "FilterInternal.hxx"
@@ -2034,7 +2030,5 @@ void OdpGenerator::endNotes()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
 	mpImpl->mBodyElements.push_back(new TagCloseElement("presentation:notes"));
 }
-
-#endif // ENABLE_ODPGEN
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

@@ -25,10 +25,6 @@
 #ifndef LIBODFGEN_ODPGENERATOR_HXX_INCLUDED
 #define LIBODFGEN_ODPGENERATOR_HXX_INCLUDED
 
-#include "config.h"
-
-#if defined ENABLE_ODPGEN
-
 #include <libkeynote/libkeynote.h>
 
 #include "OdfDocumentHandler.hxx"
@@ -103,8 +99,6 @@ private:
 
 	OdpGeneratorPrivate *mpImpl;
 };
-
-#endif // ENABLE_ODPGEN
 
 #endif // LIBODFGEN_ODPGENERATOR_HXX_INCLUDED
 
