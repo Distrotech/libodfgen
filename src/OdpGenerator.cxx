@@ -126,6 +126,7 @@ public:
 	bool mInComment;
 	bool mHeaderRow;
 	bool mTableCellOpened;
+	bool mInNotes;
 
 private:
 	OdpGeneratorPrivate(const OdpGeneratorPrivate &);
@@ -166,7 +167,8 @@ OdpGeneratorPrivate::OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mbIsTextOnPath(false),
 	mInComment(false),
 	mHeaderRow(false),
-	mTableCellOpened(false)
+	mTableCellOpened(false),
+	mInNotes(false)
 {
 }
 
@@ -1853,10 +1855,36 @@ void OdpGenerator::endComment()
 
 void OdpGenerator::startNotes(const ::WPXPropertyList &/*propList*/)
 {
+	if (mpImpl->mInNotes)
+	{
+		ODFGEN_DEBUG_MSG(("notes in notes?!\n"));
+		return;
+	}
+
+	mpImpl->mBodyElements.push_back(new TagOpenElement("presentation:notes"));
+
+	TagOpenElement *const frameElement = new TagOpenElement("draw:frame");
+	frameElement->addAttribute("draw:layer", "layout");
+	frameElement->addAttribute("presentation:class", "notes");
+
+	mpImpl->mBodyElements.push_back(frameElement);
+
+	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:text-box"));
+
+	mpImpl->mInNotes = true;
 }
 
 void OdpGenerator::endNotes()
 {
+	if (!mpImpl->mInNotes)
+	{
+		ODFGEN_DEBUG_MSG(("no notes opened\n"));
+		return;
+	}
+
+	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:text-box"));
+	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
+	mpImpl->mBodyElements.push_back(new TagCloseElement("presentation:notes"));
 }
 
 #endif // ENABLE_ODPGEN
