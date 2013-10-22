@@ -32,6 +32,11 @@
 
 class OdgGeneratorPrivate;
 
+/** A generator for vector drawings.
+  *
+  * See @c libwpg library for documentation of the
+  * libwpg::WPGPaintInterface interface.
+  */
 class OdgGenerator : public libwpg::WPGPaintInterface
 {
 public:

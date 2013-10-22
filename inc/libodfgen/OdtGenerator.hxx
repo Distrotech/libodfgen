@@ -31,19 +31,35 @@
 
 #include "OdfDocumentHandler.hxx"
 
-
+/** Handler for embedded objects.
+  *
+  * @param[in] data the object's data
+  * @param[in] pHandler the current OdfDocumentHandler
+  * @param[in] streamType type of the object
+  */
 typedef bool (*OdfEmbeddedObject)(const WPXBinaryData &data, OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+
+/** Handler for embedded images.
+  *
+  * @param[in] input the image's data
+  * @param[in] output the same image in format suitable for the used
+  * OdfDocumentHandler.
+  */
 typedef bool (*OdfEmbeddedImage)(const WPXBinaryData &input, WPXBinaryData &output);
 
 class OdtGeneratorPrivate;
 
+/** A generator for text documents.
+  *
+  * See @c libwpd library for documentation of the ::WPXDocumentInterface
+  * interface.
+  */
 class OdtGenerator : public WPXDocumentInterface
 {
 public:
 	OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdtGenerator();
 
-	// WPXDocumentInterface's implementation
 	void setDocumentMetaData(const WPXPropertyList &propList);
 	void startDocument();
 	void endDocument();
@@ -107,8 +123,23 @@ public:
 	void insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &data);
 	void insertEquation(const WPXPropertyList &propList, const WPXString &data);
 
-	// Register special converter for certain embedded binary objects
+	/** Registers a handler for embedded objects.
+	  *
+	  * @param[in] mimeType MIME type of the object
+	  * @param[in] objectHandler a function that handles processing of
+	  *		the object's data and generating output
+	  */
 	void registerEmbeddedObjectHandler(const WPXString &mimeType, OdfEmbeddedObject objectHandler);
+
+	/** Registers a handler for embedded images.
+	  *
+	  * The handler converts the image to a format suitable for the used
+	  * OdfDocumentHandler.
+	  *
+	  * @param[in] mimeType MIME type of the image
+	  * @param[in] imageHandler a function that handles processing of
+	  *		the images's data and generating output
+	  */
 	void registerEmbeddedImageHandler(const WPXString &mimeType, OdfEmbeddedImage imageHandler);
 
 private:

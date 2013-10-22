@@ -31,6 +31,11 @@
 
 class OdpGeneratorPrivate;
 
+/** A generator for presentations.
+  *
+  * See @c libetonyek library for documentation of the
+  * libetonyek::KEYPresentationInterface interface.
+  */
 class OdpGenerator : public libetonyek::KEYPresentationInterface
 {
 public:
