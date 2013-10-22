@@ -360,7 +360,7 @@ OdpGenerator::OdpGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 	tmpOfficeDocumentContent.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
 	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
 	if (mpImpl->mxStreamType == ODF_FLAT_XML)
-		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");
+		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.presentation");
 	tmpOfficeDocumentContent.write(mpImpl->mpHandler);
 }
 
