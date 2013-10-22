@@ -33,6 +33,7 @@
 #include "FilterInternal.hxx"
 #include "DocumentElement.hxx"
 #include "GraphicFunctions.hxx"
+#include "ListStyle.hxx"
 #include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 #include "FontStyle.hxx"
@@ -40,6 +41,7 @@
 #include <math.h>
 #include <string>
 #include <map>
+#include <stack>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -65,6 +67,38 @@ static WPXString doubleToString(const double value)
 
 } // anonymous namespace
 
+namespace
+{
+
+// list state
+struct ListState
+{
+	ListState();
+	ListState(const ListState &state);
+
+	ListStyle *mpCurrentListStyle;
+	bool mbListElementParagraphOpened;
+	std::stack<bool> mbListElementOpened;
+private:
+	ListState &operator=(const ListState &state);
+};
+
+ListState::ListState() :
+	mpCurrentListStyle(0),
+	mbListElementParagraphOpened(false),
+	mbListElementOpened()
+{
+}
+
+ListState::ListState(const ListState &state) :
+	mpCurrentListStyle(state.mpCurrentListStyle),
+	mbListElementParagraphOpened(state.mbListElementParagraphOpened),
+	mbListElementOpened(state.mbListElementOpened)
+{
+}
+
+}
+
 class OdpGeneratorPrivate
 {
 public:
@@ -75,8 +109,13 @@ public:
 	void _writeGraphicsStyle();
 	void _drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const WPXPropertyListVector &path);
+
+	void openListLevel(TagOpenElement *pListLevelOpenElement);
+	void closeListLevel();
+
 	//! returns the document type
 	std::string getDocumentType() const;
+
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
 
@@ -120,6 +159,9 @@ public:
 
 	const OdfStreamType mxStreamType;
 
+	// document state
+	std::stack<ListState> mListStates;
+
 	bool mbIsTextBox;
 	bool mbIsTextLine;
 	bool mbIsTextOnPath;
@@ -162,6 +204,7 @@ OdpGeneratorPrivate::OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mfHeight(0.0),
 	mfMaxHeight(0.0),
 	mxStreamType(streamType),
+	mListStates(),
 	mbIsTextBox(false),
 	mbIsTextLine(false),
 	mbIsTextOnPath(false),
@@ -226,6 +269,44 @@ OdpGeneratorPrivate::~OdpGeneratorPrivate()
 	mParagraphManager.clean();
 	mSpanManager.clean();
 	mFontManager.clean();
+}
+
+void OdpGeneratorPrivate::openListLevel(TagOpenElement *pListLevelOpenElement)
+{
+	if (!mListStates.top().mbListElementOpened.empty() &&
+	        !mListStates.top().mbListElementOpened.top())
+	{
+		mBodyElements.push_back(new TagOpenElement("text:list-item"));
+		mListStates.top().mbListElementOpened.top() = true;
+	}
+
+	mListStates.top().mbListElementOpened.push(false);
+	if (mListStates.top().mbListElementOpened.size() == 1)
+	{
+		// add a sanity check ( to avoid a crash if mpCurrentListStyle is NULL)
+		if (mListStates.top().mpCurrentListStyle)
+		{
+			pListLevelOpenElement->addAttribute("text:style-name", mListStates.top().mpCurrentListStyle->getName());
+		}
+	}
+}
+
+void OdpGeneratorPrivate::closeListLevel()
+{
+	if (mListStates.top().mbListElementOpened.empty())
+	{
+		// this implies that openListLevel was not called, so it is better to stop here
+		ODFGEN_DEBUG_MSG(("OdtGenerator: Attempting to close an unexisting level\n"));
+		return;
+	}
+	if (mListStates.top().mbListElementOpened.top())
+	{
+		mBodyElements.push_back(new TagCloseElement("text:list-item"));
+		mListStates.top().mbListElementOpened.top() = false;
+	}
+
+	mBodyElements.push_back(new TagCloseElement("text:list"));
+	mListStates.top().mbListElementOpened.pop();
 }
 
 std::string OdpGeneratorPrivate::getDocumentType() const
@@ -1652,26 +1733,77 @@ void OdpGenerator::insertField(const WPXString &/*type*/, const ::WPXPropertyLis
 
 void OdpGenerator::openOrderedListLevel(const ::WPXPropertyList &/*propList*/)
 {
+	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
+	{
+		mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
+		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
+	}
+
+	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
+	mpImpl->openListLevel(pListLevelOpenElement);
+
+	mpImpl->mBodyElements.push_back(pListLevelOpenElement);
 }
 
 void OdpGenerator::openUnorderedListLevel(const ::WPXPropertyList &/*propList*/)
 {
+	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
+	{
+		mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
+		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
+	}
+	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
+	mpImpl->openListLevel(pListLevelOpenElement);
+
+	mpImpl->mBodyElements.push_back(pListLevelOpenElement);
 }
 
 void OdpGenerator::closeOrderedListLevel()
 {
+	mpImpl->closeListLevel();
 }
 
 void OdpGenerator::closeUnorderedListLevel()
 {
+	mpImpl->closeListLevel();
 }
 
-void OdpGenerator::openListElement(const ::WPXPropertyList &/*propList*/, const ::WPXPropertyListVector &/*tabStops*/)
+void OdpGenerator::openListElement(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &tabStops)
 {
+	if (mpImpl->mListStates.top().mbListElementOpened.top())
+	{
+		mpImpl->mBodyElements.push_back(new TagCloseElement("text:list-item"));
+		mpImpl->mListStates.top().mbListElementOpened.top() = false;
+	}
+
+	WPXPropertyList finalPropList(propList);
+	finalPropList.insert("style:parent-style-name", "Standard");
+	WPXString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+
+	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
+	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
+		pOpenListItem->addAttribute("text:start-value", propList["text:start-value"]->getStr());
+	mpImpl->mBodyElements.push_back(pOpenListItem);
+
+	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
+	pOpenListElementParagraph->addAttribute("text:style-name", paragName);
+	mpImpl->mBodyElements.push_back(pOpenListElementParagraph);
+
+	mpImpl->mListStates.top().mbListElementOpened.top() = true;
+	mpImpl->mListStates.top().mbListElementParagraphOpened = true;
 }
 
 void OdpGenerator::closeListElement()
 {
+	// this code is kind of tricky, because we don't actually close the list element (because this list element
+	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
+	// code (or when we open another list element)
+
+	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
+	{
+		mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
+		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
+	}
 }
 
 void OdpGenerator::openTable(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &columns)
