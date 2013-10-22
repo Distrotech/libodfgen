@@ -6,6 +6,10 @@ pkgconfdir = $(libdir)/pkgconfig
 
 SUBDIRS = build inc src
 
+if WITH_LIBEBOOK_DOCS
+SUBDIRS += docs
+endif
+
 pkgconf_DATA = libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@.pc
 
 EXTRA_DIST = \

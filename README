@@ -21,7 +21,8 @@ libwpg (>= 0.2.0) installed. Eventually you should have boost headers if you
 choose to compile using boost smart pointers.
 
 You will also need to have pkgconfig installed, for the build system to find
-both libwpd and libwpg.
+both libwpd and libwpg, and doxygen, unless you choose to disable building
+of API documentation.
 
 This will make + install a libodfgen library and all files needed to use the
 library from your code.
