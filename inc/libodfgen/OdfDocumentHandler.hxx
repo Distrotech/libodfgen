@@ -31,7 +31,7 @@ enum OdfStreamType { ODF_FLAT_XML, ODF_CONTENT_XML, ODF_STYLES_XML, ODF_SETTINGS
 class OdfDocumentHandler
 {
 public:
-	virtual ~OdfDocumentHandler() {};
+	virtual ~OdfDocumentHandler() {}
 
 	virtual void startDocument() = 0;
 	virtual void endDocument() = 0;
