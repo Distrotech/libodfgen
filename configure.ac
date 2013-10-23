@@ -288,7 +288,7 @@ AC_MSG_NOTICE([
 ==============================================================================
 Build configuration:
 	debug:           ${enable_debug}
-    docs:            ${build_docs}
+	docs:            ${build_docs}
 	shared_ptr:      ${with_sharedptr}
 	werror:          ${enable_werror}
 ==============================================================================
