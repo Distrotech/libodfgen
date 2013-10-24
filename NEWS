@@ -5,6 +5,7 @@ libodfgen 0.0.3
 - allow to define center of rotation for a textbox
 - make linked text boxes more robust
 - add support for generating presentations (using libetonyek)
+- start on API documentation
 
 libodfgen 0.0.2
 
