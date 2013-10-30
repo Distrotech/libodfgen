@@ -24,8 +24,8 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
+#include <algorithm>
 #include <math.h>
-#include <utility>
 
 #include "GraphicFunctions.hxx"
 
