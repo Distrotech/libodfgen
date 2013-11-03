@@ -112,7 +112,7 @@ public:
 	const OdfStreamType mxStreamType;
 
 	bool mbIsTextBox;
-	bool mbIsTextLine;
+	bool mbIsParagraph;
 	bool mbIsTextOnPath;
 
 private:
@@ -148,7 +148,7 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mfMaxHeight(0.0),
 	mxStreamType(streamType),
 	mbIsTextBox(false),
-	mbIsTextLine(false),
+	mbIsParagraph(false),
 	mbIsTextOnPath(false)
 {
 }
@@ -434,7 +434,7 @@ OdgGenerator::~OdgGenerator()
 	delete mpImpl;
 }
 
-void OdgGenerator::startGraphics(const ::RVNGPropertyList &propList)
+void OdgGenerator::startPage(const ::RVNGPropertyList &propList)
 {
 	if (propList["svg:width"])
 	{
@@ -525,7 +525,7 @@ void OdgGenerator::startGraphics(const ::RVNGPropertyList &propList)
 	mpImpl->mPageAutomaticStyles.push_back(new TagCloseElement("style:style"));
 }
 
-void OdgGenerator::endGraphics()
+void OdgGenerator::endPage()
 {
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:page"));
 	mpImpl->miPageIndex++;
@@ -1543,7 +1543,7 @@ void OdgGenerator::endTextObject()
 	}
 }
 
-void OdgGenerator::startTextLine(const RVNGPropertyList &propList)
+void OdgGenerator::openParagraph(const RVNGPropertyList &propList, const RVNGPropertyListVector &)
 {
 	RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
@@ -1556,12 +1556,12 @@ void OdgGenerator::startTextLine(const RVNGPropertyList &propList)
 	mpImpl->mBodyElements.push_back(pParagraphOpenElement);
 }
 
-void OdgGenerator::endTextLine()
+void OdgGenerator::closeParagraph()
 {
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
 }
 
-void OdgGenerator::startTextSpan(const RVNGPropertyList &propList)
+void OdgGenerator::openSpan(const RVNGPropertyList &propList)
 {
 	if (propList["style:font-name"])
 		mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
@@ -1573,7 +1573,7 @@ void OdgGenerator::startTextSpan(const RVNGPropertyList &propList)
 	mpImpl->mBodyElements.push_back(pSpanOpenElement);
 }
 
-void OdgGenerator::endTextSpan()
+void OdgGenerator::closeSpan()
 {
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:span"));
 }

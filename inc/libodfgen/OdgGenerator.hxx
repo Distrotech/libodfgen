@@ -42,8 +42,8 @@ public:
 	OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdgGenerator();
 
-	void startGraphics(const ::RVNGPropertyList &propList);
-	void endGraphics();
+	void startPage(const RVNGPropertyList &);
+	void endPage();
 	void startLayer(const ::RVNGPropertyList &propList);
 	void endLayer();
 	void startEmbeddedGraphics(const ::RVNGPropertyList &propList);
@@ -60,12 +60,25 @@ public:
 
 	void startTextObject(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &path);
 	void endTextObject();
-	void startTextLine(const ::RVNGPropertyList &propList);
-	void endTextLine();
-	void startTextSpan(const ::RVNGPropertyList &propList);
-	void endTextSpan();
-	void insertText(const ::RVNGString &str);
 
+	void setDocumentMetaData(const RVNGPropertyList &) {}
+	void insertText(const RVNGString &text);
+	void insertTab() {}
+	void insertSpace() {}
+	void insertLineBreak() {}
+	void insertField(const RVNGString &, const RVNGPropertyList &) {}
+	void openOrderedListLevel(const RVNGPropertyList &) {}
+	void openUnorderedListLevel(const RVNGPropertyList &) {}
+	void closeOrderedListLevel() {}
+	void closeUnorderedListLevel() {}
+	void openListElement(const RVNGPropertyList &, const RVNGPropertyListVector &) {}
+	void closeListElement() {}
+	void openParagraph(const RVNGPropertyList &, const RVNGPropertyListVector &);
+	void closeParagraph();
+	void openSpan(const RVNGPropertyList &);
+	void closeSpan();
+	void startDocument(const RVNGPropertyList &) {}
+	void endDocument() {}
 private:
 	OdgGenerator(OdgGenerator const &);
 	OdgGenerator &operator=(OdgGenerator const &);

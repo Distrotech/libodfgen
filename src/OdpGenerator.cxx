@@ -69,7 +69,7 @@ namespace
 struct GeneratorState
 {
 	bool mbIsTextBox;
-	bool mbIsTextLine;
+	bool mbIsParagraph;
 	bool mbIsTextOnPath;
 	bool mInComment;
 	bool mHeaderRow;
@@ -81,7 +81,7 @@ struct GeneratorState
 
 GeneratorState::GeneratorState()
 	: mbIsTextBox(false)
-	, mbIsTextLine(false)
+	, mbIsParagraph(false)
 	, mbIsTextOnPath(false)
 	, mInComment(false)
 	, mHeaderRow(false)
