@@ -25,7 +25,7 @@
 #ifndef _PAGESPAN_HXX_
 #define _PAGESPAN_HXX_
 
-#include <libwpd/libwpd.h>
+#include <librevenge/librevenge.h>
 #include <vector>
 
 class DocumentElement;
@@ -34,7 +34,7 @@ class OdfDocumentHandler;
 class PageSpan
 {
 public:
-	PageSpan(const WPXPropertyList &xPropList);
+	PageSpan(const RVNGPropertyList &xPropList);
 	virtual ~PageSpan();
 	void writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const;
 	void writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, OdfDocumentHandler *pHandler) const;
@@ -50,7 +50,7 @@ protected:
 private:
 	PageSpan(const PageSpan &);
 	PageSpan &operator=(const PageSpan &);
-	WPXPropertyList mxPropList;
+	RVNGPropertyList mxPropList;
 	std::vector<DocumentElement *> *mpHeaderContent;
 	std::vector<DocumentElement *> *mpFooterContent;
 	std::vector<DocumentElement *> *mpHeaderLeftContent;

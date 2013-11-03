@@ -13,7 +13,7 @@ VS_VERSION_INFO VERSIONINFO
     BEGIN
       BLOCK "040904B0"
       BEGIN
-	VALUE "CompanyName", "The libwpd developer community"
+	VALUE "CompanyName", "The librevenge developer community"
 	VALUE "FileDescription", "libodfgen"
 	VALUE "FileVersion", "@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@.@LIBODFGEN_MICRO_VERSION@.BUILDNUMBER"
 	VALUE "InternalName", "libodfgen"

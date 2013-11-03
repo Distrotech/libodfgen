@@ -26,7 +26,7 @@
 
 #ifndef _TABLESTYLE_HXX_
 #define _TABLESTYLE_HXX_
-#include <libwpd/libwpd.h>
+#include <librevenge/librevenge.h>
 #include <vector>
 
 #include "Style.hxx"
@@ -37,26 +37,26 @@ class TableCellStyle : public Style
 {
 public:
 	virtual ~TableCellStyle() {};
-	TableCellStyle(const WPXPropertyList &xPropList, const char *psName);
+	TableCellStyle(const RVNGPropertyList &xPropList, const char *psName);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
-	WPXPropertyList mPropList;
+	RVNGPropertyList mPropList;
 };
 
 class TableRowStyle : public Style
 {
 public:
 	virtual ~TableRowStyle() {};
-	TableRowStyle(const WPXPropertyList &propList, const char *psName);
+	TableRowStyle(const RVNGPropertyList &propList, const char *psName);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
-	WPXPropertyList mPropList;
+	RVNGPropertyList mPropList;
 };
 
 class TableStyle : public Style, public TopLevelElementStyle
 {
 public:
-	TableStyle(const WPXPropertyList &xPropList, const WPXPropertyListVector &columns, const char *psName);
+	TableStyle(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &columns, const char *psName);
 	virtual ~TableStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	int getNumColumns() const
@@ -80,8 +80,8 @@ public:
 		return (int)mTableRowStyles.size();
 	}
 private:
-	WPXPropertyList mPropList;
-	WPXPropertyListVector mColumns;
+	RVNGPropertyList mPropList;
+	RVNGPropertyListVector mColumns;
 	std::vector<TableCellStyle *> mTableCellStyles;
 	std::vector<TableRowStyle *> mTableRowStyles;
 };

@@ -25,8 +25,7 @@
 #ifndef __ODGGENERATOR_HXX__
 #define __ODGGENERATOR_HXX__
 
-#include <libwpd/libwpd.h>
-#include <libwpg/libwpg.h>
+#include <librevenge/librevenge.h>
 
 #include "OdfDocumentHandler.hxx"
 
@@ -34,38 +33,38 @@ class OdgGeneratorPrivate;
 
 /** A generator for vector drawings.
   *
-  * See @c libwpg library for documentation of the
-  * libwpg::WPGPaintInterface interface.
+  * See @c librevenge library for documentation of the
+  * librevenge::WPGPaintInterface interface.
   */
-class OdgGenerator : public libwpg::WPGPaintInterface
+class OdgGenerator : public RVNGDrawingInterface
 {
 public:
 	OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdgGenerator();
 
-	void startGraphics(const ::WPXPropertyList &propList);
+	void startGraphics(const ::RVNGPropertyList &propList);
 	void endGraphics();
-	void startLayer(const ::WPXPropertyList &propList);
+	void startLayer(const ::RVNGPropertyList &propList);
 	void endLayer();
-	void startEmbeddedGraphics(const ::WPXPropertyList &propList);
+	void startEmbeddedGraphics(const ::RVNGPropertyList &propList);
 	void endEmbeddedGraphics();
 
-	void setStyle(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &gradient);
+	void setStyle(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &gradient);
 
-	void drawRectangle(const ::WPXPropertyList &propList);
-	void drawEllipse(const ::WPXPropertyList &propList);
-	void drawPolyline(const ::WPXPropertyListVector &vertices);
-	void drawPolygon(const ::WPXPropertyListVector &vertices);
-	void drawPath(const ::WPXPropertyListVector &path);
-	void drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData &binaryData);
+	void drawRectangle(const ::RVNGPropertyList &propList);
+	void drawEllipse(const ::RVNGPropertyList &propList);
+	void drawPolyline(const ::RVNGPropertyListVector &vertices);
+	void drawPolygon(const ::RVNGPropertyListVector &vertices);
+	void drawPath(const ::RVNGPropertyListVector &path);
+	void drawGraphicObject(const ::RVNGPropertyList &propList, const ::RVNGBinaryData &binaryData);
 
-	void startTextObject(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &path);
+	void startTextObject(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &path);
 	void endTextObject();
-	void startTextLine(const ::WPXPropertyList &propList);
+	void startTextLine(const ::RVNGPropertyList &propList);
 	void endTextLine();
-	void startTextSpan(const ::WPXPropertyList &propList);
+	void startTextSpan(const ::RVNGPropertyList &propList);
 	void endTextSpan();
-	void insertText(const ::WPXString &str);
+	void insertText(const ::RVNGString &str);
 
 private:
 	OdgGenerator(OdgGenerator const &);

@@ -26,9 +26,9 @@
 #ifndef _INTERNALHANDLER_HXX_
 #define _INTERNALHANDLER_HXX_
 
-#include <libwpd/libwpd.h>
-#include <libwpd/WPXProperty.h>
-#include <libwpd/WPXString.h>
+#include <librevenge/librevenge.h>
+#include <librevenge/RVNGProperty.h>
+#include <librevenge/RVNGString.h>
 #include <libodfgen/libodfgen.hxx>
 #include "DocumentElement.hxx"
 
@@ -40,9 +40,9 @@ public:
 
 	void startDocument() {};
 	void endDocument() {};
-	void startElement(const char *psName, const WPXPropertyList &xPropList);
+	void startElement(const char *psName, const RVNGPropertyList &xPropList);
 	void endElement(const char *psName);
-	void characters(const WPXString &sCharacters);
+	void characters(const RVNGString &sCharacters);
 private:
 	InternalHandler(const InternalHandler &);
 	InternalHandler &operator=(const InternalHandler &);

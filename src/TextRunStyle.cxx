@@ -36,13 +36,13 @@
 namespace
 {
 
-WPXString propListToStyleKey(const WPXPropertyList &xPropList)
+RVNGString propListToStyleKey(const RVNGPropertyList &xPropList)
 {
-	WPXString sKey;
-	WPXPropertyList::Iter i(xPropList);
+	RVNGString sKey;
+	RVNGPropertyList::Iter i(xPropList);
 	for (i.rewind(); i.next(); )
 	{
-		WPXString sProp;
+		RVNGString sProp;
 		sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
 		sKey.append(sProp);
 	}
@@ -52,7 +52,7 @@ WPXString propListToStyleKey(const WPXPropertyList &xPropList)
 
 } // anonymous namespace
 
-ParagraphStyle::ParagraphStyle(const WPXPropertyList &pPropList, const WPXPropertyListVector &xTabStops, const WPXString &sName) :
+ParagraphStyle::ParagraphStyle(const RVNGPropertyList &pPropList, const RVNGPropertyListVector &xTabStops, const RVNGString &sName) :
 	mpPropList(pPropList),
 	mxTabStops(xTabStops),
 	msName(sName)
@@ -67,7 +67,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 {
 	ODFGEN_DEBUG_MSG(("ParagraphStyle: Writing a paragraph style..\n"));
 
-	WPXPropertyList propList;
+	RVNGPropertyList propList;
 	propList.insert("style:name", msName.cstr());
 	propList.insert("style:family", "paragraph");
 	if (mpPropList["style:parent-style-name"])
@@ -77,7 +77,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->startElement("style:style", propList);
 
 	propList.clear();
-	WPXPropertyList::Iter i(mpPropList);
+	RVNGPropertyList::Iter i(mpPropList);
 	for (i.rewind(); i.next(); )
 	{
 		if (strncmp(i.key(), "fo:margin-",10) == 0)
@@ -141,14 +141,14 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	{
 		TagOpenElement tabListOpen("style:tab-stops");
 		tabListOpen.write(pHandler);
-		WPXPropertyListVector::Iter k(mxTabStops);
+		RVNGPropertyListVector::Iter k(mxTabStops);
 		for (k.rewind(); k.next();)
 		{
 			if (k()["style:position"] && k()["style:position"]->getDouble() < 0.0)
 				continue;
 			TagOpenElement tabStopOpen("style:tab-stop");
 
-			WPXPropertyList::Iter j(k());
+			RVNGPropertyList::Iter j(k());
 			for (j.rewind(); j.next(); )
 			{
 				tabStopOpen.addAttribute(j.key(), j()->getStr().cstr());
@@ -163,7 +163,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->endElement("style:style");
 }
 
-SpanStyle::SpanStyle(const char *psName, const WPXPropertyList &xPropList) :
+SpanStyle::SpanStyle(const char *psName, const RVNGPropertyList &xPropList) :
 	Style(psName),
 	mPropList(xPropList)
 {
@@ -172,12 +172,12 @@ SpanStyle::SpanStyle(const char *psName, const WPXPropertyList &xPropList) :
 void SpanStyle::write(OdfDocumentHandler *pHandler) const
 {
 	ODFGEN_DEBUG_MSG(("SpanStyle: Writing a span style..\n"));
-	WPXPropertyList styleOpenList;
+	RVNGPropertyList styleOpenList;
 	styleOpenList.insert("style:name", getName());
 	styleOpenList.insert("style:family", "text");
 	pHandler->startElement("style:style", styleOpenList);
 
-	WPXPropertyList propList(mPropList);
+	RVNGPropertyList propList(mPropList);
 
 	if (mPropList["style:font-name"])
 	{
@@ -222,7 +222,7 @@ void ParagraphStyleManager::clean()
 
 void ParagraphStyleManager::write(OdfDocumentHandler *pHandler) const
 {
-	for (std::map<WPXString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
+	for (std::map<RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
 		if (strcmp(iter->second->getName().cstr(), "Standard") == 0)
@@ -231,13 +231,13 @@ void ParagraphStyleManager::write(OdfDocumentHandler *pHandler) const
 	}
 }
 
-WPXString ParagraphStyleManager::getKey(const WPXPropertyList &xPropList, const WPXPropertyListVector &tabStops) const
+RVNGString ParagraphStyleManager::getKey(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &tabStops) const
 {
-	WPXString sKey = propListToStyleKey(xPropList);
+	RVNGString sKey = propListToStyleKey(xPropList);
 
-	WPXString sTabStops;
+	RVNGString sTabStops;
 	sTabStops.sprintf("[num-tab-stops:%i]", tabStops.count());
-	WPXPropertyListVector::Iter i(tabStops);
+	RVNGPropertyListVector::Iter i(tabStops);
 	for (i.rewind(); i.next();)
 	{
 		sTabStops.append(propListToStyleKey(i()));
@@ -247,17 +247,17 @@ WPXString ParagraphStyleManager::getKey(const WPXPropertyList &xPropList, const 
 	return sKey;
 }
 
-WPXString ParagraphStyleManager::findOrAdd(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops)
+RVNGString ParagraphStyleManager::findOrAdd(const RVNGPropertyList &propList, const RVNGPropertyListVector &tabStops)
 {
-	WPXString hashKey = getKey(propList, tabStops);
-	std::map<WPXString, WPXString, ltstr>::const_iterator iter =
+	RVNGString hashKey = getKey(propList, tabStops);
+	std::map<RVNGString, RVNGString, ltstr>::const_iterator iter =
 	    mNameHash.find(hashKey);
 	if (iter!=mNameHash.end()) return iter->second;
 
 	// ok create a new list
 	ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
 
-	WPXString sName;
+	RVNGString sName;
 	sName.sprintf("S%i", mStyleHash.size());
 	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(propList, tabStops, sName));
 	mStyleHash[sName] =parag;
@@ -265,9 +265,9 @@ WPXString ParagraphStyleManager::findOrAdd(const WPXPropertyList &propList, cons
 	return sName;
 }
 
-shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const WPXString &name) const
+shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const RVNGString &name) const
 {
-	std::map<WPXString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
+	std::map<RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
 	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<ParagraphStyle>();
 	return iter->second;
@@ -281,24 +281,24 @@ void SpanStyleManager::clean()
 
 void SpanStyleManager::write(OdfDocumentHandler *pHandler) const
 {
-	for (std::map<WPXString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
+	for (std::map<RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
 		(iter->second)->write(pHandler);
 	}
 }
 
-WPXString SpanStyleManager::findOrAdd(const WPXPropertyList &propList)
+RVNGString SpanStyleManager::findOrAdd(const RVNGPropertyList &propList)
 {
-	WPXString hashKey = propListToStyleKey(propList);
-	std::map<WPXString, WPXString, ltstr>::const_iterator iter =
+	RVNGString hashKey = propListToStyleKey(propList);
+	std::map<RVNGString, RVNGString, ltstr>::const_iterator iter =
 	    mNameHash.find(hashKey);
 	if (iter!=mNameHash.end()) return iter->second;
 
 	// ok create a new list
 	ODFGEN_DEBUG_MSG(("SpanStyleManager::findOrAdd: Span Hash Key: %s\n", hashKey.cstr()));
 
-	WPXString sName;
+	RVNGString sName;
 	sName.sprintf("Span%i", mStyleHash.size());
 	shared_ptr<SpanStyle> span(new SpanStyle(sName.cstr(), propList));
 	mStyleHash[sName] = span;
@@ -306,9 +306,9 @@ WPXString SpanStyleManager::findOrAdd(const WPXPropertyList &propList)
 	return sName;
 }
 
-shared_ptr<SpanStyle> const SpanStyleManager::get(const WPXString &name) const
+shared_ptr<SpanStyle> const SpanStyleManager::get(const RVNGString &name) const
 {
-	std::map<WPXString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
+	std::map<RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
 	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<SpanStyle>();
 	return iter->second;

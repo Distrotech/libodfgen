@@ -24,7 +24,7 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include <libwpd/libwpd.h>
+#include <librevenge/librevenge.h>
 #include <vector>
 #include <map>
 #include <stack>
@@ -137,10 +137,10 @@ public:
 	/** retrieves the list style corresponding to a given id. */
 	void _retrieveListStyle(int id);
 
-	OdfEmbeddedObject _findEmbeddedObjectHandler(const WPXString &mimeType);
-	OdfEmbeddedImage _findEmbeddedImageHandler(const WPXString &mimeType);
+	OdfEmbeddedObject _findEmbeddedObjectHandler(const RVNGString &mimeType);
+	OdfEmbeddedImage _findEmbeddedImageHandler(const RVNGString &mimeType);
 
-	unsigned _getObjectId(WPXString val="");
+	unsigned _getObjectId(RVNGString val="");
 
 	OdfDocumentHandler *mpHandler;
 	bool mbUsed; // whether or not it has been before (you can only use me once!)
@@ -169,11 +169,11 @@ public:
 
 	std::vector<DocumentElement *> mFrameAutomaticStyles;
 
-	std::map<WPXString, unsigned, ltstr> mFrameIdMap;
+	std::map<RVNGString, unsigned, ltstr> mFrameIdMap;
 
 	// embedded object handlers
-	std::map<WPXString, OdfEmbeddedObject, ltstr > mObjectHandlers;
-	std::map<WPXString, OdfEmbeddedImage, ltstr > mImageHandlers;
+	std::map<RVNGString, OdfEmbeddedObject, ltstr > mObjectHandlers;
+	std::map<RVNGString, OdfEmbeddedImage, ltstr > mImageHandlers;
 
 	// metadata
 	std::vector<DocumentElement *> mMetaData;
@@ -292,25 +292,25 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	}
 }
 
-OdfEmbeddedObject OdtGeneratorPrivate::_findEmbeddedObjectHandler(const WPXString &mimeType)
+OdfEmbeddedObject OdtGeneratorPrivate::_findEmbeddedObjectHandler(const RVNGString &mimeType)
 {
-	std::map<WPXString, OdfEmbeddedObject, ltstr>::iterator i = mObjectHandlers.find(mimeType);
+	std::map<RVNGString, OdfEmbeddedObject, ltstr>::iterator i = mObjectHandlers.find(mimeType);
 	if (i != mObjectHandlers.end())
 		return i->second;
 
 	return 0;
 }
 
-OdfEmbeddedImage OdtGeneratorPrivate::_findEmbeddedImageHandler(const WPXString &mimeType)
+OdfEmbeddedImage OdtGeneratorPrivate::_findEmbeddedImageHandler(const RVNGString &mimeType)
 {
-	std::map<WPXString, OdfEmbeddedImage, ltstr>::iterator i = mImageHandlers.find(mimeType);
+	std::map<RVNGString, OdfEmbeddedImage, ltstr>::iterator i = mImageHandlers.find(mimeType);
 	if (i != mImageHandlers.end())
 		return i->second;
 
 	return 0;
 }
 
-unsigned OdtGeneratorPrivate::_getObjectId(WPXString val)
+unsigned OdtGeneratorPrivate::_getObjectId(RVNGString val)
 {
 	bool hasLabel = val.cstr() && val.len();
 	if (hasLabel && mFrameIdMap.find(val) != mFrameIdMap.end())
@@ -434,7 +434,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	mpHandler->startDocument();
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: preamble\n"));
-	WPXPropertyList docContentPropList;
+	RVNGPropertyList docContentPropList;
 	docContentPropList.insert("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	docContentPropList.insert("xmlns:meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
 	docContentPropList.insert("xmlns:dc", "http://purl.org/dc/elements/1.1/");
@@ -539,16 +539,16 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 }
 
 
-void OdtGenerator::setDocumentMetaData(const WPXPropertyList &propList)
+void OdtGenerator::setDocumentMetaData(const RVNGPropertyList &propList)
 {
-	WPXPropertyList::Iter i(propList);
+	RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next(); )
 	{
-		// filter out libwpd elements
-		if (strncmp(i.key(), "libwpd", 6) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
+		// filter out librevenge elements
+		if (strncmp(i.key(), "librevenge", 6) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
 		{
 			mpImpl->mMetaData.push_back(new TagOpenElement(i.key()));
-			WPXString sStringValue(i()->getStr(), true);
+			RVNGString sStringValue(i()->getStr(), true);
 			mpImpl->mMetaData.push_back(new CharDataElement(sStringValue.cstr()));
 			mpImpl->mMetaData.push_back(new TagCloseElement(i.key()));
 		}
@@ -556,7 +556,7 @@ void OdtGenerator::setDocumentMetaData(const WPXPropertyList &propList)
 
 }
 
-void OdtGenerator::openPageSpan(const WPXPropertyList &propList)
+void OdtGenerator::openPageSpan(const RVNGPropertyList &propList)
 {
 	PageSpan *pPageSpan = new PageSpan(propList);
 	mpImpl->mPageSpans.push_back(pPageSpan);
@@ -566,11 +566,11 @@ void OdtGenerator::openPageSpan(const WPXPropertyList &propList)
 	mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = true;
 }
 
-void OdtGenerator::openHeader(const WPXPropertyList &propList)
+void OdtGenerator::openHeader(const RVNGPropertyList &propList)
 {
 	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
 
-	if (propList["libwpd:occurence"]->getStr() == "even")
+	if (propList["librevenge:occurence"]->getStr() == "even")
 		mpImpl->mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
 	else
 		mpImpl->mpCurrentPageSpan->setHeaderContent(pHeaderFooterContentElements);
@@ -583,11 +583,11 @@ void OdtGenerator::closeHeader()
 	mpImpl->mpCurrentContentElements = &(mpImpl->mBodyElements);
 }
 
-void OdtGenerator::openFooter(const WPXPropertyList &propList)
+void OdtGenerator::openFooter(const RVNGPropertyList &propList)
 {
 	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
 
-	if (propList["libwpd:occurence"]->getStr() == "even")
+	if (propList["librevenge:occurence"]->getStr() == "even")
 		mpImpl->mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);
 	else
 		mpImpl->mpCurrentPageSpan->setFooterContent(pHeaderFooterContentElements);
@@ -600,7 +600,7 @@ void OdtGenerator::closeFooter()
 	mpImpl->mpCurrentContentElements = &(mpImpl->mBodyElements);
 }
 
-void OdtGenerator::openSection(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
+void OdtGenerator::openSection(const RVNGPropertyList &propList, const RVNGPropertyListVector &columns)
 {
 	size_t iNumColumns = columns.count();
 	double fSectionMarginLeft = 0.0;
@@ -612,7 +612,7 @@ void OdtGenerator::openSection(const WPXPropertyList &propList, const WPXPropert
 
 	if (iNumColumns > 1 || fSectionMarginLeft != 0 || fSectionMarginRight != 0)
 	{
-		WPXString sSectionName;
+		RVNGString sSectionName;
 		sSectionName.sprintf("Section%i", mpImpl->mSectionStyles.size());
 
 		SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
@@ -635,15 +635,15 @@ void OdtGenerator::closeSection()
 		mpImpl->mWriterDocumentStates.top().mbInFakeSection = false;
 }
 
-void OdtGenerator::openParagraph(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops)
+void OdtGenerator::openParagraph(const RVNGPropertyList &propList, const RVNGPropertyListVector &tabStops)
 {
 	// FIXMENOW: What happens if we open a footnote inside a table? do we then inherit the footnote's style
 	// from "Table Contents"
 
-	WPXPropertyList finalPropList(propList);
+	RVNGPropertyList finalPropList(propList);
 	if (mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan && mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
 	{
-		WPXString sPageStyleName;
+		RVNGString sPageStyleName;
 		sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
 		finalPropList.insert("style:master-page-name", sPageStyleName);
 		mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
@@ -660,7 +660,7 @@ void OdtGenerator::openParagraph(const WPXPropertyList &propList, const WPXPrope
 	else
 		finalPropList.insert("style:parent-style-name", "Standard");
 
-	WPXString sName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	RVNGString sName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
@@ -673,13 +673,13 @@ void OdtGenerator::closeParagraph()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:p"));
 }
 
-void OdtGenerator::openSpan(const WPXPropertyList &propList)
+void OdtGenerator::openSpan(const RVNGPropertyList &propList)
 {
 	if (propList["style:font-name"])
 		mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
 
 	// Get the style
-	WPXString sName = mpImpl->mSpanManager.findOrAdd(propList);
+	RVNGString sName = mpImpl->mSpanManager.findOrAdd(propList);
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
@@ -733,11 +733,11 @@ void OdtGeneratorPrivate::_retrieveListStyle(int id)
 	ODFGEN_DEBUG_MSG(("OdtGenerator: impossible to find a list with id=%d\n",id));
 }
 
-void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
+void OdtGenerator::defineOrderedListLevel(const RVNGPropertyList &propList)
 {
 	int id = 0;
-	if (propList["libwpd:id"])
-		id = propList["libwpd:id"]->getInt();
+	if (propList["librevenge:id"])
+		id = propList["librevenge:id"]->getInt();
 
 	ListStyle *pListStyle = 0;
 	if (mpImpl->mWriterListStates.top().mpCurrentListStyle && mpImpl->mWriterListStates.top().mpCurrentListStyle->getListID() == id)
@@ -749,11 +749,11 @@ void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
 	// tell that the user actually is starting a new list at level 1
 	// (and only level 1)
 	if (pListStyle == 0 ||
-	        (propList["libwpd:level"] && propList["libwpd:level"]->getInt()==1 &&
+	        (propList["librevenge:level"] && propList["librevenge:level"]->getInt()==1 &&
 	         (propList["text:start-value"] && propList["text:start-value"]->getInt() != int(mpImpl->mWriterListStates.top().miLastListNumber+1))))
 	{
 		ODFGEN_DEBUG_MSG(("OdtGenerator: Attempting to create a new ordered list style (listid: %i)\n", id));
-		WPXString sName;
+		RVNGString sName;
 		sName.sprintf("OL%i", mpImpl->miNumListStyles);
 		mpImpl->miNumListStyles++;
 		pListStyle = new ListStyle(sName.cstr(), id);
@@ -769,16 +769,16 @@ void OdtGenerator::defineOrderedListLevel(const WPXPropertyList &propList)
 	// and reach those levels. See gradguide0405_PC.wpd in the regression suite
 	for (std::vector<ListStyle *>::iterator iterListStyles = mpImpl->mListStyles.begin(); iterListStyles != mpImpl->mListStyles.end(); ++iterListStyles)
 	{
-		if ((* iterListStyles) && (* iterListStyles)->getListID() == id && propList["libwpd:level"])
-			(* iterListStyles)->updateListLevel((propList["libwpd:level"]->getInt() - 1), propList, true);
+		if ((* iterListStyles) && (* iterListStyles)->getListID() == id && propList["librevenge:level"])
+			(* iterListStyles)->updateListLevel((propList["librevenge:level"]->getInt() - 1), propList, true);
 	}
 }
 
-void OdtGenerator::defineUnorderedListLevel(const WPXPropertyList &propList)
+void OdtGenerator::defineUnorderedListLevel(const RVNGPropertyList &propList)
 {
 	int id = 0;
-	if (propList["libwpd:id"])
-		id = propList["libwpd:id"]->getInt();
+	if (propList["librevenge:id"])
+		id = propList["librevenge:id"]->getInt();
 
 	ListStyle *pListStyle = 0;
 	if (mpImpl->mWriterListStates.top().mpCurrentListStyle && mpImpl->mWriterListStates.top().mpCurrentListStyle->getListID() == id)
@@ -787,7 +787,7 @@ void OdtGenerator::defineUnorderedListLevel(const WPXPropertyList &propList)
 	if (pListStyle == 0)
 	{
 		ODFGEN_DEBUG_MSG(("OdtGenerator: Attempting to create a new unordered list style (listid: %i)\n", id));
-		WPXString sName;
+		RVNGString sName;
 		sName.sprintf("UL%i", mpImpl->miNumListStyles);
 		mpImpl->miNumListStyles++;
 		pListStyle = new ListStyle(sName.cstr(), id);
@@ -797,22 +797,22 @@ void OdtGenerator::defineUnorderedListLevel(const WPXPropertyList &propList)
 	// See comment in OdtGenerator::defineOrderedListLevel
 	for (std::vector<ListStyle *>::iterator iterListStyles = mpImpl->mListStyles.begin(); iterListStyles != mpImpl->mListStyles.end(); ++iterListStyles)
 	{
-		if ((* iterListStyles) && (* iterListStyles)->getListID() == id && propList["libwpd:level"])
-			(* iterListStyles)->updateListLevel((propList["libwpd:level"]->getInt() - 1), propList, false);
+		if ((* iterListStyles) && (* iterListStyles)->getListID() == id && propList["librevenge:level"])
+			(* iterListStyles)->updateListLevel((propList["librevenge:level"]->getInt() - 1), propList, false);
 	}
 }
 
-void OdtGenerator::openOrderedListLevel(const WPXPropertyList &propList)
+void OdtGenerator::openOrderedListLevel(const RVNGPropertyList &propList)
 {
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
 		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:p"));
 		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
-	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["libwpd:id"])
+	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
 	{
 		// first item of a list, be sure to use the list with given id
-		mpImpl->_retrieveListStyle(propList["libwpd:id"]->getInt());
+		mpImpl->_retrieveListStyle(propList["librevenge:id"]->getInt());
 	}
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	mpImpl->_openListLevel(pListLevelOpenElement);
@@ -825,17 +825,17 @@ void OdtGenerator::openOrderedListLevel(const WPXPropertyList &propList)
 	mpImpl->mpCurrentContentElements->push_back(pListLevelOpenElement);
 }
 
-void OdtGenerator::openUnorderedListLevel(const WPXPropertyList &propList)
+void OdtGenerator::openUnorderedListLevel(const RVNGPropertyList &propList)
 {
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
 		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:p"));
 		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
-	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["libwpd:id"])
+	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
 	{
 		// first item of a list, be sure to use the list with given id
-		mpImpl->_retrieveListStyle(propList["libwpd:id"]->getInt());
+		mpImpl->_retrieveListStyle(propList["librevenge:id"]->getInt());
 	}
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	mpImpl->_openListLevel(pListLevelOpenElement);
@@ -891,7 +891,7 @@ void OdtGeneratorPrivate::_closeListLevel()
 	mWriterListStates.top().mbListElementOpened.pop();
 }
 
-void OdtGenerator::openListElement(const WPXPropertyList &propList, const WPXPropertyListVector &tabStops)
+void OdtGenerator::openListElement(const RVNGPropertyList &propList, const RVNGPropertyListVector &tabStops)
 {
 	mpImpl->mWriterListStates.top().miLastListLevel = mpImpl->mWriterListStates.top().miCurrentListLevel;
 	if (mpImpl->mWriterListStates.top().miCurrentListLevel == 1)
@@ -903,14 +903,14 @@ void OdtGenerator::openListElement(const WPXPropertyList &propList, const WPXPro
 		mpImpl->mWriterListStates.top().mbListElementOpened.top() = false;
 	}
 
-	WPXPropertyList finalPropList(propList);
+	RVNGPropertyList finalPropList(propList);
 #if 0
 	// this property is ignored in TextRunStyle.c++
 	if (mpImpl->mWriterListStates.top().mpCurrentListStyle)
 		finalPropList.insert("style:list-style-name", mpImpl->mWriterListStates.top().mpCurrentListStyle->getName());
 #endif
 	finalPropList.insert("style:parent-style-name", "Standard");
-	WPXString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
@@ -942,15 +942,15 @@ void OdtGenerator::closeListElement()
 	}
 }
 
-void OdtGenerator::openFootnote(const WPXPropertyList &propList)
+void OdtGenerator::openFootnote(const RVNGPropertyList &propList)
 {
 	mpImpl->mWriterListStates.push(WriterListState());
 	TagOpenElement *pOpenFootNote = new TagOpenElement("text:note");
 	pOpenFootNote->addAttribute("text:note-class", "footnote");
-	if (propList["libwpd:number"])
+	if (propList["librevenge:number"])
 	{
-		WPXString tmpString("ftn");
-		tmpString.append(propList["libwpd:number"]->getStr());
+		RVNGString tmpString("ftn");
+		tmpString.append(propList["librevenge:number"]->getStr());
 		pOpenFootNote->addAttribute("text:id", tmpString);
 	}
 	mpImpl->mpCurrentContentElements->push_back(pOpenFootNote);
@@ -958,15 +958,15 @@ void OdtGenerator::openFootnote(const WPXPropertyList &propList)
 	TagOpenElement *pOpenFootCitation = new TagOpenElement("text:note-citation");
 	if (propList["text:label"])
 	{
-		WPXString tmpString(propList["text:label"]->getStr(),true);
+		RVNGString tmpString(propList["text:label"]->getStr(),true);
 		pOpenFootCitation->addAttribute("text:label", tmpString);
 	}
 	mpImpl->mpCurrentContentElements->push_back(pOpenFootCitation);
 
 	if (propList["text:label"])
 		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["text:label"]->getStr().cstr()));
-	else if (propList["libwpd:number"])
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["libwpd:number"]->getStr().cstr()));
+	else if (propList["librevenge:number"])
+		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["librevenge:number"]->getStr().cstr()));
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note-citation"));
 
 	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("text:note-body"));
@@ -984,15 +984,15 @@ void OdtGenerator::closeFootnote()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note"));
 }
 
-void OdtGenerator::openEndnote(const WPXPropertyList &propList)
+void OdtGenerator::openEndnote(const RVNGPropertyList &propList)
 {
 	mpImpl->mWriterListStates.push(WriterListState());
 	TagOpenElement *pOpenEndNote = new TagOpenElement("text:note");
 	pOpenEndNote->addAttribute("text:note-class", "endnote");
-	if (propList["libwpd:number"])
+	if (propList["librevenge:number"])
 	{
-		WPXString tmpString("edn");
-		tmpString.append(propList["libwpd:number"]->getStr());
+		RVNGString tmpString("edn");
+		tmpString.append(propList["librevenge:number"]->getStr());
 		pOpenEndNote->addAttribute("text:id", tmpString);
 	}
 	mpImpl->mpCurrentContentElements->push_back(pOpenEndNote);
@@ -1000,15 +1000,15 @@ void OdtGenerator::openEndnote(const WPXPropertyList &propList)
 	TagOpenElement *pOpenEndCitation = new TagOpenElement("text:note-citation");
 	if (propList["text:label"])
 	{
-		WPXString tmpString(propList["text:label"]->getStr(),true);
+		RVNGString tmpString(propList["text:label"]->getStr(),true);
 		pOpenEndCitation->addAttribute("text:label", tmpString);
 	}
 	mpImpl->mpCurrentContentElements->push_back(pOpenEndCitation);
 
 	if (propList["text:label"])
 		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["text:label"]->getStr().cstr()));
-	else if (propList["libwpd:number"])
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["libwpd:number"]->getStr().cstr()));
+	else if (propList["librevenge:number"])
+		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["librevenge:number"]->getStr().cstr()));
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note-citation"));
 
 	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("text:note-body"));
@@ -1026,7 +1026,7 @@ void OdtGenerator::closeEndnote()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note"));
 }
 
-void OdtGenerator::openComment(const WPXPropertyList &)
+void OdtGenerator::openComment(const RVNGPropertyList &)
 {
 	mpImpl->mWriterListStates.push(WriterListState());
 	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:annotation"));
@@ -1043,21 +1043,21 @@ void OdtGenerator::closeComment()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:annotation"));
 }
 
-void OdtGenerator::openTable(const WPXPropertyList &propList, const WPXPropertyListVector &columns)
+void OdtGenerator::openTable(const RVNGPropertyList &propList, const RVNGPropertyListVector &columns)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote)
 	{
-		WPXString sTableName;
+		RVNGString sTableName;
 		sTableName.sprintf("Table%i", mpImpl->mTableStyles.size());
 
 		// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
 		// state which is transmitted inside the page. could this lead to unacceptable behaviour?
-		// WLACH_REFACTORING: characterize this behaviour, probably should nip it at the bud within libwpd
+		// WLACH_REFACTORING: characterize this behaviour, probably should nip it at the bud within librevenge
 		TableStyle *pTableStyle = new TableStyle(propList, columns, sTableName.cstr());
 
 		if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
 		{
-			WPXString sMasterPageName("Page_Style_1");
+			RVNGString sMasterPageName("Page_Style_1");
 			pTableStyle->setMasterPageName(sMasterPageName);
 			mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
 		}
@@ -1075,7 +1075,7 @@ void OdtGenerator::openTable(const WPXPropertyList &propList, const WPXPropertyL
 		for (int i=0; i<pTableStyle->getNumColumns(); ++i)
 		{
 			TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
-			WPXString sColumnStyleName;
+			RVNGString sColumnStyleName;
 			sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
 			pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
 			mpImpl->mpCurrentContentElements->push_back(pTableColumnOpenElement);
@@ -1086,7 +1086,7 @@ void OdtGenerator::openTable(const WPXPropertyList &propList, const WPXPropertyL
 	}
 }
 
-void OdtGenerator::openTableRow(const WPXPropertyList &propList)
+void OdtGenerator::openTableRow(const RVNGPropertyList &propList)
 {
 	if (mpImpl->mWriterDocumentStates.top().mbInNote)
 		return;
@@ -1095,13 +1095,13 @@ void OdtGenerator::openTableRow(const WPXPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableRow called with no table\n"));
 		return;
 	}
-	if (propList["libwpd:is-header-row"] && (propList["libwpd:is-header-row"]->getInt()))
+	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
 	{
 		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("table:table-header-rows"));
 		mpImpl->mWriterDocumentStates.top().mbHeaderRow = true;
 	}
 
-	WPXString sTableRowStyleName;
+	RVNGString sTableRowStyleName;
 	sTableRowStyleName.sprintf("%s.Row%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableRowStyles());
 	TableRowStyle *pTableRowStyle = new TableRowStyle(propList, sTableRowStyleName.cstr());
 	mpImpl->mpCurrentTableStyle->addTableRowStyle(pTableRowStyle);
@@ -1124,7 +1124,7 @@ void OdtGenerator::closeTableRow()
 	}
 }
 
-void OdtGenerator::openTableCell(const WPXPropertyList &propList)
+void OdtGenerator::openTableCell(const RVNGPropertyList &propList)
 {
 	if (mpImpl->mWriterDocumentStates.top().mbInNote)
 		return;
@@ -1134,7 +1134,7 @@ void OdtGenerator::openTableCell(const WPXPropertyList &propList)
 		return;
 	}
 
-	WPXString sTableCellStyleName;
+	RVNGString sTableCellStyleName;
 	sTableCellStyleName.sprintf( "%s.Cell%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableCellStyles());
 	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
 	mpImpl->mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
@@ -1162,7 +1162,7 @@ void OdtGenerator::closeTableCell()
 	}
 }
 
-void OdtGenerator::insertCoveredTableCell(const WPXPropertyList &)
+void OdtGenerator::insertCoveredTableCell(const RVNGPropertyList &)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote && mpImpl->mpCurrentTableStyle)
 	{
@@ -1198,7 +1198,7 @@ void OdtGenerator::insertLineBreak()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:line-break"));
 }
 
-void OdtGenerator::insertField(const WPXString &type, const WPXPropertyList &propList)
+void OdtGenerator::insertField(const RVNGString &type, const RVNGPropertyList &propList)
 {
 	if (!type.len())
 		return;
@@ -1214,22 +1214,22 @@ void OdtGenerator::insertField(const WPXString &type, const WPXPropertyList &pro
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement(type));
 }
 
-void OdtGenerator::insertText(const WPXString &text)
+void OdtGenerator::insertText(const RVNGString &text)
 {
 	DocumentElement *pText = new TextElement(text);
 	mpImpl->mpCurrentContentElements->push_back(pText);
 }
 
-void OdtGenerator::openFrame(const WPXPropertyList &propList)
+void OdtGenerator::openFrame(const RVNGPropertyList &propList)
 {
 	mpImpl->mWriterListStates.push(WriterListState());
 
 	// First, let's create a Frame Style for this box
 	TagOpenElement *frameStyleOpenElement = new TagOpenElement("style:style");
-	WPXString frameStyleName;
+	RVNGString frameStyleName;
 	unsigned objectId = 0;
-	if (propList["libwpd:frame-name"])
-		objectId= mpImpl->_getObjectId(propList["libwpd:frame-name"]->getStr());
+	if (propList["librevenge:frame-name"])
+		objectId= mpImpl->_getObjectId(propList["librevenge:frame-name"]->getStr());
 	else
 		objectId= mpImpl->_getObjectId("");
 	frameStyleName.sprintf("GraphicFrame_%i", objectId);
@@ -1290,7 +1290,7 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 
 	// Now, let's create an automatic style for this frame
 	TagOpenElement *frameAutomaticStyleElement = new TagOpenElement("style:style");
-	WPXString frameAutomaticStyleName;
+	RVNGString frameAutomaticStyleName;
 	frameAutomaticStyleName.sprintf("fr%i", objectId);
 	frameAutomaticStyleElement->addAttribute("style:name", frameAutomaticStyleName);
 	frameAutomaticStyleElement->addAttribute("style:family", "graphic");
@@ -1358,7 +1358,7 @@ void OdtGenerator::openFrame(const WPXPropertyList &propList)
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
 
 	drawFrameOpenElement->addAttribute("draw:style-name", frameAutomaticStyleName);
-	WPXString objectName;
+	RVNGString objectName;
 	objectName.sprintf("Object%i", objectId);
 	drawFrameOpenElement->addAttribute("draw:name", objectName);
 	if (propList["text:anchor-type"])
@@ -1409,17 +1409,17 @@ void OdtGenerator::closeFrame()
 	mpImpl->mWriterDocumentStates.top().mbInFrame = false;
 }
 
-void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPXBinaryData &data)
+void OdtGenerator::insertBinaryObject(const RVNGPropertyList &propList, const RVNGBinaryData &data)
 {
 	if (!data.size())
 		return;
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
-	if (!propList["libwpd:mimetype"])
+	if (!propList["librevenge:mimetype"])
 		return;
 
-	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["libwpd:mimetype"]->getStr());
-	OdfEmbeddedImage tmpImageHandler = mpImpl->_findEmbeddedImageHandler(propList["libwpd:mimetype"]->getStr());
+	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["librevenge:mimetype"]->getStr());
+	OdfEmbeddedImage tmpImageHandler = mpImpl->_findEmbeddedImageHandler(propList["librevenge:mimetype"]->getStr());
 
 	if (tmpObjectHandler || tmpImageHandler)
 	{
@@ -1438,14 +1438,14 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 		}
 		if (tmpImageHandler)
 		{
-			WPXBinaryData output;
+			RVNGBinaryData output;
 			if (tmpImageHandler(data, output))
 			{
 				mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
 
 				mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
 
-				WPXString binaryBase64Data = output.getBase64Data();
+				RVNGString binaryBase64Data = output.getBase64Data();
 
 				mpImpl->mpCurrentContentElements->push_back(new CharDataElement(binaryBase64Data.cstr()));
 
@@ -1458,37 +1458,37 @@ void OdtGenerator::insertBinaryObject(const WPXPropertyList &propList, const WPX
 	else
 		// assuming we have a binary image or a object_ole that we can just insert as it is
 	{
-		if (propList["libwpd:mimetype"]->getStr() == "object/ole")
+		if (propList["librevenge:mimetype"]->getStr() == "object/ole")
 			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:object-ole"));
 		else
 			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
 
 		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
 
-		WPXString binaryBase64Data = data.getBase64Data();
+		RVNGString binaryBase64Data = data.getBase64Data();
 
 		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(binaryBase64Data.cstr()));
 
 		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:binary-data"));
 
-		if (propList["libwpd:mimetype"]->getStr() == "object/ole")
+		if (propList["librevenge:mimetype"]->getStr() == "object/ole")
 			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:object-ole"));
 		else
 			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:image"));
 	}
 }
 
-void OdtGenerator::openTextBox(const WPXPropertyList &propList)
+void OdtGenerator::openTextBox(const RVNGPropertyList &propList)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Text box without a frame simply doesn't make sense for us
 		return;
 	mpImpl->mWriterListStates.push(WriterListState());
 	mpImpl->mWriterDocumentStates.push(WriterDocumentState());
 	TagOpenElement *textBoxOpenElement = new TagOpenElement("draw:text-box");
-	if (propList["libwpd:next-frame-name"])
+	if (propList["librevenge:next-frame-name"])
 	{
-		WPXString frameName;
-		unsigned id=mpImpl->_getObjectId(propList["libwpd:next-frame-name"]->getStr());
+		RVNGString frameName;
+		unsigned id=mpImpl->_getObjectId(propList["librevenge:next-frame-name"]->getStr());
 		frameName.sprintf("Object%i", id);
 		textBoxOpenElement->addAttribute("draw:chain-next-name", frameName);
 	}
@@ -1509,11 +1509,11 @@ void OdtGenerator::closeTextBox()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:text-box"));
 }
 
-void OdtGenerator::defineSectionStyle(WPXPropertyList const &, WPXPropertyListVector const &)
+void OdtGenerator::defineSectionStyle(RVNGPropertyList const &, RVNGPropertyListVector const &)
 {
 }
 
-void OdtGenerator::insertEquation(WPXPropertyList const &, WPXString const &)
+void OdtGenerator::insertEquation(RVNGPropertyList const &, RVNGString const &)
 {
 }
 
@@ -1531,24 +1531,24 @@ void OdtGenerator::closePageSpan()
 {
 }
 
-void OdtGenerator::definePageStyle(WPXPropertyList const &)
+void OdtGenerator::definePageStyle(RVNGPropertyList const &)
 {
 }
 
-void OdtGenerator::defineParagraphStyle(WPXPropertyList const &, WPXPropertyListVector const &)
+void OdtGenerator::defineParagraphStyle(RVNGPropertyList const &, RVNGPropertyListVector const &)
 {
 }
 
-void OdtGenerator::defineCharacterStyle(WPXPropertyList const &)
+void OdtGenerator::defineCharacterStyle(RVNGPropertyList const &)
 {
 }
 
-void OdtGenerator::registerEmbeddedObjectHandler(const WPXString &mimeType, OdfEmbeddedObject objectHandler)
+void OdtGenerator::registerEmbeddedObjectHandler(const RVNGString &mimeType, OdfEmbeddedObject objectHandler)
 {
 	mpImpl->mObjectHandlers[mimeType] = objectHandler;
 }
 
-void OdtGenerator::registerEmbeddedImageHandler(const WPXString &mimeType, OdfEmbeddedImage imageHandler)
+void OdtGenerator::registerEmbeddedImageHandler(const RVNGString &mimeType, OdfEmbeddedImage imageHandler)
 {
 	mpImpl->mImageHandlers[mimeType] = imageHandler;
 }

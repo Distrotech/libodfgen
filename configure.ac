@@ -6,8 +6,8 @@ AC_PREREQ([2.65])
 # Version informations
 # ====================
 m4_define([libodfgen_version_major],[0])
-m4_define([libodfgen_version_minor],[0])
-m4_define([libodfgen_version_micro],[3])
+m4_define([libodfgen_version_minor],[1])
+m4_define([libodfgen_version_micro],[0])
 m4_define([libodfgen_version],[libodfgen_version_major.libodfgen_version_minor.libodfgen_version_micro])
 
 # =============
@@ -36,23 +36,11 @@ PKG_PROG_PKG_CONFIG([0.20])
 # ====================
 # Find additional apps
 # ====================
-PKG_CHECK_MODULES([WPD],[
-	libwpd-0.9
+PKG_CHECK_MODULES([REVENGE],[
+	librevenge-0.0
 ])
-AC_SUBST([WPD_CFLAGS])
-AC_SUBST([WPD_LIGS])
-
-PKG_CHECK_MODULES([WPG],[
-	libwpg-0.2
-])
-AC_SUBST([WPG_CFLAGS])
-AC_SUBST([WPG_LIGS])
-
-PKG_CHECK_MODULES([ETONYEK],[
-	libetonyek-0.0
-])
-AC_SUBST([ETONYEK_CFLAGS])
-AC_SUBST([ETONYEK_LIBS])
+AC_SUBST([REVENGE_CFLAGS])
+AC_SUBST([REVENGE_LIGS])
 
 # =================================
 # Libtool/Version Makefile settings

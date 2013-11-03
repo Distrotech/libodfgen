@@ -26,7 +26,7 @@
 #include "PageSpan.hxx"
 #include "DocumentElement.hxx"
 
-PageSpan::PageSpan(const WPXPropertyList &xPropList) :
+PageSpan::PageSpan(const RVNGPropertyList &xPropList) :
 	mxPropList(xPropList),
 	mpHeaderContent(0),
 	mpFooterContent(0),
@@ -81,8 +81,8 @@ PageSpan::~PageSpan()
 
 int PageSpan::getSpan() const
 {
-	if (mxPropList["libwpd:num-pages"])
-		return mxPropList["libwpd:num-pages"]->getInt();
+	if (mxPropList["librevenge:num-pages"])
+		return mxPropList["librevenge:num-pages"]->getInt();
 
 	return 0; // should never happen
 }
@@ -145,27 +145,27 @@ void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> *pFooterConte
 
 void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const
 {
-	WPXPropertyList propList;
+	RVNGPropertyList propList;
 
-	WPXString sPageLayoutName;
+	RVNGString sPageLayoutName;
 	sPageLayoutName.sprintf("PM%i", iNum+2);
 	propList.insert("style:name", sPageLayoutName);
 	pHandler->startElement("style:page-layout", propList);
 
-	WPXPropertyList tempPropList = mxPropList;
+	RVNGPropertyList tempPropList = mxPropList;
 	if (!tempPropList["style:writing-mode"])
-		tempPropList.insert("style:writing-mode", WPXString("lr-tb"));
+		tempPropList.insert("style:writing-mode", RVNGString("lr-tb"));
 	if (!tempPropList["style:footnote-max-height"])
-		tempPropList.insert("style:footnote-max-height", WPXString("0in"));
+		tempPropList.insert("style:footnote-max-height", RVNGString("0in"));
 	pHandler->startElement("style:page-layout-properties", tempPropList);
 
-	WPXPropertyList footnoteSepPropList;
-	footnoteSepPropList.insert("style:width", WPXString("0.0071in"));
-	footnoteSepPropList.insert("style:distance-before-sep", WPXString("0.0398in"));
-	footnoteSepPropList.insert("style:distance-after-sep", WPXString("0.0398in"));
-	footnoteSepPropList.insert("style:adjustment", WPXString("left"));
-	footnoteSepPropList.insert("style:rel-width", WPXString("25%"));
-	footnoteSepPropList.insert("style:color", WPXString("#000000"));
+	RVNGPropertyList footnoteSepPropList;
+	footnoteSepPropList.insert("style:width", RVNGString("0.0071in"));
+	footnoteSepPropList.insert("style:distance-before-sep", RVNGString("0.0398in"));
+	footnoteSepPropList.insert("style:distance-after-sep", RVNGString("0.0398in"));
+	footnoteSepPropList.insert("style:adjustment", RVNGString("left"));
+	footnoteSepPropList.insert("style:rel-width", RVNGString("25%"));
+	footnoteSepPropList.insert("style:color", RVNGString("#000000"));
 	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
 
 	pHandler->endElement("style:footnote-sep");
@@ -182,18 +182,18 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 	for (int i=iStartingNum; i<(iStartingNum+iSpan); ++i)
 	{
 		TagOpenElement masterPageOpen("style:master-page");
-		WPXString sMasterPageName, sMasterPageDisplayName;
+		RVNGString sMasterPageName, sMasterPageDisplayName;
 		sMasterPageName.sprintf("Page_Style_%i", i);
 		sMasterPageDisplayName.sprintf("Page Style %i", i);
-		WPXString sPageLayoutName;
-		WPXPropertyList propList;
+		RVNGString sPageLayoutName;
+		RVNGPropertyList propList;
 		sPageLayoutName.sprintf("PM%i", iPageLayoutNum+2);
 		propList.insert("style:name", sMasterPageName);
 		propList.insert("style:display-name", sMasterPageDisplayName);
 		propList.insert("style:page-layout-name", sPageLayoutName);
 		if (!bLastPageSpan)
 		{
-			WPXString sNextMasterPageName;
+			RVNGString sNextMasterPageName;
 			sNextMasterPageName.sprintf("Page_Style_%i", (i+1));
 			propList.insert("style:next-style-name", sNextMasterPageName);
 		}

@@ -29,7 +29,7 @@
 
 #include <map>
 
-#include <libwpd/libwpd.h>
+#include <librevenge/librevenge.h>
 
 #include "FilterInternal.hxx"
 
@@ -40,28 +40,28 @@ class OdfDocumentHandler;
 class ParagraphStyle
 {
 public:
-	ParagraphStyle(WPXPropertyList const &propList, const WPXPropertyListVector &tabStops, const WPXString &sName);
+	ParagraphStyle(RVNGPropertyList const &propList, const RVNGPropertyListVector &tabStops, const RVNGString &sName);
 	virtual ~ParagraphStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	WPXString getName() const
+	RVNGString getName() const
 	{
 		return msName;
 	}
 private:
-	WPXPropertyList mpPropList;
-	WPXPropertyListVector mxTabStops;
-	WPXString msName;
+	RVNGPropertyList mpPropList;
+	RVNGPropertyListVector mxTabStops;
+	RVNGString msName;
 };
 
 
 class SpanStyle : public Style
 {
 public:
-	SpanStyle(const char *psName, const WPXPropertyList &xPropList);
+	SpanStyle(const char *psName, const RVNGPropertyList &xPropList);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
-	WPXPropertyList mPropList;
+	RVNGPropertyList mPropList;
 };
 
 class ParagraphStyleManager : public StyleManager
@@ -76,10 +76,10 @@ public:
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
 	Note: using S%i as new name*/
-	WPXString findOrAdd(const WPXPropertyList &xPropList, const WPXPropertyListVector &tabStops);
+	RVNGString findOrAdd(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &tabStops);
 
 	/* returns the style corresponding to a given name ( if it exists ) */
-	shared_ptr<ParagraphStyle> const get(const WPXString &name) const;
+	shared_ptr<ParagraphStyle> const get(const RVNGString &name) const;
 
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const;
@@ -87,12 +87,12 @@ public:
 
 protected:
 	// return a unique key
-	WPXString getKey(const WPXPropertyList &xPropList, const WPXPropertyListVector &tabStops) const;
+	RVNGString getKey(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &tabStops) const;
 
 	// hash key -> name
-	std::map<WPXString, WPXString, ltstr> mNameHash;
+	std::map<RVNGString, RVNGString, ltstr> mNameHash;
 	// style name -> paragraph style
-	std::map<WPXString, shared_ptr<ParagraphStyle>, ltstr> mStyleHash;
+	std::map<RVNGString, shared_ptr<ParagraphStyle>, ltstr> mStyleHash;
 };
 
 class SpanStyleManager : public StyleManager
@@ -107,19 +107,19 @@ public:
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
 	Note: using Span%i as new name*/
-	WPXString findOrAdd(const WPXPropertyList &xPropList);
+	RVNGString findOrAdd(const RVNGPropertyList &xPropList);
 
 	/* returns the style corresponding to a given name ( if it exists ) */
-	shared_ptr<SpanStyle> const get(const WPXString &name) const;
+	shared_ptr<SpanStyle> const get(const RVNGString &name) const;
 
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const;
 
 protected:
 	// hash key -> style name
-	std::map<WPXString, WPXString, ltstr> mNameHash;
+	std::map<RVNGString, RVNGString, ltstr> mNameHash;
 	// style name -> SpanStyle
-	std::map<WPXString, shared_ptr<SpanStyle>, ltstr> mStyleHash;
+	std::map<RVNGString, shared_ptr<SpanStyle>, ltstr> mStyleHash;
 };
 #endif
 

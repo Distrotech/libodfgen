@@ -25,7 +25,7 @@
 
 #ifndef _STYLE_HXX_
 #define _STYLE_HXX_
-#include <libwpd/libwpd.h>
+#include <librevenge/librevenge.h>
 
 #include "DocumentElement.hxx"
 
@@ -37,12 +37,12 @@ public:
 	{
 		if (mpsMasterPageName) delete mpsMasterPageName;
 	}
-	void setMasterPageName(WPXString &sMasterPageName)
+	void setMasterPageName(RVNGString &sMasterPageName)
 	{
 		if (mpsMasterPageName) delete mpsMasterPageName;
-		mpsMasterPageName = new WPXString(sMasterPageName);
+		mpsMasterPageName = new RVNGString(sMasterPageName);
 	}
-	const WPXString *getMasterPageName() const
+	const RVNGString *getMasterPageName() const
 	{
 		return mpsMasterPageName;
 	}
@@ -50,23 +50,23 @@ public:
 private:
 	TopLevelElementStyle(const TopLevelElementStyle &);
 	TopLevelElementStyle &operator=(const TopLevelElementStyle &);
-	WPXString *mpsMasterPageName;
+	RVNGString *mpsMasterPageName;
 };
 
 class Style
 {
 public:
-	Style(const WPXString &psName) : msName(psName) {}
+	Style(const RVNGString &psName) : msName(psName) {}
 	virtual ~Style() {}
 
 	virtual void write(OdfDocumentHandler *) const {};
-	const WPXString &getName() const
+	const RVNGString &getName() const
 	{
 		return msName;
 	}
 
 private:
-	WPXString msName;
+	RVNGString msName;
 };
 
 class StyleManager

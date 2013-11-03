@@ -4,8 +4,8 @@ libdir=@libdir@
 includedir=@includedir@
                                                                        
 Name: libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@
-Description: Library to generate ODF documents from libwpd's and libwpg's api calls
+Description: Library to generate ODF documents from librevenge's api calls
 Version: @VERSION@
-Requires: libwpd-0.9 libwpg-0.2 libetonyek-0.0
+Requires: librevenge-0.0
 Libs: -L${libdir} -lodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@
 Cflags: -I${includedir}/libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@

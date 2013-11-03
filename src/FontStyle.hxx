@@ -26,7 +26,7 @@
 #define _FONTSTYLE_HXX_
 #include <map>
 
-#include <libwpd/libwpd.h>
+#include <librevenge/librevenge.h>
 
 #include "FilterInternal.hxx"
 
@@ -38,13 +38,13 @@ public:
 	FontStyle(const char *psName, const char *psFontFamily);
 	~FontStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	const WPXString &getFontFamily() const
+	const RVNGString &getFontFamily() const
 	{
 		return msFontFamily;
 	}
 
 private:
-	WPXString msFontFamily;
+	RVNGString msFontFamily;
 };
 
 class FontStyleManager : public StyleManager
@@ -60,7 +60,7 @@ public:
 
 	Note: the returned font name is actually equalled to psFontFamily
 	*/
-	WPXString findOrAdd(const char *psFontFamily);
+	RVNGString findOrAdd(const char *psFontFamily);
 
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const {}
@@ -69,7 +69,7 @@ public:
 
 protected:
 	// style name -> SpanStyle
-	std::map<WPXString, shared_ptr<FontStyle>, ltstr> mStyleHash;
+	std::map<RVNGString, shared_ptr<FontStyle>, ltstr> mStyleHash;
 };
 
 #endif

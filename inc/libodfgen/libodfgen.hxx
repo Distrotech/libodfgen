@@ -23,8 +23,8 @@
 #ifndef __LIBODFGEN_HXX__
 #define __LIBODFGEN_HXX__
 
-#include <libwpd/libwpd.h>
-#include <libwpg/libwpg.h>
+#include <librevenge/librevenge.h>
+#include <librevenge/librevenge.h>
 #include "OdfDocumentHandler.hxx"
 #include "OdtGenerator.hxx"
 #include "OdgGenerator.hxx"

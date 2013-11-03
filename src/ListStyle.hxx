@@ -26,7 +26,7 @@
 #define _LISTSTYLE_HXX_
 
 #include <map>
-#include <libwpd/libwpd.h>
+#include <librevenge/librevenge.h>
 
 #include "Style.hxx"
 
@@ -40,19 +40,19 @@ public:
 class OrderedListLevelStyle : public ListLevelStyle
 {
 public:
-	OrderedListLevelStyle(const WPXPropertyList &xPropList);
+	OrderedListLevelStyle(const RVNGPropertyList &xPropList);
 	void write(OdfDocumentHandler *pHandler, int iLevel) const;
 private:
-	WPXPropertyList mPropList;
+	RVNGPropertyList mPropList;
 };
 
 class UnorderedListLevelStyle : public ListLevelStyle
 {
 public:
-	UnorderedListLevelStyle(const WPXPropertyList &xPropList);
+	UnorderedListLevelStyle(const RVNGPropertyList &xPropList);
 	void write(OdfDocumentHandler *pHandler, int iLevel) const;
 private:
-	WPXPropertyList mPropList;
+	RVNGPropertyList mPropList;
 };
 
 class ListStyle : public Style
@@ -60,7 +60,7 @@ class ListStyle : public Style
 public:
 	ListStyle(const char *psName, const int iListID);
 	virtual ~ListStyle();
-	void updateListLevel(const int iLevel, const WPXPropertyList &xPropList, bool ordered);
+	void updateListLevel(const int iLevel, const RVNGPropertyList &xPropList, bool ordered);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	int getListID()
 	{

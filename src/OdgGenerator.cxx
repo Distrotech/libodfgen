@@ -50,10 +50,10 @@ using namespace libodfgen;
 namespace
 {
 
-static WPXString doubleToString(const double value)
+static RVNGString doubleToString(const double value)
 {
-	WPXProperty *prop = WPXPropertyFactory::newDoubleProp(value);
-	WPXString retVal = prop->getStr();
+	RVNGProperty *prop = RVNGPropertyFactory::newDoubleProp(value);
+	RVNGString retVal = prop->getStr();
 	delete prop;
 	return retVal;
 }
@@ -66,10 +66,10 @@ public:
 	OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdgGeneratorPrivate();
 	/** update a graphic style element */
-	void _updateGraphicPropertiesElement(TagOpenElement &element, ::WPXPropertyList const &style, ::WPXPropertyListVector const &gradient);
+	void _updateGraphicPropertiesElement(TagOpenElement &element, ::RVNGPropertyList const &style, ::RVNGPropertyListVector const &gradient);
 	void _writeGraphicsStyle();
-	void _drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed);
-	void _drawPath(const WPXPropertyListVector &path);
+	void _drawPolySomething(const ::RVNGPropertyListVector &vertices, bool isClosed);
+	void _drawPath(const RVNGPropertyListVector &path);
 	//! returns the document type
 	std::string getDocumentType() const;
 	// body elements
@@ -97,8 +97,8 @@ public:
 
 	OdfDocumentHandler *mpHandler;
 
-	::WPXPropertyList mxStyle;
-	::WPXPropertyListVector mxGradient;
+	::RVNGPropertyList mxStyle;
+	::RVNGPropertyListVector mxGradient;
 	int miGradientIndex;
 	int miBitmapIndex;
 	int miStartMarkerIndex;
@@ -275,7 +275,7 @@ OdgGenerator::~OdgGenerator()
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpImpl->mpHandler);
-		WPXString sWidth;
+		RVNGString sWidth;
 		sWidth.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxWidth));
 		mpImpl->mpHandler->characters(sWidth);
 		mpImpl->mpHandler->endElement("config:config-item");
@@ -283,7 +283,7 @@ OdgGenerator::~OdgGenerator()
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpImpl->mpHandler);
-		WPXString sHeight;
+		RVNGString sHeight;
 		sHeight.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxHeight));
 		mpImpl->mpHandler->characters(sHeight);
 		mpImpl->mpHandler->endElement("config:config-item");
@@ -355,7 +355,7 @@ OdgGenerator::~OdgGenerator()
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-bottom", "0in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-left", "0in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-right", "0in");
-		WPXString sValue;
+		RVNGString sValue;
 		sValue = doubleToString(mpImpl->mfMaxWidth);
 		sValue.append("in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-width", sValue);
@@ -434,7 +434,7 @@ OdgGenerator::~OdgGenerator()
 	delete mpImpl;
 }
 
-void OdgGenerator::startGraphics(const ::WPXPropertyList &propList)
+void OdgGenerator::startGraphics(const ::RVNGPropertyList &propList)
 {
 	if (propList["svg:width"])
 	{
@@ -454,9 +454,9 @@ void OdgGenerator::startGraphics(const ::WPXPropertyList &propList)
 
 	TagOpenElement *pStylePageLayoutOpenElement = new TagOpenElement("style:page-layout");
 
-	WPXString sValue;
+	RVNGString sValue;
 	if (propList["draw:name"])
-		sValue = WPXString(propList["draw:name"]->getStr(), true); // escape special xml characters
+		sValue = RVNGString(propList["draw:name"]->getStr(), true); // escape special xml characters
 	else
 		sValue.sprintf("page%i", mpImpl->miPageIndex);
 	pDrawPageOpenElement->addAttribute("draw:name", sValue);
@@ -531,14 +531,14 @@ void OdgGenerator::endGraphics()
 	mpImpl->miPageIndex++;
 }
 
-void OdgGenerator::setStyle(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &gradient)
+void OdgGenerator::setStyle(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &gradient)
 {
 	mpImpl->mxStyle.clear();
 	mpImpl->mxStyle = propList;
 	mpImpl->mxGradient = gradient;
 }
 
-void OdgGenerator::startLayer(const ::WPXPropertyList & /* propList */)
+void OdgGenerator::startLayer(const ::RVNGPropertyList & /* propList */)
 {
 	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:g"));
 }
@@ -548,7 +548,7 @@ void OdgGenerator::endLayer()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:g"));
 }
 
-void OdgGenerator::drawRectangle(const ::WPXPropertyList &propList)
+void OdgGenerator::drawRectangle(const ::RVNGPropertyList &propList)
 {
 	if (!propList["svg:x"] || !propList["svg:y"] ||
 	        !propList["svg:width"] || !propList["svg:height"])
@@ -558,7 +558,7 @@ void OdgGenerator::drawRectangle(const ::WPXPropertyList &propList)
 	}
 	mpImpl->_writeGraphicsStyle();
 	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
-	WPXString sValue;
+	RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
 	pDrawRectElement->addAttribute("draw:style-name", sValue);
 	pDrawRectElement->addAttribute("svg:x", propList["svg:x"]->getStr());
@@ -574,7 +574,7 @@ void OdgGenerator::drawRectangle(const ::WPXPropertyList &propList)
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:rect"));
 }
 
-void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
+void OdgGenerator::drawEllipse(const ::RVNGPropertyList &propList)
 {
 	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
 	{
@@ -583,7 +583,7 @@ void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
 	}
 	mpImpl->_writeGraphicsStyle();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
-	WPXString sValue;
+	RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
 	sValue = doubleToString(2 * propList["svg:rx"]->getDouble());
@@ -592,9 +592,9 @@ void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
 	sValue = doubleToString(2 * propList["svg:ry"]->getDouble());
 	sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
-	if (propList["libwpg:rotate"] && propList["libwpg:rotate"]->getDouble() != 0.0)
+	if (propList["librevenge:rotate"] && propList["librevenge:rotate"]->getDouble() != 0.0)
 	{
-		double rotation = propList["libwpg:rotate"]->getDouble();
+		double rotation = propList["librevenge:rotate"]->getDouble();
 		while(rotation < -180)
 			rotation += 360;
 		while(rotation > 180)
@@ -629,17 +629,17 @@ void OdgGenerator::drawEllipse(const ::WPXPropertyList &propList)
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
 
-void OdgGenerator::drawPolyline(const ::WPXPropertyListVector &vertices)
+void OdgGenerator::drawPolyline(const ::RVNGPropertyListVector &vertices)
 {
 	mpImpl->_drawPolySomething(vertices, false);
 }
 
-void OdgGenerator::drawPolygon(const ::WPXPropertyListVector &vertices)
+void OdgGenerator::drawPolygon(const ::RVNGPropertyListVector &vertices)
 {
 	mpImpl->_drawPolySomething(vertices, true);
 }
 
-void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed)
+void OdgGeneratorPrivate::_drawPolySomething(const ::RVNGPropertyListVector &vertices, bool isClosed)
 {
 	if(vertices.count() < 2)
 		return;
@@ -653,7 +653,7 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector &vert
 		}
 		_writeGraphicsStyle();
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
-		WPXString sValue;
+		RVNGString sValue;
 		sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 		pDrawLineElement->addAttribute("draw:style-name", sValue);
 		pDrawLineElement->addAttribute("draw:layer", "layout");
@@ -666,34 +666,34 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::WPXPropertyListVector &vert
 	}
 	else
 	{
-		::WPXPropertyListVector path;
-		::WPXPropertyList element;
+		::RVNGPropertyListVector path;
+		::RVNGPropertyList element;
 
 		for (unsigned long ii = 0; ii < vertices.count(); ++ii)
 		{
 			element = vertices[ii];
 			if (ii == 0)
-				element.insert("libwpg:path-action", "M");
+				element.insert("librevenge:path-action", "M");
 			else
-				element.insert("libwpg:path-action", "L");
+				element.insert("librevenge:path-action", "L");
 			path.append(element);
 			element.clear();
 		}
 		if (isClosed)
 		{
-			element.insert("libwpg:path-action", "Z");
+			element.insert("librevenge:path-action", "Z");
 			path.append(element);
 		}
 		_drawPath(path);
 	}
 }
 
-void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
+void OdgGeneratorPrivate::_drawPath(const RVNGPropertyListVector &path)
 {
 	if(path.count() == 0)
 		return;
 	// This must be a mistake and we do not want to crash lower
-	if(path[0]["libwpg:path-action"]->getStr() == "Z")
+	if(path[0]["librevenge:path-action"]->getStr() == "Z")
 		return;
 
 	// try to find the bounding box
@@ -709,9 +709,9 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 
 	for(unsigned k = 0; k < path.count(); ++k)
 	{
-		if (!path[k]["libwpg:path-action"])
+		if (!path[k]["librevenge:path-action"])
 			continue;
-		std::string action=path[k]["libwpg:path-action"]->getStr().cstr();
+		std::string action=path[k]["librevenge:path-action"]->getStr().cstr();
 		if (action.length()!=1 || action[0]=='Z') continue;
 
 		bool coordOk=path[k]["svg:x"]&&path[k]["svg:y"];
@@ -781,9 +781,9 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 		else if(action[0] == 'A' && coordOk && path[k]["svg:rx"] && path[k]["svg:ry"])
 		{
 			getEllipticalArcBBox(lastX, lastY, path[k]["svg:rx"]->getDouble(), path[k]["svg:ry"]->getDouble(),
-			                     path[k]["libwpg:rotate"] ? path[k]["libwpg:rotate"]->getDouble() : 0.0,
-			                     path[k]["libwpg:large-arc"] ? path[k]["libwpg:large-arc"]->getInt() : 1,
-			                     path[k]["libwpg:sweep"] ? path[k]["libwpg:sweep"]->getInt() : 1,
+			                     path[k]["librevenge:rotate"] ? path[k]["librevenge:rotate"]->getDouble() : 0.0,
+			                     path[k]["librevenge:large-arc"] ? path[k]["librevenge:large-arc"]->getInt() : 1,
+			                     path[k]["librevenge:sweep"] ? path[k]["librevenge:sweep"]->getInt() : 1,
 			                     x, y, xmin, ymin, xmax, ymax);
 		}
 		else if (action[0] != 'M' && action[0] != 'L' && action[0] != 'H' && action[0] != 'V')
@@ -804,7 +804,7 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	}
 
 
-	WPXString sValue;
+	RVNGString sValue;
 	_writeGraphicsStyle();
 	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
@@ -828,14 +828,14 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	sValue.clear();
 	for(unsigned i = 0; i < path.count(); ++i)
 	{
-		if (!path[i]["libwpg:path-action"])
+		if (!path[i]["librevenge:path-action"])
 			continue;
-		std::string action=path[i]["libwpg:path-action"]->getStr().cstr();
+		std::string action=path[i]["librevenge:path-action"]->getStr().cstr();
 		if (action.length()!=1) continue;
 		bool coordOk=path[i]["svg:x"]&&path[i]["svg:y"];
 		bool coord1Ok=coordOk && path[i]["svg:x1"]&&path[i]["svg:y1"];
 		bool coord2Ok=coord1Ok && path[i]["svg:x2"]&&path[i]["svg:y2"];
-		WPXString sElement;
+		RVNGString sElement;
 		// 2540 is 2.54*1000, 2.54 in = 1 inch
 		if (path[i]["svg:x"] && action[0] == 'H')
 		{
@@ -871,9 +871,9 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 		else if (coordOk && path[i]["svg:rx"] && path[i]["svg:ry"] && action[0] == 'A')
 		{
 			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
-			                 (unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["libwpg:rotate"] ? path[i]["libwpg:rotate"]->getInt() : 0),
-			                 (path[i]["libwpg:large-arc"] ? path[i]["libwpg:large-arc"]->getInt() : 1),
-			                 (path[i]["libwpg:sweep"] ? path[i]["libwpg:sweep"]->getInt() : 1),
+			                 (unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["librevenge:rotate"] ? path[i]["librevenge:rotate"]->getInt() : 0),
+			                 (path[i]["librevenge:large-arc"] ? path[i]["librevenge:large-arc"]->getInt() : 1),
+			                 (path[i]["librevenge:sweep"] ? path[i]["librevenge:sweep"]->getInt() : 1),
 			                 (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
 			sValue.append(sElement);
 		}
@@ -885,14 +885,14 @@ void OdgGeneratorPrivate::_drawPath(const WPXPropertyListVector &path)
 	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
-void OdgGenerator::drawPath(const WPXPropertyListVector &path)
+void OdgGenerator::drawPath(const RVNGPropertyListVector &path)
 {
 	mpImpl->_drawPath(path);
 }
 
-void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData &binaryData)
+void OdgGenerator::drawGraphicObject(const ::RVNGPropertyList &propList, const ::RVNGBinaryData &binaryData)
 {
-	if (!propList["libwpg:mime-type"] || propList["libwpg:mime-type"]->getStr().len() <= 0)
+	if (!propList["librevenge:mime-type"] || propList["librevenge:mime-type"]->getStr().len() <= 0)
 		return;
 	if (!propList["svg:x"] || !propList["svg:y"] || !propList["svg:width"] || !propList["svg:height"])
 		return;
@@ -934,7 +934,7 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 		height *= -1.0;
 	}
 
-	double angle(propList["libwpg:rotate"] ? - M_PI * propList["libwpg:rotate"]->getDouble() / 180.0 : 0.0);
+	double angle(propList["librevenge:rotate"] ? - M_PI * propList["librevenge:rotate"]->getDouble() / 180.0 : 0.0);
 	if (angle != 0.0)
 	{
 		double deltax((width*cos(angle)+height*sin(angle)-width)/2.0);
@@ -943,7 +943,7 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 		y -= deltay;
 	}
 
-	WPXPropertyList framePropList;
+	RVNGPropertyList framePropList;
 
 	framePropList.insert("svg:x", x);
 	framePropList.insert("svg:y", y);
@@ -952,7 +952,7 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 
 	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
 
-	WPXString sValue;
+	RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
 	pDrawFrameElement->addAttribute("draw:style-name", sValue);
 
@@ -961,9 +961,9 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 
 	if (angle != 0.0)
 	{
-		framePropList.insert("libwpg:rotate", angle, WPX_GENERIC);
+		framePropList.insert("librevenge:rotate", angle, RVNG_GENERIC);
 		sValue.sprintf("rotate (%s) translate(%s, %s)",
-		               framePropList["libwpg:rotate"]->getStr().cstr(),
+		               framePropList["librevenge:rotate"]->getStr().cstr(),
 		               framePropList["svg:x"]->getStr().cstr(),
 		               framePropList["svg:y"]->getStr().cstr());
 		pDrawFrameElement->addAttribute("draw:transform", sValue);
@@ -975,19 +975,19 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 	}
 	mpImpl->mBodyElements.push_back(pDrawFrameElement);
 
-	if (propList["libwpg:mime-type"]->getStr() == "object/ole")
+	if (propList["librevenge:mime-type"]->getStr() == "object/ole")
 		mpImpl->mBodyElements.push_back(new TagOpenElement("draw:object-ole"));
 	else
 		mpImpl->mBodyElements.push_back(new TagOpenElement("draw:image"));
 
 	mpImpl->mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 
-	::WPXString base64Binary = binaryData.getBase64Data();
+	::RVNGString base64Binary = binaryData.getBase64Data();
 	mpImpl->mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
 
 	mpImpl->mBodyElements.push_back(new TagCloseElement("office:binary-data"));
 
-	if (propList["libwpg:mime-type"]->getStr() == "object/ole")
+	if (propList["librevenge:mime-type"]->getStr() == "object/ole")
 		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:object-ole"));
 	else
 		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:image"));
@@ -998,7 +998,7 @@ void OdgGenerator::drawGraphicObject(const ::WPXPropertyList &propList, const ::
 void OdgGeneratorPrivate::_writeGraphicsStyle()
 {
 	TagOpenElement *pStyleStyleElement = new TagOpenElement("style:style");
-	WPXString sValue;
+	RVNGString sValue;
 	sValue.sprintf("gr%i",  miGraphicsStyleIndex);
 	pStyleStyleElement->addAttribute("style:name", sValue);
 	pStyleStyleElement->addAttribute("style:family", "graphic");
@@ -1014,14 +1014,14 @@ void OdgGeneratorPrivate::_writeGraphicsStyle()
 	miGraphicsStyleIndex++;
 }
 
-void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::WPXPropertyList const &style, ::WPXPropertyListVector const &gradient)
+void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::RVNGPropertyList const &style, ::RVNGPropertyListVector const &gradient)
 {
 	bool bUseOpacityGradient = false;
 
 	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
 	{
 		TagOpenElement *pDrawStrokeDashElement = new TagOpenElement("draw:stroke-dash");
-		WPXString sValue;
+		RVNGString sValue;
 		sValue.sprintf("Dash_%i", miDashIndex++);
 		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
 		if (style["svg:stoke-linecap"])
@@ -1044,7 +1044,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 
 	if (style["draw:marker-start-path"])
 	{
-		WPXString sValue;
+		RVNGString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
 		sValue.sprintf("StartMarker_%i", miStartMarkerIndex);
 		pDrawMarkerElement->addAttribute("draw:name", sValue);
@@ -1056,7 +1056,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 	}
 	if(style["draw:marker-end-path"])
 	{
-		WPXString sValue;
+		RVNGString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
 		sValue.sprintf("EndMarker_%i", miEndMarkerIndex);
 		pDrawMarkerElement->addAttribute("draw:name", sValue);
@@ -1081,7 +1081,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 			pDrawGradientElement->addAttribute("draw:style", "linear");
 			pDrawOpacityElement->addAttribute("draw:style", "linear");
 		}
-		WPXString sValue;
+		RVNGString sValue;
 		sValue.sprintf("Gradient_%i", miGradientIndex);
 		pDrawGradientElement->addAttribute("draw:name", sValue);
 		sValue.sprintf("Transparency_%i", miGradientIndex++);
@@ -1147,13 +1147,13 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 			else
 				pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
 
-			if (style["libwpg:start-opacity"])
-				pDrawOpacityElement->addAttribute("draw:start", style["libwpg:start-opacity"]->getStr());
+			if (style["librevenge:start-opacity"])
+				pDrawOpacityElement->addAttribute("draw:start", style["librevenge:start-opacity"]->getStr());
 			else
 				pDrawOpacityElement->addAttribute("draw:start", "100%");
 
-			if (style["libwpg:end-opacity"])
-				pDrawOpacityElement->addAttribute("draw:end", style["libwpg:end-opacity"]->getStr());
+			if (style["librevenge:end-opacity"])
+				pDrawOpacityElement->addAttribute("draw:end", style["librevenge:end-opacity"]->getStr());
 			else
 				pDrawOpacityElement->addAttribute("draw:end", "100%");
 
@@ -1162,8 +1162,8 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 
 			// Work around a mess in LibreOffice where both opacities of 100% are interpreted as complete transparency
 			// Nevertheless, when one is different, immediately, they are interpreted correctly
-			if (style["libwpg:start-opacity"] && style["libwpg:end-opacity"]
-			        && (style["libwpg:start-opacity"]->getDouble() != 1.0 || style["libwpg:end-opacity"]->getDouble() != 1.0))
+			if (style["librevenge:start-opacity"] && style["librevenge:end-opacity"]
+			        && (style["librevenge:start-opacity"]->getDouble() != 1.0 || style["librevenge:end-opacity"]->getDouble() != 1.0))
 			{
 				bUseOpacityGradient = true;
 				mGraphicsGradientStyles.push_back(pDrawOpacityElement);
@@ -1216,10 +1216,10 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 	}
 
 	if(style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap" &&
-	        style["draw:fill-image"] && style["libwpg:mime-type"])
+	        style["draw:fill-image"] && style["librevenge:mime-type"])
 	{
 		TagOpenElement *pDrawBitmapElement = new TagOpenElement("draw:fill-image");
-		WPXString sValue;
+		RVNGString sValue;
 		sValue.sprintf("Bitmap_%i", miBitmapIndex++);
 		pDrawBitmapElement->addAttribute("draw:name", sValue);
 		mGraphicsBitmapStyles.push_back(pDrawBitmapElement);
@@ -1244,7 +1244,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 	if (style["draw:blue"] && style["draw:blue"]->getStr().len() > 0)
 		element.addAttribute("draw:blue", style["draw:blue"]->getStr());
 
-	WPXString sValue;
+	RVNGString sValue;
 	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "none")
 		element.addAttribute("draw:stroke", "none");
 	else
@@ -1330,7 +1330,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 
 	if(style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap")
 	{
-		if (style["draw:fill-image"] && style["libwpg:mime-type"])
+		if (style["draw:fill-image"] && style["librevenge:mime-type"])
 		{
 			element.addAttribute("draw:fill", "bitmap");
 			sValue.sprintf("Bitmap_%i", miBitmapIndex-1);
@@ -1383,7 +1383,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 		element.addAttribute("style:mirror", style["style:mirror"]->getStr());
 }
 
-void OdgGenerator::startEmbeddedGraphics(const WPXPropertyList &)
+void OdgGenerator::startEmbeddedGraphics(const RVNGPropertyList &)
 {
 }
 
@@ -1391,12 +1391,12 @@ void OdgGenerator::endEmbeddedGraphics()
 {
 }
 
-void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPropertyListVector &/*path*/)
+void OdgGenerator::startTextObject(const RVNGPropertyList &propList, const RVNGPropertyListVector &/*path*/)
 {
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	TagOpenElement *pStyleStyleOpenElement = new TagOpenElement("style:style");
 
-	WPXString sValue;
+	RVNGString sValue;
 	sValue.sprintf("gr%i",  mpImpl->miGraphicsStyleIndex++);
 	pStyleStyleOpenElement->addAttribute("style:name", sValue);
 	pStyleStyleOpenElement->addAttribute("style:family", "graphic");
@@ -1407,15 +1407,15 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 	pDrawFrameOpenElement->addAttribute("draw:layer", "layout");
 
 	TagOpenElement *pStyleGraphicPropertiesOpenElement = new TagOpenElement("style:graphic-properties");
-	WPXPropertyList styleList(propList);
+	RVNGPropertyList styleList(propList);
 	if (!propList["draw:stroke"])
 		styleList.insert("draw:stroke", "none");
 	if (!propList["draw:fill"])
 		styleList.insert("draw:fill", "none");
 	// the transformation is managed latter, so even if this changes nothing...
-	if (propList["libwpg:rotate"])
-		styleList.insert("libwpg:rotate", 0);
-	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList, WPXPropertyListVector());
+	if (propList["librevenge:rotate"])
+		styleList.insert("librevenge:rotate", 0);
+	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList, RVNGPropertyListVector());
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{
@@ -1485,18 +1485,18 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 		x = propList["svg:x"]->getDouble();
 	if (propList["svg:y"])
 		y = propList["svg:y"]->getDouble();
-	double angle(propList["libwpg:rotate"] ? - M_PI * propList["libwpg:rotate"]->getDouble() / 180.0 : 0.0);
+	double angle(propList["librevenge:rotate"] ? - M_PI * propList["librevenge:rotate"]->getDouble() / 180.0 : 0.0);
 	if (angle != 0.0)
 	{
 		// compute position: make sure that the center position remains invariant
 		double width = 0.0;
 		double height = 0.0;
-		if (propList["libwpg:rotate-cx"])
-			width = 2.0*(propList["libwpg:rotate-cx"]->getDouble()-x);
+		if (propList["librevenge:rotate-cx"])
+			width = 2.0*(propList["librevenge:rotate-cx"]->getDouble()-x);
 		else if (propList["svg:width"])
 			width = propList["svg:width"]->getDouble();
-		if (propList["libwpg:rotate-cy"])
-			height = 2.0*(propList["libwpg:rotate-cy"]->getDouble()-y);
+		if (propList["librevenge:rotate-cy"])
+			height = 2.0*(propList["librevenge:rotate-cy"]->getDouble()-y);
 		else if (propList["svg:height"])
 			height = propList["svg:height"]->getDouble();
 		double deltax((width*cos(angle)+height*sin(angle)-width)/2.0);
@@ -1504,16 +1504,16 @@ void OdgGenerator::startTextObject(const WPXPropertyList &propList, const WPXPro
 		x -= deltax;
 		y -= deltay;
 	}
-	WPXProperty *svg_x = WPXPropertyFactory::newInchProp(x);
-	WPXProperty *svg_y = WPXPropertyFactory::newInchProp(y);
+	RVNGProperty *svg_x = RVNGPropertyFactory::newInchProp(x);
+	RVNGProperty *svg_y = RVNGPropertyFactory::newInchProp(y);
 	if (angle != 0.0)
 	{
-		WPXProperty *libwpg_rotate = WPXPropertyFactory::newDoubleProp(angle);
+		RVNGProperty *librevenge_rotate = RVNGPropertyFactory::newDoubleProp(angle);
 		sValue.sprintf("rotate (%s) translate(%s, %s)",
-		               libwpg_rotate->getStr().cstr(),
+		               librevenge_rotate->getStr().cstr(),
 		               svg_x->getStr().cstr(),
 		               svg_y->getStr().cstr());
-		delete libwpg_rotate;
+		delete librevenge_rotate;
 		pDrawFrameOpenElement->addAttribute("draw:transform", sValue);
 	}
 	else
@@ -1543,11 +1543,11 @@ void OdgGenerator::endTextObject()
 	}
 }
 
-void OdgGenerator::startTextLine(const WPXPropertyList &propList)
+void OdgGenerator::startTextLine(const RVNGPropertyList &propList)
 {
-	WPXPropertyList finalPropList(propList);
+	RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	WPXString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, WPXPropertyListVector());
+	RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, RVNGPropertyListVector());
 
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
@@ -1561,12 +1561,12 @@ void OdgGenerator::endTextLine()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
 }
 
-void OdgGenerator::startTextSpan(const WPXPropertyList &propList)
+void OdgGenerator::startTextSpan(const RVNGPropertyList &propList)
 {
 	if (propList["style:font-name"])
 		mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
 
-	WPXString sName = mpImpl->mSpanManager.findOrAdd(propList);
+	RVNGString sName = mpImpl->mSpanManager.findOrAdd(propList);
 
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
 	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());
@@ -1578,10 +1578,10 @@ void OdgGenerator::endTextSpan()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:span"));
 }
 
-void OdgGenerator::insertText(const WPXString &text)
+void OdgGenerator::insertText(const RVNGString &text)
 {
-	WPXString out;
-	WPXString::Iter i(text);
+	RVNGString out;
+	RVNGString::Iter i(text);
 	for (i.rewind(); i.next();)
 	{
 		if ((*i()) == '\n' || (*i()) == '\t')

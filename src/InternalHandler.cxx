@@ -32,14 +32,14 @@ InternalHandler::InternalHandler(std::vector<DocumentElement *> *elements):
 {
 }
 
-void InternalHandler::startElement(const char *psName, const WPXPropertyList &xPropList)
+void InternalHandler::startElement(const char *psName, const RVNGPropertyList &xPropList)
 {
 	TagOpenElement *element = new TagOpenElement(psName);
-	WPXPropertyList::Iter i(xPropList);
+	RVNGPropertyList::Iter i(xPropList);
 	for (i.rewind(); i.next(); )
 	{
-		// filter out libwpd elements
-		if (strncmp(i.key(), "libwpd", 6) != 0)
+		// filter out librevenge elements
+		if (strncmp(i.key(), "librevenge", 6) != 0)
 			element->addAttribute(i.key(), i()->getStr());
 	}
 	mpElements->push_back(element);
@@ -50,7 +50,7 @@ void InternalHandler::endElement(const char *psName)
 	mpElements->push_back(new TagCloseElement(psName));
 }
 
-void InternalHandler::characters(const WPXString &sCharacters)
+void InternalHandler::characters(const RVNGString &sCharacters)
 {
 	mpElements->push_back(new CharDataElement(sCharacters.cstr()));
 }

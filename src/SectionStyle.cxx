@@ -32,8 +32,8 @@
 double rint(double x);
 #endif /* _WIN32 */
 
-SectionStyle::SectionStyle(const WPXPropertyList &xPropList,
-                           const WPXPropertyListVector &xColumns,
+SectionStyle::SectionStyle(const RVNGPropertyList &xPropList,
+                           const RVNGPropertyListVector &xColumns,
                            const char *psName) :
 	Style(psName),
 	mPropList(xPropList),
@@ -48,17 +48,17 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 	styleOpen.addAttribute("style:family", "section");
 	styleOpen.write(pHandler);
 
-	WPXPropertyList propList;
-	WPXPropertyList::Iter p(mPropList);
+	RVNGPropertyList propList;
+	RVNGPropertyList::Iter p(mPropList);
 	for (p.rewind(); p.next(); )
 	{
-		if (strncmp(p.key(), "libwpd:", 7) != 0)
+		if (strncmp(p.key(), "librevenge:", 7) != 0)
 			propList.insert(p.key(), p()->getStr());
 	}
 	pHandler->startElement("style:section-properties", propList);
 
 	// column properties
-	WPXPropertyList columnProps;
+	RVNGPropertyList columnProps;
 
 	// if the number of columns is <= 1, we will never come here. This is only an additional check
 	// style properties
@@ -67,23 +67,23 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 		columnProps.insert("fo:column-count", (int)mColumns.count());
 		pHandler->startElement("style:columns", columnProps);
 
-		if (mPropList["libwpd:colsep-width"] && mPropList["libwpd:colsep-color"])
+		if (mPropList["librevenge:colsep-width"] && mPropList["librevenge:colsep-color"])
 		{
-			WPXPropertyList columnSeparator;
-			columnSeparator.insert("style:width", mPropList["libwpd:colsep-width"]->getStr());
-			columnSeparator.insert("style:color", mPropList["libwpd:colsep-color"]->getStr());
-			if (mPropList["libwpd:colsep-height"])
-				columnSeparator.insert("style:height", mPropList["libwpd:colsep-height"]->getStr());
+			RVNGPropertyList columnSeparator;
+			columnSeparator.insert("style:width", mPropList["librevenge:colsep-width"]->getStr());
+			columnSeparator.insert("style:color", mPropList["librevenge:colsep-color"]->getStr());
+			if (mPropList["librevenge:colsep-height"])
+				columnSeparator.insert("style:height", mPropList["librevenge:colsep-height"]->getStr());
 			else
 				columnSeparator.insert("style:height", "100%");
-			if (mPropList["libwpd:colsep-vertical-align"])
-				columnSeparator.insert("style:vertical-align", mPropList["libwpd:colsep-vertical-align"]->getStr());
+			if (mPropList["librevenge:colsep-vertical-align"])
+				columnSeparator.insert("style:vertical-align", mPropList["librevenge:colsep-vertical-align"]->getStr());
 			else
 				columnSeparator.insert("style:vertical-align", "middle");
 			pHandler->startElement("style:column-sep", columnSeparator);
 			pHandler->endElement("style:column-sep");
 		}
-		WPXPropertyListVector::Iter i(mColumns);
+		RVNGPropertyListVector::Iter i(mColumns);
 		for (i.rewind(); i.next();)
 		{
 			pHandler->startElement("style:column", i());

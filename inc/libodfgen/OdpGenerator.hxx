@@ -25,7 +25,7 @@
 #ifndef LIBODFGEN_ODPGENERATOR_HXX_INCLUDED
 #define LIBODFGEN_ODPGENERATOR_HXX_INCLUDED
 
-#include <libetonyek/libetonyek.h>
+#include <librevenge/librevenge.h>
 
 #include "OdfDocumentHandler.hxx"
 
@@ -33,68 +33,68 @@ class OdpGeneratorPrivate;
 
 /** A generator for presentations.
   *
-  * See @c libetonyek library for documentation of the
-  * libetonyek::KEYPresentationInterface interface.
+  * See @c librevenge library for documentation of the
+  * librevenge::KEYPresentationInterface interface.
   */
-class OdpGenerator : public libetonyek::KEYPresentationInterface
+class OdpGenerator : public RVNGPresentationInterface
 {
 public:
 	OdpGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdpGenerator();
 
-	void startDocument(const ::WPXPropertyList &propList);
+	void startDocument(const ::RVNGPropertyList &propList);
 	void endDocument();
-	void setDocumentMetaData(const ::WPXPropertyList &propList);
-	void startSlide(const ::WPXPropertyList &propList);
+	void setDocumentMetaData(const ::RVNGPropertyList &propList);
+	void startSlide(const ::RVNGPropertyList &propList);
 	void endSlide();
-	void startLayer(const ::WPXPropertyList &propList);
+	void startLayer(const ::RVNGPropertyList &propList);
 	void endLayer();
-	void startEmbeddedGraphics(const ::WPXPropertyList &propList);
+	void startEmbeddedGraphics(const ::RVNGPropertyList &propList);
 	void endEmbeddedGraphics();
-	void startGroup(const ::WPXPropertyList &propList);
+	void startGroup(const ::RVNGPropertyList &propList);
 	void endGroup();
 
-	void setStyle(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &gradient);
+	void setStyle(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &gradient);
 
-	void drawRectangle(const ::WPXPropertyList &propList);
-	void drawEllipse(const ::WPXPropertyList &propList);
-	void drawPolyline(const ::WPXPropertyListVector &vertices);
-	void drawPolygon(const ::WPXPropertyListVector &vertices);
-	void drawPath(const ::WPXPropertyListVector &path);
-	void drawGraphicObject(const ::WPXPropertyList &propList, const ::WPXBinaryData &binaryData);
-	void drawConnector(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &path);
+	void drawRectangle(const ::RVNGPropertyList &propList);
+	void drawEllipse(const ::RVNGPropertyList &propList);
+	void drawPolyline(const ::RVNGPropertyListVector &vertices);
+	void drawPolygon(const ::RVNGPropertyListVector &vertices);
+	void drawPath(const ::RVNGPropertyListVector &path);
+	void drawGraphicObject(const ::RVNGPropertyList &propList, const ::RVNGBinaryData &binaryData);
+	void drawConnector(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &path);
 
-	void startTextObject(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &path);
+	void startTextObject(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &path);
 	void endTextObject();
-	void openParagraph(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &tabStops);
+	void openParagraph(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &tabStops);
 	void closeParagraph();
-	void openSpan(const ::WPXPropertyList &propList);
+	void openSpan(const ::RVNGPropertyList &propList);
 	void closeSpan();
-	void insertText(const ::WPXString &str);
+	void insertText(const ::RVNGString &str);
 	void insertTab();
 	void insertSpace();
 	void insertLineBreak();
-	void insertField(const WPXString &type, const ::WPXPropertyList &propList);
+	void insertField(const RVNGString &type, const ::RVNGPropertyList &propList);
 
-	void openOrderedListLevel(const ::WPXPropertyList &propList);
-	void openUnorderedListLevel(const ::WPXPropertyList &propList);
+	void openOrderedListLevel(const ::RVNGPropertyList &propList);
+	void openUnorderedListLevel(const ::RVNGPropertyList &propList);
 	void closeOrderedListLevel();
 	void closeUnorderedListLevel();
-	void openListElement(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &tabStops);
+	void openListElement(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &tabStops);
 	void closeListElement();
 
-	void openTable(const ::WPXPropertyList &propList, const ::WPXPropertyListVector &columns);
-	void openTableRow(const ::WPXPropertyList &propList);
+	void openTable(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &columns);
+	void openTableRow(const ::RVNGPropertyList &propList);
 	void closeTableRow();
-	void openTableCell(const ::WPXPropertyList &propList);
+	void openTableCell(const ::RVNGPropertyList &propList);
 	void closeTableCell();
-	void insertCoveredTableCell(const ::WPXPropertyList &propList);
+	void insertCoveredTableCell(const ::RVNGPropertyList &propList);
 	void closeTable();
 
-	void startComment(const ::WPXPropertyList &propList);
+	void startComment(const ::RVNGPropertyList &propList);
 	void endComment();
 
-	void startNotes(const ::WPXPropertyList &propList);
+	void startNotes(const ::RVNGPropertyList &propList);
 	void endNotes();
 
 private:
