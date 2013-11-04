@@ -1415,11 +1415,11 @@ void OdtGenerator::insertBinaryObject(const RVNGPropertyList &propList, const RV
 		return;
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
-	if (!propList["librevenge:mimetype"])
+	if (!propList["librevenge:mime-type"])
 		return;
 
-	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["librevenge:mimetype"]->getStr());
-	OdfEmbeddedImage tmpImageHandler = mpImpl->_findEmbeddedImageHandler(propList["librevenge:mimetype"]->getStr());
+	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["librevenge:mime-type"]->getStr());
+	OdfEmbeddedImage tmpImageHandler = mpImpl->_findEmbeddedImageHandler(propList["librevenge:mime-type"]->getStr());
 
 	if (tmpObjectHandler || tmpImageHandler)
 	{
@@ -1458,7 +1458,7 @@ void OdtGenerator::insertBinaryObject(const RVNGPropertyList &propList, const RV
 	else
 		// assuming we have a binary image or a object_ole that we can just insert as it is
 	{
-		if (propList["librevenge:mimetype"]->getStr() == "object/ole")
+		if (propList["librevenge:mime-type"]->getStr() == "object/ole")
 			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:object-ole"));
 		else
 			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
@@ -1471,7 +1471,7 @@ void OdtGenerator::insertBinaryObject(const RVNGPropertyList &propList, const RV
 
 		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:binary-data"));
 
-		if (propList["librevenge:mimetype"]->getStr() == "object/ole")
+		if (propList["librevenge:mime-type"]->getStr() == "object/ole")
 			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:object-ole"));
 		else
 			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:image"));

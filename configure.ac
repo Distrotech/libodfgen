@@ -38,6 +38,7 @@ PKG_PROG_PKG_CONFIG([0.20])
 # ====================
 PKG_CHECK_MODULES([REVENGE],[
 	librevenge-0.0
+	librevenge-stream-0.0
 ])
 AC_SUBST([REVENGE_CFLAGS])
 AC_SUBST([REVENGE_LIGS])

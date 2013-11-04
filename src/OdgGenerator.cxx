@@ -690,7 +690,7 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::RVNGPropertyListVector &ver
 
 void OdgGeneratorPrivate::_drawPath(const RVNGPropertyListVector &path)
 {
-	if(path.count() == 0)
+	if(!path.count())
 		return;
 	// This must be a mistake and we do not want to crash lower
 	if(path[0]["librevenge:path-action"]->getStr() == "Z")
