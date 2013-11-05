@@ -32,10 +32,10 @@ InternalHandler::InternalHandler(std::vector<DocumentElement *> *elements):
 {
 }
 
-void InternalHandler::startElement(const char *psName, const RVNGPropertyList &xPropList)
+void InternalHandler::startElement(const char *psName, const librevenge::RVNGPropertyList &xPropList)
 {
 	TagOpenElement *element = new TagOpenElement(psName);
-	RVNGPropertyList::Iter i(xPropList);
+	librevenge::RVNGPropertyList::Iter i(xPropList);
 	for (i.rewind(); i.next(); )
 	{
 		// filter out librevenge elements
@@ -50,7 +50,7 @@ void InternalHandler::endElement(const char *psName)
 	mpElements->push_back(new TagCloseElement(psName));
 }
 
-void InternalHandler::characters(const RVNGString &sCharacters)
+void InternalHandler::characters(const librevenge::RVNGString &sCharacters)
 {
 	mpElements->push_back(new CharDataElement(sCharacters.cstr()));
 }

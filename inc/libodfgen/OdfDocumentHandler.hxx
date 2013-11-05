@@ -57,7 +57,7 @@ public:
 	  * @param[in] psName name of the element
 	  * @param[in] xPropList list of attributes
 	  */
-	virtual void startElement(const char *psName, const RVNGPropertyList &xPropList) = 0;
+	virtual void startElement(const char *psName, const librevenge::RVNGPropertyList &xPropList) = 0;
 
 	/** Add a end tag to the XML document.
 	  *
@@ -70,7 +70,7 @@ public:
 	  *
 	  * @param[in] sCharacters the content
 	  */
-	virtual void characters(const RVNGString &sCharacters) = 0;
+	virtual void characters(const librevenge::RVNGString &sCharacters) = 0;
 };
 #endif
 

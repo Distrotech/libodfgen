@@ -32,8 +32,8 @@
 double rint(double x);
 #endif /* _WIN32 */
 
-SectionStyle::SectionStyle(const RVNGPropertyList &xPropList,
-                           const RVNGPropertyListVector &xColumns,
+SectionStyle::SectionStyle(const librevenge::RVNGPropertyList &xPropList,
+                           const librevenge::RVNGPropertyListVector &xColumns,
                            const char *psName) :
 	Style(psName),
 	mPropList(xPropList),
@@ -48,8 +48,8 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 	styleOpen.addAttribute("style:family", "section");
 	styleOpen.write(pHandler);
 
-	RVNGPropertyList propList;
-	RVNGPropertyList::Iter p(mPropList);
+	librevenge::RVNGPropertyList propList;
+	librevenge::RVNGPropertyList::Iter p(mPropList);
 	for (p.rewind(); p.next(); )
 	{
 		if (strncmp(p.key(), "librevenge:", 7) != 0)
@@ -58,7 +58,7 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->startElement("style:section-properties", propList);
 
 	// column properties
-	RVNGPropertyList columnProps;
+	librevenge::RVNGPropertyList columnProps;
 
 	// if the number of columns is <= 1, we will never come here. This is only an additional check
 	// style properties
@@ -69,7 +69,7 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 
 		if (mPropList["librevenge:colsep-width"] && mPropList["librevenge:colsep-color"])
 		{
-			RVNGPropertyList columnSeparator;
+			librevenge::RVNGPropertyList columnSeparator;
 			columnSeparator.insert("style:width", mPropList["librevenge:colsep-width"]->getStr());
 			columnSeparator.insert("style:color", mPropList["librevenge:colsep-color"]->getStr());
 			if (mPropList["librevenge:colsep-height"])
@@ -83,7 +83,7 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 			pHandler->startElement("style:column-sep", columnSeparator);
 			pHandler->endElement("style:column-sep");
 		}
-		RVNGPropertyListVector::Iter i(mColumns);
+		librevenge::RVNGPropertyListVector::Iter i(mColumns);
 		for (i.rewind(); i.next();)
 		{
 			pHandler->startElement("style:column", i());

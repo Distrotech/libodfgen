@@ -36,13 +36,13 @@
 namespace
 {
 
-RVNGString propListToStyleKey(const RVNGPropertyList &xPropList)
+librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyList &xPropList)
 {
-	RVNGString sKey;
-	RVNGPropertyList::Iter i(xPropList);
+	librevenge::RVNGString sKey;
+	librevenge::RVNGPropertyList::Iter i(xPropList);
 	for (i.rewind(); i.next(); )
 	{
-		RVNGString sProp;
+		librevenge::RVNGString sProp;
 		sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
 		sKey.append(sProp);
 	}
@@ -52,7 +52,7 @@ RVNGString propListToStyleKey(const RVNGPropertyList &xPropList)
 
 } // anonymous namespace
 
-ParagraphStyle::ParagraphStyle(const RVNGPropertyList &pPropList, const RVNGPropertyListVector &xTabStops, const RVNGString &sName) :
+ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGPropertyListVector &xTabStops, const librevenge::RVNGString &sName) :
 	mpPropList(pPropList),
 	mxTabStops(xTabStops),
 	msName(sName)
@@ -67,7 +67,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 {
 	ODFGEN_DEBUG_MSG(("ParagraphStyle: Writing a paragraph style..\n"));
 
-	RVNGPropertyList propList;
+	librevenge::RVNGPropertyList propList;
 	propList.insert("style:name", msName.cstr());
 	propList.insert("style:family", "paragraph");
 	if (mpPropList["style:parent-style-name"])
@@ -77,7 +77,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->startElement("style:style", propList);
 
 	propList.clear();
-	RVNGPropertyList::Iter i(mpPropList);
+	librevenge::RVNGPropertyList::Iter i(mpPropList);
 	for (i.rewind(); i.next(); )
 	{
 		if (strncmp(i.key(), "fo:margin-",10) == 0)
@@ -141,14 +141,14 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	{
 		TagOpenElement tabListOpen("style:tab-stops");
 		tabListOpen.write(pHandler);
-		RVNGPropertyListVector::Iter k(mxTabStops);
+		librevenge::RVNGPropertyListVector::Iter k(mxTabStops);
 		for (k.rewind(); k.next();)
 		{
 			if (k()["style:position"] && k()["style:position"]->getDouble() < 0.0)
 				continue;
 			TagOpenElement tabStopOpen("style:tab-stop");
 
-			RVNGPropertyList::Iter j(k());
+			librevenge::RVNGPropertyList::Iter j(k());
 			for (j.rewind(); j.next(); )
 			{
 				tabStopOpen.addAttribute(j.key(), j()->getStr().cstr());
@@ -163,7 +163,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->endElement("style:style");
 }
 
-SpanStyle::SpanStyle(const char *psName, const RVNGPropertyList &xPropList) :
+SpanStyle::SpanStyle(const char *psName, const librevenge::RVNGPropertyList &xPropList) :
 	Style(psName),
 	mPropList(xPropList)
 {
@@ -172,12 +172,12 @@ SpanStyle::SpanStyle(const char *psName, const RVNGPropertyList &xPropList) :
 void SpanStyle::write(OdfDocumentHandler *pHandler) const
 {
 	ODFGEN_DEBUG_MSG(("SpanStyle: Writing a span style..\n"));
-	RVNGPropertyList styleOpenList;
+	librevenge::RVNGPropertyList styleOpenList;
 	styleOpenList.insert("style:name", getName());
 	styleOpenList.insert("style:family", "text");
 	pHandler->startElement("style:style", styleOpenList);
 
-	RVNGPropertyList propList(mPropList);
+	librevenge::RVNGPropertyList propList(mPropList);
 
 	if (mPropList["style:font-name"])
 	{
@@ -222,7 +222,7 @@ void ParagraphStyleManager::clean()
 
 void ParagraphStyleManager::write(OdfDocumentHandler *pHandler) const
 {
-	for (std::map<RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
+	for (std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
 		if (strcmp(iter->second->getName().cstr(), "Standard") == 0)
@@ -231,13 +231,13 @@ void ParagraphStyleManager::write(OdfDocumentHandler *pHandler) const
 	}
 }
 
-RVNGString ParagraphStyleManager::getKey(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &tabStops) const
+librevenge::RVNGString ParagraphStyleManager::getKey(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &tabStops) const
 {
-	RVNGString sKey = propListToStyleKey(xPropList);
+	librevenge::RVNGString sKey = propListToStyleKey(xPropList);
 
-	RVNGString sTabStops;
+	librevenge::RVNGString sTabStops;
 	sTabStops.sprintf("[num-tab-stops:%i]", tabStops.count());
-	RVNGPropertyListVector::Iter i(tabStops);
+	librevenge::RVNGPropertyListVector::Iter i(tabStops);
 	for (i.rewind(); i.next();)
 	{
 		sTabStops.append(propListToStyleKey(i()));
@@ -247,17 +247,17 @@ RVNGString ParagraphStyleManager::getKey(const RVNGPropertyList &xPropList, cons
 	return sKey;
 }
 
-RVNGString ParagraphStyleManager::findOrAdd(const RVNGPropertyList &propList, const RVNGPropertyListVector &tabStops)
+librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops)
 {
-	RVNGString hashKey = getKey(propList, tabStops);
-	std::map<RVNGString, RVNGString, ltstr>::const_iterator iter =
+	librevenge::RVNGString hashKey = getKey(propList, tabStops);
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
 	    mNameHash.find(hashKey);
 	if (iter!=mNameHash.end()) return iter->second;
 
 	// ok create a new list
 	ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
 
-	RVNGString sName;
+	librevenge::RVNGString sName;
 	sName.sprintf("S%i", mStyleHash.size());
 	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(propList, tabStops, sName));
 	mStyleHash[sName] =parag;
@@ -265,9 +265,9 @@ RVNGString ParagraphStyleManager::findOrAdd(const RVNGPropertyList &propList, co
 	return sName;
 }
 
-shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const RVNGString &name) const
+shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const librevenge::RVNGString &name) const
 {
-	std::map<RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
+	std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
 	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<ParagraphStyle>();
 	return iter->second;
@@ -281,24 +281,24 @@ void SpanStyleManager::clean()
 
 void SpanStyleManager::write(OdfDocumentHandler *pHandler) const
 {
-	for (std::map<RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
+	for (std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
 		(iter->second)->write(pHandler);
 	}
 }
 
-RVNGString SpanStyleManager::findOrAdd(const RVNGPropertyList &propList)
+librevenge::RVNGString SpanStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList)
 {
-	RVNGString hashKey = propListToStyleKey(propList);
-	std::map<RVNGString, RVNGString, ltstr>::const_iterator iter =
+	librevenge::RVNGString hashKey = propListToStyleKey(propList);
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
 	    mNameHash.find(hashKey);
 	if (iter!=mNameHash.end()) return iter->second;
 
 	// ok create a new list
 	ODFGEN_DEBUG_MSG(("SpanStyleManager::findOrAdd: Span Hash Key: %s\n", hashKey.cstr()));
 
-	RVNGString sName;
+	librevenge::RVNGString sName;
 	sName.sprintf("Span%i", mStyleHash.size());
 	shared_ptr<SpanStyle> span(new SpanStyle(sName.cstr(), propList));
 	mStyleHash[sName] = span;
@@ -306,9 +306,9 @@ RVNGString SpanStyleManager::findOrAdd(const RVNGPropertyList &propList)
 	return sName;
 }
 
-shared_ptr<SpanStyle> const SpanStyleManager::get(const RVNGString &name) const
+shared_ptr<SpanStyle> const SpanStyleManager::get(const librevenge::RVNGString &name) const
 {
-	std::map<RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
+	std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
 	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<SpanStyle>();
 	return iter->second;

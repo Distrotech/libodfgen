@@ -42,7 +42,7 @@ void TagOpenElement::print() const
 	TagElement::print();
 }
 
-void TagOpenElement::addAttribute(const RVNGString &szAttributeName, const RVNGString &sAttributeValue)
+void TagOpenElement::addAttribute(const librevenge::RVNGString &szAttributeName, const librevenge::RVNGString &sAttributeValue)
 {
 	maAttrList.insert(szAttributeName.cstr(), sAttributeValue);
 }

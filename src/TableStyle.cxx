@@ -35,7 +35,7 @@
 
 #include <string.h>
 
-TableCellStyle::TableCellStyle(const RVNGPropertyList &xPropList, const char *psName) :
+TableCellStyle::TableCellStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName) :
 	Style(psName),
 	mPropList(xPropList)
 {
@@ -50,8 +50,8 @@ void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 
 	// WLACH_REFACTORING: Only temporary.. a much better solution is to
 	// generalize this sort of thing into the "Style" superclass
-	RVNGPropertyList stylePropList;
-	RVNGPropertyList::Iter i(mPropList);
+	librevenge::RVNGPropertyList stylePropList;
+	librevenge::RVNGPropertyList::Iter i(mPropList);
 	/* first set padding, so that mPropList can redefine, if
 	   mPropList["fo:padding"] is defined */
 	stylePropList.insert("fo:padding", "0.0382in");
@@ -77,7 +77,7 @@ void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->endElement("style:style");
 }
 
-TableRowStyle::TableRowStyle(const RVNGPropertyList &propList, const char *psName) :
+TableRowStyle::TableRowStyle(const librevenge::RVNGPropertyList &propList, const char *psName) :
 	Style(psName),
 	mPropList(propList)
 {
@@ -103,7 +103,7 @@ void TableRowStyle::write(OdfDocumentHandler *pHandler) const
 }
 
 
-TableStyle::TableStyle(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &columns, const char *psName) :
+TableStyle::TableStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName) :
 	Style(psName),
 	mPropList(xPropList),
 	mColumns(columns),
@@ -151,11 +151,11 @@ void TableStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->endElement("style:style");
 
 	int i=1;
-	RVNGPropertyListVector::Iter j(mColumns);
+	librevenge::RVNGPropertyListVector::Iter j(mColumns);
 	for (j.rewind(); j.next();)
 	{
 		TagOpenElement columnStyleOpen("style:style");
-		RVNGString sColumnName;
+		librevenge::RVNGString sColumnName;
 		sColumnName.sprintf("%s.Column%i", getName().cstr(), i);
 		columnStyleOpen.addAttribute("style:name", sColumnName);
 		columnStyleOpen.addAttribute("style:family", "table-column");

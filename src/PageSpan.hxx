@@ -34,7 +34,7 @@ class OdfDocumentHandler;
 class PageSpan
 {
 public:
-	PageSpan(const RVNGPropertyList &xPropList);
+	PageSpan(const librevenge::RVNGPropertyList &xPropList);
 	virtual ~PageSpan();
 	void writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const;
 	void writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan, OdfDocumentHandler *pHandler) const;
@@ -50,7 +50,7 @@ protected:
 private:
 	PageSpan(const PageSpan &);
 	PageSpan &operator=(const PageSpan &);
-	RVNGPropertyList mxPropList;
+	librevenge::RVNGPropertyList mxPropList;
 	std::vector<DocumentElement *> *mpHeaderContent;
 	std::vector<DocumentElement *> *mpFooterContent;
 	std::vector<DocumentElement *> *mpHeaderLeftContent;

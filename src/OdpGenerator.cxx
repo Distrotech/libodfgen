@@ -53,10 +53,10 @@ using namespace libodfgen;
 namespace
 {
 
-static RVNGString doubleToString(const double value)
+static librevenge::RVNGString doubleToString(const double value)
 {
-	RVNGProperty *prop = RVNGPropertyFactory::newDoubleProp(value);
-	RVNGString retVal = prop->getStr();
+	librevenge::RVNGProperty *prop = librevenge::RVNGPropertyFactory::newDoubleProp(value);
+	librevenge::RVNGString retVal = prop->getStr();
 	delete prop;
 	return retVal;
 }
@@ -130,10 +130,10 @@ public:
 	OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdpGeneratorPrivate();
 	/** update a graphic style element */
-	void _updateGraphicPropertiesElement(TagOpenElement &element, ::RVNGPropertyList const &style, ::RVNGPropertyListVector const &gradient);
+	void _updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style, ::librevenge::RVNGPropertyListVector const &gradient);
 	void _writeGraphicsStyle();
-	void _drawPolySomething(const ::RVNGPropertyListVector &vertices, bool isClosed);
-	void _drawPath(const RVNGPropertyListVector &path);
+	void _drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
+	void _drawPath(const librevenge::RVNGPropertyListVector &path);
 
 	void openListLevel(TagOpenElement *pListLevelOpenElement);
 	void closeListLevel();
@@ -170,8 +170,8 @@ public:
 
 	OdfDocumentHandler *mpHandler;
 
-	::RVNGPropertyList mxStyle;
-	::RVNGPropertyListVector mxGradient;
+	::librevenge::RVNGPropertyList mxStyle;
+	::librevenge::RVNGPropertyListVector mxGradient;
 	int miGradientIndex;
 	int miBitmapIndex;
 	int miStartMarkerIndex;
@@ -387,7 +387,7 @@ OdpGenerator::~OdpGenerator()
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpImpl->mpHandler);
-		RVNGString sWidth;
+		librevenge::RVNGString sWidth;
 		sWidth.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxWidth));
 		mpImpl->mpHandler->characters(sWidth);
 		mpImpl->mpHandler->endElement("config:config-item");
@@ -395,7 +395,7 @@ OdpGenerator::~OdpGenerator()
 		configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
 		configItemOpenElement.addAttribute("config:type", "int");
 		configItemOpenElement.write(mpImpl->mpHandler);
-		RVNGString sHeight;
+		librevenge::RVNGString sHeight;
 		sHeight.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxHeight));
 		mpImpl->mpHandler->characters(sHeight);
 		mpImpl->mpHandler->endElement("config:config-item");
@@ -467,7 +467,7 @@ OdpGenerator::~OdpGenerator()
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-bottom", "0in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-left", "0in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-right", "0in");
-		RVNGString sValue;
+		librevenge::RVNGString sValue;
 		sValue = doubleToString(mpImpl->mfMaxWidth);
 		sValue.append("in");
 		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-width", sValue);
@@ -546,7 +546,7 @@ OdpGenerator::~OdpGenerator()
 	delete mpImpl;
 }
 
-void OdpGenerator::startDocument(const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::startDocument(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 }
 
@@ -554,11 +554,11 @@ void OdpGenerator::endDocument()
 {
 }
 
-void OdpGenerator::setDocumentMetaData(const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::setDocumentMetaData(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 }
 
-void OdpGenerator::startSlide(const ::RVNGPropertyList &propList)
+void OdpGenerator::startSlide(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (propList["svg:width"])
 	{
@@ -578,9 +578,9 @@ void OdpGenerator::startSlide(const ::RVNGPropertyList &propList)
 
 	TagOpenElement *pStylePageLayoutOpenElement = new TagOpenElement("style:page-layout");
 
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	if (propList["draw:name"])
-		sValue = RVNGString(propList["draw:name"]->getStr(), true); // escape special xml characters
+		sValue = librevenge::RVNGString(propList["draw:name"]->getStr(), true); // escape special xml characters
 	else
 		sValue.sprintf("page%i", mpImpl->miPageIndex);
 	pDrawPageOpenElement->addAttribute("draw:name", sValue);
@@ -655,14 +655,14 @@ void OdpGenerator::endSlide()
 	mpImpl->miPageIndex++;
 }
 
-void OdpGenerator::setStyle(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &gradient)
+void OdpGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &gradient)
 {
 	mpImpl->mxStyle.clear();
 	mpImpl->mxStyle = propList;
 	mpImpl->mxGradient = gradient;
 }
 
-void OdpGenerator::startLayer(const ::RVNGPropertyList & /* propList */)
+void OdpGenerator::startLayer(const ::librevenge::RVNGPropertyList & /* propList */)
 {
 	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:g"));
 }
@@ -672,7 +672,7 @@ void OdpGenerator::endLayer()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:g"));
 }
 
-void OdpGenerator::drawRectangle(const ::RVNGPropertyList &propList)
+void OdpGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!propList["svg:x"] || !propList["svg:y"] ||
 	        !propList["svg:width"] || !propList["svg:height"])
@@ -682,7 +682,7 @@ void OdpGenerator::drawRectangle(const ::RVNGPropertyList &propList)
 	}
 	mpImpl->_writeGraphicsStyle();
 	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
 	pDrawRectElement->addAttribute("draw:style-name", sValue);
 	pDrawRectElement->addAttribute("svg:x", propList["svg:x"]->getStr());
@@ -698,7 +698,7 @@ void OdpGenerator::drawRectangle(const ::RVNGPropertyList &propList)
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:rect"));
 }
 
-void OdpGenerator::drawEllipse(const ::RVNGPropertyList &propList)
+void OdpGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
 	{
@@ -707,7 +707,7 @@ void OdpGenerator::drawEllipse(const ::RVNGPropertyList &propList)
 	}
 	mpImpl->_writeGraphicsStyle();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
 	sValue = doubleToString(2 * propList["svg:rx"]->getDouble());
@@ -753,17 +753,17 @@ void OdpGenerator::drawEllipse(const ::RVNGPropertyList &propList)
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
 
-void OdpGenerator::drawPolyline(const ::RVNGPropertyListVector &vertices)
+void OdpGenerator::drawPolyline(const ::librevenge::RVNGPropertyListVector &vertices)
 {
 	mpImpl->_drawPolySomething(vertices, false);
 }
 
-void OdpGenerator::drawPolygon(const ::RVNGPropertyListVector &vertices)
+void OdpGenerator::drawPolygon(const ::librevenge::RVNGPropertyListVector &vertices)
 {
 	mpImpl->_drawPolySomething(vertices, true);
 }
 
-void OdpGeneratorPrivate::_drawPolySomething(const ::RVNGPropertyListVector &vertices, bool isClosed)
+void OdpGeneratorPrivate::_drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed)
 {
 	if(vertices.count() < 2)
 		return;
@@ -777,7 +777,7 @@ void OdpGeneratorPrivate::_drawPolySomething(const ::RVNGPropertyListVector &ver
 		}
 		_writeGraphicsStyle();
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
-		RVNGString sValue;
+		librevenge::RVNGString sValue;
 		sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 		pDrawLineElement->addAttribute("draw:style-name", sValue);
 		pDrawLineElement->addAttribute("draw:layer", "layout");
@@ -790,8 +790,8 @@ void OdpGeneratorPrivate::_drawPolySomething(const ::RVNGPropertyListVector &ver
 	}
 	else
 	{
-		::RVNGPropertyListVector path;
-		::RVNGPropertyList element;
+		::librevenge::RVNGPropertyListVector path;
+		::librevenge::RVNGPropertyList element;
 
 		for (unsigned long ii = 0; ii < vertices.count(); ++ii)
 		{
@@ -812,7 +812,7 @@ void OdpGeneratorPrivate::_drawPolySomething(const ::RVNGPropertyListVector &ver
 	}
 }
 
-void OdpGeneratorPrivate::_drawPath(const RVNGPropertyListVector &path)
+void OdpGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &path)
 {
 	if(path.count() == 0)
 		return;
@@ -928,7 +928,7 @@ void OdpGeneratorPrivate::_drawPath(const RVNGPropertyListVector &path)
 	}
 
 
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	_writeGraphicsStyle();
 	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
@@ -959,7 +959,7 @@ void OdpGeneratorPrivate::_drawPath(const RVNGPropertyListVector &path)
 		bool coordOk=path[i]["svg:x"]&&path[i]["svg:y"];
 		bool coord1Ok=coordOk && path[i]["svg:x1"]&&path[i]["svg:y1"];
 		bool coord2Ok=coord1Ok && path[i]["svg:x2"]&&path[i]["svg:y2"];
-		RVNGString sElement;
+		librevenge::RVNGString sElement;
 		// 2540 is 2.54*1000, 2.54 in = 1 inch
 		if (path[i]["svg:x"] && action[0] == 'H')
 		{
@@ -1009,12 +1009,12 @@ void OdpGeneratorPrivate::_drawPath(const RVNGPropertyListVector &path)
 	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
-void OdpGenerator::drawPath(const RVNGPropertyListVector &path)
+void OdpGenerator::drawPath(const librevenge::RVNGPropertyListVector &path)
 {
 	mpImpl->_drawPath(path);
 }
 
-void OdpGenerator::drawGraphicObject(const ::RVNGPropertyList &propList, const ::RVNGBinaryData &binaryData)
+void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGBinaryData &binaryData)
 {
 	if (!propList["librevenge:mime-type"] || propList["librevenge:mime-type"]->getStr().len() <= 0)
 		return;
@@ -1067,7 +1067,7 @@ void OdpGenerator::drawGraphicObject(const ::RVNGPropertyList &propList, const :
 		y -= deltay;
 	}
 
-	RVNGPropertyList framePropList;
+	librevenge::RVNGPropertyList framePropList;
 
 	framePropList.insert("svg:x", x);
 	framePropList.insert("svg:y", y);
@@ -1076,7 +1076,7 @@ void OdpGenerator::drawGraphicObject(const ::RVNGPropertyList &propList, const :
 
 	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
 
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
 	pDrawFrameElement->addAttribute("draw:style-name", sValue);
 
@@ -1085,7 +1085,7 @@ void OdpGenerator::drawGraphicObject(const ::RVNGPropertyList &propList, const :
 
 	if (angle != 0.0)
 	{
-		framePropList.insert("librevenge:rotate", angle, RVNG_GENERIC);
+		framePropList.insert("librevenge:rotate", angle, librevenge::RVNG_GENERIC);
 		sValue.sprintf("rotate (%s) translate(%s, %s)",
 		               framePropList["librevenge:rotate"]->getStr().cstr(),
 		               framePropList["svg:x"]->getStr().cstr(),
@@ -1106,7 +1106,7 @@ void OdpGenerator::drawGraphicObject(const ::RVNGPropertyList &propList, const :
 
 	mpImpl->mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 
-	::RVNGString base64Binary = binaryData.getBase64Data();
+	::librevenge::RVNGString base64Binary = binaryData.getBase64Data();
 	mpImpl->mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
 
 	mpImpl->mBodyElements.push_back(new TagCloseElement("office:binary-data"));
@@ -1119,14 +1119,14 @@ void OdpGenerator::drawGraphicObject(const ::RVNGPropertyList &propList, const :
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
-void OdpGenerator::drawConnector(const ::RVNGPropertyList &/*propList*/, const ::RVNGPropertyListVector &/*path*/)
+void OdpGenerator::drawConnector(const ::librevenge::RVNGPropertyList &/*propList*/, const ::librevenge::RVNGPropertyListVector &/*path*/)
 {
 }
 
 void OdpGeneratorPrivate::_writeGraphicsStyle()
 {
 	TagOpenElement *pStyleStyleElement = new TagOpenElement("style:style");
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	sValue.sprintf("gr%i",  miGraphicsStyleIndex);
 	pStyleStyleElement->addAttribute("style:name", sValue);
 	pStyleStyleElement->addAttribute("style:family", "graphic");
@@ -1142,14 +1142,14 @@ void OdpGeneratorPrivate::_writeGraphicsStyle()
 	miGraphicsStyleIndex++;
 }
 
-void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::RVNGPropertyList const &style, ::RVNGPropertyListVector const &gradient)
+void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style, ::librevenge::RVNGPropertyListVector const &gradient)
 {
 	bool bUseOpacityGradient = false;
 
 	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
 	{
 		TagOpenElement *pDrawStrokeDashElement = new TagOpenElement("draw:stroke-dash");
-		RVNGString sValue;
+		librevenge::RVNGString sValue;
 		sValue.sprintf("Dash_%i", miDashIndex++);
 		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
 		if (style["svg:stoke-linecap"])
@@ -1172,7 +1172,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 
 	if (style["draw:marker-start-path"])
 	{
-		RVNGString sValue;
+		librevenge::RVNGString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
 		sValue.sprintf("StartMarker_%i", miStartMarkerIndex);
 		pDrawMarkerElement->addAttribute("draw:name", sValue);
@@ -1184,7 +1184,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 	}
 	if(style["draw:marker-end-path"])
 	{
-		RVNGString sValue;
+		librevenge::RVNGString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
 		sValue.sprintf("EndMarker_%i", miEndMarkerIndex);
 		pDrawMarkerElement->addAttribute("draw:name", sValue);
@@ -1209,7 +1209,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 			pDrawGradientElement->addAttribute("draw:style", "linear");
 			pDrawOpacityElement->addAttribute("draw:style", "linear");
 		}
-		RVNGString sValue;
+		librevenge::RVNGString sValue;
 		sValue.sprintf("Gradient_%i", miGradientIndex);
 		pDrawGradientElement->addAttribute("draw:name", sValue);
 		sValue.sprintf("Transparency_%i", miGradientIndex++);
@@ -1347,7 +1347,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 	        style["draw:fill-image"] && style["librevenge:mime-type"])
 	{
 		TagOpenElement *pDrawBitmapElement = new TagOpenElement("draw:fill-image");
-		RVNGString sValue;
+		librevenge::RVNGString sValue;
 		sValue.sprintf("Bitmap_%i", miBitmapIndex++);
 		pDrawBitmapElement->addAttribute("draw:name", sValue);
 		mGraphicsBitmapStyles.push_back(pDrawBitmapElement);
@@ -1372,7 +1372,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 	if (style["draw:blue"] && style["draw:blue"]->getStr().len() > 0)
 		element.addAttribute("draw:blue", style["draw:blue"]->getStr());
 
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "none")
 		element.addAttribute("draw:stroke", "none");
 	else
@@ -1511,7 +1511,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 		element.addAttribute("style:mirror", style["style:mirror"]->getStr());
 }
 
-void OdpGenerator::startEmbeddedGraphics(const RVNGPropertyList &)
+void OdpGenerator::startEmbeddedGraphics(const librevenge::RVNGPropertyList &)
 {
 }
 
@@ -1519,7 +1519,7 @@ void OdpGenerator::endEmbeddedGraphics()
 {
 }
 
-void OdpGenerator::startGroup(const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::startGroup(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:g"));
 }
@@ -1529,12 +1529,12 @@ void OdpGenerator::endGroup()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:g"));
 }
 
-void OdpGenerator::startTextObject(const RVNGPropertyList &propList, const RVNGPropertyListVector &/*path*/)
+void OdpGenerator::startTextObject(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &/*path*/)
 {
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	TagOpenElement *pStyleStyleOpenElement = new TagOpenElement("style:style");
 
-	RVNGString sValue;
+	librevenge::RVNGString sValue;
 	sValue.sprintf("gr%i",  mpImpl->miGraphicsStyleIndex++);
 	pStyleStyleOpenElement->addAttribute("style:name", sValue);
 	pStyleStyleOpenElement->addAttribute("style:family", "graphic");
@@ -1545,7 +1545,7 @@ void OdpGenerator::startTextObject(const RVNGPropertyList &propList, const RVNGP
 	pDrawFrameOpenElement->addAttribute("draw:layer", "layout");
 
 	TagOpenElement *pStyleGraphicPropertiesOpenElement = new TagOpenElement("style:graphic-properties");
-	RVNGPropertyList styleList(propList);
+	librevenge::RVNGPropertyList styleList(propList);
 	if (!propList["draw:stroke"])
 		styleList.insert("draw:stroke", "none");
 	if (!propList["draw:fill"])
@@ -1553,7 +1553,7 @@ void OdpGenerator::startTextObject(const RVNGPropertyList &propList, const RVNGP
 	// the transformation is managed latter, so even if this changes nothing...
 	if (propList["librevenge:rotate"])
 		styleList.insert("librevenge:rotate", 0);
-	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList, RVNGPropertyListVector());
+	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList, librevenge::RVNGPropertyListVector());
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{
@@ -1642,11 +1642,11 @@ void OdpGenerator::startTextObject(const RVNGPropertyList &propList, const RVNGP
 		x -= deltax;
 		y -= deltay;
 	}
-	RVNGProperty *svg_x = RVNGPropertyFactory::newInchProp(x);
-	RVNGProperty *svg_y = RVNGPropertyFactory::newInchProp(y);
+	librevenge::RVNGProperty *svg_x = librevenge::RVNGPropertyFactory::newInchProp(x);
+	librevenge::RVNGProperty *svg_y = librevenge::RVNGPropertyFactory::newInchProp(y);
 	if (angle != 0.0)
 	{
-		RVNGProperty *librevenge_rotate = RVNGPropertyFactory::newDoubleProp(angle);
+		librevenge::RVNGProperty *librevenge_rotate = librevenge::RVNGPropertyFactory::newDoubleProp(angle);
 		sValue.sprintf("rotate (%s) translate(%s, %s)",
 		               librevenge_rotate->getStr().cstr(),
 		               svg_x->getStr().cstr(),
@@ -1681,11 +1681,11 @@ void OdpGenerator::endTextObject()
 	}
 }
 
-void OdpGenerator::openParagraph(const RVNGPropertyList &propList, const RVNGPropertyListVector &/*tabStops*/)
+void OdpGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &/*tabStops*/)
 {
-	RVNGPropertyList finalPropList(propList);
+	librevenge::RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, RVNGPropertyListVector());
+	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, librevenge::RVNGPropertyListVector());
 
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
@@ -1699,12 +1699,12 @@ void OdpGenerator::closeParagraph()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
 }
 
-void OdpGenerator::openSpan(const RVNGPropertyList &propList)
+void OdpGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 {
 	if (propList["style:font-name"])
 		mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
 
-	RVNGString sName = mpImpl->mSpanManager.findOrAdd(propList);
+	librevenge::RVNGString sName = mpImpl->mSpanManager.findOrAdd(propList);
 
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
 	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());
@@ -1716,7 +1716,7 @@ void OdpGenerator::closeSpan()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:span"));
 }
 
-void OdpGenerator::insertText(const RVNGString &text)
+void OdpGenerator::insertText(const librevenge::RVNGString &text)
 {
 	mpImpl->mBodyElements.push_back(new TextElement(text));
 }
@@ -1739,11 +1739,11 @@ void OdpGenerator::insertLineBreak()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:line-break"));
 }
 
-void OdpGenerator::insertField(const RVNGString &/*type*/, const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::insertField(const librevenge::RVNGString &/*type*/, const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 }
 
-void OdpGenerator::openOrderedListLevel(const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::openOrderedListLevel(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
 	{
@@ -1757,7 +1757,7 @@ void OdpGenerator::openOrderedListLevel(const ::RVNGPropertyList &/*propList*/)
 	mpImpl->mBodyElements.push_back(pListLevelOpenElement);
 }
 
-void OdpGenerator::openUnorderedListLevel(const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::openUnorderedListLevel(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
 	{
@@ -1780,7 +1780,7 @@ void OdpGenerator::closeUnorderedListLevel()
 	mpImpl->closeListLevel();
 }
 
-void OdpGenerator::openListElement(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &tabStops)
+void OdpGenerator::openListElement(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &tabStops)
 {
 	if (mpImpl->mListStates.top().mbListElementOpened.top())
 	{
@@ -1788,9 +1788,9 @@ void OdpGenerator::openListElement(const ::RVNGPropertyList &propList, const ::R
 		mpImpl->mListStates.top().mbListElementOpened.top() = false;
 	}
 
-	RVNGPropertyList finalPropList(propList);
+	librevenge::RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
@@ -1818,12 +1818,12 @@ void OdpGenerator::closeListElement()
 	}
 }
 
-void OdpGenerator::openTable(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &columns)
+void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &columns)
 {
 	if (mpImpl->mState.mInComment)
 		return;
 
-	RVNGString sTableName;
+	librevenge::RVNGString sTableName;
 	sTableName.sprintf("Table%i", mpImpl->mTableStyles.size());
 
 	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
@@ -1844,7 +1844,7 @@ void OdpGenerator::openTable(const ::RVNGPropertyList &propList, const ::RVNGPro
 	for (int i=0; i<pTableStyle->getNumColumns(); ++i)
 	{
 		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
-		RVNGString sColumnStyleName;
+		librevenge::RVNGString sColumnStyleName;
 		sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
 		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
 		mpImpl->mBodyElements.push_back(pTableColumnOpenElement);
@@ -1854,7 +1854,7 @@ void OdpGenerator::openTable(const ::RVNGPropertyList &propList, const ::RVNGPro
 	}
 }
 
-void OdpGenerator::openTableRow(const ::RVNGPropertyList &propList)
+void OdpGenerator::openTableRow(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mState.mInComment)
 		return;
@@ -1871,7 +1871,7 @@ void OdpGenerator::openTableRow(const ::RVNGPropertyList &propList)
 		mpImpl->mState.mHeaderRow = true;
 	}
 
-	RVNGString sTableRowStyleName;
+	librevenge::RVNGString sTableRowStyleName;
 	sTableRowStyleName.sprintf("%s.Row%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableRowStyles());
 	TableRowStyle *pTableRowStyle = new TableRowStyle(propList, sTableRowStyleName.cstr());
 	mpImpl->mpCurrentTableStyle->addTableRowStyle(pTableRowStyle);
@@ -1894,7 +1894,7 @@ void OdpGenerator::closeTableRow()
 	}
 }
 
-void OdpGenerator::openTableCell(const ::RVNGPropertyList &propList)
+void OdpGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->mpCurrentTableStyle)
 	{
@@ -1908,7 +1908,7 @@ void OdpGenerator::openTableCell(const ::RVNGPropertyList &propList)
 		return;
 	}
 
-	RVNGString sTableCellStyleName;
+	librevenge::RVNGString sTableCellStyleName;
 	sTableCellStyleName.sprintf( "%s.Cell%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableCellStyles());
 	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
 	mpImpl->mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
@@ -1941,7 +1941,7 @@ void OdpGenerator::closeTableCell()
 	mpImpl->mState.mTableCellOpened = false;
 }
 
-void OdpGenerator::insertCoveredTableCell(const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::insertCoveredTableCell(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 	if (mpImpl->mState.mInComment || !mpImpl->mpCurrentTableStyle)
 		return;
@@ -1958,7 +1958,7 @@ void OdpGenerator::closeTable()
 	}
 }
 
-void OdpGenerator::startComment(const ::RVNGPropertyList &propList)
+void OdpGenerator::startComment(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mState.mInComment)
 	{
@@ -1997,7 +1997,7 @@ void OdpGenerator::endComment()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("office:annotation"));
 }
 
-void OdpGenerator::startNotes(const ::RVNGPropertyList &/*propList*/)
+void OdpGenerator::startNotes(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 	if (mpImpl->mState.mInNotes)
 	{

@@ -37,12 +37,12 @@ public:
 	{
 		if (mpsMasterPageName) delete mpsMasterPageName;
 	}
-	void setMasterPageName(RVNGString &sMasterPageName)
+	void setMasterPageName(librevenge::RVNGString &sMasterPageName)
 	{
 		if (mpsMasterPageName) delete mpsMasterPageName;
-		mpsMasterPageName = new RVNGString(sMasterPageName);
+		mpsMasterPageName = new librevenge::RVNGString(sMasterPageName);
 	}
-	const RVNGString *getMasterPageName() const
+	const librevenge::RVNGString *getMasterPageName() const
 	{
 		return mpsMasterPageName;
 	}
@@ -50,23 +50,23 @@ public:
 private:
 	TopLevelElementStyle(const TopLevelElementStyle &);
 	TopLevelElementStyle &operator=(const TopLevelElementStyle &);
-	RVNGString *mpsMasterPageName;
+	librevenge::RVNGString *mpsMasterPageName;
 };
 
 class Style
 {
 public:
-	Style(const RVNGString &psName) : msName(psName) {}
+	Style(const librevenge::RVNGString &psName) : msName(psName) {}
 	virtual ~Style() {}
 
 	virtual void write(OdfDocumentHandler *) const {};
-	const RVNGString &getName() const
+	const librevenge::RVNGString &getName() const
 	{
 		return msName;
 	}
 
 private:
-	RVNGString msName;
+	librevenge::RVNGString msName;
 };
 
 class StyleManager

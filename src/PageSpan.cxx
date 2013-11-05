@@ -26,7 +26,7 @@
 #include "PageSpan.hxx"
 #include "DocumentElement.hxx"
 
-PageSpan::PageSpan(const RVNGPropertyList &xPropList) :
+PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList) :
 	mxPropList(xPropList),
 	mpHeaderContent(0),
 	mpFooterContent(0),
@@ -145,27 +145,27 @@ void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> *pFooterConte
 
 void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const
 {
-	RVNGPropertyList propList;
+	librevenge::RVNGPropertyList propList;
 
-	RVNGString sPageLayoutName;
+	librevenge::RVNGString sPageLayoutName;
 	sPageLayoutName.sprintf("PM%i", iNum+2);
 	propList.insert("style:name", sPageLayoutName);
 	pHandler->startElement("style:page-layout", propList);
 
-	RVNGPropertyList tempPropList = mxPropList;
+	librevenge::RVNGPropertyList tempPropList = mxPropList;
 	if (!tempPropList["style:writing-mode"])
-		tempPropList.insert("style:writing-mode", RVNGString("lr-tb"));
+		tempPropList.insert("style:writing-mode", librevenge::RVNGString("lr-tb"));
 	if (!tempPropList["style:footnote-max-height"])
-		tempPropList.insert("style:footnote-max-height", RVNGString("0in"));
+		tempPropList.insert("style:footnote-max-height", librevenge::RVNGString("0in"));
 	pHandler->startElement("style:page-layout-properties", tempPropList);
 
-	RVNGPropertyList footnoteSepPropList;
-	footnoteSepPropList.insert("style:width", RVNGString("0.0071in"));
-	footnoteSepPropList.insert("style:distance-before-sep", RVNGString("0.0398in"));
-	footnoteSepPropList.insert("style:distance-after-sep", RVNGString("0.0398in"));
-	footnoteSepPropList.insert("style:adjustment", RVNGString("left"));
-	footnoteSepPropList.insert("style:rel-width", RVNGString("25%"));
-	footnoteSepPropList.insert("style:color", RVNGString("#000000"));
+	librevenge::RVNGPropertyList footnoteSepPropList;
+	footnoteSepPropList.insert("style:width", librevenge::RVNGString("0.0071in"));
+	footnoteSepPropList.insert("style:distance-before-sep", librevenge::RVNGString("0.0398in"));
+	footnoteSepPropList.insert("style:distance-after-sep", librevenge::RVNGString("0.0398in"));
+	footnoteSepPropList.insert("style:adjustment", librevenge::RVNGString("left"));
+	footnoteSepPropList.insert("style:rel-width", librevenge::RVNGString("25%"));
+	footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
 	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
 
 	pHandler->endElement("style:footnote-sep");
@@ -182,18 +182,18 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 	for (int i=iStartingNum; i<(iStartingNum+iSpan); ++i)
 	{
 		TagOpenElement masterPageOpen("style:master-page");
-		RVNGString sMasterPageName, sMasterPageDisplayName;
+		librevenge::RVNGString sMasterPageName, sMasterPageDisplayName;
 		sMasterPageName.sprintf("Page_Style_%i", i);
 		sMasterPageDisplayName.sprintf("Page Style %i", i);
-		RVNGString sPageLayoutName;
-		RVNGPropertyList propList;
+		librevenge::RVNGString sPageLayoutName;
+		librevenge::RVNGPropertyList propList;
 		sPageLayoutName.sprintf("PM%i", iPageLayoutNum+2);
 		propList.insert("style:name", sMasterPageName);
 		propList.insert("style:display-name", sMasterPageDisplayName);
 		propList.insert("style:page-layout-name", sPageLayoutName);
 		if (!bLastPageSpan)
 		{
-			RVNGString sNextMasterPageName;
+			librevenge::RVNGString sNextMasterPageName;
 			sNextMasterPageName.sprintf("Page_Style_%i", (i+1));
 			propList.insert("style:next-style-name", sNextMasterPageName);
 		}

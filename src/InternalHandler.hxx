@@ -27,8 +27,6 @@
 #define _INTERNALHANDLER_HXX_
 
 #include <librevenge/librevenge.h>
-#include <librevenge/RVNGProperty.h>
-#include <librevenge/RVNGString.h>
 #include <libodfgen/libodfgen.hxx>
 #include "DocumentElement.hxx"
 
@@ -40,9 +38,9 @@ public:
 
 	void startDocument() {};
 	void endDocument() {};
-	void startElement(const char *psName, const RVNGPropertyList &xPropList);
+	void startElement(const char *psName, const librevenge::RVNGPropertyList &xPropList);
 	void endElement(const char *psName);
-	void characters(const RVNGString &sCharacters);
+	void characters(const librevenge::RVNGString &sCharacters);
 private:
 	InternalHandler(const InternalHandler &);
 	InternalHandler &operator=(const InternalHandler &);

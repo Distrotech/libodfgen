@@ -40,28 +40,28 @@ class OdfDocumentHandler;
 class ParagraphStyle
 {
 public:
-	ParagraphStyle(RVNGPropertyList const &propList, const RVNGPropertyListVector &tabStops, const RVNGString &sName);
+	ParagraphStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGPropertyListVector &tabStops, const librevenge::RVNGString &sName);
 	virtual ~ParagraphStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	RVNGString getName() const
+	librevenge::RVNGString getName() const
 	{
 		return msName;
 	}
 private:
-	RVNGPropertyList mpPropList;
-	RVNGPropertyListVector mxTabStops;
-	RVNGString msName;
+	librevenge::RVNGPropertyList mpPropList;
+	librevenge::RVNGPropertyListVector mxTabStops;
+	librevenge::RVNGString msName;
 };
 
 
 class SpanStyle : public Style
 {
 public:
-	SpanStyle(const char *psName, const RVNGPropertyList &xPropList);
+	SpanStyle(const char *psName, const librevenge::RVNGPropertyList &xPropList);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
-	RVNGPropertyList mPropList;
+	librevenge::RVNGPropertyList mPropList;
 };
 
 class ParagraphStyleManager : public StyleManager
@@ -76,10 +76,10 @@ public:
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
 	Note: using S%i as new name*/
-	RVNGString findOrAdd(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &tabStops);
+	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &tabStops);
 
 	/* returns the style corresponding to a given name ( if it exists ) */
-	shared_ptr<ParagraphStyle> const get(const RVNGString &name) const;
+	shared_ptr<ParagraphStyle> const get(const librevenge::RVNGString &name) const;
 
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const;
@@ -87,12 +87,12 @@ public:
 
 protected:
 	// return a unique key
-	RVNGString getKey(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &tabStops) const;
+	librevenge::RVNGString getKey(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &tabStops) const;
 
 	// hash key -> name
-	std::map<RVNGString, RVNGString, ltstr> mNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mNameHash;
 	// style name -> paragraph style
-	std::map<RVNGString, shared_ptr<ParagraphStyle>, ltstr> mStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr> mStyleHash;
 };
 
 class SpanStyleManager : public StyleManager
@@ -107,19 +107,19 @@ public:
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
 	Note: using Span%i as new name*/
-	RVNGString findOrAdd(const RVNGPropertyList &xPropList);
+	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList);
 
 	/* returns the style corresponding to a given name ( if it exists ) */
-	shared_ptr<SpanStyle> const get(const RVNGString &name) const;
+	shared_ptr<SpanStyle> const get(const librevenge::RVNGString &name) const;
 
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const;
 
 protected:
 	// hash key -> style name
-	std::map<RVNGString, RVNGString, ltstr> mNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mNameHash;
 	// style name -> SpanStyle
-	std::map<RVNGString, shared_ptr<SpanStyle>, ltstr> mStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr> mStyleHash;
 };
 #endif
 

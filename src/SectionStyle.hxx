@@ -26,7 +26,6 @@
 #define _SECTIONSTYLE_HXX_
 
 #include <librevenge/librevenge.h>
-#include <librevenge/RVNGPropertyListVector.h>
 
 #include "Style.hxx"
 
@@ -34,12 +33,12 @@
 class SectionStyle : public Style
 {
 public:
-	SectionStyle(const RVNGPropertyList &xPropList, const RVNGPropertyListVector &xColumns, const char *psName);
+	SectionStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &xColumns, const char *psName);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
-	RVNGPropertyList mPropList;
-	RVNGPropertyListVector mColumns;
+	librevenge::RVNGPropertyList mPropList;
+	librevenge::RVNGPropertyListVector mColumns;
 };
 #endif
 

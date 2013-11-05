@@ -26,14 +26,14 @@
 #include "ListStyle.hxx"
 #include "DocumentElement.hxx"
 
-OrderedListLevelStyle::OrderedListLevelStyle(const RVNGPropertyList &xPropList) :
+OrderedListLevelStyle::OrderedListLevelStyle(const librevenge::RVNGPropertyList &xPropList) :
 	mPropList(xPropList)
 {
 }
 
 void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) const
 {
-	RVNGString sLevel;
+	librevenge::RVNGString sLevel;
 	sLevel.sprintf("%i", (iLevel+1));
 
 	TagOpenElement listLevelStyleOpen("text:list-level-style-number");
@@ -41,12 +41,12 @@ void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) cons
 	listLevelStyleOpen.addAttribute("text:style-name", "Numbering_Symbols");
 	if (mPropList["style:num-prefix"])
 	{
-		RVNGString sEscapedString(mPropList["style:num-prefix"]->getStr(), true);
+		librevenge::RVNGString sEscapedString(mPropList["style:num-prefix"]->getStr(), true);
 		listLevelStyleOpen.addAttribute("style:num-prefix", sEscapedString);
 	}
 	if (mPropList["style:num-suffix"])
 	{
-		RVNGString sEscapedString(mPropList["style:num-suffix"]->getStr(), true);
+		librevenge::RVNGString sEscapedString(mPropList["style:num-suffix"]->getStr(), true);
 		listLevelStyleOpen.addAttribute("style:num-suffix", sEscapedString);
 	}
 	if (mPropList["style:num-format"])
@@ -78,14 +78,14 @@ void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) cons
 	pHandler->endElement("text:list-level-style-number");
 }
 
-UnorderedListLevelStyle::UnorderedListLevelStyle(const RVNGPropertyList &xPropList)
+UnorderedListLevelStyle::UnorderedListLevelStyle(const librevenge::RVNGPropertyList &xPropList)
 	: mPropList(xPropList)
 {
 }
 
 void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) const
 {
-	RVNGString sLevel;
+	librevenge::RVNGString sLevel;
 	sLevel.sprintf("%i", (iLevel+1));
 	TagOpenElement listLevelStyleOpen("text:list-level-style-bullet");
 	listLevelStyleOpen.addAttribute("text:level", sLevel);
@@ -93,11 +93,11 @@ void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) co
 	if (mPropList["text:bullet-char"] && (mPropList["text:bullet-char"]->getStr().len()))
 	{
 		// The following is needed because the ODF format does not accept bullet chars longer than one character
-		RVNGString::Iter i(mPropList["text:bullet-char"]->getStr());
+		librevenge::RVNGString::Iter i(mPropList["text:bullet-char"]->getStr());
 		i.rewind();
-		RVNGString sEscapedString(".");
+		librevenge::RVNGString sEscapedString(".");
 		if (i.next())
-			sEscapedString = RVNGString(i(), true);
+			sEscapedString = librevenge::RVNGString(i(), true);
 		listLevelStyleOpen.addAttribute("text:bullet-char", sEscapedString);
 
 	}
@@ -159,7 +159,7 @@ void ListStyle::setListLevel(int iLevel, ListLevelStyle *iListLevelStyle)
 		mxListLevels[iLevel] = iListLevelStyle;
 }
 
-void ListStyle::updateListLevel(const int iLevel, const RVNGPropertyList &xPropList, bool ordered)
+void ListStyle::updateListLevel(const int iLevel, const librevenge::RVNGPropertyList &xPropList, bool ordered)
 {
 	if (iLevel < 0)
 		return;

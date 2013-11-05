@@ -25,7 +25,6 @@
 #include <string.h> // for strcmp
 
 #include <librevenge/librevenge.h>
-#include <librevenge/RVNGString.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -52,7 +51,7 @@ using boost::shared_ptr;
 
 struct ltstr
 {
-	bool operator()(const RVNGString &s1, const RVNGString &s2) const
+	bool operator()(const librevenge::RVNGString &s1, const librevenge::RVNGString &s2) const
 	{
 		return strcmp(s1.cstr(), s2.cstr()) < 0;
 	}

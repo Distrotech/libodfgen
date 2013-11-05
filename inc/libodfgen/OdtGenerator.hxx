@@ -37,7 +37,7 @@
   * @param[in] pHandler the current OdfDocumentHandler
   * @param[in] streamType type of the object
   */
-typedef bool (*OdfEmbeddedObject)(const RVNGBinaryData &data, OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+typedef bool (*OdfEmbeddedObject)(const librevenge::RVNGBinaryData &data, OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 
 /** Handler for embedded images.
   *
@@ -45,83 +45,83 @@ typedef bool (*OdfEmbeddedObject)(const RVNGBinaryData &data, OdfDocumentHandler
   * @param[in] output the same image in format suitable for the used
   * OdfDocumentHandler.
   */
-typedef bool (*OdfEmbeddedImage)(const RVNGBinaryData &input, RVNGBinaryData &output);
+typedef bool (*OdfEmbeddedImage)(const librevenge::RVNGBinaryData &input, librevenge::RVNGBinaryData &output);
 
 class OdtGeneratorPrivate;
 
 /** A generator for text documents.
   *
-  * See @c librevenge library for documentation of the ::RVNGDocumentInterface
+  * See @c librevenge library for documentation of the ::librevenge::RVNGDocumentInterface
   * interface.
   */
-class OdtGenerator : public RVNGTextInterface
+class OdtGenerator : public librevenge::RVNGTextInterface
 {
 public:
 	OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdtGenerator();
 
-	void setDocumentMetaData(const RVNGPropertyList &propList);
+	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
 	void startDocument();
 	void endDocument();
 
-	void definePageStyle(const RVNGPropertyList &);
-	void openPageSpan(const RVNGPropertyList &propList);
+	void definePageStyle(const librevenge::RVNGPropertyList &);
+	void openPageSpan(const librevenge::RVNGPropertyList &propList);
 	void closePageSpan();
 
-	void defineSectionStyle(const RVNGPropertyList &, const RVNGPropertyListVector &);
-	void openSection(const RVNGPropertyList &propList, const RVNGPropertyListVector &columns);
+	void defineSectionStyle(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
+	void openSection(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns);
 	void closeSection();
 
-	void openHeader(const RVNGPropertyList &propList);
+	void openHeader(const librevenge::RVNGPropertyList &propList);
 	void closeHeader();
-	void openFooter(const RVNGPropertyList &propList);
+	void openFooter(const librevenge::RVNGPropertyList &propList);
 	void closeFooter();
 
-	void defineParagraphStyle(const RVNGPropertyList &, const RVNGPropertyListVector &);
-	void openParagraph(const RVNGPropertyList &propList, const RVNGPropertyListVector &tabStops);
+	void defineParagraphStyle(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
+	void openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops);
 	void closeParagraph();
 
-	void defineCharacterStyle(const RVNGPropertyList &);
-	void openSpan(const RVNGPropertyList &propList);
+	void defineCharacterStyle(const librevenge::RVNGPropertyList &);
+	void openSpan(const librevenge::RVNGPropertyList &propList);
 	void closeSpan();
 
 	void insertTab();
 	void insertSpace();
-	void insertText(const RVNGString &text);
+	void insertText(const librevenge::RVNGString &text);
 	void insertLineBreak();
-	void insertField(const RVNGString &type, const RVNGPropertyList &propList);
+	void insertField(const librevenge::RVNGString &type, const librevenge::RVNGPropertyList &propList);
 
-	void defineOrderedListLevel(const RVNGPropertyList &propList);
-	void defineUnorderedListLevel(const RVNGPropertyList &propList);
-	void openOrderedListLevel(const RVNGPropertyList &propList);
-	void openUnorderedListLevel(const RVNGPropertyList &propList);
+	void defineOrderedListLevel(const librevenge::RVNGPropertyList &propList);
+	void defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList);
+	void openOrderedListLevel(const librevenge::RVNGPropertyList &propList);
+	void openUnorderedListLevel(const librevenge::RVNGPropertyList &propList);
 	void closeOrderedListLevel();
 	void closeUnorderedListLevel();
-	void openListElement(const RVNGPropertyList &propList, const RVNGPropertyListVector &tabStops);
+	void openListElement(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops);
 	void closeListElement();
 
-	void openFootnote(const RVNGPropertyList &propList);
+	void openFootnote(const librevenge::RVNGPropertyList &propList);
 	void closeFootnote();
-	void openEndnote(const RVNGPropertyList &propList);
+	void openEndnote(const librevenge::RVNGPropertyList &propList);
 	void closeEndnote();
-	void openComment(const RVNGPropertyList &propList);
+	void openComment(const librevenge::RVNGPropertyList &propList);
 	void closeComment();
-	void openTextBox(const RVNGPropertyList &propList);
+	void openTextBox(const librevenge::RVNGPropertyList &propList);
 	void closeTextBox();
 
-	void openTable(const RVNGPropertyList &propList, const RVNGPropertyListVector &columns);
-	void openTableRow(const RVNGPropertyList &propList);
+	void openTable(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns);
+	void openTableRow(const librevenge::RVNGPropertyList &propList);
 	void closeTableRow();
-	void openTableCell(const RVNGPropertyList &propList);
+	void openTableCell(const librevenge::RVNGPropertyList &propList);
 	void closeTableCell();
-	void insertCoveredTableCell(const RVNGPropertyList &propList);
+	void insertCoveredTableCell(const librevenge::RVNGPropertyList &propList);
 	void closeTable();
 
-	void openFrame(const RVNGPropertyList &propList);
+	void openFrame(const librevenge::RVNGPropertyList &propList);
 	void closeFrame();
 
-	void insertBinaryObject(const RVNGPropertyList &propList, const RVNGBinaryData &data);
-	void insertEquation(const RVNGPropertyList &propList, const RVNGString &data);
+	void insertBinaryObject(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGBinaryData &data);
+	void insertEquation(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGString &data);
 
 	/** Registers a handler for embedded objects.
 	  *
@@ -129,7 +129,7 @@ public:
 	  * @param[in] objectHandler a function that handles processing of
 	  *		the object's data and generating output
 	  */
-	void registerEmbeddedObjectHandler(const RVNGString &mimeType, OdfEmbeddedObject objectHandler);
+	void registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler);
 
 	/** Registers a handler for embedded images.
 	  *
@@ -140,7 +140,7 @@ public:
 	  * @param[in] imageHandler a function that handles processing of
 	  *		the images's data and generating output
 	  */
-	void registerEmbeddedImageHandler(const RVNGString &mimeType, OdfEmbeddedImage imageHandler);
+	void registerEmbeddedImageHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedImage imageHandler);
 
 private:
 	OdtGenerator(OdtGenerator const &);

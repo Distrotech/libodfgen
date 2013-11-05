@@ -26,11 +26,8 @@
 #ifndef _DOCUMENTELEMENT_HXX_
 #define _DOCUMENTELEMENT_HXX_
 
-#include <librevenge/librevenge.h>
-#include <librevenge/RVNGProperty.h>
-#include <librevenge/RVNGString.h>
 #include <vector>
-
+#include <librevenge/librevenge.h>
 #include <libodfgen/libodfgen.hxx>
 
 class DocumentElement
@@ -45,32 +42,32 @@ class TagElement : public DocumentElement
 {
 public:
 	virtual ~TagElement() {}
-	TagElement(const RVNGString &szTagName) : msTagName(szTagName) {}
-	const RVNGString &getTagName() const
+	TagElement(const librevenge::RVNGString &szTagName) : msTagName(szTagName) {}
+	const librevenge::RVNGString &getTagName() const
 	{
 		return msTagName;
 	}
 	virtual void print() const;
 private:
-	RVNGString msTagName;
+	librevenge::RVNGString msTagName;
 };
 
 class TagOpenElement : public TagElement
 {
 public:
-	TagOpenElement(const RVNGString &szTagName) : TagElement(szTagName), maAttrList() {}
+	TagOpenElement(const librevenge::RVNGString &szTagName) : TagElement(szTagName), maAttrList() {}
 	virtual ~TagOpenElement() {}
-	void addAttribute(const RVNGString &szAttributeName, const RVNGString &sAttributeValue);
+	void addAttribute(const librevenge::RVNGString &szAttributeName, const librevenge::RVNGString &sAttributeValue);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	virtual void print () const;
 private:
-	RVNGPropertyList maAttrList;
+	librevenge::RVNGPropertyList maAttrList;
 };
 
 class TagCloseElement : public TagElement
 {
 public:
-	TagCloseElement(const RVNGString &szTagName) : TagElement(szTagName) {}
+	TagCloseElement(const librevenge::RVNGString &szTagName) : TagElement(szTagName) {}
 	virtual ~TagCloseElement() {}
 	virtual void write(OdfDocumentHandler *pHandler) const;
 };
@@ -78,22 +75,22 @@ public:
 class CharDataElement : public DocumentElement
 {
 public:
-	CharDataElement(const RVNGString &sData) : DocumentElement(), msData(sData) {}
+	CharDataElement(const librevenge::RVNGString &sData) : DocumentElement(), msData(sData) {}
 	virtual ~CharDataElement() {}
 	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
-	RVNGString msData;
+	librevenge::RVNGString msData;
 };
 
 class TextElement : public DocumentElement
 {
 public:
-	TextElement(const RVNGString &sTextBuf) : DocumentElement(), msTextBuf(sTextBuf, false) {}
+	TextElement(const librevenge::RVNGString &sTextBuf) : DocumentElement(), msTextBuf(sTextBuf, false) {}
 	virtual ~TextElement() {}
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
-	RVNGString msTextBuf;
+	librevenge::RVNGString msTextBuf;
 };
 
 #endif

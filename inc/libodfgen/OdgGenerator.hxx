@@ -36,48 +36,48 @@ class OdgGeneratorPrivate;
   * See @c librevenge library for documentation of the
   * librevenge::WPGPaintInterface interface.
   */
-class OdgGenerator : public RVNGDrawingInterface
+class OdgGenerator : public librevenge::RVNGDrawingInterface
 {
 public:
 	OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdgGenerator();
 
-	void startPage(const RVNGPropertyList &);
+	void startPage(const librevenge::RVNGPropertyList &);
 	void endPage();
-	void startLayer(const ::RVNGPropertyList &propList);
+	void startLayer(const ::librevenge::RVNGPropertyList &propList);
 	void endLayer();
-	void startEmbeddedGraphics(const ::RVNGPropertyList &propList);
+	void startEmbeddedGraphics(const ::librevenge::RVNGPropertyList &propList);
 	void endEmbeddedGraphics();
 
-	void setStyle(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &gradient);
+	void setStyle(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &gradient);
 
-	void drawRectangle(const ::RVNGPropertyList &propList);
-	void drawEllipse(const ::RVNGPropertyList &propList);
-	void drawPolyline(const ::RVNGPropertyListVector &vertices);
-	void drawPolygon(const ::RVNGPropertyListVector &vertices);
-	void drawPath(const ::RVNGPropertyListVector &path);
-	void drawGraphicObject(const ::RVNGPropertyList &propList, const ::RVNGBinaryData &binaryData);
+	void drawRectangle(const ::librevenge::RVNGPropertyList &propList);
+	void drawEllipse(const ::librevenge::RVNGPropertyList &propList);
+	void drawPolyline(const ::librevenge::RVNGPropertyListVector &vertices);
+	void drawPolygon(const ::librevenge::RVNGPropertyListVector &vertices);
+	void drawPath(const ::librevenge::RVNGPropertyListVector &path);
+	void drawGraphicObject(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGBinaryData &binaryData);
 
-	void startTextObject(const ::RVNGPropertyList &propList, const ::RVNGPropertyListVector &path);
+	void startTextObject(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &path);
 	void endTextObject();
 
-	void setDocumentMetaData(const RVNGPropertyList &) {}
-	void insertText(const RVNGString &text);
+	void setDocumentMetaData(const librevenge::RVNGPropertyList &) {}
+	void insertText(const librevenge::RVNGString &text);
 	void insertTab() {}
 	void insertSpace() {}
 	void insertLineBreak() {}
-	void insertField(const RVNGString &, const RVNGPropertyList &) {}
-	void openOrderedListLevel(const RVNGPropertyList &) {}
-	void openUnorderedListLevel(const RVNGPropertyList &) {}
+	void insertField(const librevenge::RVNGString &, const librevenge::RVNGPropertyList &) {}
+	void openOrderedListLevel(const librevenge::RVNGPropertyList &) {}
+	void openUnorderedListLevel(const librevenge::RVNGPropertyList &) {}
 	void closeOrderedListLevel() {}
 	void closeUnorderedListLevel() {}
-	void openListElement(const RVNGPropertyList &, const RVNGPropertyListVector &) {}
+	void openListElement(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &) {}
 	void closeListElement() {}
-	void openParagraph(const RVNGPropertyList &, const RVNGPropertyListVector &);
+	void openParagraph(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
 	void closeParagraph();
-	void openSpan(const RVNGPropertyList &);
+	void openSpan(const librevenge::RVNGPropertyList &);
 	void closeSpan();
-	void startDocument(const RVNGPropertyList &) {}
+	void startDocument(const librevenge::RVNGPropertyList &) {}
 	void endDocument() {}
 private:
 	OdgGenerator(OdgGenerator const &);

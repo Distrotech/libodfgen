@@ -38,13 +38,13 @@ public:
 	FontStyle(const char *psName, const char *psFontFamily);
 	~FontStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	const RVNGString &getFontFamily() const
+	const librevenge::RVNGString &getFontFamily() const
 	{
 		return msFontFamily;
 	}
 
 private:
-	RVNGString msFontFamily;
+	librevenge::RVNGString msFontFamily;
 };
 
 class FontStyleManager : public StyleManager
@@ -60,7 +60,7 @@ public:
 
 	Note: the returned font name is actually equalled to psFontFamily
 	*/
-	RVNGString findOrAdd(const char *psFontFamily);
+	librevenge::RVNGString findOrAdd(const char *psFontFamily);
 
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const {}
@@ -69,7 +69,7 @@ public:
 
 protected:
 	// style name -> SpanStyle
-	std::map<RVNGString, shared_ptr<FontStyle>, ltstr> mStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<FontStyle>, ltstr> mStyleHash;
 };
 
 #endif
