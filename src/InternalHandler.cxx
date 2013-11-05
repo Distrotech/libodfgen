@@ -39,7 +39,7 @@ void InternalHandler::startElement(const char *psName, const librevenge::RVNGPro
 	for (i.rewind(); i.next(); )
 	{
 		// filter out librevenge elements
-		if (strncmp(i.key(), "librevenge", 6) != 0)
+		if (strncmp(i.key(), "librevenge", 10) != 0)
 			element->addAttribute(i.key(), i()->getStr());
 	}
 	mpElements->push_back(element);
