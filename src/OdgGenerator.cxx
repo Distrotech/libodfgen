@@ -1578,6 +1578,24 @@ void OdgGenerator::closeSpan()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:span"));
 }
 
+void OdgGenerator::insertTab()
+{
+	mpImpl->mBodyElements.push_back(new TagOpenElement("text:tab"));
+	mpImpl->mBodyElements.push_back(new TagCloseElement("text:tab"));
+}
+
+void OdgGenerator::insertSpace()
+{
+	mpImpl->mBodyElements.push_back(new TagOpenElement("text:s"));
+	mpImpl->mBodyElements.push_back(new TagCloseElement("text:s"));
+}
+
+void OdgGenerator::insertLineBreak()
+{
+	mpImpl->mBodyElements.push_back(new TagOpenElement("text:line-break"));
+	mpImpl->mBodyElements.push_back(new TagCloseElement("text:line-break"));
+}
+
 void OdgGenerator::insertText(const librevenge::RVNGString &text)
 {
 	librevenge::RVNGString out;

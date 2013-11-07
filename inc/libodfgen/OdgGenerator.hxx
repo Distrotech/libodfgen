@@ -63,9 +63,9 @@ public:
 
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &) {}
 	void insertText(const librevenge::RVNGString &text);
-	void insertTab() {}
-	void insertSpace() {}
-	void insertLineBreak() {}
+	void insertTab();
+	void insertSpace();
+	void insertLineBreak();
 	void insertField(const librevenge::RVNGString &, const librevenge::RVNGPropertyList &) {}
 	void openOrderedListLevel(const librevenge::RVNGPropertyList &) {}
 	void openUnorderedListLevel(const librevenge::RVNGPropertyList &) {}
