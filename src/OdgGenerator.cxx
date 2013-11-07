@@ -434,6 +434,18 @@ OdgGenerator::~OdgGenerator()
 	delete mpImpl;
 }
 
+void OdgGenerator::startDocument(const librevenge::RVNGPropertyList &)
+{
+}
+
+void OdgGenerator::endDocument()
+{
+}
+
+void OdgGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &)
+{
+}
+
 void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (propList["svg:width"])
@@ -1543,6 +1555,30 @@ void OdgGenerator::endTextObject()
 	}
 }
 
+void OdgGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &)
+{
+}
+
+void OdgGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &)
+{
+}
+
+void OdgGenerator::closeOrderedListLevel()
+{
+}
+
+void OdgGenerator::closeUnorderedListLevel()
+{
+}
+
+void OdgGenerator::openListElement(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &)
+{
+}
+
+void OdgGenerator::closeListElement()
+{
+}
+
 void OdgGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &)
 {
 	librevenge::RVNGPropertyList finalPropList(propList);
@@ -1594,6 +1630,10 @@ void OdgGenerator::insertLineBreak()
 {
 	mpImpl->mBodyElements.push_back(new TagOpenElement("text:line-break"));
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:line-break"));
+}
+
+void OdgGenerator::insertField(const librevenge::RVNGString &, const librevenge::RVNGPropertyList &)
+{
 }
 
 void OdgGenerator::insertText(const librevenge::RVNGString &text)

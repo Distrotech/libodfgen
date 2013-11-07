@@ -61,24 +61,24 @@ public:
 	void startTextObject(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &path);
 	void endTextObject();
 
-	void setDocumentMetaData(const librevenge::RVNGPropertyList &) {}
+	void setDocumentMetaData(const librevenge::RVNGPropertyList &);
 	void insertText(const librevenge::RVNGString &text);
 	void insertTab();
 	void insertSpace();
 	void insertLineBreak();
-	void insertField(const librevenge::RVNGString &, const librevenge::RVNGPropertyList &) {}
-	void openOrderedListLevel(const librevenge::RVNGPropertyList &) {}
-	void openUnorderedListLevel(const librevenge::RVNGPropertyList &) {}
-	void closeOrderedListLevel() {}
-	void closeUnorderedListLevel() {}
-	void openListElement(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &) {}
-	void closeListElement() {}
+	void insertField(const librevenge::RVNGString &, const librevenge::RVNGPropertyList &);
+	void openOrderedListLevel(const librevenge::RVNGPropertyList &);
+	void openUnorderedListLevel(const librevenge::RVNGPropertyList &);
+	void closeOrderedListLevel();
+	void closeUnorderedListLevel();
+	void openListElement(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
+	void closeListElement();
 	void openParagraph(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
 	void closeParagraph();
 	void openSpan(const librevenge::RVNGPropertyList &);
 	void closeSpan();
-	void startDocument(const librevenge::RVNGPropertyList &) {}
-	void endDocument() {}
+	void startDocument(const librevenge::RVNGPropertyList &);
+	void endDocument();
 private:
 	OdgGenerator(OdgGenerator const &);
 	OdgGenerator &operator=(OdgGenerator const &);
