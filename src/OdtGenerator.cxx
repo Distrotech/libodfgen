@@ -452,7 +452,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	docContentPropList.insert("xmlns:form", "urn:oasis:names:tc:opendocument:xmlns:form:1.0");
 	docContentPropList.insert("xmlns:script", "urn:oasis:names:tc:opendocument:xmlns:script:1.0");
 	docContentPropList.insert("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
-	docContentPropList.insert("office:version", "1.0");
+	docContentPropList.insert("office:version", librevenge::RVNGPropertyFactory::newStringProp("1.0"));
 	if (mxStreamType == ODF_FLAT_XML)
 	{
 		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");

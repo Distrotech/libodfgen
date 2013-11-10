@@ -42,9 +42,13 @@ void TagOpenElement::print() const
 	TagElement::print();
 }
 
-void TagOpenElement::addAttribute(const librevenge::RVNGString &szAttributeName, const librevenge::RVNGString &sAttributeValue)
+void TagOpenElement::addAttribute(const librevenge::RVNGString &szAttributeName,
+                                  const librevenge::RVNGString &sAttributeValue, bool forceString)
 {
-	maAttrList.insert(szAttributeName.cstr(), sAttributeValue);
+	if (forceString)
+		maAttrList.insert(szAttributeName.cstr(), librevenge::RVNGPropertyFactory::newStringProp(sAttributeValue));
+	else
+		maAttrList.insert(szAttributeName.cstr(), sAttributeValue);
 }
 
 void TagCloseElement::write(OdfDocumentHandler *pHandler) const

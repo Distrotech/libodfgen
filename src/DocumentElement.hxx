@@ -57,7 +57,8 @@ class TagOpenElement : public TagElement
 public:
 	TagOpenElement(const librevenge::RVNGString &szTagName) : TagElement(szTagName), maAttrList() {}
 	virtual ~TagOpenElement() {}
-	void addAttribute(const librevenge::RVNGString &szAttributeName, const librevenge::RVNGString &sAttributeValue);
+	void addAttribute(const librevenge::RVNGString &szAttributeName,
+	                  const librevenge::RVNGString &sAttributeValue, bool forceString=true);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	virtual void print () const;
 private:

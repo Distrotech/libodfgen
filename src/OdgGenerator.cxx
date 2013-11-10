@@ -242,7 +242,7 @@ OdgGenerator::OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 	tmpOfficeDocumentContent.addAttribute("xmlns:fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
-	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
+	tmpOfficeDocumentContent.addAttribute("office:version", "1.0", true);
 	if (mpImpl->mxStreamType == ODF_FLAT_XML)
 		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");
 	tmpOfficeDocumentContent.write(mpImpl->mpHandler);
