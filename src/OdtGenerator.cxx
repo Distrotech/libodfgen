@@ -1409,9 +1409,9 @@ void OdtGenerator::closeFrame()
 	mpImpl->mWriterDocumentStates.top().mbInFrame = false;
 }
 
-void OdtGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGBinaryData &data)
+void OdtGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propList)
 {
-	if (!data.size())
+	if (!propList["office:binary-data"])
 		return;
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
@@ -1423,10 +1423,12 @@ void OdtGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 
 	if (tmpObjectHandler || tmpImageHandler)
 	{
+		librevenge::RVNGBinaryData data(propList["office:binary-data"]->getStr());
 		if (tmpObjectHandler)
 		{
 			std::vector<DocumentElement *> tmpContentElements;
 			InternalHandler tmpHandler(&tmpContentElements);
+
 
 			if (tmpObjectHandler(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
 			{
@@ -1465,9 +1467,7 @@ void OdtGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 
 		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
 
-		librevenge::RVNGString binaryBase64Data = data.getBase64Data();
-
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(binaryBase64Data.cstr()));
+		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["office:binary-data"]->getStr().cstr()));
 
 		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:binary-data"));
 

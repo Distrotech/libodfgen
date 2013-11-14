@@ -1014,9 +1014,11 @@ void OdpGenerator::drawPath(const librevenge::RVNGPropertyListVector &path)
 	mpImpl->_drawPath(path);
 }
 
-void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGBinaryData &binaryData)
+void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!propList["librevenge:mime-type"] || propList["librevenge:mime-type"]->getStr().len() <= 0)
+		return;
+	if (!propList["office:binary-data"])
 		return;
 	if (!propList["svg:x"] || !propList["svg:y"] || !propList["svg:width"] || !propList["svg:height"])
 		return;
@@ -1106,8 +1108,7 @@ void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 
 	mpImpl->mBodyElements.push_back(new TagOpenElement("office:binary-data"));
 
-	::librevenge::RVNGString base64Binary = binaryData.getBase64Data();
-	mpImpl->mBodyElements.push_back(new CharDataElement(base64Binary.cstr()));
+	mpImpl->mBodyElements.push_back(new CharDataElement(propList["office:binary-data"]->getStr().cstr()));
 
 	mpImpl->mBodyElements.push_back(new TagCloseElement("office:binary-data"));
 

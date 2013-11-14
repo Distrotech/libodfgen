@@ -120,7 +120,7 @@ public:
 	void openFrame(const librevenge::RVNGPropertyList &propList);
 	void closeFrame();
 
-	void insertBinaryObject(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGBinaryData &data);
+	void insertBinaryObject(const librevenge::RVNGPropertyList &propList);
 	void insertEquation(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGString &data);
 
 	/** Registers a handler for embedded objects.
