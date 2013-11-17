@@ -11,9 +11,10 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_includedir = \
 
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_include_HEADERS = \
 	$(top_srcdir)/inc/libodfgen/OdfDocumentHandler.hxx \
-	$(top_srcdir)/inc/libodfgen/OdtGenerator.hxx \
 	$(top_srcdir)/inc/libodfgen/OdgGenerator.hxx \
 	$(top_srcdir)/inc/libodfgen/OdpGenerator.hxx \
+	$(top_srcdir)/inc/libodfgen/OdsGenerator.hxx \
+	$(top_srcdir)/inc/libodfgen/OdtGenerator.hxx \
 	$(top_srcdir)/inc/libodfgen/libodfgen.hxx
 
 AM_CXXFLAGS = -I$(top_srcdir)/inc/ $(REVENGE_CFLAGS) $(DEBUG_CXXFLAGS)
@@ -39,13 +40,16 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
 	PageSpan.hxx \
 	SectionStyle.cxx \
 	SectionStyle.hxx \
+	SheetStyle.cxx \
+	SheetStyle.hxx \
 	TableStyle.cxx \
 	TableStyle.hxx \
 	TextRunStyle.cxx \
 	TextRunStyle.hxx \
+	OdgGenerator.cxx \
 	OdpGenerator.cxx \
-	OdtGenerator.cxx \
-	OdgGenerator.cxx
+	OdsGenerator.cxx \
+	OdtGenerator.cxx
 
 if OS_WIN32
 

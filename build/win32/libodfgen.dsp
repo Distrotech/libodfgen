@@ -105,6 +105,14 @@ SOURCE=..\..\src\OdgGenerator.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\OdpGenerator.cxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\OdsGenerator.cxx
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\OdtGenerator.cxx
 # End Source File
 # Begin Source File
@@ -114,6 +122,10 @@ SOURCE=..\..\src\PageSpan.cxx
 # Begin Source File
 
 SOURCE=..\..\src\SectionStyle.cxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\SheetStyle.cxx
 # End Source File
 # Begin Source File
 
@@ -161,6 +173,14 @@ SOURCE=..\..\inc\libodfgen\OdgGenerator.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\inc\libodfgen\OdpGenerator.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\inc\libodfgen\OdsGenerator.hxx
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\inc\libodfgen\OdtGenerator.hxx
 # End Source File
 # Begin Source File
@@ -174,6 +194,10 @@ SOURCE=..\..\src\SectionStyle.hxx
 # Begin Source File
 
 SOURCE=..\..\src\Style.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\SheetStyle.hxx
 # End Source File
 # Begin Source File
 

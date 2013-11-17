@@ -705,7 +705,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 	if(!path.count())
 		return;
 	// This must be a mistake and we do not want to crash lower
-	if(path[0]["librevenge:path-action"]->getStr() == "Z")
+	if(!path[0]["librevenge:path-action"] || path[0]["librevenge:path-action"]->getStr() == "Z")
 		return;
 
 	// try to find the bounding box

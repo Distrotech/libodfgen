@@ -24,11 +24,12 @@
 #define __LIBODFGEN_HXX__
 
 #include <librevenge/librevenge.h>
-#include <librevenge/librevenge.h>
+
 #include "OdfDocumentHandler.hxx"
-#include "OdtGenerator.hxx"
 #include "OdgGenerator.hxx"
 #include "OdpGenerator.hxx"
+#include "OdsGenerator.hxx"
+#include "OdtGenerator.hxx"
 
 #endif
 
