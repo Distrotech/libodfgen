@@ -32,6 +32,24 @@
   */
 enum OdfStreamType { ODF_FLAT_XML, ODF_CONTENT_XML, ODF_STYLES_XML, ODF_SETTINGS_XML, ODF_META_XML };
 
+class OdfDocumentHandler;
+
+/** Handler for embedded objects.
+  *
+  * @param[in] data the object's data
+  * @param[in] pHandler the current OdfDocumentHandler
+  * @param[in] streamType type of the object
+  */
+typedef bool (*OdfEmbeddedObject)(const librevenge::RVNGBinaryData &data, OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+
+/** Handler for embedded images.
+  *
+  * @param[in] input the image's data
+  * @param[in] output the same image in format suitable for the used
+  * OdfDocumentHandler.
+  */
+typedef bool (*OdfEmbeddedImage)(const librevenge::RVNGBinaryData &input, librevenge::RVNGBinaryData &output);
+
 /** XML writer.
   *
   * This interface is used by the document generators to create a valid

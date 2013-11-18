@@ -276,7 +276,7 @@ public:
 			return false;
 		}
 		mAuxiliarOdtState.reset(new OdtGeneratorState);
-		std::map<librevenge::RVNGString, OdsEmbeddedObject, ltstr >::const_iterator it=mObjectHandlers.begin();
+		std::map<librevenge::RVNGString, OdfEmbeddedObject, ltstr >::const_iterator it=mObjectHandlers.begin();
 		while (it!=mObjectHandlers.end())
 		{
 			mAuxiliarOdtState->get().registerEmbeddedObjectHandler(it->first,static_cast<OdfEmbeddedObject>(it->second));
@@ -335,7 +335,7 @@ public:
 	bool _writeTargetDocument(OdfDocumentHandler *pHandler);
 	void _writeDefaultStyles(OdfDocumentHandler *pHandler);
 
-	OdsEmbeddedObject _findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType);
+	OdfEmbeddedObject _findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType);
 
 	unsigned _getObjectId()
 	{
@@ -358,7 +358,7 @@ public:
 	// font styles
 	FontStyleManager mFontManager;
 	// embedded object handlers
-	std::map<librevenge::RVNGString, OdsEmbeddedObject, ltstr > mObjectHandlers;
+	std::map<librevenge::RVNGString, OdfEmbeddedObject, ltstr > mObjectHandlers;
 	// auxiliar odt handler to create data
 	shared_ptr<OdtGeneratorState> mAuxiliarOdtState;
 	// auxiliar odg handler to create data
@@ -457,9 +457,9 @@ bool OdsGeneratorPrivate::close(Command command)
 	return true;
 }
 
-OdsEmbeddedObject OdsGeneratorPrivate::_findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType)
+OdfEmbeddedObject OdsGeneratorPrivate::_findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType)
 {
-	std::map<librevenge::RVNGString, OdsEmbeddedObject, ltstr>::iterator i = mObjectHandlers.find(mimeType);
+	std::map<librevenge::RVNGString, OdfEmbeddedObject, ltstr>::iterator i = mObjectHandlers.find(mimeType);
 	if (i != mObjectHandlers.end())
 		return i->second;
 
@@ -1651,7 +1651,7 @@ void OdsGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 		return mpImpl->mAuxiliarOdtState->get().insertBinaryObject(propList);
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().drawGraphicObject(propList);
-	OdsEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["librevenge:mimetype"]->getStr());
+	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["librevenge:mimetype"]->getStr());
 
 	if (tmpObjectHandler)
 	{
@@ -1909,7 +1909,7 @@ void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyListVector &path)
 	mpImpl->mAuxiliarOdgState->get().drawPath(path);
 }
 
-void OdsGenerator::registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdsEmbeddedObject objectHandler)
+void OdsGenerator::registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler)
 {
 	mpImpl->mObjectHandlers[mimeType] = objectHandler;
 }

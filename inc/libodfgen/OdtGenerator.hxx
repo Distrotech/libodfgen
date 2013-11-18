@@ -31,22 +31,6 @@
 
 #include "OdfDocumentHandler.hxx"
 
-/** Handler for embedded objects.
-  *
-  * @param[in] data the object's data
-  * @param[in] pHandler the current OdfDocumentHandler
-  * @param[in] streamType type of the object
-  */
-typedef bool (*OdfEmbeddedObject)(const librevenge::RVNGBinaryData &data, OdfDocumentHandler *pHandler, const OdfStreamType streamType);
-
-/** Handler for embedded images.
-  *
-  * @param[in] input the image's data
-  * @param[in] output the same image in format suitable for the used
-  * OdfDocumentHandler.
-  */
-typedef bool (*OdfEmbeddedImage)(const librevenge::RVNGBinaryData &input, librevenge::RVNGBinaryData &output);
-
 class OdtGeneratorPrivate;
 
 /** A generator for text documents.

@@ -31,16 +31,6 @@
 
 #include "OdfDocumentHandler.hxx"
 
-/** Handler for embedded objects.
-  *
-  * @param[in] data the object's data
-  * @param[in] pHandler the current OdfDocumentHandler
-  * @param[in] streamType type of the object
-  *
-  * \note FIXME must be defined in OdfDocumentHandler and be equal to OdfEmbeddedObject
-  */
-typedef bool (*OdsEmbeddedObject)(const librevenge::RVNGBinaryData &data, OdfDocumentHandler *pHandler, const OdfStreamType streamType);
-
 class OdsGeneratorPrivate;
 
 /** A generator for text documents.
@@ -157,7 +147,7 @@ public:
 	  * @param[in] objectHandler a function that handles processing of
 	  *		the object's data and generating output
 	  */
-	void registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdsEmbeddedObject objectHandler);
+	void registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler);
 
 private:
 	OdsGenerator(OdsGenerator const &);
