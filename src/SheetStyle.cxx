@@ -52,7 +52,8 @@ static librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyL
 
 } // anonymous namespace
 
-SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList, const librevenge::RVNGString &psName) : Style(psName), mPropList(xPropList), mFormatsList(formatsList)
+SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList, const librevenge::RVNGString &psName)
+	: Style(psName), mPropList(xPropList), mFormatsList(formatsList), mConditionsList()
 {
 }
 
