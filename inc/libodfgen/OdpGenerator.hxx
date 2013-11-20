@@ -60,11 +60,11 @@ public:
 	void drawEllipse(const ::librevenge::RVNGPropertyList &propList);
 	void drawPolyline(const ::librevenge::RVNGPropertyListVector &vertices);
 	void drawPolygon(const ::librevenge::RVNGPropertyListVector &vertices);
-	void drawPath(const ::librevenge::RVNGPropertyListVector &path);
+	void drawPath(const ::librevenge::RVNGPropertyList &propList);
 	void drawGraphicObject(const ::librevenge::RVNGPropertyList &propList);
-	void drawConnector(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &path);
+	void drawConnector(const ::librevenge::RVNGPropertyList &propList);
 
-	void startTextObject(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &path);
+	void startTextObject(const ::librevenge::RVNGPropertyList &propList);
 	void endTextObject();
 	void openParagraph(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &tabStops);
 	void closeParagraph();

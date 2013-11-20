@@ -1707,7 +1707,7 @@ void OdsGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTextBox(propList);
 	if (mpImpl->mAuxiliarOdgState)
-		return mpImpl->mAuxiliarOdgState->get().startTextObject(propList, librevenge::RVNGPropertyListVector());
+		return mpImpl->mAuxiliarOdgState->get().startTextObject(propList);
 	if (!mpImpl->createAuxiliarOdtGenerator())
 		return;
 
@@ -1901,14 +1901,14 @@ void OdsGenerator::drawPolyline(const ::librevenge::RVNGPropertyListVector &vert
 }
 
 
-void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyListVector &path)
+void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->getState().mbInGraphics || !mpImpl->mAuxiliarOdgState)
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::drawPath: graphics not started\n"));
 		return;
 	}
-	mpImpl->mAuxiliarOdgState->get().drawPath(path);
+	mpImpl->mAuxiliarOdgState->get().drawPath(propList);
 }
 
 void OdsGenerator::registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler)

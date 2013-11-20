@@ -137,7 +137,7 @@ public:
 	void drawEllipse(const librevenge::RVNGPropertyList &propList);
 	void drawPolygon(const librevenge::RVNGPropertyListVector &vertices);
 	void drawPolyline(const librevenge::RVNGPropertyListVector &vertices);
-	void drawPath(const librevenge::RVNGPropertyListVector &path);
+	void drawPath(const librevenge::RVNGPropertyList &propList);
 
 	void insertEquation(const librevenge::RVNGPropertyList &, const librevenge::RVNGString &) {}
 
