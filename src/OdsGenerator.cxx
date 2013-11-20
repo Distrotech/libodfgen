@@ -859,10 +859,12 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 	if (propList["librevenge:value-type"])
 	{
 		std::string valueType(propList["librevenge:value-type"]->getStr().cstr());
-		if (valueType=="double" || valueType=="float")
+		if (valueType=="double" || valueType=="scientific") valueType="float";
+		else if (valueType=="percent") valueType="percentage";
+		if (valueType=="float" || valueType=="percentage" || valueType=="currency")
 		{
-			pSheetCellOpenElement->addAttribute("office:value-type", "float");
-			pSheetCellOpenElement->addAttribute("calcext:value-type", "float");
+			pSheetCellOpenElement->addAttribute("office:value-type", valueType.c_str());
+			pSheetCellOpenElement->addAttribute("calcext:value-type", valueType.c_str());
 			if (propList["librevenge:value"])
 				pSheetCellOpenElement->addAttribute("office:value", propList["librevenge:value"]->getStr().cstr());
 		}

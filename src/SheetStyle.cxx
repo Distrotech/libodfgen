@@ -91,23 +91,27 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle co
 	else if (type=="bool") type="boolean";
 	if (type=="number" || type=="fraction" || type=="percentage" || type=="scientific")
 	{
-		what.sprintf("number:%s-type", type=="percentage" ? "percentage" : "number");
+		what.sprintf("number:%s-style", type=="percentage" ? "percentage" : "number");
 		TagOpenElement styleOpen(what);
 		styleOpen.addAttribute("style:name", getName());
 		styleOpen.write(pHandler);
 		librevenge::RVNGString subWhat;
-		subWhat.sprintf("number:%s", type.c_str());
+		subWhat.sprintf("number:%s", type=="percentage" ? "number" : type=="scientific" ? "scientific-number" : type.c_str());
 		TagOpenElement number(subWhat);
 		if (mPropList["number:decimal-places"])
 			number.addAttribute("number:decimal-places", mPropList["number:decimal-places"]->getStr());
 		if (mPropList["number:min-integer-digits"])
 			number.addAttribute("number:min-integer-digits", mPropList["number:min-integer-digits"]->getStr());
+		else
+			number.addAttribute("number:min-integer-digits", "1");
 		if (mPropList["number:grouping"])
 			number.addAttribute("number:grouping", mPropList["number:grouping"]->getStr());
 		if (type=="scientific")
 		{
 			if (mPropList["number:min-exponent-digits"])
 				number.addAttribute("number:min-exponent-digits", mPropList["number:min-exponent-digits"]->getStr());
+			else
+				number.addAttribute("number:min-exponent-digits", "2");
 		}
 		else if (type=="fraction")
 		{
@@ -118,6 +122,12 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle co
 		}
 		number.write(pHandler);
 		TagCloseElement(subWhat).write(pHandler);
+		if (type=="percentage")
+		{
+			TagOpenElement("number:text").write(pHandler);
+			pHandler->characters("%");
+			TagCloseElement("number:text").write(pHandler);
+		}
 	}
 	else if (type=="boolean")
 	{
@@ -165,8 +175,22 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle co
 		std::string wh=prop["librevenge:value-type"]->getStr().cstr();
 		if (wh.substr(0,7)=="number:") wh=wh.substr(7);
 
-		if (wh=="year" || wh=="month" || wh=="day" || wh=="day-of-week" || wh=="quarter" || wh=="week-of-year" ||
-		        wh=="hours" || wh=="minutes" || wh=="seconds" || wh=="am-pm")
+		if (wh=="number")
+		{
+			TagOpenElement formatOpen("number:number");
+			if (prop["number:decimal-places"])
+				formatOpen.addAttribute("number:decimal-places", prop["number:decimal-places"]->getStr());
+			if (prop["number:min-integer-digits"])
+				formatOpen.addAttribute("number:min-integer-digits", prop["number:min-integer-digits"]->getStr());
+			else
+				formatOpen.addAttribute("number:min-integer-digits", "1");
+			if (prop["number:grouping"])
+				formatOpen.addAttribute("number:grouping", prop["number:grouping"]->getStr());
+			formatOpen.write(pHandler);
+			TagCloseElement("number:number").write(pHandler);
+		}
+		else if (wh=="year" || wh=="month" || wh=="day" || wh=="day-of-week" || wh=="quarter" || wh=="week-of-year" ||
+		         wh=="hours" || wh=="minutes" || wh=="seconds" || wh=="am-pm")
 		{
 			librevenge::RVNGString subWhat;
 			subWhat.sprintf("number:%s", wh.c_str());
