@@ -57,9 +57,9 @@ void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 	stylePropList.insert("fo:padding", "0.0382in");
 	for (i.rewind(); i.next();)
 	{
-		if (strlen(i.key()) > 2 && strncmp(i.key(), "fo", 2) == 0)
+		if (strncmp(i.key(), "fo", 2) == 0)
 			stylePropList.insert(i.key(), i()->clone());
-		else if (strlen(i.key()) > 22  && strncmp(i.key(), "style:border-line-width", 23) == 0)
+		else if (strncmp(i.key(), "style:border-line-width", 23) == 0)
 		{
 			if (strcmp(i.key(), "style:border-line-width") == 0 ||
 			        strcmp(i.key(), "style:border-line-width-left") == 0 ||

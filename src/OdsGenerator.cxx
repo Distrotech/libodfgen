@@ -251,7 +251,7 @@ public:
 			librevenge::RVNGPropertyList::Iter i(level.mLevel);
 			for (i.rewind(); i.next(); )
 			{
-				if (pList[i.key()]) continue;
+				if (pList[i.key()] || i.child()) continue;
 				pList.insert(i.key(), i()->clone());
 			}
 		}
@@ -649,7 +649,7 @@ void OdsGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 	for (i.rewind(); i.next(); )
 	{
 		// filter out librevenge elements
-		if (strncmp(i.key(), "librevenge", 6) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
+		if (strncmp(i.key(), "librevenge", 10) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
 		{
 			mpImpl->mMetaData.push_back(new TagOpenElement(i.key()));
 			librevenge::RVNGString sStringValue(i()->getStr(), true);

@@ -42,9 +42,12 @@ static librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyL
 	librevenge::RVNGPropertyList::Iter i(xPropList);
 	for (i.rewind(); i.next(); )
 	{
-		librevenge::RVNGString sProp;
-		sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
-		sKey.append(sProp);
+		if (!i.child()) // write out simple properties only
+		{
+			librevenge::RVNGString sProp;
+			sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
+			sKey.append(sProp);
+		}
 	}
 
 	return sKey;
@@ -476,6 +479,8 @@ librevenge::RVNGString SheetStyle::addRow(const librevenge::RVNGPropertyList &pr
 	{
 		if (strncmp(i.key(), "librevenge:", 11)==0)
 			continue;
+		if (i.child())
+			continue;
 		pList.insert(i.key(),i()->clone());
 	}
 	librevenge::RVNGString hashKey = propListToStyleKey(pList);
@@ -499,6 +504,8 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 	{
 		if (strncmp(i.key(), "librevenge:", 11)==0 &&
 		        strncmp(i.key(), "librevenge:numbering-name", 24)!=0)
+			continue;
+		if (i.child())
 			continue;
 		pList.insert(i.key(),i()->clone());
 	}
