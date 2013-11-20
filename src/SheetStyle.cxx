@@ -59,16 +59,18 @@ SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPr
 
 void SheetNumberingStyle::writeCondition(librevenge::RVNGPropertyList const &propList, OdfDocumentHandler *pHandler, SheetStyle const &sheet) const
 {
-	librevenge::RVNGString applyName(""), formula("");
-	if (!propList["librevenge:formula-name"]||!propList["librevenge:apply-name"]||
+	librevenge::RVNGString applyName("");
+	librevenge::RVNGPropertyListVector const *formula=propList.get("librevenge:formula");
+	librevenge::RVNGString formulaString("");
+	if (!formula||!propList["librevenge:apply-name"]||
 	        (applyName=sheet.getNumberingStyleName(propList["librevenge:apply-name"]->getStr())).empty() ||
-	        (formula=sheet.getFormula(propList["librevenge:formula-name"]->getStr())).empty())
+	        (formulaString=SheetManager::convertFormula(*formula)).empty())
 	{
 		ODFGEN_DEBUG_MSG(("SheetNumberingStyle::writeCondition: can not find condition data\n"));
 		return;
 	}
 	TagOpenElement mapOpen("style:map");
-	mapOpen.addAttribute("style:condition",formula);
+	mapOpen.addAttribute("style:condition",formulaString);
 	mapOpen.addAttribute("style:apply-style-name",applyName);
 	mapOpen.write(pHandler);
 	TagCloseElement("style:map").write(pHandler);
@@ -342,19 +344,14 @@ void SheetRowStyle::write(OdfDocumentHandler *pHandler) const
 }
 
 
-SheetStyle::SheetStyle(SheetManager const &manager, const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName) :
-	Style(psName), mManager(manager), mPropList(xPropList), mColumns(columns),
+SheetStyle::SheetStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName) :
+	Style(psName), mPropList(xPropList), mColumns(columns),
 	mRowNameHash(), mRowStyleHash(), mCellNameHash(), mCellStyleHash(), mNumberingHash()
 {
 }
 
 SheetStyle::~SheetStyle()
 {
-}
-
-librevenge::RVNGString SheetStyle::getFormula(librevenge::RVNGString const &localName) const
-{
-	return mManager.getFormula(localName);
 }
 
 void SheetStyle::write(OdfDocumentHandler *pHandler) const
@@ -514,7 +511,7 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 	return name;
 }
 
-SheetManager::SheetManager() : mbSheetOpened(false), mSheetStyles(), mFormulaHash()
+SheetManager::SheetManager() : mbSheetOpened(false), mSheetStyles()
 {
 }
 
@@ -525,7 +522,6 @@ SheetManager::~SheetManager()
 void SheetManager::clean()
 {
 	mSheetStyles.clear();
-	mFormulaHash.clear();
 }
 
 bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns)
@@ -538,7 +534,7 @@ bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList, cons
 	mbSheetOpened=true;
 	librevenge::RVNGString sTableName;
 	sTableName.sprintf("Table%i", (int) mSheetStyles.size());
-	shared_ptr<SheetStyle> sheet(new SheetStyle(*this, xPropList, columns, sTableName.cstr()));
+	shared_ptr<SheetStyle> sheet(new SheetStyle(xPropList, columns, sTableName.cstr()));
 	mSheetStyles.push_back(sheet);
 	return true;
 }
@@ -554,23 +550,9 @@ bool SheetManager::closeSheet()
 	return true;
 }
 
-librevenge::RVNGString SheetManager::getFormula(librevenge::RVNGString const &localName) const
+librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGPropertyListVector &formula)
 {
-	if (mFormulaHash.find(localName)==mFormulaHash.end())
-	{
-		ODFGEN_DEBUG_MSG(("SheetManager::getFormula: can not find the formula for %s\n", localName.cstr()));
-		return librevenge::RVNGString("");
-	}
-	return mFormulaHash.find(localName)->second;
-}
-
-void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &formula)
-{
-	if (!propList["librevenge:formula-name"])
-	{
-		ODFGEN_DEBUG_MSG(("SheetManager::addFormula: can not find the formula name\n"));
-		return;
-	}
+	librevenge::RVNGString res("");
 	std::stringstream s;
 	s << "of:=";
 	for (unsigned long i=0; i<formula.count(); ++i)
@@ -579,7 +561,7 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 		if (!list["librevenge:type"])
 		{
 			ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find %d formula type !!!\n", int(s)));
-			return;
+			return res;
 		}
 		std::string type(list["librevenge:type"]->getStr().cstr());
 		if (type=="librevenge-operator")
@@ -587,7 +569,7 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (!list["librevenge:operator"])
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find operator for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 			std::string oper(list["librevenge:operator"]->getStr().cstr());
 			bool find=false;
@@ -605,7 +587,7 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (!find)
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula find unknown operator for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 		}
 		else if (type=="librevenge-function")
@@ -613,7 +595,7 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (!list["librevenge:function"])
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find value for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 			s << list["librevenge:function"]->getStr().cstr();
 		}
@@ -622,7 +604,7 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (!list["librevenge:number"])
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find value for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 			s << list["librevenge:number"]->getStr().cstr();
 		}
@@ -631,7 +613,7 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (!list["librevenge:text"])
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find text for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 			librevenge::RVNGString escaped(list["librevenge:text"]->getStr(), true);
 			s << "\"" << escaped.cstr() << "\"";
@@ -641,14 +623,14 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (!list["librevenge:row"]||!list["librevenge:column"])
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find formula[%d] cordinate!!!\n", int(s)));
-				return;
+				return res;
 			}
 			int column=list["librevenge:column"]->getInt();
 			int row=list["librevenge:row"]->getInt();
 			if (column<0 || row<0)
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula: find bad coordinate for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 			s << "[";
 			if (list["librevenge:sheet"]) s << list["librevenge:sheet"]->getStr().cstr();
@@ -664,14 +646,14 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (!list["librevenge:start-row"]||!list["librevenge:start-column"])
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find formula[%d] cordinate!!!\n", int(s)));
-				return;
+				return res;
 			}
 			int column=list["librevenge:start-column"]->getInt();
 			int row=list["librevenge:start-row"]->getInt();
 			if (column<0 || row<0)
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula: find bad coordinate1 for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 			s << "[";
 			if (list["librevenge:sheet-name"]) s << list["librevenge:sheet-name"]->getStr().cstr();
@@ -688,7 +670,7 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 			if (column<0 || row<0)
 			{
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula: find bad coordinate2 for formula[%d]!!!\n", int(s)));
-				return;
+				return res;
 			}
 			if (list["librevenge:end-column-absolute"] && list["librevenge:end-column-absolute"]->getInt()) s << "$";
 			if (column>=27) s << char('A'+(column/27));
@@ -699,10 +681,10 @@ void SheetManager::addFormula(const librevenge::RVNGPropertyList &propList, cons
 		else
 		{
 			ODFGEN_DEBUG_MSG(("SheetManager::addFormula find unknown type %s!!!\n", type.c_str()));
-			return;
+			return res;
 		}
 	}
-	mFormulaHash[propList["librevenge:formula-name"]->getStr()]=librevenge::RVNGString(s.str().c_str(), true);
+	return librevenge::RVNGString(s.str().c_str(), true);
 }
 
 void SheetManager::write(OdfDocumentHandler *pHandler) const

@@ -79,7 +79,7 @@ private:
 class SheetStyle : public Style, public TopLevelElementStyle
 {
 public:
-	SheetStyle(SheetManager const &manager, const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName);
+	SheetStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName);
 	virtual ~SheetStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	int getNumColumns() const
@@ -95,9 +95,7 @@ public:
 	void addNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList);
 	librevenge::RVNGString getNumberingStyleName(librevenge::RVNGString const &localName) const;
 
-	librevenge::RVNGString getFormula(librevenge::RVNGString const &localName) const;
 private:
-	SheetManager const &mManager;
 	librevenge::RVNGPropertyList mPropList;
 	librevenge::RVNGPropertyListVector mColumns;
 
@@ -135,15 +133,11 @@ public:
 	bool openSheet(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns);
 	bool closeSheet();
 
-	void addFormula(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList);
-	librevenge::RVNGString getFormula(librevenge::RVNGString const &localName) const;
+	static librevenge::RVNGString convertFormula(const librevenge::RVNGPropertyListVector &formatsList);
 
 private:
 	bool mbSheetOpened;
 	std::vector<shared_ptr<SheetStyle> > mSheetStyles;
-
-	// formula name -> formula
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mFormulaHash;
 };
 #endif
 

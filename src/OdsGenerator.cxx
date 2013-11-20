@@ -671,16 +671,6 @@ void OdsGenerator::closePageSpan()
 	if (!mpImpl->close(OdsGeneratorPrivate::C_PageSpan)) return;
 }
 
-void OdsGenerator::defineSheetFormula(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &formula)
-{
-	if (!mpImpl->getState().mbInSheet)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::defineSheetFormula can not be called outside a sheet!!!\n"));
-		return;
-	}
-	mpImpl->mSheetManager.addFormula(propList, formula);
-}
-
 void OdsGenerator::defineSheetNumberingStyle(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &formats)
 {
 	if (!mpImpl->getState().mbInSheet || !mpImpl->mSheetManager.actualSheet())
@@ -919,11 +909,12 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 			ODFGEN_DEBUG_MSG(("OdsGenerator::openSheetCell: unexpected value type: %s\n", valueType.c_str()));
 		}
 	}
-	if (propList["librevenge:formula-name"])
+	librevenge::RVNGPropertyListVector const *formula=propList.get("librevenge:formula");
+	if (formula)
 	{
-		librevenge::RVNGString formula=style->getFormula(propList["librevenge:formula-name"]->getStr());
-		if (!formula.empty())
-			pSheetCellOpenElement->addAttribute("table:formula", formula);
+		librevenge::RVNGString finalFormula=SheetManager::convertFormula(*formula);
+		if (!finalFormula.empty())
+			pSheetCellOpenElement->addAttribute("table:formula", finalFormula);
 	}
 	mpImpl->mpCurrentContentElements->push_back(pSheetCellOpenElement);
 }

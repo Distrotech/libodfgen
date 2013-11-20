@@ -61,7 +61,6 @@ public:
 	void openFooter(const librevenge::RVNGPropertyList &propList);
 	void closeFooter();
 
-	void defineSheetFormula(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &formula);
 	void insertSheetConditionInNumberingStyle(const librevenge::RVNGPropertyList &propList);
 	void defineSheetNumberingStyle(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &formats) ;
 	void openSheet(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns);
