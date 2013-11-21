@@ -635,7 +635,7 @@ void OdtGenerator::closeSection()
 		mpImpl->mWriterDocumentStates.top().mbInFakeSection = false;
 }
 
-void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops)
+void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	// FIXMENOW: What happens if we open a footnote inside a table? do we then inherit the footnote's style
 	// from "Table Contents"
@@ -660,7 +660,7 @@ void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, c
 	else
 		finalPropList.insert("style:parent-style-name", "Standard");
 
-	librevenge::RVNGString sName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	librevenge::RVNGString sName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
@@ -891,7 +891,7 @@ void OdtGeneratorPrivate::_closeListLevel()
 	mWriterListStates.top().mbListElementOpened.pop();
 }
 
-void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops)
+void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->mWriterListStates.top().miLastListLevel = mpImpl->mWriterListStates.top().miCurrentListLevel;
 	if (mpImpl->mWriterListStates.top().miCurrentListLevel == 1)
@@ -910,7 +910,7 @@ void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList,
 		finalPropList.insert("style:list-style-name", mpImpl->mWriterListStates.top().mpCurrentListStyle->getName());
 #endif
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
@@ -1535,7 +1535,7 @@ void OdtGenerator::definePageStyle(librevenge::RVNGPropertyList const &)
 {
 }
 
-void OdtGenerator::defineParagraphStyle(librevenge::RVNGPropertyList const &, librevenge::RVNGPropertyListVector const &)
+void OdtGenerator::defineParagraphStyle(librevenge::RVNGPropertyList const &)
 {
 }
 

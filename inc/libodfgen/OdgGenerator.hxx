@@ -71,9 +71,9 @@ public:
 	void openUnorderedListLevel(const librevenge::RVNGPropertyList &);
 	void closeOrderedListLevel();
 	void closeUnorderedListLevel();
-	void openListElement(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
+	void openListElement(const librevenge::RVNGPropertyList &);
 	void closeListElement();
-	void openParagraph(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
+	void openParagraph(const librevenge::RVNGPropertyList &);
 	void closeParagraph();
 	void openSpan(const librevenge::RVNGPropertyList &);
 	void closeSpan();

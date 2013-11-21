@@ -1684,11 +1684,11 @@ void OdpGenerator::endTextObject()
 	}
 }
 
-void OdpGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &/*tabStops*/)
+void OdpGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, librevenge::RVNGPropertyListVector());
+	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
 
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
@@ -1783,7 +1783,7 @@ void OdpGenerator::closeUnorderedListLevel()
 	mpImpl->closeListLevel();
 }
 
-void OdpGenerator::openListElement(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &tabStops)
+void OdpGenerator::openListElement(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mListStates.top().mbListElementOpened.top())
 	{
@@ -1793,7 +1793,7 @@ void OdpGenerator::openListElement(const ::librevenge::RVNGPropertyList &propLis
 
 	librevenge::RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)

@@ -74,8 +74,8 @@ public:
 	void closeChart();
 	void insertChartSerie(const librevenge::RVNGPropertyList &propList);
 
-	void defineParagraphStyle(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &) {}
-	void openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops);
+	void defineParagraphStyle(const librevenge::RVNGPropertyList &) {}
+	void openParagraph(const librevenge::RVNGPropertyList &propList);
 	void closeParagraph();
 
 	void defineCharacterStyle(const librevenge::RVNGPropertyList &) {}
@@ -94,7 +94,7 @@ public:
 	void openUnorderedListLevel(const librevenge::RVNGPropertyList &propList);
 	void closeOrderedListLevel();
 	void closeUnorderedListLevel();
-	void openListElement(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops);
+	void openListElement(const librevenge::RVNGPropertyList &propList);
 	void closeListElement();
 
 	void openFootnote(const librevenge::RVNGPropertyList &propList);

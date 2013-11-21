@@ -40,7 +40,7 @@ class OdfDocumentHandler;
 class ParagraphStyle
 {
 public:
-	ParagraphStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGPropertyListVector &tabStops, const librevenge::RVNGString &sName);
+	ParagraphStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGString &sName);
 	virtual ~ParagraphStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	librevenge::RVNGString getName() const
@@ -49,7 +49,6 @@ public:
 	}
 private:
 	librevenge::RVNGPropertyList mpPropList;
-	librevenge::RVNGPropertyListVector mxTabStops;
 	librevenge::RVNGString msName;
 };
 
@@ -76,7 +75,7 @@ public:
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
 	Note: using S%i as new name*/
-	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &tabStops);
+	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList);
 
 	/* returns the style corresponding to a given name ( if it exists ) */
 	shared_ptr<ParagraphStyle> const get(const librevenge::RVNGString &name) const;
@@ -87,7 +86,7 @@ public:
 
 protected:
 	// return a unique key
-	librevenge::RVNGString getKey(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &tabStops) const;
+	librevenge::RVNGString getKey(const librevenge::RVNGPropertyList &xPropList) const;
 
 	// hash key -> name
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mNameHash;

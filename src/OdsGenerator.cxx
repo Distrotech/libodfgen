@@ -1018,13 +1018,13 @@ void OdsGenerator::closeSection()
 	if (mpImpl->mAuxiliarOdgState) return;
 }
 
-void OdsGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops)
+void OdsGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Paragraph);
 	if (mpImpl->mAuxiliarOdtState)
-		return mpImpl->mAuxiliarOdtState->get().openParagraph(propList,tabStops);
+		return mpImpl->mAuxiliarOdtState->get().openParagraph(propList);
 	if (mpImpl->mAuxiliarOdgState)
-		return mpImpl->mAuxiliarOdgState->get().openParagraph(propList,tabStops);
+		return mpImpl->mAuxiliarOdgState->get().openParagraph(propList);
 
 	if (!mpImpl->canWriteText())
 	{
@@ -1037,7 +1037,7 @@ void OdsGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, c
 		finalPropList.insert("style:parent-style-name", "Table_Contents");
 	else
 		finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString sName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	librevenge::RVNGString sName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
 	pParagraphOpenElement->addAttribute("text:style-name", sName);
@@ -1177,13 +1177,13 @@ void OdsGenerator::closeUnorderedListLevel()
 		mpImpl->mAuxiliarOdgState->get().closeOrderedListLevel();
 }
 
-void OdsGenerator::openListElement(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops)
+void OdsGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_ListElement);
 	if (mpImpl->mAuxiliarOdtState)
-		return mpImpl->mAuxiliarOdtState->get().openListElement(propList, tabStops);
+		return mpImpl->mAuxiliarOdtState->get().openListElement(propList);
 	if (mpImpl->mAuxiliarOdgState)
-		return mpImpl->mAuxiliarOdgState->get().openListElement(propList, tabStops);
+		return mpImpl->mAuxiliarOdgState->get().openListElement(propList);
 	if (!mpImpl->canWriteText())
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::openListElement call outside a text zone\n"));
@@ -1191,7 +1191,7 @@ void OdsGenerator::openListElement(const librevenge::RVNGPropertyList &propList,
 	}
 	librevenge::RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, tabStops);
+	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
 
 	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
 	pOpenListElementParagraph->addAttribute("text:style-name", paragName);

@@ -66,7 +66,7 @@ public:
 
 	void startTextObject(const ::librevenge::RVNGPropertyList &propList);
 	void endTextObject();
-	void openParagraph(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &tabStops);
+	void openParagraph(const ::librevenge::RVNGPropertyList &propList);
 	void closeParagraph();
 	void openSpan(const ::librevenge::RVNGPropertyList &propList);
 	void closeSpan();
@@ -80,7 +80,7 @@ public:
 	void openUnorderedListLevel(const ::librevenge::RVNGPropertyList &propList);
 	void closeOrderedListLevel();
 	void closeUnorderedListLevel();
-	void openListElement(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &tabStops);
+	void openListElement(const ::librevenge::RVNGPropertyList &propList);
 	void closeListElement();
 
 	void openTable(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &columns);

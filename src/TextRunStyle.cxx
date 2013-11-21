@@ -55,9 +55,8 @@ librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyList &xP
 
 } // anonymous namespace
 
-ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGPropertyListVector &xTabStops, const librevenge::RVNGString &sName) :
+ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName) :
 	mpPropList(pPropList),
-	mxTabStops(xTabStops),
 	msName(sName)
 {
 }
@@ -140,11 +139,12 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	propList.insert("style:justify-single-word", "false");
 	pHandler->startElement("style:paragraph-properties", propList);
 
-	if (mxTabStops.count() > 0)
+	const librevenge::RVNGPropertyListVector *pTabStops = mpPropList.child("style:tab-stops");
+	if (pTabStops && pTabStops->count())
 	{
 		TagOpenElement tabListOpen("style:tab-stops");
 		tabListOpen.write(pHandler);
-		librevenge::RVNGPropertyListVector::Iter k(mxTabStops);
+		librevenge::RVNGPropertyListVector::Iter k(*pTabStops);
 		for (k.rewind(); k.next();)
 		{
 			if (k()["style:position"] && k()["style:position"]->getDouble() < 0.0)
@@ -234,25 +234,28 @@ void ParagraphStyleManager::write(OdfDocumentHandler *pHandler) const
 	}
 }
 
-librevenge::RVNGString ParagraphStyleManager::getKey(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &tabStops) const
+librevenge::RVNGString ParagraphStyleManager::getKey(const librevenge::RVNGPropertyList &xPropList) const
 {
 	librevenge::RVNGString sKey = propListToStyleKey(xPropList);
-
-	librevenge::RVNGString sTabStops;
-	sTabStops.sprintf("[num-tab-stops:%i]", tabStops.count());
-	librevenge::RVNGPropertyListVector::Iter i(tabStops);
-	for (i.rewind(); i.next();)
+	const librevenge::RVNGPropertyListVector *pTabStops = xPropList.child("style:tab-stops");
+	if (pTabStops)
 	{
-		sTabStops.append(propListToStyleKey(i()));
+		librevenge::RVNGString sTabStops;
+		sTabStops.sprintf("[num-tab-stops:%i]", pTabStops->count());
+		librevenge::RVNGPropertyListVector::Iter i(*pTabStops);
+		for (i.rewind(); i.next();)
+		{
+			sTabStops.append(propListToStyleKey(i()));
+		}
+		sKey.append(sTabStops);
 	}
-	sKey.append(sTabStops);
 
 	return sKey;
 }
 
-librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &tabStops)
+librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList)
 {
-	librevenge::RVNGString hashKey = getKey(propList, tabStops);
+	librevenge::RVNGString hashKey = getKey(propList);
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
 	    mNameHash.find(hashKey);
 	if (iter!=mNameHash.end()) return iter->second;
@@ -262,7 +265,7 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 
 	librevenge::RVNGString sName;
 	sName.sprintf("S%i", mStyleHash.size());
-	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(propList, tabStops, sName));
+	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(propList, sName));
 	mStyleHash[sName] =parag;
 	mNameHash[hashKey] = sName;
 	return sName;

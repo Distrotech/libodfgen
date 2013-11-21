@@ -1574,7 +1574,7 @@ void OdgGenerator::closeUnorderedListLevel()
 {
 }
 
-void OdgGenerator::openListElement(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &)
+void OdgGenerator::openListElement(const librevenge::RVNGPropertyList &)
 {
 }
 
@@ -1582,11 +1582,11 @@ void OdgGenerator::closeListElement()
 {
 }
 
-void OdgGenerator::openParagraph(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &)
+void OdgGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList, librevenge::RVNGPropertyListVector());
+	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
 
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
