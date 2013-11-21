@@ -63,7 +63,7 @@ SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPr
 void SheetNumberingStyle::writeCondition(librevenge::RVNGPropertyList const &propList, OdfDocumentHandler *pHandler, SheetStyle const &sheet) const
 {
 	librevenge::RVNGString applyName("");
-	librevenge::RVNGPropertyListVector const *formula=propList.get("librevenge:formula");
+	librevenge::RVNGPropertyListVector const *formula=propList.child("librevenge:formula");
 	librevenge::RVNGString formulaString("");
 	if (!formula||!propList["librevenge:apply-name"]||
 	        (applyName=sheet.getNumberingStyleName(propList["librevenge:apply-name"]->getStr())).empty() ||

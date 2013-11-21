@@ -909,7 +909,7 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 			ODFGEN_DEBUG_MSG(("OdsGenerator::openSheetCell: unexpected value type: %s\n", valueType.c_str()));
 		}
 	}
-	librevenge::RVNGPropertyListVector const *formula=propList.get("librevenge:formula");
+	librevenge::RVNGPropertyListVector const *formula=propList.child("librevenge:formula");
 	if (formula)
 	{
 		librevenge::RVNGString finalFormula=SheetManager::convertFormula(*formula);
