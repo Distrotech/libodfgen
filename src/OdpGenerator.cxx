@@ -1009,9 +1009,11 @@ void OdpGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 	mBodyElements.push_back(new TagCloseElement("draw:path"));
 }
 
-void OdpGenerator::drawPath(const librevenge::RVNGPropertyListVector &path)
+void OdpGenerator::drawPath(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->_drawPath(path);
+	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
+	if (path && path->count())
+		mpImpl->_drawPath(*path);
 }
 
 void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propList)
@@ -1120,7 +1122,7 @@ void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
-void OdpGenerator::drawConnector(const ::librevenge::RVNGPropertyList &/*propList*/, const ::librevenge::RVNGPropertyListVector &/*path*/)
+void OdpGenerator::drawConnector(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
 }
 
@@ -1530,7 +1532,7 @@ void OdpGenerator::endGroup()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:g"));
 }
 
-void OdpGenerator::startTextObject(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &/*path*/)
+void OdpGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 {
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	TagOpenElement *pStyleStyleOpenElement = new TagOpenElement("style:style");

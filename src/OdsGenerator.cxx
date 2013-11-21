@@ -251,7 +251,7 @@ public:
 			librevenge::RVNGPropertyList::Iter i(level.mLevel);
 			for (i.rewind(); i.next(); )
 			{
-				if (pList[i.key()]) continue;
+				if (pList[i.key()] || i.child()) continue;
 				pList.insert(i.key(), i()->clone());
 			}
 		}
@@ -649,7 +649,7 @@ void OdsGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 	for (i.rewind(); i.next(); )
 	{
 		// filter out librevenge elements
-		if (strncmp(i.key(), "librevenge", 6) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
+		if (strncmp(i.key(), "librevenge", 10) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
 		{
 			mpImpl->mMetaData.push_back(new TagOpenElement(i.key()));
 			librevenge::RVNGString sStringValue(i()->getStr(), true);
@@ -1698,7 +1698,7 @@ void OdsGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTextBox(propList);
 	if (mpImpl->mAuxiliarOdgState)
-		return mpImpl->mAuxiliarOdgState->get().startTextObject(propList, librevenge::RVNGPropertyListVector());
+		return mpImpl->mAuxiliarOdgState->get().startTextObject(propList);
 	if (!mpImpl->createAuxiliarOdtGenerator())
 		return;
 
@@ -1892,14 +1892,14 @@ void OdsGenerator::drawPolyline(const ::librevenge::RVNGPropertyListVector &vert
 }
 
 
-void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyListVector &path)
+void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->getState().mbInGraphics || !mpImpl->mAuxiliarOdgState)
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::drawPath: graphics not started\n"));
 		return;
 	}
-	mpImpl->mAuxiliarOdgState->get().drawPath(path);
+	mpImpl->mAuxiliarOdgState->get().drawPath(propList);
 }
 
 void OdsGenerator::registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler)
