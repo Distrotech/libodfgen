@@ -108,6 +108,10 @@ private:
 	std::map<librevenge::RVNGString, shared_ptr<SheetCellStyle>, ltstr> mCellStyleHash;
 	// style name -> NumberingStyle
 	std::map<librevenge::RVNGString, shared_ptr<SheetNumberingStyle>, ltstr> mNumberingHash;
+
+	// Disable copying
+	SheetStyle(const SheetStyle&);
+	SheetStyle &operator=(const SheetStyle&);
 };
 
 class SheetManager
