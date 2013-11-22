@@ -52,8 +52,8 @@ public:
 	void openPageSpan(const librevenge::RVNGPropertyList &propList);
 	void closePageSpan();
 
-	void defineSectionStyle(const librevenge::RVNGPropertyList &, const librevenge::RVNGPropertyListVector &);
-	void openSection(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns);
+	void defineSectionStyle(const librevenge::RVNGPropertyList &);
+	void openSection(const librevenge::RVNGPropertyList &propList);
 	void closeSection();
 
 	void openHeader(const librevenge::RVNGPropertyList &propList);

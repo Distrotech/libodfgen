@@ -600,9 +600,12 @@ void OdtGenerator::closeFooter()
 	mpImpl->mpCurrentContentElements = &(mpImpl->mBodyElements);
 }
 
-void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns)
+void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 {
-	size_t iNumColumns = columns.count();
+	size_t iNumColumns = 0;
+	const librevenge::RVNGPropertyListVector *columns = propList.child("style:columns");
+	if (columns)
+		iNumColumns = columns->count();
 	double fSectionMarginLeft = 0.0;
 	double fSectionMarginRight = 0.0;
 	if (propList["fo:margin-left"])
@@ -615,7 +618,7 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList, con
 		librevenge::RVNGString sSectionName;
 		sSectionName.sprintf("Section%i", mpImpl->mSectionStyles.size());
 
-		SectionStyle *pSectionStyle = new SectionStyle(propList, columns, sSectionName.cstr());
+		SectionStyle *pSectionStyle = new SectionStyle(propList, *columns, sSectionName.cstr());
 		mpImpl->mSectionStyles.push_back(pSectionStyle);
 
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
@@ -1509,7 +1512,7 @@ void OdtGenerator::closeTextBox()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:text-box"));
 }
 
-void OdtGenerator::defineSectionStyle(librevenge::RVNGPropertyList const &, librevenge::RVNGPropertyListVector const &)
+void OdtGenerator::defineSectionStyle(librevenge::RVNGPropertyList const &)
 {
 }
 

@@ -1001,11 +1001,11 @@ void OdsGenerator::closeFooter()
 	mpImpl->popState();
 }
 
-void OdsGenerator::openSection(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns)
+void OdsGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Section);
 	if (mpImpl->mAuxiliarOdtState)
-		return mpImpl->mAuxiliarOdtState->get().openSection(propList,columns);
+		return mpImpl->mAuxiliarOdtState->get().openSection(propList);
 	if (mpImpl->mAuxiliarOdgState) return;
 	ODFGEN_DEBUG_MSG(("OdsGenerator::openSection ignored\n"));
 }
