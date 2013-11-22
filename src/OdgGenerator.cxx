@@ -1635,7 +1635,7 @@ void OdgGenerator::insertLineBreak()
 	mpImpl->mBodyElements.push_back(new TagCloseElement("text:line-break"));
 }
 
-void OdgGenerator::insertField(const librevenge::RVNGString &, const librevenge::RVNGPropertyList &)
+void OdgGenerator::insertField(const librevenge::RVNGPropertyList &)
 {
 }
 

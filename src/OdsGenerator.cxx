@@ -1395,14 +1395,14 @@ void OdsGenerator::insertLineBreak()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:line-break"));
 }
 
-void OdsGenerator::insertField(const librevenge::RVNGString &type, const librevenge::RVNGPropertyList &propList)
+void OdsGenerator::insertField(const librevenge::RVNGPropertyList &propList)
 {
-	if (!type.len())
+	if (!propList["librevenge:field-type"] || propList["librevenge:field-type"]->getStr().empty())
 		return;
 	if (mpImpl->mAuxiliarOdtState)
-		return mpImpl->mAuxiliarOdtState->get().insertField(type, propList);
+		return mpImpl->mAuxiliarOdtState->get().insertField(propList);
 	if (mpImpl->mAuxiliarOdgState)
-		return mpImpl->mAuxiliarOdgState->get().insertField(type, propList);
+		return mpImpl->mAuxiliarOdgState->get().insertField(propList);
 	ODFGEN_DEBUG_MSG(("OdsGenerator::insertField ignored\n"));
 }
 

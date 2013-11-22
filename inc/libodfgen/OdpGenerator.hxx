@@ -74,7 +74,7 @@ public:
 	void insertTab();
 	void insertSpace();
 	void insertLineBreak();
-	void insertField(const librevenge::RVNGString &type, const ::librevenge::RVNGPropertyList &propList);
+	void insertField(const ::librevenge::RVNGPropertyList &propList);
 
 	void openOrderedListLevel(const ::librevenge::RVNGPropertyList &propList);
 	void openUnorderedListLevel(const ::librevenge::RVNGPropertyList &propList);

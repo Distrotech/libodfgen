@@ -1201,10 +1201,12 @@ void OdtGenerator::insertLineBreak()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:line-break"));
 }
 
-void OdtGenerator::insertField(const librevenge::RVNGString &type, const librevenge::RVNGPropertyList &propList)
+void OdtGenerator::insertField(const librevenge::RVNGPropertyList &propList)
 {
-	if (!type.len())
+	if (!propList["librevenge:field-type"] || propList["librevenge:field-type"]->getStr().empty())
 		return;
+
+	const librevenge::RVNGString &type = propList["librevenge:field-type"]->getStr();
 
 	TagOpenElement *openElement = new TagOpenElement(type);
 	if (type == "text:page-number")
