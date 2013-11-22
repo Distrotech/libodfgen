@@ -1262,7 +1262,7 @@ void OdsGenerator::closeComment()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:annotation"));
 }
 
-void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns)
+void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Table);
 	OdsGeneratorPrivate::State state=mpImpl->getState();
@@ -1289,7 +1289,7 @@ void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList, const
 	state.mbInTable=true;
 	mpImpl->pushState(state);
 	if (mpImpl->mAuxiliarOdtState)
-		return mpImpl->mAuxiliarOdtState->get().openTable(propList, columns);
+		return mpImpl->mAuxiliarOdtState->get().openTable(propList);
 	if (mpImpl->mAuxiliarOdgState)
 	{
 		/*CHECKME: maybe we can create a auxiliar odt generator, use it
@@ -1301,7 +1301,7 @@ void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList, const
 	if (mpImpl->createAuxiliarOdtGenerator())
 	{
 		mpImpl->getState().mbNewOdtGenerator=true;
-		return mpImpl->mAuxiliarOdtState->get().openTable(propList, columns);
+		return mpImpl->mAuxiliarOdtState->get().openTable(propList);
 	}
 }
 

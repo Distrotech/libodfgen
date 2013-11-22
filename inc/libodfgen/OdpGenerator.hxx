@@ -83,7 +83,7 @@ public:
 	void openListElement(const ::librevenge::RVNGPropertyList &propList);
 	void closeListElement();
 
-	void openTable(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &columns);
+	void openTable(const ::librevenge::RVNGPropertyList &propList);
 	void openTableRow(const ::librevenge::RVNGPropertyList &propList);
 	void closeTableRow();
 	void openTableCell(const ::librevenge::RVNGPropertyList &propList);

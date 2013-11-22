@@ -93,7 +93,7 @@ public:
 	void openTextBox(const librevenge::RVNGPropertyList &propList);
 	void closeTextBox();
 
-	void openTable(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns);
+	void openTable(const librevenge::RVNGPropertyList &propList);
 	void openTableRow(const librevenge::RVNGPropertyList &propList);
 	void closeTableRow();
 	void openTableCell(const librevenge::RVNGPropertyList &propList);
@@ -105,7 +105,7 @@ public:
 	void closeFrame();
 
 	void insertBinaryObject(const librevenge::RVNGPropertyList &propList);
-	void insertEquation(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGString &data);
+	void insertEquation(const librevenge::RVNGPropertyList &propList);
 
 	/** Registers a handler for embedded objects.
 	  *

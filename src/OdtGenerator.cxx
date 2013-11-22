@@ -1046,7 +1046,7 @@ void OdtGenerator::closeComment()
 	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:annotation"));
 }
 
-void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns)
+void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote)
 	{
@@ -1055,8 +1055,8 @@ void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList, const
 
 		// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
 		// state which is transmitted inside the page. could this lead to unacceptable behaviour?
-		// WLACH_REFACTORING: characterize this behaviour, probably should nip it at the bud within librevenge
-		TableStyle *pTableStyle = new TableStyle(propList, columns, sTableName.cstr());
+		const librevenge::RVNGPropertyListVector *columns = propList.child("librevenge:table-columns");
+		TableStyle *pTableStyle = new TableStyle(propList, (columns ? *columns : librevenge::RVNGPropertyListVector()), sTableName.cstr());
 
 		if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
 		{
@@ -1518,7 +1518,7 @@ void OdtGenerator::defineSectionStyle(librevenge::RVNGPropertyList const &)
 {
 }
 
-void OdtGenerator::insertEquation(librevenge::RVNGPropertyList const &, librevenge::RVNGString const &)
+void OdtGenerator::insertEquation(librevenge::RVNGPropertyList const &)
 {
 }
 

@@ -1821,7 +1821,7 @@ void OdpGenerator::closeListElement()
 	}
 }
 
-void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &columns)
+void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mState.mInComment)
 		return;
@@ -1831,8 +1831,8 @@ void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList, con
 
 	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
 	// state which is transmitted inside the page. could this lead to unacceptable behaviour?
-	// WLACH_REFACTORING: characterize this behaviour, probably should nip it at the bud within librevenge
-	TableStyle *pTableStyle = new TableStyle(propList, columns, sTableName.cstr());
+	const librevenge::RVNGPropertyListVector *columns = propList.child("librevenge:table-columns");
+	TableStyle *pTableStyle = new TableStyle(propList, (columns ? *columns : librevenge::RVNGPropertyListVector()), sTableName.cstr());
 
 	mpImpl->mTableStyles.push_back(pTableStyle);
 
