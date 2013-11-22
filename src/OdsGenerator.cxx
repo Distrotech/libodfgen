@@ -671,14 +671,14 @@ void OdsGenerator::closePageSpan()
 	if (!mpImpl->close(OdsGeneratorPrivate::C_PageSpan)) return;
 }
 
-void OdsGenerator::defineSheetNumberingStyle(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &formats)
+void OdsGenerator::defineSheetNumberingStyle(const librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->getState().mbInSheet || !mpImpl->mSheetManager.actualSheet())
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::defineSheetNumberingStyle can not be called outside a sheet!!!\n"));
 		return;
 	}
-	mpImpl->mSheetManager.actualSheet()->addNumberingStyle(propList, formats);
+	mpImpl->mSheetManager.actualSheet()->addNumberingStyle(propList);
 }
 
 void OdsGenerator::insertSheetConditionInNumberingStyle(const librevenge::RVNGPropertyList &propList)
@@ -691,7 +691,7 @@ void OdsGenerator::insertSheetConditionInNumberingStyle(const librevenge::RVNGPr
 	mpImpl->mSheetManager.actualSheet()->addCondition(propList);
 }
 
-void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &columns)
+void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Sheet);
 	OdsGeneratorPrivate::State state=mpImpl->getState();
@@ -709,7 +709,7 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList, const
 		return;
 	}
 
-	if (!mpImpl->mSheetManager.openSheet(propList, columns)) return;
+	if (!mpImpl->mSheetManager.openSheet(propList)) return;
 	mpImpl->getState().mbInSheet=true;
 
 	SheetStyle *style=mpImpl->mSheetManager.actualSheet();
@@ -724,7 +724,7 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList, const
 	/* TODO: open a table:shapes element
 	   a environment to store the table content which must be merged in closeSheet
 	*/
-	for (int i=0; i< (int) columns.count(); ++i)
+	for (int i=0; i< style->getNumColumns(); ++i)
 	{
 		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
 		librevenge::RVNGString sColumnStyleName;

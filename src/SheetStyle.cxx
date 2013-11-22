@@ -55,8 +55,8 @@ static librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyL
 
 } // anonymous namespace
 
-SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList, const librevenge::RVNGString &psName)
-	: Style(psName), mPropList(xPropList), mFormatsList(formatsList), mConditionsList()
+SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGString &psName)
+	: Style(psName), mPropList(xPropList), mConditionsList()
 {
 }
 
@@ -168,10 +168,11 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle co
 		ODFGEN_DEBUG_MSG(("SheetNumberingStyle::writeStyle: unexpected value type %s\n", type.c_str()));
 		return;
 	}
+	librevenge::RVNGPropertyListVector const *format=mPropList.child("librevenge:format");
 	// now read the potential formats sub list
-	for (unsigned long f=0; f < mFormatsList.count(); ++f)
+	for (unsigned long f=0; format && f < format->count(); ++f)
 	{
-		librevenge::RVNGPropertyList const &prop=mFormatsList[f];
+		librevenge::RVNGPropertyList const &prop=(*format)[f];
 		if (!prop["librevenge:value-type"])
 		{
 			ODFGEN_DEBUG_MSG(("SheetNumberingStyle::writeStyle: can not find format type[%d]\n", int(f)));
@@ -347,10 +348,11 @@ void SheetRowStyle::write(OdfDocumentHandler *pHandler) const
 }
 
 
-SheetStyle::SheetStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName) :
-	Style(psName), mPropList(xPropList), mColumns(columns),
+SheetStyle::SheetStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName) :
+	Style(psName), mPropList(xPropList), mColumns(0),
 	mRowNameHash(), mRowStyleHash(), mCellNameHash(), mCellStyleHash(), mNumberingHash()
 {
+	mColumns = mPropList.child("librevenge:columns");
 }
 
 SheetStyle::~SheetStyle()
@@ -384,20 +386,23 @@ void SheetStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->endElement("style:style");
 
 	int col=1;
-	librevenge::RVNGPropertyListVector::Iter j(mColumns);
-	for (j.rewind(); j.next(); ++col)
+	if (mColumns)
 	{
-		TagOpenElement columnStyleOpen("style:style");
-		librevenge::RVNGString sColumnName;
-		sColumnName.sprintf("%s.Column%i", getName().cstr(), col);
-		columnStyleOpen.addAttribute("style:name", sColumnName);
-		columnStyleOpen.addAttribute("style:family", "table-column");
-		columnStyleOpen.write(pHandler);
+		librevenge::RVNGPropertyListVector::Iter j(*mColumns);
+		for (j.rewind(); j.next(); ++col)
+		{
+			TagOpenElement columnStyleOpen("style:style");
+			librevenge::RVNGString sColumnName;
+			sColumnName.sprintf("%s.Column%i", getName().cstr(), col);
+			columnStyleOpen.addAttribute("style:name", sColumnName);
+			columnStyleOpen.addAttribute("style:family", "table-column");
+			columnStyleOpen.write(pHandler);
 
-		pHandler->startElement("style:table-column-properties", j());
-		pHandler->endElement("style:table-column-properties");
+			pHandler->startElement("style:table-column-properties", j());
+			pHandler->endElement("style:table-column-properties");
 
-		pHandler->endElement("style:style");
+			pHandler->endElement("style:style");
+		}
 	}
 
 	std::map<librevenge::RVNGString, shared_ptr<SheetRowStyle>, ltstr>::const_iterator rIt;
@@ -450,7 +455,7 @@ void SheetStyle::addCondition(const librevenge::RVNGPropertyList &xPropList)
 	mNumberingHash.find(name)->second->addCondition(xPropList);
 }
 
-void SheetStyle::addNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList)
+void SheetStyle::addNumberingStyle(const librevenge::RVNGPropertyList &xPropList)
 {
 	if (!xPropList["librevenge:name"] || xPropList["librevenge:name"]->getStr().len()==0)
 	{
@@ -463,7 +468,7 @@ void SheetStyle::addNumberingStyle(const librevenge::RVNGPropertyList &xPropList
 		finalName=mNumberingHash.find(name)->second->getName();
 	else
 		finalName.sprintf("Number%d", int(mNumberingHash.size()));
-	shared_ptr<SheetNumberingStyle> style(new SheetNumberingStyle(xPropList, formatsList, finalName));
+	shared_ptr<SheetNumberingStyle> style(new SheetNumberingStyle(xPropList, finalName));
 	mNumberingHash[name]=style;
 }
 
@@ -531,7 +536,7 @@ void SheetManager::clean()
 	mSheetStyles.clear();
 }
 
-bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns)
+bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList)
 {
 	if (mbSheetOpened)
 	{
@@ -541,7 +546,7 @@ bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList, cons
 	mbSheetOpened=true;
 	librevenge::RVNGString sTableName;
 	sTableName.sprintf("Table%i", (int) mSheetStyles.size());
-	shared_ptr<SheetStyle> sheet(new SheetStyle(xPropList, columns, sTableName.cstr()));
+	shared_ptr<SheetStyle> sheet(new SheetStyle(xPropList, sTableName.cstr()));
 	mSheetStyles.push_back(sheet);
 	return true;
 }
@@ -580,11 +585,11 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			}
 			std::string oper(list["librevenge:operator"]->getStr().cstr());
 			bool find=false;
-			for (int w=0; w<12; ++w)
+			for (int w=0; w<13; ++w)
 			{
-				static char const *(s_operators[12])=
+				static char const *(s_operators[13])=
 				{
-					"(", ")", "+", "-", "*", "/", "=", ";", "<", ">", "<=", ">=",
+					"(", ")", "+", "-", "*", "/", "=", ";", "<", ">", "<=", ">=", "^"
 				};
 				if (oper!=s_operators[w]) continue;
 				s << oper;
@@ -643,8 +648,8 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			if (list["librevenge:sheet"]) s << list["librevenge:sheet"]->getStr().cstr();
 			s << ".";
 			if (list["librevenge:column-absolute"] && list["librevenge:column-absolute"]->getInt()) s << "$";
-			if (column>=27) s << char('A'+(column/27));
-			s << char('A'+(column%27));
+			if (column>=26) s << char('A'+(column/26-1));
+			s << char('A'+(column%26));
 			if (list["librevenge:row-absolute"] && list["librevenge:row-absolute"]->getInt()) s << "$";
 			s << row+1 << "]";
 		}
@@ -666,8 +671,8 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			if (list["librevenge:sheet-name"]) s << list["librevenge:sheet-name"]->getStr().cstr();
 			s << ".";
 			if (list["librevenge:start-column-absolute"] && list["librevenge:start-column-absolute"]->getInt()) s << "$";
-			if (column>=27) s << char('A'+(column/27));
-			s << char('A'+(column%27));
+			if (column>=26) s << char('A'+(column/26-1));
+			s << char('A'+(column%26));
 			if (list["librevenge:start-row-absolute"] && list["librevenge:start-row-absolute"]->getInt()) s << "$";
 			s << row+1 << ":";
 			if (list["librevenge:end-column"])
@@ -680,8 +685,8 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 				return res;
 			}
 			if (list["librevenge:end-column-absolute"] && list["librevenge:end-column-absolute"]->getInt()) s << "$";
-			if (column>=27) s << char('A'+(column/27));
-			s << char('A'+(column%27));
+			if (column>=26) s << char('A'+(column/26-1));
+			s << char('A'+(column%26));
 			if (list["librevenge:end-row-absolute"] && list["librevenge:end-row-absolute"]->getInt()) s << "$";
 			s << row+1 << "]";
 		}

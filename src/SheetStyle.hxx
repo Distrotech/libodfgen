@@ -40,7 +40,7 @@ class SheetStyle;
 class SheetNumberingStyle : public Style
 {
 public:
-	SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList, const librevenge::RVNGString &psName);
+	SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGString &psName);
 	virtual ~SheetNumberingStyle() {};
 	void addCondition(const librevenge::RVNGPropertyList &condition)
 	{
@@ -52,7 +52,6 @@ private:
 	void writeCondition(librevenge::RVNGPropertyList const &propList, OdfDocumentHandler *pHandler, SheetStyle const &sheet) const;
 
 	librevenge::RVNGPropertyList mPropList;
-	librevenge::RVNGPropertyListVector mFormatsList;
 	std::vector<librevenge::RVNGPropertyList> mConditionsList;
 };
 
@@ -79,12 +78,12 @@ private:
 class SheetStyle : public Style, public TopLevelElementStyle
 {
 public:
-	SheetStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName);
+	SheetStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
 	virtual ~SheetStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	int getNumColumns() const
 	{
-		return (int)mColumns.count();
+		return mColumns ? (int)mColumns->count() : 0;
 	}
 
 	librevenge::RVNGString addCell(const librevenge::RVNGPropertyList &propList);
@@ -92,12 +91,12 @@ public:
 
 	void addCondition(const librevenge::RVNGPropertyList &xPropList);
 
-	void addNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &formatsList);
+	void addNumberingStyle(const librevenge::RVNGPropertyList &xPropList);
 	librevenge::RVNGString getNumberingStyleName(librevenge::RVNGString const &localName) const;
 
 private:
 	librevenge::RVNGPropertyList mPropList;
-	librevenge::RVNGPropertyListVector mColumns;
+	librevenge::RVNGPropertyListVector const *mColumns;
 
 	// hash key -> row style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mRowNameHash;
@@ -130,7 +129,7 @@ public:
 		return mSheetStyles.back().get();
 	}
 	//! open a sheet and update the list of elements
-	bool openSheet(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns);
+	bool openSheet(const librevenge::RVNGPropertyList &xPropList);
 	bool closeSheet();
 
 	static librevenge::RVNGString convertFormula(const librevenge::RVNGPropertyListVector &formatsList);
