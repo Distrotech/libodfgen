@@ -1839,14 +1839,14 @@ void OdsGenerator::endGraphicLayer()
 	mpImpl->mAuxiliarOdgState->get().endLayer();
 }
 
-void OdsGenerator::setGraphicStyle(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &gradient)
+void OdsGenerator::setGraphicStyle(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->getState().mbInGraphics || !mpImpl->mAuxiliarOdgState)
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::setGraphicStyles: graphics not started\n"));
 		return;
 	}
-	mpImpl->mAuxiliarOdgState->get().setStyle(propList, gradient);
+	mpImpl->mAuxiliarOdgState->get().setStyle(propList);
 }
 
 void OdsGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)

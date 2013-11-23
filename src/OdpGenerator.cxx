@@ -130,7 +130,7 @@ public:
 	OdpGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	~OdpGeneratorPrivate();
 	/** update a graphic style element */
-	void _updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style, ::librevenge::RVNGPropertyListVector const &gradient);
+	void _updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style);
 	void _writeGraphicsStyle();
 	void _drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const librevenge::RVNGPropertyListVector &path);
@@ -655,11 +655,14 @@ void OdpGenerator::endSlide()
 	mpImpl->miPageIndex++;
 }
 
-void OdpGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList, const ::librevenge::RVNGPropertyListVector &gradient)
+void OdpGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->mxStyle.clear();
 	mpImpl->mxStyle = propList;
-	mpImpl->mxGradient = gradient;
+	const librevenge::RVNGPropertyListVector *gradient = propList.child("svg:linearGradient");
+	if (!gradient)
+		gradient = propList.child("svg:radialGradient");
+	mpImpl->mxGradient = gradient ? *gradient : librevenge::RVNGPropertyListVector();
 }
 
 void OdpGenerator::startLayer(const ::librevenge::RVNGPropertyList & /* propList */)
@@ -1137,7 +1140,7 @@ void OdpGeneratorPrivate::_writeGraphicsStyle()
 	mGraphicsAutomaticStyles.push_back(pStyleStyleElement);
 
 	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
-	_updateGraphicPropertiesElement(*pStyleGraphicsPropertiesElement, mxStyle, mxGradient);
+	_updateGraphicPropertiesElement(*pStyleGraphicsPropertiesElement, mxStyle);
 	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
 	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
 
@@ -1145,9 +1148,13 @@ void OdpGeneratorPrivate::_writeGraphicsStyle()
 	miGraphicsStyleIndex++;
 }
 
-void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style, ::librevenge::RVNGPropertyListVector const &gradient)
+void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style)
 {
 	bool bUseOpacityGradient = false;
+	const librevenge::RVNGPropertyListVector *gradient = style.child("svg:linearGradient");
+	if (!gradient)
+		gradient = style.child("svg:radialGradient");
+
 
 	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
 	{
@@ -1228,7 +1235,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 		pDrawGradientElement->addAttribute("draw:angle", sValue);
 		pDrawOpacityElement->addAttribute("draw:angle", sValue);
 
-		if (!gradient.count())
+		if (!gradient || !gradient->count())
 		{
 			if (style["draw:start-color"])
 				pDrawGradientElement->addAttribute("draw:start-color", style["draw:start-color"]->getStr());
@@ -1301,27 +1308,27 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 				mGraphicsGradientStyles.push_back(new TagCloseElement("draw:opacity"));
 			}
 		}
-		else if(gradient.count() >= 2)
+		else if(gradient->count() >= 2)
 		{
 			sValue.sprintf("%i", (unsigned)(angle*10));
 			pDrawGradientElement->addAttribute("draw:angle", sValue);
 
-			pDrawGradientElement->addAttribute("draw:start-color", gradient[1]["svg:stop-color"]->getStr());
-			pDrawGradientElement->addAttribute("draw:end-color", gradient[0]["svg:stop-color"]->getStr());
+			pDrawGradientElement->addAttribute("draw:start-color", (*gradient)[1]["svg:stop-color"]->getStr());
+			pDrawGradientElement->addAttribute("draw:end-color", (*gradient)[0]["svg:stop-color"]->getStr());
 			if (style["svg:cx"])
 				pDrawGradientElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
 			if (style["svg:cy"])
 				pDrawGradientElement->addAttribute("draw:cy", style["svg:cy"]->getStr());
-			if (gradient[1]["svg:stop-opacity"])
+			if ((*gradient)[1]["svg:stop-opacity"])
 			{
-				pDrawOpacityElement->addAttribute("draw:start", gradient[1]["svg:stop-opacity"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:start", (*gradient)[1]["svg:stop-opacity"]->getStr());
 				bUseOpacityGradient = true;
 			}
 			else
 				pDrawOpacityElement->addAttribute("draw:start", "100%");
-			if (gradient[0]["svg:stop-opacity"])
+			if ((*gradient)[0]["svg:stop-opacity"])
 			{
-				pDrawOpacityElement->addAttribute("draw:end", gradient[0]["svg:stop-opacity"]->getStr());
+				pDrawOpacityElement->addAttribute("draw:end", (*gradient)[0]["svg:stop-opacity"]->getStr());
 				bUseOpacityGradient = true;
 			}
 			else
@@ -1436,7 +1443,7 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 
 	if(style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
 	{
-		if (!gradient.count() || gradient.count() >= 2)
+		if (!gradient || !gradient->count() || gradient->count() >= 2)
 		{
 			element.addAttribute("draw:fill", "gradient");
 			sValue.sprintf("Gradient_%i", miGradientIndex-1);
@@ -1449,10 +1456,10 @@ void OdpGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 		}
 		else
 		{
-			if (gradient[0]["svg:stop-color"])
+			if ((*gradient)[0]["svg:stop-color"])
 			{
 				element.addAttribute("draw:fill", "solid");
-				element.addAttribute("draw:fill-color", gradient[0]["svg:stop-color"]->getStr());
+				element.addAttribute("draw:fill-color", (*gradient)[0]["svg:stop-color"]->getStr());
 			}
 			else
 				element.addAttribute("draw:fill", "solid");
@@ -1556,7 +1563,7 @@ void OdpGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	// the transformation is managed latter, so even if this changes nothing...
 	if (propList["librevenge:rotate"])
 		styleList.insert("librevenge:rotate", 0);
-	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList, librevenge::RVNGPropertyListVector());
+	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList);
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{

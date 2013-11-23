@@ -128,7 +128,7 @@ public:
 	void startGraphicPage(const librevenge::RVNGPropertyList &propList);
 	void endGraphicPage();
 
-	void setGraphicStyle(const librevenge::RVNGPropertyList &propList, const librevenge::RVNGPropertyListVector &gradient);
+	void setGraphicStyle(const librevenge::RVNGPropertyList &propList);
 	void startGraphicLayer(const librevenge::RVNGPropertyList &propList);
 	void endGraphicLayer();
 
