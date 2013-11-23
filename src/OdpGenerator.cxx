@@ -756,14 +756,18 @@ void OdpGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
 }
 
-void OdpGenerator::drawPolyline(const ::librevenge::RVNGPropertyListVector &vertices)
+void OdpGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->_drawPolySomething(vertices, false);
+	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
+	if (vertices && vertices->count())
+		mpImpl->_drawPolySomething(*vertices, false);
 }
 
-void OdpGenerator::drawPolygon(const ::librevenge::RVNGPropertyListVector &vertices)
+void OdpGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->_drawPolySomething(vertices, true);
+	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
+	if (vertices && vertices->count())
+		mpImpl->_drawPolySomething(*vertices, true);
 }
 
 void OdpGeneratorPrivate::_drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed)

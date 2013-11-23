@@ -1870,25 +1870,25 @@ void OdsGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 }
 
 
-void OdsGenerator::drawPolygon(const ::librevenge::RVNGPropertyListVector &vertices)
+void OdsGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->getState().mbInGraphics || !mpImpl->mAuxiliarOdgState)
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::drawPolygon: graphics not started\n"));
 		return;
 	}
-	mpImpl->mAuxiliarOdgState->get().drawPolygon(vertices);
+	mpImpl->mAuxiliarOdgState->get().drawPolygon(propList);
 }
 
 
-void OdsGenerator::drawPolyline(const ::librevenge::RVNGPropertyListVector &vertices)
+void OdsGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->getState().mbInGraphics || !mpImpl->mAuxiliarOdgState)
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::drawPolyline: graphics not started\n"));
 		return;
 	}
-	mpImpl->mAuxiliarOdgState->get().drawPolyline(vertices);
+	mpImpl->mAuxiliarOdgState->get().drawPolyline(propList);
 }
 
 

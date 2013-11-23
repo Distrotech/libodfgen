@@ -58,8 +58,8 @@ public:
 
 	void drawRectangle(const ::librevenge::RVNGPropertyList &propList);
 	void drawEllipse(const ::librevenge::RVNGPropertyList &propList);
-	void drawPolyline(const ::librevenge::RVNGPropertyListVector &vertices);
-	void drawPolygon(const ::librevenge::RVNGPropertyListVector &vertices);
+	void drawPolyline(const ::librevenge::RVNGPropertyList &propList);
+	void drawPolygon(const ::librevenge::RVNGPropertyList &propList);
 	void drawPath(const ::librevenge::RVNGPropertyList &propList);
 	void drawGraphicObject(const ::librevenge::RVNGPropertyList &propList);
 	void drawConnector(const ::librevenge::RVNGPropertyList &propList);
