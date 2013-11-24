@@ -35,7 +35,7 @@ class OdtGeneratorPrivate;
 
 /** A generator for text documents.
   *
-  * See @c librevenge library for documentation of the ::librevenge::RVNGDocumentInterface
+  * See @c librevenge library for documentation of the ::librevenge::RVNGTextInterface
   * interface.
   */
 class OdtGenerator : public librevenge::RVNGTextInterface
