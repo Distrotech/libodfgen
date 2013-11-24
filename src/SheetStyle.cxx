@@ -56,7 +56,7 @@ static librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyL
 } // anonymous namespace
 
 SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGString &psName)
-	: Style(psName), mPropList(xPropList), mConditionsList()
+	: Style(psName), mPropList(xPropList)
 {
 }
 
@@ -65,8 +65,8 @@ void SheetNumberingStyle::writeCondition(librevenge::RVNGPropertyList const &pro
 	librevenge::RVNGString applyName("");
 	librevenge::RVNGPropertyListVector const *formula=propList.child("librevenge:formula");
 	librevenge::RVNGString formulaString("");
-	if (!formula||!propList["librevenge:apply-name"]||
-	        (applyName=sheet.getNumberingStyleName(propList["librevenge:apply-name"]->getStr())).empty() ||
+	if (!formula||!propList["librevenge:name"]||
+	        (applyName=sheet.getNumberingStyleName(propList["librevenge:name"]->getStr())).empty() ||
 	        (formulaString=SheetManager::convertFormula(*formula)).empty())
 	{
 		ODFGEN_DEBUG_MSG(("SheetNumberingStyle::writeCondition: can not find condition data\n"));
@@ -245,8 +245,9 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle co
 		}
 	}
 
-	for (size_t c=0; c < mConditionsList.size(); ++c)
-		writeCondition(mConditionsList[c], pHandler, sheet);
+	librevenge::RVNGPropertyListVector const *conditions=mPropList.child("librevenge::conditions");
+	for (unsigned long c=0; c < (conditions ? conditions->count() : 0); ++c)
+		writeCondition((*conditions)[c], pHandler, sheet);
 	TagCloseElement(what).write(pHandler);
 }
 
@@ -439,22 +440,6 @@ librevenge::RVNGString SheetStyle::getNumberingStyleName(librevenge::RVNGString 
 	return it->second->getName();
 }
 
-void SheetStyle::addCondition(const librevenge::RVNGPropertyList &xPropList)
-{
-	if (!xPropList["librevenge:name"] || xPropList["librevenge:name"]->getStr().len()==0)
-	{
-		ODFGEN_DEBUG_MSG(("SheetStyle::addCondition: can not find the style name\n"));
-		return;
-	}
-	librevenge::RVNGString name(xPropList["librevenge:name"]->getStr());
-	if (mNumberingHash.find(name)!=mNumberingHash.end() || mNumberingHash.find(name)->second)
-	{
-		ODFGEN_DEBUG_MSG(("SheetStyle::addCondition: can not find the style name\n"));
-		return;
-	}
-	mNumberingHash.find(name)->second->addCondition(xPropList);
-}
-
 void SheetStyle::addNumberingStyle(const librevenge::RVNGPropertyList &xPropList)
 {
 	if (!xPropList["librevenge:name"] || xPropList["librevenge:name"]->getStr().len()==0)
@@ -468,6 +453,7 @@ void SheetStyle::addNumberingStyle(const librevenge::RVNGPropertyList &xPropList
 		finalName=mNumberingHash.find(name)->second->getName();
 	else
 		finalName.sprintf("Number%d", int(mNumberingHash.size()));
+
 	shared_ptr<SheetNumberingStyle> style(new SheetNumberingStyle(xPropList, finalName));
 	mNumberingHash[name]=style;
 }

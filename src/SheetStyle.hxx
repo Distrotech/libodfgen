@@ -42,17 +42,12 @@ class SheetNumberingStyle : public Style
 public:
 	SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGString &psName);
 	virtual ~SheetNumberingStyle() {};
-	void addCondition(const librevenge::RVNGPropertyList &condition)
-	{
-		mConditionsList.push_back(condition);
-	}
 	void writeStyle(OdfDocumentHandler *pHandler, SheetStyle const &sheet) const;
 
 private:
 	void writeCondition(librevenge::RVNGPropertyList const &propList, OdfDocumentHandler *pHandler, SheetStyle const &sheet) const;
 
 	librevenge::RVNGPropertyList mPropList;
-	std::vector<librevenge::RVNGPropertyList> mConditionsList;
 };
 
 class SheetCellStyle : public Style
@@ -88,8 +83,6 @@ public:
 
 	librevenge::RVNGString addCell(const librevenge::RVNGPropertyList &propList);
 	librevenge::RVNGString addRow(const librevenge::RVNGPropertyList &propList);
-
-	void addCondition(const librevenge::RVNGPropertyList &xPropList);
 
 	void addNumberingStyle(const librevenge::RVNGPropertyList &xPropList);
 	librevenge::RVNGString getNumberingStyleName(librevenge::RVNGString const &localName) const;

@@ -681,16 +681,6 @@ void OdsGenerator::defineSheetNumberingStyle(const librevenge::RVNGPropertyList 
 	mpImpl->mSheetManager.actualSheet()->addNumberingStyle(propList);
 }
 
-void OdsGenerator::insertSheetConditionInNumberingStyle(const librevenge::RVNGPropertyList &propList)
-{
-	if (!mpImpl->getState().mbInSheet || !mpImpl->mSheetManager.actualSheet())
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::insertSheetConditionInNumberingStyle can not be called outside a sheet!!!\n"));
-		return;
-	}
-	mpImpl->mSheetManager.actualSheet()->addCondition(propList);
-}
-
 void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Sheet);
@@ -792,6 +782,7 @@ void OdsGenerator::openSheetRow(const librevenge::RVNGPropertyList &propList)
 		row=state.miLastSheetRow;
 	mpImpl->getState().miLastSheetRow=row+1;
 
+	state.miLastSheetColumn=0;
 	state.mbInSheetRow=true;
 	mpImpl->pushState(state);
 
