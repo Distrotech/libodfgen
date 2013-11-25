@@ -40,7 +40,7 @@ static librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyL
 {
 	librevenge::RVNGString sKey;
 	librevenge::RVNGPropertyList::Iter i(xPropList);
-	for (i.rewind(); i.next(); )
+	for (i.rewind(); i.next();)
 	{
 		if (!i.child()) // write out simple properties only
 		{

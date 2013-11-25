@@ -60,7 +60,7 @@ public:
 	void addAttribute(const librevenge::RVNGString &szAttributeName,
 	                  const librevenge::RVNGString &sAttributeValue, bool forceString=true);
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	virtual void print () const;
+	virtual void print() const;
 private:
 	librevenge::RVNGPropertyList maAttrList;
 };

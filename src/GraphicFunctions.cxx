@@ -38,7 +38,7 @@ namespace libodfgen
 
 double getAngle(double bx, double by)
 {
-	return fmod(2*M_PI + (by > 0.0 ? 1.0 : -1.0) * acos( bx / sqrt(bx * bx + by * by) ), 2*M_PI);
+	return fmod(2*M_PI + (by > 0.0 ? 1.0 : -1.0) * acos(bx / sqrt(bx * bx + by * by)), 2*M_PI);
 }
 
 void getEllipticalArcBBox(double x0, double y0,
@@ -143,7 +143,7 @@ void getEllipticalArcBBox(double x0, double y0,
 	else
 	{
 		txmin = -atan(ry*tan(phi)/rx);
-		txmax = M_PI - atan (ry*tan(phi)/rx);
+		txmax = M_PI - atan(ry*tan(phi)/rx);
 		xmin = cx + rx*cos(txmin)*cos(phi) - ry*sin(txmin)*sin(phi);
 		xmax = cx + rx*cos(txmax)*cos(phi) - ry*sin(txmax)*sin(phi);
 		double tmpY = cy + rx*cos(txmin)*sin(phi) + ry*sin(txmin)*cos(phi);
@@ -225,7 +225,7 @@ void getQuadraticBezierBBox(double x0, double y0, double x1, double y1, double x
 	ymax = y0 > y ? y0 : y;
 
 	double t = quadraticDerivative(x0, x1, x);
-	if(t>=0 && t<=1)
+	if (t>=0 && t<=1)
 	{
 		double tmpx = quadraticExtreme(t, x0, x1, x);
 		xmin = tmpx < xmin ? tmpx : xmin;
@@ -233,7 +233,7 @@ void getQuadraticBezierBBox(double x0, double y0, double x1, double y1, double x
 	}
 
 	t = quadraticDerivative(y0, y1, y);
-	if(t>=0 && t<=1)
+	if (t>=0 && t<=1)
 	{
 		double tmpy = quadraticExtreme(t, y0, y1, y);
 		ymin = tmpy < ymin ? tmpy : ymin;

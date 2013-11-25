@@ -249,7 +249,7 @@ public:
 			List::Level const &level=it++->second;
 			if (level.mbOrdered!=ordered) continue;
 			librevenge::RVNGPropertyList::Iter i(level.mLevel);
-			for (i.rewind(); i.next(); )
+			for (i.rewind(); i.next();)
 			{
 				if (pList[i.key()] || i.child()) continue;
 				pList.insert(i.key(), i()->clone());
@@ -411,7 +411,7 @@ OdsGeneratorPrivate::~OdsGeneratorPrivate()
 	ODFGEN_DEBUG_MSG(("OdsGenerator: Destroying the body elements\n"));
 	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); ++iterBody)
 	{
-		delete (*iterBody);
+		delete(*iterBody);
 		(*iterBody) = 0;
 	}
 
@@ -646,7 +646,7 @@ bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 void OdsGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList::Iter i(propList);
-	for (i.rewind(); i.next(); )
+	for (i.rewind(); i.next();)
 	{
 		// filter out librevenge elements
 		if (strncmp(i.key(), "librevenge", 10) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
@@ -1269,7 +1269,7 @@ void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 		{
 			librevenge::RVNGPropertyList fPropList;
 			fPropList.insert("text:anchor-type","as-char");
-			fPropList.insert("style:vertical-rel", "baseline" );
+			fPropList.insert("style:vertical-rel", "baseline");
 			fPropList.insert("style:vertical-pos", "middle");
 			fPropList.insert("style:wrap","none");
 			openFrame(fPropList);

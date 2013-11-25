@@ -36,7 +36,7 @@ void InternalHandler::startElement(const char *psName, const librevenge::RVNGPro
 {
 	TagOpenElement *element = new TagOpenElement(psName);
 	librevenge::RVNGPropertyList::Iter i(xPropList);
-	for (i.rewind(); i.next(); )
+	for (i.rewind(); i.next();)
 	{
 		// filter out librevenge elements
 		if (strncmp(i.key(), "librevenge", 10) != 0)

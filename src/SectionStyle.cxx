@@ -50,7 +50,7 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 
 	librevenge::RVNGPropertyList propList;
 	librevenge::RVNGPropertyList::Iter p(mPropList);
-	for (p.rewind(); p.next(); )
+	for (p.rewind(); p.next();)
 	{
 		if (strncmp(p.key(), "librevenge:", 11) != 0 && !p.child())
 			propList.insert(p.key(), p()->getStr());

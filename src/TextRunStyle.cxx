@@ -40,7 +40,7 @@ librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyList &xP
 {
 	librevenge::RVNGString sKey;
 	librevenge::RVNGPropertyList::Iter i(xPropList);
-	for (i.rewind(); i.next(); )
+	for (i.rewind(); i.next();)
 	{
 		if (!i.child()) // write out simple properties only
 		{
@@ -80,7 +80,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 
 	propList.clear();
 	librevenge::RVNGPropertyList::Iter i(mpPropList);
-	for (i.rewind(); i.next(); )
+	for (i.rewind(); i.next();)
 	{
 		if (strncmp(i.key(), "fo:margin-",10) == 0)
 		{
@@ -152,7 +152,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 			TagOpenElement tabStopOpen("style:tab-stop");
 
 			librevenge::RVNGPropertyList::Iter j(k());
-			for (j.rewind(); j.next(); )
+			for (j.rewind(); j.next();)
 			{
 				tabStopOpen.addAttribute(j.key(), j()->getStr().cstr());
 			}

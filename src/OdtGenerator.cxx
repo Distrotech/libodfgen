@@ -246,7 +246,7 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Destroying the body elements\n"));
 	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); ++iterBody)
 	{
-		delete (*iterBody);
+		delete(*iterBody);
 		(*iterBody) = 0;
 	}
 
@@ -542,7 +542,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 void OdtGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList::Iter i(propList);
-	for (i.rewind(); i.next(); )
+	for (i.rewind(); i.next();)
 	{
 		// filter out librevenge elements
 		if (strncmp(i.key(), "librevenge", 10) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
@@ -1138,7 +1138,7 @@ void OdtGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 	}
 
 	librevenge::RVNGString sTableCellStyleName;
-	sTableCellStyleName.sprintf( "%s.Cell%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableCellStyles());
+	sTableCellStyleName.sprintf("%s.Cell%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableCellStyles());
 	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
 	mpImpl->mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
 

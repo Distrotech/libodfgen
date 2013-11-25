@@ -157,7 +157,7 @@ OdgGeneratorPrivate::~OdgGeneratorPrivate()
 
 	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); ++iterBody)
 	{
-		delete (*iterBody);
+		delete(*iterBody);
 		(*iterBody) = 0;
 	}
 
@@ -210,7 +210,7 @@ OdgGeneratorPrivate::~OdgGeneratorPrivate()
 
 std::string OdgGeneratorPrivate::getDocumentType() const
 {
-	switch(mxStreamType)
+	switch (mxStreamType)
 	{
 	case ODF_FLAT_XML:
 		return "office:document";
@@ -605,17 +605,17 @@ void OdgGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 	if (propList["librevenge:rotate"] && propList["librevenge:rotate"]->getDouble() != 0.0)
 	{
 		double rotation = propList["librevenge:rotate"]->getDouble();
-		while(rotation < -180)
+		while (rotation < -180)
 			rotation += 360;
-		while(rotation > 180)
+		while (rotation > 180)
 			rotation -= 360;
 		double radrotation = rotation*M_PI/180.0;
 		double deltax = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
 		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                             - radrotation ) - propList["svg:rx"]->getDouble();
+		                             - radrotation) - propList["svg:rx"]->getDouble();
 		double deltay = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
 		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                             - radrotation ) - propList["svg:ry"]->getDouble();
+		                             - radrotation) - propList["svg:ry"]->getDouble();
 		sValue = "rotate(";
 		sValue.append(doubleToString(radrotation));
 		sValue.append(") ");
@@ -655,10 +655,10 @@ void OdgGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 
 void OdgGeneratorPrivate::_drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed)
 {
-	if(vertices.count() < 2)
+	if (vertices.count() < 2)
 		return;
 
-	if(vertices.count() == 2)
+	if (vertices.count() == 2)
 	{
 		if (!vertices[0]["svg:x"]||!vertices[0]["svg:y"]||!vertices[1]["svg:x"]||!vertices[1]["svg:y"])
 		{
@@ -704,10 +704,10 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::librevenge::RVNGPropertyLis
 
 void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &path)
 {
-	if(!path.count())
+	if (!path.count())
 		return;
 	// This must be a mistake and we do not want to crash lower
-	if(!path[0]["librevenge:path-action"] || path[0]["librevenge:path-action"]->getStr() == "Z")
+	if (!path[0]["librevenge:path-action"] || path[0]["librevenge:path-action"]->getStr() == "Z")
 		return;
 
 	// try to find the bounding box
@@ -721,7 +721,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 	double lastPrevX = 0.0;
 	double lastPrevY = 0.0;
 
-	for(unsigned k = 0; k < path.count(); ++k)
+	for (unsigned k = 0; k < path.count(); ++k)
 	{
 		if (!path[k]["librevenge:path-action"])
 			continue;
@@ -758,7 +758,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 		double xmin=px, xmax=qx, ymin=py, ymax=qy;
 		bool lastPrevSet=false;
 
-		if(action[0] == 'C' && coord2Ok)
+		if (action[0] == 'C' && coord2Ok)
 		{
 			getCubicBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
 			                   path[k]["svg:x2"]->getDouble(), path[k]["svg:y2"]->getDouble(),
@@ -767,7 +767,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 			lastPrevX=2*x-path[k]["svg:x2"]->getDouble();
 			lastPrevY=2*y-path[k]["svg:y2"]->getDouble();
 		}
-		else if(action[0] == 'S' && coord1Ok)
+		else if (action[0] == 'S' && coord1Ok)
 		{
 			getCubicBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
 			                   path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
@@ -776,7 +776,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
 			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
 		}
-		else if(action[0] == 'Q' && coord1Ok)
+		else if (action[0] == 'Q' && coord1Ok)
 		{
 			getQuadraticBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
 			                       x, y, xmin, ymin, xmax, ymax);
@@ -784,7 +784,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
 			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
 		}
-		else if(action[0] == 'T' && coordOk)
+		else if (action[0] == 'T' && coordOk)
 		{
 			getQuadraticBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
 			                       x, y, xmin, ymin, xmax, ymax);
@@ -792,7 +792,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 			lastPrevX=2*x-lastPrevX;
 			lastPrevY=2*y-lastPrevY;
 		}
-		else if(action[0] == 'A' && coordOk && path[k]["svg:rx"] && path[k]["svg:ry"])
+		else if (action[0] == 'A' && coordOk && path[k]["svg:rx"] && path[k]["svg:ry"])
 		{
 			getEllipticalArcBBox(lastX, lastY, path[k]["svg:rx"]->getDouble(), path[k]["svg:ry"]->getDouble(),
 			                     path[k]["librevenge:rotate"] ? path[k]["librevenge:rotate"]->getDouble() : 0.0,
@@ -840,7 +840,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 	pDrawPathElement->addAttribute("svg:viewBox", sValue);
 
 	sValue.clear();
-	for(unsigned i = 0; i < path.count(); ++i)
+	for (unsigned i = 0; i < path.count(); ++i)
 	{
 		if (!path[i]["librevenge:path-action"])
 			continue;
@@ -1074,7 +1074,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 		mGraphicsMarkerStyles.push_back(pDrawMarkerElement);
 		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
 	}
-	if(style["draw:marker-end-path"])
+	if (style["draw:marker-end-path"])
 	{
 		librevenge::RVNGString sValue;
 		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
@@ -1087,7 +1087,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
 	}
 
-	if(style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
+	if (style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
 	{
 		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
 		TagOpenElement *pDrawOpacityElement = new TagOpenElement("draw:opacity");
@@ -1109,9 +1109,9 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 
 		// ODG angle unit is 0.1 degree
 		double angle = style["draw:angle"] ? style["draw:angle"]->getDouble() : 0.0;
-		while(angle < 0)
+		while (angle < 0)
 			angle += 360;
-		while(angle > 360)
+		while (angle > 360)
 			angle -= 360;
 		sValue.sprintf("%i", (unsigned)(angle*10));
 		pDrawGradientElement->addAttribute("draw:angle", sValue);
@@ -1190,7 +1190,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 				mGraphicsGradientStyles.push_back(new TagCloseElement("draw:opacity"));
 			}
 		}
-		else if(gradient->count() >= 2)
+		else if (gradient->count() >= 2)
 		{
 			sValue.sprintf("%i", (unsigned)(angle*10));
 			pDrawGradientElement->addAttribute("draw:angle", sValue);
@@ -1231,11 +1231,11 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 			 */
 			delete pDrawGradientElement;
 		}
-		if(!bUseOpacityGradient)
+		if (!bUseOpacityGradient)
 			delete pDrawOpacityElement;
 	}
 
-	if(style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap" &&
+	if (style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap" &&
 	        style["draw:fill-image"] && style["librevenge:mime-type"])
 	{
 		TagOpenElement *pDrawBitmapElement = new TagOpenElement("draw:fill-image");
@@ -1294,7 +1294,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 			element.addAttribute("draw:stroke", "solid");
 	}
 
-	if(style["draw:fill"] && style["draw:fill"]->getStr() == "none")
+	if (style["draw:fill"] && style["draw:fill"]->getStr() == "none")
 		element.addAttribute("draw:fill", "none");
 	else
 	{
@@ -1314,7 +1314,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 			element.addAttribute("svg:fill-rule", style["svg:fill-rule"]->getStr());
 	}
 
-	if(style["draw:fill"] && style["draw:fill"]->getStr() == "solid")
+	if (style["draw:fill"] && style["draw:fill"]->getStr() == "solid")
 	{
 		element.addAttribute("draw:fill", "solid");
 		if (style["draw:fill-color"])
@@ -1323,7 +1323,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 			element.addAttribute("draw:opacity", style["draw:opacity"]->getStr());
 	}
 
-	if(style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
+	if (style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
 	{
 		if (!gradient || !gradient->count() || gradient->count() >= 2)
 		{
@@ -1348,7 +1348,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 		}
 	}
 
-	if(style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap")
+	if (style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap")
 	{
 		if (style["draw:fill-image"] && style["librevenge:mime-type"])
 		{
@@ -1377,7 +1377,7 @@ void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &elemen
 	}
 
 
-	if(style["draw:marker-start-path"])
+	if (style["draw:marker-start-path"])
 	{
 		sValue.sprintf("StartMarker_%i", miStartMarkerIndex++);
 		element.addAttribute("draw:marker-start", sValue);
@@ -1448,9 +1448,9 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	}
 	else
 	{
-		if(propList["svg:width"])
+		if (propList["svg:width"])
 			pDrawFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-		if(propList["svg:height"])
+		if (propList["svg:height"])
 			pDrawFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
 	}
 	if (propList["fo:min-width"])
