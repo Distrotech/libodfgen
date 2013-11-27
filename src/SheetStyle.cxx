@@ -152,7 +152,7 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle co
 			styleOpen.addAttribute("number:language", mPropList["number:language"]->getStr());
 		if (mPropList["number:country"])
 			styleOpen.addAttribute("number:country", mPropList["number:country"]->getStr());
-		if (mPropList["number:automatic-order"])
+		if (type=="date" && mPropList["number:automatic-order"])
 			styleOpen.addAttribute("number:automatic-order", mPropList["number:automatic-order"]->getStr());
 		styleOpen.write(pHandler);
 	}
@@ -261,6 +261,8 @@ void SheetCellStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle const &
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
+	if (mPropList["style:parent-style-name"])
+		styleOpen.addAttribute("style:parent-style-name", mPropList["style:parent-style-name"]->getStr());
 	styleOpen.addAttribute("style:family", "table-cell");
 	if (mPropList["librevenge:numbering-name"])
 	{
@@ -309,6 +311,9 @@ void SheetCellStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle const &
 		else if (strcmp(i.key(), "style:vertical-align")==0)
 			stylePropList.insert(i.key(), i()->clone());
 	}
+	pHandler->startElement("style:table-cell-properties", stylePropList);
+	pHandler->endElement("style:table-cell-properties");
+
 	if (hasTextAlign)
 	{
 		librevenge::RVNGPropertyList paragPropList;
@@ -317,9 +322,6 @@ void SheetCellStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle const &
 		pHandler->startElement("style:paragraph-properties", paragPropList);
 		pHandler->endElement("style:paragraph-properties");
 	}
-	pHandler->startElement("style:table-cell-properties", stylePropList);
-	pHandler->endElement("style:table-cell-properties");
-
 	pHandler->endElement("style:style");
 }
 
@@ -364,10 +366,13 @@ void SheetStyle::write(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
-	styleOpen.addAttribute("style:family", "sheet");
+	styleOpen.addAttribute("style:family", "table");
+	if (mPropList["style:master-page-name"])
+		styleOpen.addAttribute("style:master-page-name", mPropList["style:master-page-name"]->getStr());
 	styleOpen.write(pHandler);
 
 	TagOpenElement stylePropertiesOpen("style:table-properties");
+	stylePropertiesOpen.addAttribute("table:display", "true");
 	if (mPropList["table:align"])
 		stylePropertiesOpen.addAttribute("table:align", mPropList["table:align"]->getStr());
 	if (mPropList["fo:margin-left"])
@@ -394,7 +399,7 @@ void SheetStyle::write(OdfDocumentHandler *pHandler) const
 		{
 			TagOpenElement columnStyleOpen("style:style");
 			librevenge::RVNGString sColumnName;
-			sColumnName.sprintf("%s.Column%i", getName().cstr(), col);
+			sColumnName.sprintf("%s_col%i", getName().cstr(), col);
 			columnStyleOpen.addAttribute("style:name", sColumnName);
 			columnStyleOpen.addAttribute("style:family", "table-column");
 			columnStyleOpen.write(pHandler);
@@ -452,7 +457,7 @@ void SheetStyle::addNumberingStyle(const librevenge::RVNGPropertyList &xPropList
 	if (mNumberingHash.find(name)!=mNumberingHash.end() && mNumberingHash.find(name)->second)
 		finalName=mNumberingHash.find(name)->second->getName();
 	else
-		finalName.sprintf("Number%d", int(mNumberingHash.size()));
+		finalName.sprintf("%s_num%i", getName().cstr(), (int) mNumberingHash.size());
 
 	shared_ptr<SheetNumberingStyle> style(new SheetNumberingStyle(xPropList, finalName));
 	mNumberingHash[name]=style;
@@ -477,7 +482,7 @@ librevenge::RVNGString SheetStyle::addRow(const librevenge::RVNGPropertyList &pr
 	if (iter!=mRowNameHash.end()) return iter->second;
 
 	librevenge::RVNGString name;
-	name.sprintf("%s.Row%i", getName().cstr(), (int) mRowStyleHash.size());
+	name.sprintf("%s_row%i", getName().cstr(), (int) mRowStyleHash.size());
 	mRowNameHash[hashKey]=name;
 	mRowStyleHash[name]=shared_ptr<SheetRowStyle>(new SheetRowStyle(pList, name.cstr()));
 	return name;
@@ -503,7 +508,7 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 	if (iter!=mCellNameHash.end()) return iter->second;
 
 	librevenge::RVNGString name;
-	name.sprintf("%s.Cell%i", getName().cstr(), (int) mCellStyleHash.size());
+	name.sprintf("%s_cell%i", getName().cstr(), (int) mCellStyleHash.size());
 	mCellNameHash[hashKey]=name;
 	mCellStyleHash[name]=shared_ptr<SheetCellStyle>(new SheetCellStyle(pList, name.cstr()));
 	return name;
@@ -531,7 +536,7 @@ bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList)
 	}
 	mbSheetOpened=true;
 	librevenge::RVNGString sTableName;
-	sTableName.sprintf("Table%i", (int) mSheetStyles.size());
+	sTableName.sprintf("Sheet%i", (int) mSheetStyles.size());
 	shared_ptr<SheetStyle> sheet(new SheetStyle(xPropList, sTableName.cstr()));
 	mSheetStyles.push_back(sheet);
 	return true;

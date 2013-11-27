@@ -192,7 +192,7 @@ public:
 	bool canWriteText() const
 	{
 		if (mStateStack.empty() || mStateStack.top().mbInFootnote)  return false;
-		return mStateStack.top().mbInComment || mStateStack.top().mbInSheetCell;
+		return mStateStack.top().mbInComment || mStateStack.top().mbInSheetCell || mStateStack.top().mbInHeaderFooter;
 	}
 
 	//
@@ -332,6 +332,8 @@ public:
 		mAuxiliarOdgState.reset();
 	}
 
+	void _writeMasterPages(OdfDocumentHandler *pHandler);
+	void _writePageLayouts(OdfDocumentHandler *pHandler);
 	bool _writeTargetDocument(OdfDocumentHandler *pHandler);
 	void _writeDefaultStyles(OdfDocumentHandler *pHandler);
 
@@ -382,6 +384,11 @@ public:
 	// the current set of elements that we're writing to
 	std::vector<DocumentElement *> *mpCurrentContentElements;
 
+	// page state
+	std::vector<PageSpan *> mPageSpans;
+	PageSpan *mpCurrentPageSpan;
+	int miNumPageStyles;
+
 private:
 	OdsGeneratorPrivate(const OdsGeneratorPrivate &);
 	OdsGeneratorPrivate &operator=(const OdsGeneratorPrivate &);
@@ -398,7 +405,8 @@ OdsGeneratorPrivate::OdsGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mSheetManager(),
 	mFrameStyles(), mFrameAutomaticStyles(), mFrameIdMap(),
 	mMetaData(),
-	mBodyElements(), mpCurrentContentElements(&mBodyElements)
+	mBodyElements(), mpCurrentContentElements(&mBodyElements),
+	mPageSpans(), mpCurrentPageSpan(0),	miNumPageStyles(0)
 {
 	mStateStack.push(State());
 }
@@ -424,6 +432,11 @@ OdsGeneratorPrivate::~OdsGeneratorPrivate()
 	        iterFrameStyles != mFrameStyles.end(); ++iterFrameStyles)
 	{
 		delete(*iterFrameStyles);
+	}
+	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
+	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
+	{
+		delete(*iterPageSpans);
 	}
 	for (std::vector<DocumentElement *>::iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
 	        iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); ++iterFrameAutomaticStyles)
@@ -464,6 +477,28 @@ OdfEmbeddedObject OdsGeneratorPrivate::_findEmbeddedObjectHandler(const libreven
 		return i->second;
 
 	return 0;
+}
+
+void OdsGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
+{
+	TagOpenElement("office:master-styles").write(mpHandler);
+	int pageNumber = 1;
+	for (unsigned int i=0; i<mPageSpans.size(); ++i)
+	{
+		bool bLastPage;
+		(i == (mPageSpans.size() - 1)) ? bLastPage = true : bLastPage = false;
+		mPageSpans[i]->writeMasterPages(pageNumber, (int)i, bLastPage, pHandler);
+		pageNumber += mPageSpans[i]->getSpan();
+	}
+	pHandler->endElement("office:master-styles");
+}
+
+void OdsGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
+{
+	for (unsigned int i=0; i<mPageSpans.size(); ++i)
+	{
+		mPageSpans[i]->writePageLayout((int)i, pHandler);
+	}
 }
 
 OdsGenerator::OdsGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
@@ -509,7 +544,6 @@ void OdsGeneratorPrivate::_writeDefaultStyles(OdfDocumentHandler *pHandler)
 	standardStyleOpenElement.addAttribute("style:family", "paragraph");
 	standardStyleOpenElement.addAttribute("style:class", "text");
 	standardStyleOpenElement.write(pHandler);
-
 	pHandler->endElement("style:style");
 
 	TagOpenElement textBodyStyleOpenElement("style:style");
@@ -519,7 +553,6 @@ void OdsGeneratorPrivate::_writeDefaultStyles(OdfDocumentHandler *pHandler)
 	textBodyStyleOpenElement.addAttribute("style:parent-style-name", "Standard");
 	textBodyStyleOpenElement.addAttribute("style:class", "text");
 	textBodyStyleOpenElement.write(pHandler);
-
 	pHandler->endElement("style:style");
 
 	TagOpenElement tableContentsStyleOpenElement("style:style");
@@ -529,7 +562,6 @@ void OdsGeneratorPrivate::_writeDefaultStyles(OdfDocumentHandler *pHandler)
 	tableContentsStyleOpenElement.addAttribute("style:parent-style-name", "Text_Body");
 	tableContentsStyleOpenElement.addAttribute("style:class", "extra");
 	tableContentsStyleOpenElement.write(pHandler);
-
 	pHandler->endElement("style:style");
 
 	TagOpenElement tableHeadingStyleOpenElement("style:style");
@@ -539,7 +571,6 @@ void OdsGeneratorPrivate::_writeDefaultStyles(OdfDocumentHandler *pHandler)
 	tableHeadingStyleOpenElement.addAttribute("style:parent-style-name", "Table_Contents");
 	tableHeadingStyleOpenElement.addAttribute("style:class", "extra");
 	tableHeadingStyleOpenElement.write(pHandler);
-
 	pHandler->endElement("style:style");
 
 	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
@@ -576,10 +607,10 @@ bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	docContentPropList.insert("xmlns:math", "http://www.w3.org/1998/Math/MathML");
 	docContentPropList.insert("xmlns:form", "urn:oasis:names:tc:opendocument:xmlns:form:1.0");
 	docContentPropList.insert("xmlns:script", "urn:oasis:names:tc:opendocument:xmlns:script:1.0");
+	docContentPropList.insert("xmlns:tableooo", "http://openoffice.org/2009/table");
 	docContentPropList.insert("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
-	docContentPropList.insert("xmlns:oooc","http://openoffice.org/2004/calc");
 	docContentPropList.insert("xmlns:calcext","urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0");
-	docContentPropList.insert("office:version", librevenge::RVNGPropertyFactory::newStringProp("1.0"));
+	docContentPropList.insert("office:version", librevenge::RVNGPropertyFactory::newStringProp("1.2"));
 	if (mxStreamType == ODF_FLAT_XML)
 	{
 		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.spreadsheet");
@@ -617,7 +648,10 @@ bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	mSpanManager.write(pHandler);
 	mSheetManager.write(pHandler);
 
+	_writePageLayouts(pHandler);
 	pHandler->endElement("office:automatic-styles");
+	// writing out the page masters
+	_writeMasterPages(pHandler);
 
 	ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Writing out the document..\n"));
 	// writing out the document
@@ -660,10 +694,14 @@ void OdsGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 
 }
 
-void OdsGenerator::openPageSpan(const librevenge::RVNGPropertyList &/*propList*/)
+void OdsGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_PageSpan);
-	ODFGEN_DEBUG_MSG(("OdsGenerator::openPageSpan call!!!\n"));
+
+	PageSpan *pPageSpan = new PageSpan(propList);
+	mpImpl->mPageSpans.push_back(pPageSpan);
+	mpImpl->mpCurrentPageSpan = pPageSpan;
+	mpImpl->miNumPageStyles++;
 }
 
 void OdsGenerator::closePageSpan()
@@ -699,7 +737,11 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 		return;
 	}
 
-	if (!mpImpl->mSheetManager.openSheet(propList)) return;
+	librevenge::RVNGPropertyList finalPropList(propList);
+	librevenge::RVNGString sPageStyleName;
+	sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
+	finalPropList.insert("style:master-page-name", sPageStyleName);
+	if (!mpImpl->mSheetManager.openSheet(finalPropList)) return;
 	mpImpl->getState().mbInSheet=true;
 
 	SheetStyle *style=mpImpl->mSheetManager.actualSheet();
@@ -718,7 +760,7 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 	{
 		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
 		librevenge::RVNGString sColumnStyleName;
-		sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
+		sColumnStyleName.sprintf("%s_col%i", sTableName.cstr(), (i+1));
 		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
 		mpImpl->mpCurrentContentElements->push_back(pTableColumnOpenElement);
 
@@ -844,10 +886,23 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 		else if (valueType=="percent") valueType="percentage";
 		if (valueType=="float" || valueType=="percentage" || valueType=="currency")
 		{
-			pSheetCellOpenElement->addAttribute("office:value-type", valueType.c_str());
 			pSheetCellOpenElement->addAttribute("calcext:value-type", valueType.c_str());
+			pSheetCellOpenElement->addAttribute("office:value-type", valueType.c_str());
 			if (propList["librevenge:value"])
-				pSheetCellOpenElement->addAttribute("office:value", propList["librevenge:value"]->getStr().cstr());
+			{
+				if (strncmp(propList["librevenge:value"]->getStr().cstr(),"nan",3)==0 ||
+				        strncmp(propList["librevenge:value"]->getStr().cstr(),"NAN",3)==0)
+				{
+					pSheetCellOpenElement->addAttribute("office:string-value", "");
+					pSheetCellOpenElement->addAttribute("office:value-type", "string");
+					pSheetCellOpenElement->addAttribute("calcext:value-type", "error");
+				}
+				else
+				{
+					pSheetCellOpenElement->addAttribute("office:value-type", valueType.c_str());
+					pSheetCellOpenElement->addAttribute("office:value", propList["librevenge:value"]->getStr().cstr());
+				}
+			}
 		}
 		else if (valueType=="string" || valueType=="text")
 		{
@@ -962,34 +1017,66 @@ void OdsGenerator::insertChartSerie(const librevenge::RVNGPropertyList &/*comman
 	ODFGEN_DEBUG_MSG(("OdsGenerator::insertChartSerie not implemented\n"));
 }
 
-void OdsGenerator::openHeader(const librevenge::RVNGPropertyList &)
+void OdsGenerator::openHeader(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Header);
 	OdsGeneratorPrivate::State state=mpImpl->getState();
 	state.mbInHeaderFooter=true;
 	mpImpl->pushState(state);
-	ODFGEN_DEBUG_MSG(("OdsGenerator::openHeader ignored\n"));
+	if (mpImpl->mAuxiliarOdtState || mpImpl->mAuxiliarOdgState) return;
+
+	if (!mpImpl->mpCurrentPageSpan)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator::openHeader oops can not find the page span\n"));
+		return;
+	}
+	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
+	if (propList["librevenge:occurence"] && propList["librevenge:occurence"]->getStr() == "even")
+		mpImpl->mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
+	else
+		mpImpl->mpCurrentPageSpan->setHeaderContent(pHeaderFooterContentElements);
+	mpImpl->mpCurrentContentElements = pHeaderFooterContentElements;
 }
 
 void OdsGenerator::closeHeader()
 {
 	if (!mpImpl->close(OdsGeneratorPrivate::C_Header)) return;
 	mpImpl->popState();
+	if (mpImpl->mAuxiliarOdtState || mpImpl->mAuxiliarOdgState) return;
+
+	if (!mpImpl->mpCurrentPageSpan) return;
+	mpImpl->mpCurrentContentElements = &(mpImpl->mBodyElements);
 }
 
-void OdsGenerator::openFooter(const librevenge::RVNGPropertyList &/*propList*/)
+void OdsGenerator::openFooter(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Footer);
 	OdsGeneratorPrivate::State state=mpImpl->getState();
 	state.mbInHeaderFooter=true;
 	mpImpl->pushState(state);
-	ODFGEN_DEBUG_MSG(("OdsGenerator::openFooter ignored\n"));
+	if (mpImpl->mAuxiliarOdtState || mpImpl->mAuxiliarOdgState) return;
+
+	if (!mpImpl->mpCurrentPageSpan)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator::openFooter oops can not find the page span\n"));
+		return;
+	}
+	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
+	if (propList["librevenge:occurence"] && propList["librevenge:occurence"]->getStr() == "even")
+		mpImpl->mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);
+	else
+		mpImpl->mpCurrentPageSpan->setFooterContent(pHeaderFooterContentElements);
+	mpImpl->mpCurrentContentElements = pHeaderFooterContentElements;
 }
 
 void OdsGenerator::closeFooter()
 {
 	if (!mpImpl->close(OdsGeneratorPrivate::C_Footer)) return;
 	mpImpl->popState();
+	if (mpImpl->mAuxiliarOdtState || mpImpl->mAuxiliarOdgState) return;
+
+	if (!mpImpl->mpCurrentPageSpan) return;
+	mpImpl->mpCurrentContentElements = &(mpImpl->mBodyElements);
 }
 
 void OdsGenerator::openSection(const librevenge::RVNGPropertyList &propList)
