@@ -128,8 +128,9 @@ public:
 	// the odg state
 	struct OdgGeneratorState
 	{
-		OdgGeneratorState() : mContentElements(), mInternalHandler(&mContentElements), mGenerator(&mInternalHandler,ODF_FLAT_XML)
+		OdgGeneratorState() : mContentElements(), mInternalHandler(&mContentElements), mGenerator()
 		{
+			mGenerator.addDocumentHandler(&mInternalHandler,ODF_FLAT_XML);
 		}
 		~OdgGeneratorState()
 		{

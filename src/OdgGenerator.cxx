@@ -63,15 +63,37 @@ static librevenge::RVNGString doubleToString(const double value)
 class OdgGeneratorPrivate
 {
 public:
-	OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	OdgGeneratorPrivate();
 	~OdgGeneratorPrivate();
+	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType)
+	{
+		if (!pHandler)
+		{
+			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::addDocumentHandler: called without handler\n"));
+			return;
+		}
+		mDocumentStreamHandlers.push_back(pHandler);
+		mDocumentStreamTypes.push_back(streamType);
+	}
+
 	/** update a graphic style element */
 	void _updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style);
-	void _writeGraphicsStyle();
+	void _storeGraphicsStyle();
 	void _drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const librevenge::RVNGPropertyListVector &path);
+
 	//! returns the document type
-	std::string getDocumentType() const;
+	std::string getDocumentType(OdfStreamType streamType) const;
+	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
+	void _writeSettings(OdfDocumentHandler *pHandler);
+	void _writeStyles(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
+	void _writeMasterPages(OdfDocumentHandler *pHandler);
+	void _writePageLayouts(OdfDocumentHandler *pHandler);
+
+	std::vector<OdfDocumentHandler *>mDocumentStreamHandlers;
+	std::vector<OdfStreamType> mDocumentStreamTypes;
+
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
 
@@ -95,8 +117,6 @@ public:
 	// font styles
 	FontStyleManager mFontManager;
 
-	OdfDocumentHandler *mpHandler;
-
 	::librevenge::RVNGPropertyList mxStyle;
 	int miGradientIndex;
 	int miBitmapIndex;
@@ -108,8 +128,6 @@ public:
 	double mfWidth, mfMaxWidth;
 	double mfHeight, mfMaxHeight;
 
-	const OdfStreamType mxStreamType;
-
 	bool mbIsTextBox;
 	bool mbIsParagraph;
 	bool mbIsTextOnPath;
@@ -120,7 +138,8 @@ private:
 
 };
 
-OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType):
+OdgGeneratorPrivate::OdgGeneratorPrivate() :
+	mDocumentStreamHandlers(), mDocumentStreamTypes(),
 	mBodyElements(),
 	mGraphicsStrokeDashStyles(),
 	mGraphicsGradientStyles(),
@@ -132,7 +151,6 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mParagraphManager(),
 	mSpanManager(),
 	mFontManager(),
-	mpHandler(pHandler),
 	mxStyle(),
 	miGradientIndex(1),
 	miBitmapIndex(1),
@@ -145,7 +163,6 @@ OdgGeneratorPrivate::OdgGeneratorPrivate(OdfDocumentHandler *pHandler, const Odf
 	mfMaxWidth(0.0),
 	mfHeight(0.0),
 	mfMaxHeight(0.0),
-	mxStreamType(streamType),
 	mbIsTextBox(false),
 	mbIsParagraph(false),
 	mbIsTextOnPath(false)
@@ -208,9 +225,9 @@ OdgGeneratorPrivate::~OdgGeneratorPrivate()
 	mFontManager.clean();
 }
 
-std::string OdgGeneratorPrivate::getDocumentType() const
+std::string OdgGeneratorPrivate::getDocumentType(OdfStreamType streamType) const
 {
-	switch (mxStreamType)
+	switch (streamType)
 	{
 	case ODF_FLAT_XML:
 		return "office:document";
@@ -227,210 +244,218 @@ std::string OdgGeneratorPrivate::getDocumentType() const
 	}
 }
 
-OdgGenerator::OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType):
-	mpImpl(new OdgGeneratorPrivate(pHandler, streamType))
+void OdgGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
 {
-	mpImpl->mpHandler->startDocument();
-	TagOpenElement tmpOfficeDocumentContent(mpImpl->getDocumentType().c_str());
-	tmpOfficeDocumentContent.addAttribute("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
-	tmpOfficeDocumentContent.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
-	tmpOfficeDocumentContent.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
-	tmpOfficeDocumentContent.addAttribute("xmlns:draw", "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0");
-	tmpOfficeDocumentContent.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
-	tmpOfficeDocumentContent.addAttribute("xmlns:svg", "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0");
-	tmpOfficeDocumentContent.addAttribute("xmlns:fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
-	tmpOfficeDocumentContent.addAttribute("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0");
-	tmpOfficeDocumentContent.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
-	tmpOfficeDocumentContent.addAttribute("office:version", "1.0", true);
-	if (mpImpl->mxStreamType == ODF_FLAT_XML)
-		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");
-	tmpOfficeDocumentContent.write(mpImpl->mpHandler);
+	TagOpenElement("office:settings").write(pHandler);
+
+	TagOpenElement configItemSetOpenElement("config:config-item-set");
+	configItemSetOpenElement.addAttribute("config:name", "ooo:view-settings");
+	configItemSetOpenElement.write(pHandler);
+
+	TagOpenElement configItemOpenElement("config:config-item");
+
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaTop");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(pHandler);
+	pHandler->characters("0");
+	pHandler->endElement("config:config-item");
+
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaLeft");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(pHandler);
+	pHandler->characters("0");
+	pHandler->endElement("config:config-item");
+
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(pHandler);
+	librevenge::RVNGString sWidth;
+	sWidth.sprintf("%li", (unsigned long)(2540 * mfMaxWidth));
+	pHandler->characters(sWidth);
+	pHandler->endElement("config:config-item");
+
+	configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
+	configItemOpenElement.addAttribute("config:type", "int");
+	configItemOpenElement.write(pHandler);
+	librevenge::RVNGString sHeight;
+	sHeight.sprintf("%li", (unsigned long)(2540 * mfMaxHeight));
+	pHandler->characters(sHeight);
+	pHandler->endElement("config:config-item");
+
+	pHandler->endElement("config:config-item-set");
+
+	pHandler->endElement("office:settings");
+}
+
+void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
+{
+	TagOpenElement("office:automatic-styles").write(pHandler);
+
+	// CHECKME: previously, this part was not done in STYLES
+
+	// writing out the graphics automatic styles
+	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
+	        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
+		(*iterGraphicsAutomaticStyles)->write(pHandler);
+
+	mParagraphManager.write(pHandler);
+	mSpanManager.write(pHandler);
+
+	// CHECKME: previously, this part was not done in CONTENT
+	_writePageLayouts(pHandler);
+
+	pHandler->endElement("office:automatic-styles");
+}
+
+void OdgGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
+{
+	TagOpenElement("office:master-styles").write(pHandler);
+
+	for (std::vector<DocumentElement *>::const_iterator pageMasterIter = mPageMasterStyles.begin();
+	        pageMasterIter != mPageMasterStyles.end(); ++pageMasterIter)
+		(*pageMasterIter)->write(pHandler);
+	pHandler->endElement("office:master-styles");
+}
+
+void OdgGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
+{
+#ifdef MULTIPAGE_WORKAROUND
+	TagOpenElement tmpStylePageLayoutOpenElement("style:page-layout");
+	tmpStylePageLayoutOpenElement.addAttribute("style:name", "PM0");
+	tmpStylePageLayoutOpenElement.write(pHandler);
+
+	TagOpenElement tmpStylePageLayoutPropertiesOpenElement("style:page-layout-properties");
+	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-top", "0in");
+	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-bottom", "0in");
+	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-left", "0in");
+	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-right", "0in");
+	librevenge::RVNGString sValue;
+	sValue = doubleToString(mfMaxWidth);
+	sValue.append("in");
+	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-width", sValue);
+	sValue = doubleToString(mfMaxHeight);
+	sValue.append("in");
+	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-height", sValue);
+	tmpStylePageLayoutPropertiesOpenElement.addAttribute("style:print-orientation", "portrait");
+	tmpStylePageLayoutPropertiesOpenElement.write(pHandler);
+
+	pHandler->endElement("style:page-layout-properties");
+
+	pHandler->endElement("style:page-layout");
+
+	TagOpenElement tmpStyleStyleOpenElement("style:style");
+	tmpStyleStyleOpenElement.addAttribute("style:name", "dp1");
+	tmpStyleStyleOpenElement.addAttribute("style:family", "drawing-page");
+	tmpStyleStyleOpenElement.write(pHandler);
+
+	TagOpenElement tmpStyleDrawingPagePropertiesOpenElement("style:drawing-page-properties");
+	// tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:background-size", "border");
+	tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:fill", "none");
+	tmpStyleDrawingPagePropertiesOpenElement.write(pHandler);
+	pHandler->endElement("style:drawing-page-properties");
+
+	pHandler->endElement("style:style");
+#else
+	// writing out the page automatic styles
+	for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mPageAutomaticStyles.begin();
+	        iterPageAutomaticStyles != mPageAutomaticStyles.end(); ++iterPageAutomaticStyles)
+		(*iterPageAutomaticStyles)->write(pHandler);
+#endif
+
+}
+
+void OdgGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
+{
+	TagOpenElement("office:styles").write(pHandler);
+
+	for (std::vector<DocumentElement *>::const_iterator iterGraphicsStrokeDashStyles = mGraphicsStrokeDashStyles.begin();
+	        iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); ++iterGraphicsStrokeDashStyles)
+		(*iterGraphicsStrokeDashStyles)->write(pHandler);
+
+	for (std::vector<DocumentElement *>::const_iterator iterGraphicsGradientStyles = mGraphicsGradientStyles.begin();
+	        iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); ++iterGraphicsGradientStyles)
+		(*iterGraphicsGradientStyles)->write(pHandler);
+
+	for (std::vector<DocumentElement *>::const_iterator iterGraphicsBitmapStyles = mGraphicsBitmapStyles.begin();
+	        iterGraphicsBitmapStyles != mGraphicsBitmapStyles.end(); ++iterGraphicsBitmapStyles)
+		(*iterGraphicsBitmapStyles)->write(pHandler);
+
+	for (std::vector<DocumentElement *>::const_iterator iterGraphicsMarkerStyles = mGraphicsMarkerStyles.begin();
+	        iterGraphicsMarkerStyles != mGraphicsMarkerStyles.end(); ++iterGraphicsMarkerStyles)
+		(*iterGraphicsMarkerStyles)->write(pHandler);
+	pHandler->endElement("office:styles");
+}
+
+bool OdgGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
+{
+	pHandler->startDocument();
+
+	std::string const documentType=getDocumentType(streamType);
+	TagOpenElement docContentPropList(documentType.c_str());
+	docContentPropList.addAttribute("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
+	docContentPropList.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
+	docContentPropList.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
+	docContentPropList.addAttribute("xmlns:draw", "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0");
+	docContentPropList.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
+	docContentPropList.addAttribute("xmlns:svg", "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0");
+	docContentPropList.addAttribute("xmlns:fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
+	docContentPropList.addAttribute("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0");
+	docContentPropList.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
+	docContentPropList.addAttribute("office:version", "1.0", true);
+	if (streamType == ODF_FLAT_XML)
+		docContentPropList.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.graphics");
+	docContentPropList.write(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_SETTINGS_XML))
+		_writeSettings(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+		_writeStyles(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
+		mFontManager.writeFontsDeclaration(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
+		_writeAutomaticStyles(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+		_writeMasterPages(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
+		TagOpenElement("office:body").write(pHandler);
+		TagOpenElement("office:drawing").write(pHandler);
+
+		for (std::vector<DocumentElement *>::const_iterator bodyIter = mBodyElements.begin();
+		        bodyIter != mBodyElements.end(); ++bodyIter)
+			(*bodyIter)->write(pHandler);
+
+		pHandler->endElement("office:drawing");
+		pHandler->endElement("office:body");
+	}
+
+	pHandler->endElement(documentType.c_str());
+
+	pHandler->endDocument();
+	return true;
+}
+
+OdgGenerator::OdgGenerator() : mpImpl(new OdgGeneratorPrivate)
+{
 }
 
 OdgGenerator::~OdgGenerator()
 {
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_SETTINGS_XML))
-	{
-		TagOpenElement("office:settings").write(mpImpl->mpHandler);
-
-		TagOpenElement configItemSetOpenElement("config:config-item-set");
-		configItemSetOpenElement.addAttribute("config:name", "ooo:view-settings");
-		configItemSetOpenElement.write(mpImpl->mpHandler);
-
-		TagOpenElement configItemOpenElement("config:config-item");
-
-		configItemOpenElement.addAttribute("config:name", "VisibleAreaTop");
-		configItemOpenElement.addAttribute("config:type", "int");
-		configItemOpenElement.write(mpImpl->mpHandler);
-		mpImpl->mpHandler->characters("0");
-		mpImpl->mpHandler->endElement("config:config-item");
-
-		configItemOpenElement.addAttribute("config:name", "VisibleAreaLeft");
-		configItemOpenElement.addAttribute("config:type", "int");
-		configItemOpenElement.write(mpImpl->mpHandler);
-		mpImpl->mpHandler->characters("0");
-		mpImpl->mpHandler->endElement("config:config-item");
-
-		configItemOpenElement.addAttribute("config:name", "VisibleAreaWidth");
-		configItemOpenElement.addAttribute("config:type", "int");
-		configItemOpenElement.write(mpImpl->mpHandler);
-		librevenge::RVNGString sWidth;
-		sWidth.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxWidth));
-		mpImpl->mpHandler->characters(sWidth);
-		mpImpl->mpHandler->endElement("config:config-item");
-
-		configItemOpenElement.addAttribute("config:name", "VisibleAreaHeight");
-		configItemOpenElement.addAttribute("config:type", "int");
-		configItemOpenElement.write(mpImpl->mpHandler);
-		librevenge::RVNGString sHeight;
-		sHeight.sprintf("%li", (unsigned long)(2540 * mpImpl->mfMaxHeight));
-		mpImpl->mpHandler->characters(sHeight);
-		mpImpl->mpHandler->endElement("config:config-item");
-
-		mpImpl->mpHandler->endElement("config:config-item-set");
-
-		mpImpl->mpHandler->endElement("office:settings");
-	}
-
-
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
-	{
-		TagOpenElement("office:styles").write(mpImpl->mpHandler);
-
-		for (std::vector<DocumentElement *>::const_iterator iterGraphicsStrokeDashStyles = mpImpl->mGraphicsStrokeDashStyles.begin();
-		        iterGraphicsStrokeDashStyles != mpImpl->mGraphicsStrokeDashStyles.end(); ++iterGraphicsStrokeDashStyles)
-		{
-			(*iterGraphicsStrokeDashStyles)->write(mpImpl->mpHandler);
-		}
-
-		for (std::vector<DocumentElement *>::const_iterator iterGraphicsGradientStyles = mpImpl->mGraphicsGradientStyles.begin();
-		        iterGraphicsGradientStyles != mpImpl->mGraphicsGradientStyles.end(); ++iterGraphicsGradientStyles)
-		{
-			(*iterGraphicsGradientStyles)->write(mpImpl->mpHandler);
-		}
-
-		for (std::vector<DocumentElement *>::const_iterator iterGraphicsBitmapStyles = mpImpl->mGraphicsBitmapStyles.begin();
-		        iterGraphicsBitmapStyles != mpImpl->mGraphicsBitmapStyles.end(); ++iterGraphicsBitmapStyles)
-		{
-			(*iterGraphicsBitmapStyles)->write(mpImpl->mpHandler);
-		}
-
-		for (std::vector<DocumentElement *>::const_iterator iterGraphicsMarkerStyles = mpImpl->mGraphicsMarkerStyles.begin();
-		        iterGraphicsMarkerStyles != mpImpl->mGraphicsMarkerStyles.end(); ++iterGraphicsMarkerStyles)
-		{
-			(*iterGraphicsMarkerStyles)->write(mpImpl->mpHandler);
-		}
-		mpImpl->mpHandler->endElement("office:styles");
-	}
-
-
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
-	{
-		mpImpl->mFontManager.writeFontsDeclaration(mpImpl->mpHandler);
-
-		TagOpenElement("office:automatic-styles").write(mpImpl->mpHandler);
-	}
-
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML))
-	{
-		// writing out the graphics automatic styles
-		for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mpImpl->mGraphicsAutomaticStyles.begin();
-		        iterGraphicsAutomaticStyles != mpImpl->mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
-		{
-			(*iterGraphicsAutomaticStyles)->write(mpImpl->mpHandler);
-		}
-		mpImpl->mParagraphManager.write(mpImpl->mpHandler);
-		mpImpl->mSpanManager.write(mpImpl->mpHandler);
-	}
-#ifdef MULTIPAGE_WORKAROUND
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
-	{
-		TagOpenElement tmpStylePageLayoutOpenElement("style:page-layout");
-		tmpStylePageLayoutOpenElement.addAttribute("style:name", "PM0");
-		tmpStylePageLayoutOpenElement.write(mpImpl->mpHandler);
-
-		TagOpenElement tmpStylePageLayoutPropertiesOpenElement("style:page-layout-properties");
-		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-top", "0in");
-		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-bottom", "0in");
-		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-left", "0in");
-		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-right", "0in");
-		librevenge::RVNGString sValue;
-		sValue = doubleToString(mpImpl->mfMaxWidth);
-		sValue.append("in");
-		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-width", sValue);
-		sValue = doubleToString(mpImpl->mfMaxHeight);
-		sValue.append("in");
-		tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-height", sValue);
-		tmpStylePageLayoutPropertiesOpenElement.addAttribute("style:print-orientation", "portrait");
-		tmpStylePageLayoutPropertiesOpenElement.write(mpImpl->mpHandler);
-
-		mpImpl->mpHandler->endElement("style:page-layout-properties");
-
-		mpImpl->mpHandler->endElement("style:page-layout");
-
-		TagOpenElement tmpStyleStyleOpenElement("style:style");
-		tmpStyleStyleOpenElement.addAttribute("style:name", "dp1");
-		tmpStyleStyleOpenElement.addAttribute("style:family", "drawing-page");
-		tmpStyleStyleOpenElement.write(mpImpl->mpHandler);
-
-		TagOpenElement tmpStyleDrawingPagePropertiesOpenElement("style:drawing-page-properties");
-		// tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:background-size", "border");
-		tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:fill", "none");
-		tmpStyleDrawingPagePropertiesOpenElement.write(mpImpl->mpHandler);
-
-		mpImpl->mpHandler->endElement("style:drawing-page-properties");
-
-		mpImpl->mpHandler->endElement("style:style");
-	}
-#else
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
-	{
-		// writing out the page automatic styles
-		for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mpImpl->mPageAutomaticStyles.begin();
-		        iterPageAutomaticStyles != mpImpl->mPageAutomaticStyles.end(); ++iterPageAutomaticStyles)
-		{
-			(*iterPageAutomaticStyles)->write(mpImpl->mpHandler);
-		}
-	}
-#endif
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
-	{
-		mpImpl->mpHandler->endElement("office:automatic-styles");
-	}
-
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
-	{
-		TagOpenElement("office:master-styles").write(mpImpl->mpHandler);
-
-		for (std::vector<DocumentElement *>::const_iterator pageMasterIter = mpImpl->mPageMasterStyles.begin();
-		        pageMasterIter != mpImpl->mPageMasterStyles.end(); ++pageMasterIter)
-		{
-			(*pageMasterIter)->write(mpImpl->mpHandler);
-		}
-		mpImpl->mpHandler->endElement("office:master-styles");
-	}
-
-	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_CONTENT_XML))
-	{
-		TagOpenElement("office:body").write(mpImpl->mpHandler);
-
-		TagOpenElement("office:drawing").write(mpImpl->mpHandler);
-
-		for (std::vector<DocumentElement *>::const_iterator bodyIter = mpImpl->mBodyElements.begin();
-		        bodyIter != mpImpl->mBodyElements.end(); ++bodyIter)
-		{
-			(*bodyIter)->write(mpImpl->mpHandler);
-		}
-
-		mpImpl->mpHandler->endElement("office:drawing");
-		mpImpl->mpHandler->endElement("office:body");
-	}
-
-	mpImpl->mpHandler->endElement(mpImpl->getDocumentType().c_str());
-
-	mpImpl->mpHandler->endDocument();
-
+	// Write out the collected document
+	for (size_t i=0; i<mpImpl->mDocumentStreamHandlers.size(); ++i)
+		mpImpl->_writeTargetDocument(mpImpl->mDocumentStreamHandlers[i], mpImpl->mDocumentStreamTypes[i]);
 	delete mpImpl;
+}
+
+void OdgGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType)
+{
+	if (mpImpl)
+		mpImpl->addDocumentHandler(pHandler, streamType);
 }
 
 void OdgGenerator::startDocument(const librevenge::RVNGPropertyList &)
@@ -566,7 +591,7 @@ void OdgGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdgGenerator::drawRectangle: position undefined\n"));
 		return;
 	}
-	mpImpl->_writeGraphicsStyle();
+	mpImpl->_storeGraphicsStyle();
 	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
 	librevenge::RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
@@ -591,7 +616,7 @@ void OdgGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdgGenerator::drawEllipse: position undefined\n"));
 		return;
 	}
-	mpImpl->_writeGraphicsStyle();
+	mpImpl->_storeGraphicsStyle();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
 	librevenge::RVNGString sValue;
 	sValue.sprintf("gr%i", mpImpl->miGraphicsStyleIndex-1);
@@ -665,7 +690,7 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::librevenge::RVNGPropertyLis
 			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::_drawPolySomething: some vertices are not defined\n"));
 			return;
 		}
-		_writeGraphicsStyle();
+		_storeGraphicsStyle();
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
 		librevenge::RVNGString sValue;
 		sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
@@ -819,7 +844,7 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 
 
 	librevenge::RVNGString sValue;
-	_writeGraphicsStyle();
+	_storeGraphicsStyle();
 	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
 	sValue.sprintf("gr%i", miGraphicsStyleIndex-1);
 	pDrawPathElement->addAttribute("draw:style-name", sValue);
@@ -937,7 +962,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 		mpImpl->mxStyle.insert("draw:blue", propList["draw:blue"]->getStr());
 
 
-	mpImpl->_writeGraphicsStyle();
+	mpImpl->_storeGraphicsStyle();
 
 	double x = propList["svg:x"]->getDouble();
 	double y = propList["svg:y"]->getDouble();
@@ -1012,7 +1037,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
 }
 
-void OdgGeneratorPrivate::_writeGraphicsStyle()
+void OdgGeneratorPrivate::_storeGraphicsStyle()
 {
 	TagOpenElement *pStyleStyleElement = new TagOpenElement("style:style");
 	librevenge::RVNGString sValue;

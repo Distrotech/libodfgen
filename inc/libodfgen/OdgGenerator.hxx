@@ -39,8 +39,9 @@ class OdgGeneratorPrivate;
 class OdgGenerator : public librevenge::RVNGDrawingInterface
 {
 public:
-	OdgGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	OdgGenerator();
 	~OdgGenerator();
+	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 
 	void startPage(const librevenge::RVNGPropertyList &);
 	void endPage();
