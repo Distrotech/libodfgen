@@ -155,8 +155,7 @@ public:
 			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::addDocumentHandler: called without handler\n"));
 			return;
 		}
-		mDocumentStreamHandlers.push_back(pHandler);
-		mDocumentStreamTypes.push_back(streamType);
+		mDocumentStreamHandlers[streamType] = pHandler;
 	}
 	//
 	// command gestion
@@ -355,8 +354,7 @@ public:
 		return miObjectNumber++;
 	}
 
-	std::vector<OdfDocumentHandler *>mDocumentStreamHandlers;
-	std::vector<OdfStreamType> mDocumentStreamTypes;
+	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
 
 	std::stack<Command> mCommandStack;
 	std::stack<State> mStateStack;
@@ -426,16 +424,13 @@ std::string OdsGeneratorPrivate::getDocumentType(OdfStreamType streamType)
 }
 
 OdsGeneratorPrivate::OdsGeneratorPrivate() :
-	mDocumentStreamHandlers(), mDocumentStreamTypes(),
-	mCommandStack(), mStateStack(), mListMap(), miObjectNumber(0),
-
+	mDocumentStreamHandlers(), mCommandStack(),
+	mStateStack(), mListMap(), miObjectNumber(0),
 	mParagraphManager(), mSpanManager(), mFontManager(),
 	mObjectHandlers(), mAuxiliarOdtState(), mAuxiliarOdgState(),
-
-	mSheetManager(),
-	mFrameStyles(), mFrameAutomaticStyles(), mFrameIdMap(),
-	mMetaData(),
-	mBodyElements(), mpCurrentContentElements(&mBodyElements),
+	mSheetManager(), mFrameStyles(), mFrameAutomaticStyles(),
+	mFrameIdMap(), mMetaData(), mBodyElements(),
+	mpCurrentContentElements(&mBodyElements),
 	mPageSpans(), mpCurrentPageSpan(0),	miNumPageStyles(0)
 {
 	mStateStack.push(State());
@@ -1951,8 +1946,9 @@ void OdsGenerator::endDocument()
 
 	if (!mpImpl->close(OdsGeneratorPrivate::C_Document)) return;
 	// Write out the collected document
-	for (size_t i=0; i<mpImpl->mDocumentStreamHandlers.size(); ++i)
-		mpImpl->_writeTargetDocument(mpImpl->mDocumentStreamHandlers[i], mpImpl->mDocumentStreamTypes[i]);
+	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
+	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
+		mpImpl->_writeTargetDocument(iter->second, iter->first);
 }
 
 void OdsGenerator::startGraphic(const ::librevenge::RVNGPropertyList &propList)
