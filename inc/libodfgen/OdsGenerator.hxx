@@ -41,9 +41,10 @@ class OdsGeneratorPrivate;
 class OdsGenerator : public librevenge::RVNGSpreadsheetInterface
 {
 public:
-	OdsGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	OdsGenerator();
 	~OdsGenerator();
 
+	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
 	void startDocument();
 	void endDocument();

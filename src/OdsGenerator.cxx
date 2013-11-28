@@ -146,9 +146,18 @@ public:
 		OdgGenerator mGenerator;
 	};
 
-	OdsGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	OdsGeneratorPrivate();
 	~OdsGeneratorPrivate();
-
+	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType)
+	{
+		if (!pHandler)
+		{
+			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::addDocumentHandler: called without handler\n"));
+			return;
+		}
+		mDocumentStreamHandlers.push_back(pHandler);
+		mDocumentStreamTypes.push_back(streamType);
+	}
 	//
 	// command gestion
 	//
@@ -332,10 +341,12 @@ public:
 		mAuxiliarOdgState.reset();
 	}
 
+	static std::string getDocumentType(OdfStreamType streamType);
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
-	bool _writeTargetDocument(OdfDocumentHandler *pHandler);
-	void _writeDefaultStyles(OdfDocumentHandler *pHandler);
+	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
+	void _writeStyles(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, bool includePageLayout);
 
 	OdfEmbeddedObject _findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType);
 
@@ -344,8 +355,8 @@ public:
 		return miObjectNumber++;
 	}
 
-	OdfDocumentHandler *mpHandler;
-	const OdfStreamType mxStreamType;
+	std::vector<OdfDocumentHandler *>mDocumentStreamHandlers;
+	std::vector<OdfStreamType> mDocumentStreamTypes;
 
 	std::stack<Command> mCommandStack;
 	std::stack<State> mStateStack;
@@ -395,8 +406,27 @@ private:
 
 };
 
-OdsGeneratorPrivate::OdsGeneratorPrivate(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
-	mpHandler(pHandler), mxStreamType(streamType),
+std::string OdsGeneratorPrivate::getDocumentType(OdfStreamType streamType)
+{
+	switch (streamType)
+	{
+	case ODF_FLAT_XML:
+		return "office:document";
+	case ODF_CONTENT_XML:
+		return "office:document-content";
+	case ODF_STYLES_XML:
+		return "office:document-styles";
+	case ODF_SETTINGS_XML:
+		return "office:document-settings";
+	case ODF_META_XML:
+		return "office:document-meta";
+	default:
+		return "office:document";
+	}
+}
+
+OdsGeneratorPrivate::OdsGeneratorPrivate() :
+	mDocumentStreamHandlers(), mDocumentStreamTypes(),
 	mCommandStack(), mStateStack(), mListMap(), miObjectNumber(0),
 
 	mParagraphManager(), mSpanManager(), mFontManager(),
@@ -481,7 +511,18 @@ OdfEmbeddedObject OdsGeneratorPrivate::_findEmbeddedObjectHandler(const libreven
 
 void OdsGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 {
-	TagOpenElement("office:master-styles").write(mpHandler);
+	TagOpenElement("office:master-styles").write(pHandler);
+
+	static char const *(s_default[2*2]) = { "Standard", "PM0", "Endnote", "PM1" };
+	for (int i=0; i < 2; ++i)
+	{
+		TagOpenElement pageOpenElement("style:master-page");
+		pageOpenElement.addAttribute("style:name", s_default[2*i]);
+		pageOpenElement.addAttribute("style:page-layout-name", s_default[2*i+1]);
+		pageOpenElement.write(pHandler);
+		pHandler->endElement("style:master-page");
+	}
+
 	int pageNumber = 1;
 	for (unsigned int i=0; i<mPageSpans.size(); ++i)
 	{
@@ -495,14 +536,44 @@ void OdsGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 
 void OdsGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 {
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
+	for (int i=0; i < 2; ++i)
 	{
-		mPageSpans[i]->writePageLayout((int)i, pHandler);
+		TagOpenElement layout("style:page-layout");
+		layout.addAttribute("style:name", i==0 ? "PM0" : "PM1");
+		layout.write(pHandler);
+
+		TagOpenElement layoutProperties("style:page-layout-properties");
+		layoutProperties.addAttribute("fo:margin-bottom", "1in");
+		layoutProperties.addAttribute("fo:margin-left", "1in");
+		layoutProperties.addAttribute("fo:margin-right", "1in");
+		layoutProperties.addAttribute("fo:margin-top", "1in");
+		layoutProperties.addAttribute("fo:page-height", "11in");
+		layoutProperties.addAttribute("fo:page-width", "8.5in");
+		layoutProperties.addAttribute("style:print-orientation", "portrait");
+		layoutProperties.write(pHandler);
+
+		TagOpenElement footnoteSep("style:footnote-sep");
+		footnoteSep.addAttribute("style:adjustment","left");
+		footnoteSep.addAttribute("style:color","#000000");
+		footnoteSep.addAttribute("style:rel-width","25%");
+		if (i==0)
+		{
+			footnoteSep.addAttribute("style:distance-after-sep","0.0398in");
+			footnoteSep.addAttribute("style:distance-before-sep","0.0398in");
+			footnoteSep.addAttribute("style:width","0.0071in");
+		}
+		footnoteSep.write(pHandler);
+		TagCloseElement("style:footnote-sep").write(pHandler);
+		TagCloseElement("style:page-layout-properties").write(pHandler);
+
+		TagCloseElement("style:page-layout").write(pHandler);
 	}
+
+	for (unsigned int i=0; i<mPageSpans.size(); ++i)
+		mPageSpans[i]->writePageLayout((int)i, pHandler);
 }
 
-OdsGenerator::OdsGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType) :
-	mpImpl(new OdsGeneratorPrivate(pHandler, streamType))
+OdsGenerator::OdsGenerator() : mpImpl(new OdsGeneratorPrivate())
 {
 }
 
@@ -512,33 +583,78 @@ OdsGenerator::~OdsGenerator()
 		delete mpImpl;
 }
 
-void OdsGeneratorPrivate::_writeDefaultStyles(OdfDocumentHandler *pHandler)
+void OdsGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType)
+{
+	if (mpImpl)
+		mpImpl->addDocumentHandler(pHandler, streamType);
+}
+
+void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, bool includePageLayout)
+{
+	TagOpenElement("office:automatic-styles").write(pHandler);
+	for (std::vector<DocumentElement *>::const_iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
+	        iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); ++iterFrameAutomaticStyles)
+		(*iterFrameAutomaticStyles)->write(pHandler);
+	if (includePageLayout)
+		_writePageLayouts(pHandler);
+	mFontManager.write(pHandler); // do nothing
+	mParagraphManager.write(pHandler);
+	mSpanManager.write(pHandler);
+	mSheetManager.write(pHandler);
+
+	pHandler->endElement("office:automatic-styles");
+}
+
+void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
 
+	// style:default-style
+
+	// paragraph
 	TagOpenElement defaultParagraphStyleOpenElement("style:default-style");
 	defaultParagraphStyleOpenElement.addAttribute("style:family", "paragraph");
 	defaultParagraphStyleOpenElement.write(pHandler);
-
 	TagOpenElement defaultParagraphStylePropertiesOpenElement("style:paragraph-properties");
 	defaultParagraphStylePropertiesOpenElement.addAttribute("style:tab-stop-distance", "0.5in");
+	defaultParagraphStylePropertiesOpenElement.addAttribute("style:text-autospace", "ideograph-alpha");
+	defaultParagraphStylePropertiesOpenElement.addAttribute("style:punctuation-wrap", "hanging");
+	defaultParagraphStylePropertiesOpenElement.addAttribute("style:writing-mode", "page");
 	defaultParagraphStylePropertiesOpenElement.write(pHandler);
-	TagCloseElement defaultParagraphStylePropertiesCloseElement("style:paragraph-properties");
-	defaultParagraphStylePropertiesCloseElement.write(pHandler);
-
+	pHandler->endElement("style:paragraph-properties");
 	pHandler->endElement("style:default-style");
 
+	// table
+	TagOpenElement defaultTableStyleOpenElement("style:default-style");
+	defaultTableStyleOpenElement.addAttribute("style:family", "table");
+	defaultTableStyleOpenElement.write(pHandler);
+	pHandler->endElement("style:default-style");
+
+	// table-row
 	TagOpenElement defaultTableRowStyleOpenElement("style:default-style");
 	defaultTableRowStyleOpenElement.addAttribute("style:family", "table-row");
 	defaultTableRowStyleOpenElement.write(pHandler);
-
 	TagOpenElement defaultTableRowPropertiesOpenElement("style:table-row-properties");
 	defaultTableRowPropertiesOpenElement.addAttribute("fo:keep-together", "auto");
 	defaultTableRowPropertiesOpenElement.write(pHandler);
-
 	pHandler->endElement("style:table-row-properties");
 	pHandler->endElement("style:default-style");
 
+	// table-column
+	TagOpenElement defaultTableColumnStyleOpenElement("style:default-style");
+	defaultTableColumnStyleOpenElement.addAttribute("style:family", "table-column");
+	defaultTableColumnStyleOpenElement.write(pHandler);
+	pHandler->endElement("style:default-style");
+
+	// table-cell
+	TagOpenElement defaultTableCellStyleOpenElement("style:default-style");
+	defaultTableCellStyleOpenElement.addAttribute("style:family", "table-cell");
+	defaultTableCellStyleOpenElement.write(pHandler);
+	pHandler->endElement("style:default-style");
+
+	// basic style
+
+	// paragraph Standard
 	TagOpenElement standardStyleOpenElement("style:style");
 	standardStyleOpenElement.addAttribute("style:name", "Standard");
 	standardStyleOpenElement.addAttribute("style:family", "paragraph");
@@ -546,32 +662,49 @@ void OdsGeneratorPrivate::_writeDefaultStyles(OdfDocumentHandler *pHandler)
 	standardStyleOpenElement.write(pHandler);
 	pHandler->endElement("style:style");
 
-	TagOpenElement textBodyStyleOpenElement("style:style");
-	textBodyStyleOpenElement.addAttribute("style:name", "Text_Body");
-	textBodyStyleOpenElement.addAttribute("style:display-name", "Text Body");
-	textBodyStyleOpenElement.addAttribute("style:family", "paragraph");
-	textBodyStyleOpenElement.addAttribute("style:parent-style-name", "Standard");
-	textBodyStyleOpenElement.addAttribute("style:class", "text");
-	textBodyStyleOpenElement.write(pHandler);
-	pHandler->endElement("style:style");
+	static char const *(s_paraStyle[4*10]) =
+	{
+		"Text_Body", "Text Body", "Standard", "text",
+		"Table_Contents", "Table Contents", "Text_Body", "extra",
+		"Table_Heading", "Table Heading", "Table_Contents", "extra",
+		"List", "List", "Text_Body", "list",
+		"Header", "Header", "Standard", "extra",
+		"Footer", "Footer", "Standard", "extra",
+		"Caption", "Caption", "Standard", "extra",
+		"Footnote", "Footnote", "Standard", "extra",
+		"Endnote", "Endnote", "Standard", "extra",
+		"Index", "Index", "Standard", "extra"
+	};
+	for (int i=0; i<10; ++i)
+	{
+		TagOpenElement paraOpenElement("style:style");
+		paraOpenElement.addAttribute("style:name", s_paraStyle[4*i]);
+		paraOpenElement.addAttribute("style:display-name", s_paraStyle[4*i+1]);
+		paraOpenElement.addAttribute("style:family", "paragraph");
+		paraOpenElement.addAttribute("style:parent-style-name", s_paraStyle[4*i+2]);
+		paraOpenElement.addAttribute("style:class", s_paraStyle[4*i+3]);
+		paraOpenElement.write(pHandler);
+		pHandler->endElement("style:style");
+	}
 
-	TagOpenElement tableContentsStyleOpenElement("style:style");
-	tableContentsStyleOpenElement.addAttribute("style:name", "Table_Contents");
-	tableContentsStyleOpenElement.addAttribute("style:display-name", "Table Contents");
-	tableContentsStyleOpenElement.addAttribute("style:family", "paragraph");
-	tableContentsStyleOpenElement.addAttribute("style:parent-style-name", "Text_Body");
-	tableContentsStyleOpenElement.addAttribute("style:class", "extra");
-	tableContentsStyleOpenElement.write(pHandler);
-	pHandler->endElement("style:style");
-
-	TagOpenElement tableHeadingStyleOpenElement("style:style");
-	tableHeadingStyleOpenElement.addAttribute("style:name", "Table_Heading");
-	tableHeadingStyleOpenElement.addAttribute("style:display-name", "Table Heading");
-	tableHeadingStyleOpenElement.addAttribute("style:family", "paragraph");
-	tableHeadingStyleOpenElement.addAttribute("style:parent-style-name", "Table_Contents");
-	tableHeadingStyleOpenElement.addAttribute("style:class", "extra");
-	tableHeadingStyleOpenElement.write(pHandler);
-	pHandler->endElement("style:style");
+	static char const *(s_textStyle[2*4])=
+	{
+		"Footnote_Symbol", "Footnote Symbol", "Endnote_Symbol", "Endnote Symbol",
+		"Footnote_anchor", "Footnote anchor", "Endnote_anchor", "Endnote anchor"
+	};
+	for (int i=0; i<4; ++i)
+	{
+		TagOpenElement textOpenElement("style:style");
+		textOpenElement.addAttribute("style:name", s_textStyle[2*i]);
+		textOpenElement.addAttribute("style:display-name", s_textStyle[2*i]);
+		textOpenElement.addAttribute("style:family", "text");
+		textOpenElement.write(pHandler);
+		TagOpenElement textPropertiesOpenElement("style:text-properties");
+		textPropertiesOpenElement.addAttribute("style:text-position", "super 58%");
+		textPropertiesOpenElement.write(pHandler);
+		pHandler->endElement("style:text-properties");
+		pHandler->endElement("style:style");
+	}
 
 	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
 	        iter != mFrameStyles.end(); ++iter)
@@ -580,14 +713,16 @@ void OdsGeneratorPrivate::_writeDefaultStyles(OdfDocumentHandler *pHandler)
 	pHandler->endElement("office:styles");
 }
 
-bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
+bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
-	ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Printing out the header stuff..\n"));
+	pHandler->startDocument();
 
-	ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Start Document\n"));
-	mpHandler->startDocument();
+	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: preamble\n"));
+	}
 
-	ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: preamble\n"));
+	std::string const documentType=getDocumentType(streamType);
 	librevenge::RVNGPropertyList docContentPropList;
 	docContentPropList.insert("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	docContentPropList.insert("xmlns:meta", "urn:oasis:names:tc:opendocument:xmlns:meta:1.0");
@@ -611,65 +746,58 @@ bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler)
 	docContentPropList.insert("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
 	docContentPropList.insert("xmlns:calcext","urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0");
 	docContentPropList.insert("office:version", librevenge::RVNGPropertyFactory::newStringProp("1.2"));
-	if (mxStreamType == ODF_FLAT_XML)
-	{
+	if (streamType == ODF_FLAT_XML)
 		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.spreadsheet");
-		mpHandler->startElement("office:document", docContentPropList);
-	}
-	else
-		mpHandler->startElement("office:document-content", docContentPropList);
+	pHandler->startElement(documentType.c_str(), docContentPropList);
 
-	// write out the metadata
-	TagOpenElement("office:meta").write(mpHandler);
-	for (std::vector<DocumentElement *>::const_iterator iterMetaData = mMetaData.begin(); iterMetaData != mMetaData.end(); ++iterMetaData)
+	if (streamType == ODF_FLAT_XML || streamType == ODF_META_XML)
 	{
-		(*iterMetaData)->write(mpHandler);
+		// write out the metadata
+		TagOpenElement("office:meta").write(pHandler);
+		for (std::vector<DocumentElement *>::const_iterator iterMetaData = mMetaData.begin(); iterMetaData != mMetaData.end(); ++iterMetaData)
+			(*iterMetaData)->write(pHandler);
+		pHandler->endElement("office:meta");
 	}
-	mpHandler->endElement("office:meta");
 
 	// write out the font styles
-	mFontManager.writeFontsDeclaration(mpHandler);
-
-	ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Writing out the styles..\n"));
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
+		mFontManager.writeFontsDeclaration(pHandler);
 
 	// write default styles
-	_writeDefaultStyles(mpHandler);
-
-	TagOpenElement("office:automatic-styles").write(mpHandler);
-
-	for (std::vector<DocumentElement *>::const_iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
-	        iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); ++iterFrameAutomaticStyles)
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
 	{
-		(*iterFrameAutomaticStyles)->write(pHandler);
+		ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Writing out the styles..\n"));
+		_writeStyles(pHandler);
 	}
-
-	mFontManager.write(pHandler); // do nothing
-	mParagraphManager.write(pHandler);
-	mSpanManager.write(pHandler);
-	mSheetManager.write(pHandler);
-
-	_writePageLayouts(pHandler);
-	pHandler->endElement("office:automatic-styles");
-	// writing out the page masters
-	_writeMasterPages(pHandler);
-
-	ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Writing out the document..\n"));
-	// writing out the document
-	TagOpenElement("office:body").write(mpHandler);
-	TagOpenElement("office:spreadsheet").write(mpHandler);
-
-	for (std::vector<DocumentElement *>::const_iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); ++iterBodyElements)
+	if (streamType == ODF_STYLES_XML)
 	{
-		(*iterBodyElements)->write(pHandler);
+		TagOpenElement("office:automatic-styles").write(pHandler);
+		_writePageLayouts(pHandler);
+		pHandler->endElement("office:automatic-styles");
 	}
-	ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Finished writing all doc els..\n"));
+	// writing automatic style
+	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
+		_writeAutomaticStyles(pHandler, streamType == ODF_FLAT_XML);
 
-	pHandler->endElement("office:spreadsheet");
-	pHandler->endElement("office:body");
-	if (mxStreamType == ODF_FLAT_XML)
-		pHandler->endElement("office:document");
-	else
-		pHandler->endElement("office:document-content");
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
+		// writing out the page masters
+		_writeMasterPages(pHandler);
+
+	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Writing out the document..\n"));
+		// writing out the document
+		TagOpenElement("office:body").write(pHandler);
+		TagOpenElement("office:spreadsheet").write(pHandler);
+
+		for (std::vector<DocumentElement *>::const_iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); ++iterBodyElements)
+			(*iterBodyElements)->write(pHandler);
+
+		pHandler->endElement("office:spreadsheet");
+		pHandler->endElement("office:body");
+		ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Finished writing all doc els..\n"));
+	}
+	pHandler->endElement(documentType.c_str());
 
 	pHandler->endDocument();
 
@@ -1830,7 +1958,8 @@ void OdsGenerator::endDocument()
 
 	if (!mpImpl->close(OdsGeneratorPrivate::C_Document)) return;
 	// Write out the collected document
-	mpImpl->_writeTargetDocument(mpImpl->mpHandler);
+	for (size_t i=0; i<mpImpl->mDocumentStreamHandlers.size(); ++i)
+		mpImpl->_writeTargetDocument(mpImpl->mDocumentStreamHandlers[i], mpImpl->mDocumentStreamTypes[i]);
 }
 
 void OdsGenerator::startGraphic(const ::librevenge::RVNGPropertyList &propList)
