@@ -16,7 +16,7 @@ EXTRA_DIST = \
 	autogen.sh \
 	config.h.in \
 	libodfgen.pc.in \
-	NEWS README COPYING.MPL COPYING.LGPL
+	AUTHORS NEWS README COPYING.MPL COPYING.LGPL
 
 distclean-local:
 	rm -rf *.cache *~ *.out *.pc
