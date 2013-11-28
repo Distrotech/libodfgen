@@ -346,7 +346,7 @@ public:
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeStyles(OdfDocumentHandler *pHandler);
-	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, bool includePageLayout);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
 
 	OdfEmbeddedObject _findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType);
 
@@ -589,14 +589,13 @@ void OdsGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStr
 		mpImpl->addDocumentHandler(pHandler, streamType);
 }
 
-void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, bool includePageLayout)
+void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
 	for (std::vector<DocumentElement *>::const_iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
 	        iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); ++iterFrameAutomaticStyles)
 		(*iterFrameAutomaticStyles)->write(pHandler);
-	if (includePageLayout)
-		_writePageLayouts(pHandler);
+	_writePageLayouts(pHandler);
 	mFontManager.write(pHandler); // do nothing
 	mParagraphManager.write(pHandler);
 	mSpanManager.write(pHandler);
@@ -769,15 +768,9 @@ bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 		ODFGEN_DEBUG_MSG(("OdsGenerator: Document Body: Writing out the styles..\n"));
 		_writeStyles(pHandler);
 	}
-	if (streamType == ODF_STYLES_XML)
-	{
-		TagOpenElement("office:automatic-styles").write(pHandler);
-		_writePageLayouts(pHandler);
-		pHandler->endElement("office:automatic-styles");
-	}
 	// writing automatic style
-	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
-		_writeAutomaticStyles(pHandler, streamType == ODF_FLAT_XML);
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
+		_writeAutomaticStyles(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
 		// writing out the page masters
