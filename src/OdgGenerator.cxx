@@ -69,7 +69,7 @@ public:
 	{
 		if (!pHandler)
 		{
-			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::addDocumentHandler: called without handler\n"));
+			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::addDocumentHandler: called without handler\n"));
 			return;
 		}
 		mDocumentStreamHandlers.push_back(pHandler);

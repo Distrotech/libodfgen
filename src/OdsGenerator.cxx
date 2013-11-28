@@ -344,9 +344,9 @@ public:
 	}
 
 	static std::string getDocumentType(OdfStreamType streamType);
+	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
-	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeStyles(OdfDocumentHandler *pHandler);
 	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
 
