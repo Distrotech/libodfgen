@@ -106,8 +106,9 @@ public:
 	// the odt state
 	struct OdtGeneratorState
 	{
-		OdtGeneratorState() : mContentElements(), mInternalHandler(&mContentElements), mGenerator(&mInternalHandler,ODF_FLAT_XML)
+		OdtGeneratorState() : mContentElements(), mInternalHandler(&mContentElements), mGenerator()
 		{
+			mGenerator.addDocumentHandler(&mInternalHandler,ODF_FLAT_XML);
 		}
 		~OdtGeneratorState()
 		{
@@ -772,8 +773,8 @@ bool OdsGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
 		_writeAutomaticStyles(pHandler);
 
+	// writing out the page masters
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
-		// writing out the page masters
 		_writeMasterPages(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)

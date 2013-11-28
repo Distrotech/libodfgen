@@ -41,8 +41,9 @@ class OdtGeneratorPrivate;
 class OdtGenerator : public librevenge::RVNGTextInterface
 {
 public:
-	OdtGenerator(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	OdtGenerator();
 	~OdtGenerator();
+	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
 	void startDocument();
