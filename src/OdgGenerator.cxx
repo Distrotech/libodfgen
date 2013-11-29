@@ -444,10 +444,6 @@ OdgGenerator::OdgGenerator() : mpImpl(new OdgGeneratorPrivate)
 
 OdgGenerator::~OdgGenerator()
 {
-	// Write out the collected document
-	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
-	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
-		mpImpl->_writeTargetDocument(iter->second, iter->first);
 	delete mpImpl;
 }
 
@@ -463,6 +459,10 @@ void OdgGenerator::startDocument(const librevenge::RVNGPropertyList &)
 
 void OdgGenerator::endDocument()
 {
+	// Write out the collected document
+	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
+	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
+		mpImpl->_writeTargetDocument(iter->second, iter->first);
 }
 
 void OdgGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &)
