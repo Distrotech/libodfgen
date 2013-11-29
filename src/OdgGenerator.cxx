@@ -407,11 +407,11 @@ bool OdgGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_SETTINGS_XML))
 		_writeSettings(pHandler);
 
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
-		_writeStyles(pHandler);
-
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
 		mFontManager.writeFontsDeclaration(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+		_writeStyles(pHandler);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
 		_writeAutomaticStyles(pHandler, streamType);

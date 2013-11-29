@@ -516,11 +516,11 @@ bool OdpGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_SETTINGS_XML))
 		_writeSettings(pHandler);
 
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
-		_writeStyles(pHandler);
-
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
 		mFontManager.writeFontsDeclaration(pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+		_writeStyles(pHandler);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
 		_writeAutomaticStyles(pHandler);
@@ -553,10 +553,6 @@ OdpGenerator::OdpGenerator(): mpImpl(new OdpGeneratorPrivate)
 
 OdpGenerator::~OdpGenerator()
 {
-	// Write out the collected document
-	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
-	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
-		mpImpl->_writeTargetDocument(iter->second, iter->first);
 	delete mpImpl;
 }
 
@@ -572,6 +568,10 @@ void OdpGenerator::startDocument(const ::librevenge::RVNGPropertyList &/*propLis
 
 void OdpGenerator::endDocument()
 {
+	// Write out the collected document
+	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
+	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
+		mpImpl->_writeTargetDocument(iter->second, iter->first);
 }
 
 void OdpGenerator::setDocumentMetaData(const ::librevenge::RVNGPropertyList &/*propList*/)

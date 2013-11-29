@@ -471,8 +471,19 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:text-properties");
 		pHandler->endElement("style:style");
 	}
-#if 0
-	// set previously in wpd2odt but odf-validator tells that this is incorrect...
+	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
+	        iter != mFrameStyles.end(); ++iter)
+		(*iter)->write(pHandler);
+
+	TagOpenElement lineOpenElement("text:linenumbering-configuration");
+	lineOpenElement.addAttribute("text:number-lines", "false");
+	lineOpenElement.addAttribute("text:number-position", "left");
+	lineOpenElement.addAttribute("text:increment", "5");
+	lineOpenElement.addAttribute("text:offset", "0.1965in");
+	lineOpenElement.addAttribute("style:num-format", "1");
+	lineOpenElement.write(pHandler);
+	pHandler->endElement("text:linenumbering-configuration");
+
 	static char const *(s_noteConfig[4*2])=
 	{
 		"footnote", "Footnote_Symbol", "Footnote_anchor", "1",
@@ -496,19 +507,6 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		noteOpenElement.write(pHandler);
 		pHandler->endElement("text:notes-configuration");
 	}
-#endif
-	TagOpenElement lineOpenElement("text:linenumbering-configuration");
-	lineOpenElement.addAttribute("text:number-lines", "false");
-	lineOpenElement.addAttribute("text:number-position", "left");
-	lineOpenElement.addAttribute("text:increment", "5");
-	lineOpenElement.addAttribute("text:offset", "0.1965in");
-	lineOpenElement.addAttribute("style:num-format", "1");
-	lineOpenElement.write(pHandler);
-	pHandler->endElement("text:linenumbering-configuration");
-
-	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
-	        iter != mFrameStyles.end(); ++iter)
-		(*iter)->write(pHandler);
 
 	pHandler->endElement("office:styles");
 }
@@ -603,13 +601,13 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	docContentPropList.insert("xmlns:form", "urn:oasis:names:tc:opendocument:xmlns:form:1.0");
 	docContentPropList.insert("xmlns:script", "urn:oasis:names:tc:opendocument:xmlns:script:1.0");
 	docContentPropList.insert("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
-	docContentPropList.insert("office:version", librevenge::RVNGPropertyFactory::newStringProp("1.0"));
+	docContentPropList.insert("office:version", librevenge::RVNGPropertyFactory::newStringProp("1.1"));
 	if (streamType == ODF_FLAT_XML)
 		docContentPropList.insert("office:mimetype", "application/vnd.oasis.opendocument.text");
 	pHandler->startElement(documentType.c_str(), docContentPropList);
 
 	// write out the metadata
-	if (streamType == ODF_FLAT_XML || streamType == ODF_META_XML || streamType == ODF_CONTENT_XML) // REMOVE ODF_CONTENT_XML
+	if (streamType == ODF_FLAT_XML || streamType == ODF_META_XML)
 	{
 		TagOpenElement("office:meta").write(pHandler);
 		for (std::vector<DocumentElement *>::const_iterator iterMetaData = mMetaData.begin(); iterMetaData != mMetaData.end(); ++iterMetaData)
@@ -618,19 +616,19 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	}
 
 	// write out the font styles
-	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML) // REMOVE ODF_CONTENT_XML
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
 		mFontManager.writeFontsDeclaration(pHandler);
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Writing out the styles..\n"));
 
 	// write default styles
-	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML) // REMOVE ODF_CONTENT_XML
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
 		_writeStyles(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
 		_writeAutomaticStyles(pHandler);
 
-	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML) // REMOVE ODF_CONTENT_XML
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
 		_writeMasterPages(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
