@@ -616,7 +616,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	}
 
 	// write out the font styles
-	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
+	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
 		mFontManager.writeFontsDeclaration(pHandler);
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Writing out the styles..\n"));
