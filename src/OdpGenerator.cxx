@@ -133,11 +133,10 @@ public:
 	{
 		if (!pHandler)
 		{
-			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::addDocumentHandler: called without handler\n"));
+			ODFGEN_DEBUG_MSG(("OdpGeneratorPrivate::addDocumentHandler: called without handler\n"));
 			return;
 		}
-		mDocumentStreamHandlers.push_back(pHandler);
-		mDocumentStreamTypes.push_back(streamType);
+		mDocumentStreamHandlers[streamType] = pHandler;
 	}
 
 	/** update a graphic style element */
@@ -158,8 +157,7 @@ public:
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
-	std::vector<OdfDocumentHandler *>mDocumentStreamHandlers;
-	std::vector<OdfStreamType> mDocumentStreamTypes;
+	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
 
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
@@ -211,7 +209,7 @@ private:
 };
 
 OdpGeneratorPrivate::OdpGeneratorPrivate() :
-	mDocumentStreamHandlers(), mDocumentStreamTypes(),
+	mDocumentStreamHandlers(),
 	mBodyElements(),
 	mGraphicsStrokeDashStyles(),
 	mGraphicsGradientStyles(),
@@ -556,8 +554,9 @@ OdpGenerator::OdpGenerator(): mpImpl(new OdpGeneratorPrivate)
 OdpGenerator::~OdpGenerator()
 {
 	// Write out the collected document
-	for (size_t i=0; i<mpImpl->mDocumentStreamHandlers.size(); ++i)
-		mpImpl->_writeTargetDocument(mpImpl->mDocumentStreamHandlers[i], mpImpl->mDocumentStreamTypes[i]);
+	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
+	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
+		mpImpl->_writeTargetDocument(iter->second, iter->first);
 	delete mpImpl;
 }
 

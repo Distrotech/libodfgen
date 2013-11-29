@@ -72,8 +72,7 @@ public:
 			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::addDocumentHandler: called without handler\n"));
 			return;
 		}
-		mDocumentStreamHandlers.push_back(pHandler);
-		mDocumentStreamTypes.push_back(streamType);
+		mDocumentStreamHandlers[streamType] = pHandler;
 	}
 
 	/** update a graphic style element */
@@ -87,12 +86,11 @@ public:
 	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeSettings(OdfDocumentHandler *pHandler);
 	void _writeStyles(OdfDocumentHandler *pHandler);
-	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
-	std::vector<OdfDocumentHandler *>mDocumentStreamHandlers;
-	std::vector<OdfStreamType> mDocumentStreamTypes;
+	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
 
 	// body elements
 	std::vector <DocumentElement *> mBodyElements;
@@ -139,7 +137,7 @@ private:
 };
 
 OdgGeneratorPrivate::OdgGeneratorPrivate() :
-	mDocumentStreamHandlers(), mDocumentStreamTypes(),
+	mDocumentStreamHandlers(),
 	mBodyElements(),
 	mGraphicsStrokeDashStyles(),
 	mGraphicsGradientStyles(),
@@ -287,22 +285,22 @@ void OdgGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
 	pHandler->endElement("office:settings");
 }
 
-void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
+void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
 
-	// CHECKME: previously, this part was not done in STYLES
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
+		for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
+		        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
+			(*iterGraphicsAutomaticStyles)->write(pHandler);
 
-	// writing out the graphics automatic styles
-	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
-	        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
-		(*iterGraphicsAutomaticStyles)->write(pHandler);
+		mParagraphManager.write(pHandler);
+		mSpanManager.write(pHandler);
+	}
 
-	mParagraphManager.write(pHandler);
-	mSpanManager.write(pHandler);
-
-	// CHECKME: previously, this part was not done in CONTENT
-	_writePageLayouts(pHandler);
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+		_writePageLayouts(pHandler);
 
 	pHandler->endElement("office:automatic-styles");
 }
@@ -416,7 +414,7 @@ bool OdgGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 		mFontManager.writeFontsDeclaration(pHandler);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
-		_writeAutomaticStyles(pHandler);
+		_writeAutomaticStyles(pHandler, streamType);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 		_writeMasterPages(pHandler);
@@ -447,8 +445,9 @@ OdgGenerator::OdgGenerator() : mpImpl(new OdgGeneratorPrivate)
 OdgGenerator::~OdgGenerator()
 {
 	// Write out the collected document
-	for (size_t i=0; i<mpImpl->mDocumentStreamHandlers.size(); ++i)
-		mpImpl->_writeTargetDocument(mpImpl->mDocumentStreamHandlers[i], mpImpl->mDocumentStreamTypes[i]);
+	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
+	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
+		mpImpl->_writeTargetDocument(iter->second, iter->first);
 	delete mpImpl;
 }
 

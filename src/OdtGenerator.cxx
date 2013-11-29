@@ -128,8 +128,7 @@ public:
 			ODFGEN_DEBUG_MSG(("OdtGeneratorPrivate::addDocumentHandler: called without handler\n"));
 			return;
 		}
-		mDocumentStreamHandlers.push_back(pHandler);
-		mDocumentStreamTypes.push_back(streamType);
+		mDocumentStreamHandlers[streamType] = pHandler;
 	}
 
 	static std::string getDocumentType(OdfStreamType streamType);
@@ -155,8 +154,7 @@ public:
 
 	unsigned _getObjectId(librevenge::RVNGString val="");
 
-	std::vector<OdfDocumentHandler *>mDocumentStreamHandlers;
-	std::vector<OdfStreamType> mDocumentStreamTypes;
+	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
 
 	std::stack<WriterDocumentState> mWriterDocumentStates;
 
@@ -224,7 +222,7 @@ private:
 };
 
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
-	mDocumentStreamHandlers(), mDocumentStreamTypes(),
+	mDocumentStreamHandlers(),
 	mWriterDocumentStates(),
 	mWriterListStates(),
 	mParagraphManager(), mSpanManager(), mFontManager(),
@@ -383,6 +381,8 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	defaultParagraphStyleOpenElement.addAttribute("style:family", "paragraph");
 	defaultParagraphStyleOpenElement.write(pHandler);
 	TagOpenElement defaultParagraphStylePropertiesOpenElement("style:paragraph-properties");
+	defaultParagraphStylePropertiesOpenElement.addAttribute("style:use-window-font-color", "true");
+	defaultParagraphStylePropertiesOpenElement.addAttribute("style:line-break", "strict");
 	defaultParagraphStylePropertiesOpenElement.addAttribute("style:tab-stop-distance", "0.5in");
 	defaultParagraphStylePropertiesOpenElement.addAttribute("style:text-autospace", "ideograph-alpha");
 	defaultParagraphStylePropertiesOpenElement.addAttribute("style:punctuation-wrap", "hanging");
@@ -453,6 +453,59 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:style");
 	}
 
+	static char const *(s_textStyle[2*4])=
+	{
+		"Footnote_Symbol", "Footnote Symbol", "Endnote_Symbol", "Endnote Symbol",
+		"Footnote_anchor", "Footnote anchor", "Endnote_anchor", "Endnote anchor"
+	};
+	for (int i=0; i<4; ++i)
+	{
+		TagOpenElement textOpenElement("style:style");
+		textOpenElement.addAttribute("style:name", s_textStyle[2*i]);
+		textOpenElement.addAttribute("style:display-name", s_textStyle[2*i]);
+		textOpenElement.addAttribute("style:family", "text");
+		textOpenElement.write(pHandler);
+		TagOpenElement textPropertiesOpenElement("style:text-properties");
+		textPropertiesOpenElement.addAttribute("style:text-position", "super 58%");
+		textPropertiesOpenElement.write(pHandler);
+		pHandler->endElement("style:text-properties");
+		pHandler->endElement("style:style");
+	}
+#if 0
+	// set previously in wpd2odt but odf-validator tells that this is incorrect...
+	static char const *(s_noteConfig[4*2])=
+	{
+		"footnote", "Footnote_Symbol", "Footnote_anchor", "1",
+		"endnote", "Endnote_Symbol", "Endnote_anchor", "i"
+	};
+	for (int i=0; i<2; ++i)
+	{
+		TagOpenElement noteOpenElement("text:notes-configuration");
+		noteOpenElement.addAttribute("text:note-class", s_noteConfig[4*i]);
+		noteOpenElement.addAttribute("text:citation-style-name", s_noteConfig[4*i+1]);
+		noteOpenElement.addAttribute("text:citation-body-style-name", s_noteConfig[4*i+2]);
+		noteOpenElement.addAttribute("style:num-format", s_noteConfig[4*i+3]);
+		noteOpenElement.addAttribute("text:start-value", "0");
+		if (i==0)
+		{
+			noteOpenElement.addAttribute("text:footnotes-position", "page");
+			noteOpenElement.addAttribute("text:start-numbering-at", "document");
+		}
+		else
+			noteOpenElement.addAttribute("text:master-page-name", "Endnote");
+		noteOpenElement.write(pHandler);
+		pHandler->endElement("text:notes-configuration");
+	}
+#endif
+	TagOpenElement lineOpenElement("text:linenumbering-configuration");
+	lineOpenElement.addAttribute("text:number-lines", "false");
+	lineOpenElement.addAttribute("text:number-position", "left");
+	lineOpenElement.addAttribute("text:increment", "5");
+	lineOpenElement.addAttribute("text:offset", "0.1965in");
+	lineOpenElement.addAttribute("style:num-format", "1");
+	lineOpenElement.write(pHandler);
+	pHandler->endElement("text:linenumbering-configuration");
+
 	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
 	        iter != mFrameStyles.end(); ++iter)
 		(*iter)->write(pHandler);
@@ -463,6 +516,17 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 void OdtGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:master-styles").write(pHandler);
+
+	static char const *(s_default[2*2]) = { "Standard", "PM0", "Endnote", "PM1" };
+	for (int i=0; i < 2; ++i)
+	{
+		TagOpenElement pageOpenElement("style:master-page");
+		pageOpenElement.addAttribute("style:name", s_default[2*i]);
+		pageOpenElement.addAttribute("style:page-layout-name", s_default[2*i+1]);
+		pageOpenElement.write(pHandler);
+		pHandler->endElement("style:master-page");
+	}
+
 	int pageNumber = 1;
 	for (unsigned int i=0; i<mPageSpans.size(); ++i)
 	{
@@ -476,10 +540,40 @@ void OdtGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 
 void OdtGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 {
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
+	for (int i=0; i < 2; ++i)
 	{
-		mPageSpans[i]->writePageLayout((int)i, pHandler);
+		TagOpenElement layout("style:page-layout");
+		layout.addAttribute("style:name", i==0 ? "PM0" : "PM1");
+		layout.write(pHandler);
+
+		TagOpenElement layoutProperties("style:page-layout-properties");
+		layoutProperties.addAttribute("fo:margin-bottom", "1in");
+		layoutProperties.addAttribute("fo:margin-left", "1in");
+		layoutProperties.addAttribute("fo:margin-right", "1in");
+		layoutProperties.addAttribute("fo:margin-top", "1in");
+		layoutProperties.addAttribute("fo:page-height", "11in");
+		layoutProperties.addAttribute("fo:page-width", "8.5in");
+		layoutProperties.addAttribute("style:print-orientation", "portrait");
+		layoutProperties.write(pHandler);
+
+		TagOpenElement footnoteSep("style:footnote-sep");
+		footnoteSep.addAttribute("style:adjustment","left");
+		footnoteSep.addAttribute("style:color","#000000");
+		footnoteSep.addAttribute("style:rel-width","25%");
+		if (i==0)
+		{
+			footnoteSep.addAttribute("style:distance-after-sep","0.0398in");
+			footnoteSep.addAttribute("style:distance-before-sep","0.0398in");
+			footnoteSep.addAttribute("style:width","0.0071in");
+		}
+		footnoteSep.write(pHandler);
+		TagCloseElement("style:footnote-sep").write(pHandler);
+		TagCloseElement("style:page-layout-properties").write(pHandler);
+
+		TagCloseElement("style:page-layout").write(pHandler);
 	}
+	for (unsigned int i=0; i<mPageSpans.size(); ++i)
+		mPageSpans[i]->writePageLayout((int)i, pHandler);
 }
 
 bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
@@ -1564,8 +1658,9 @@ void OdtGenerator::insertEquation(librevenge::RVNGPropertyList const &)
 void OdtGenerator::endDocument()
 {
 	// Write out the collected document
-	for (size_t i=0; i<mpImpl->mDocumentStreamHandlers.size(); ++i)
-		mpImpl->_writeTargetDocument(mpImpl->mDocumentStreamHandlers[i], mpImpl->mDocumentStreamTypes[i]);
+	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
+	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
+		mpImpl->_writeTargetDocument(iter->second, iter->first);
 }
 
 void OdtGenerator::startDocument()
