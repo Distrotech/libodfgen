@@ -31,6 +31,7 @@
 
 #include "OdfDocumentHandler.hxx"
 
+class OdfGenerator;
 class OdsGeneratorPrivate;
 
 /** A generator for text documents.
@@ -62,7 +63,7 @@ public:
 	void openFooter(const librevenge::RVNGPropertyList &propList);
 	void closeFooter();
 
-	void defineSheetNumberingStyle(const librevenge::RVNGPropertyList &propList) ;
+	void defineSheetNumberingStyle(const librevenge::RVNGPropertyList &propList);
 	void openSheet(const librevenge::RVNGPropertyList &propList);
 	void closeSheet();
 	void openSheetRow(const librevenge::RVNGPropertyList &propList);
@@ -74,11 +75,11 @@ public:
 	void closeChart();
 	void insertChartSerie(const librevenge::RVNGPropertyList &propList);
 
-	void defineParagraphStyle(const librevenge::RVNGPropertyList &) {}
+	void defineParagraphStyle(const librevenge::RVNGPropertyList &propList);
 	void openParagraph(const librevenge::RVNGPropertyList &propList);
 	void closeParagraph();
 
-	void defineCharacterStyle(const librevenge::RVNGPropertyList &) {}
+	void defineCharacterStyle(const librevenge::RVNGPropertyList &propList);
 	void openSpan(const librevenge::RVNGPropertyList &propList);
 	void closeSpan();
 
@@ -140,6 +141,13 @@ public:
 
 	void insertEquation(const librevenge::RVNGPropertyList &) {}
 
+	/** Registers a handler for embedded images.
+	  *
+	  * @param[in] mimeType MIME type of the image
+	  * @param[in] imageHandler a function that handles processing of
+	  *		the image's data and generating output
+	  */
+	void registerEmbeddedImageHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedImage imageHandler);
 	/** Registers a handler for embedded objects.
 	  *
 	  * @param[in] mimeType MIME type of the object
@@ -147,6 +155,9 @@ public:
 	  *		the object's data and generating output
 	  */
 	void registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler);
+
+	//! retrieve data from another odfgenerator ( the list and the embedded handler)
+	void initStateWith(OdfGenerator const &orig);
 
 private:
 	OdsGenerator(OdsGenerator const &);

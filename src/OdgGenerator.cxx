@@ -28,9 +28,10 @@
 
 #include "FilterInternal.hxx"
 #include "DocumentElement.hxx"
-#include "GraphicFunctions.hxx"
-#include "TextRunStyle.hxx"
 #include "FontStyle.hxx"
+#include "GraphicFunctions.hxx"
+#include "OdfGenerator.hxx"
+#include "TextRunStyle.hxx"
 #include <locale.h>
 #include <math.h>
 #include <string>
@@ -60,20 +61,11 @@ static librevenge::RVNGString doubleToString(const double value)
 
 } // anonymous namespace
 
-class OdgGeneratorPrivate
+class OdgGeneratorPrivate : public OdfGenerator
 {
 public:
 	OdgGeneratorPrivate();
 	~OdgGeneratorPrivate();
-	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType)
-	{
-		if (!pHandler)
-		{
-			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::addDocumentHandler: called without handler\n"));
-			return;
-		}
-		mDocumentStreamHandlers[streamType] = pHandler;
-	}
 
 	/** update a graphic style element */
 	void _updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style);
@@ -82,18 +74,12 @@ public:
 	void _drawPath(const librevenge::RVNGPropertyListVector &path);
 
 	//! returns the document type
-	std::string getDocumentType(OdfStreamType streamType) const;
-	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
+	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeSettings(OdfDocumentHandler *pHandler);
 	void _writeStyles(OdfDocumentHandler *pHandler);
 	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
-
-	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
-
-	// body elements
-	std::vector <DocumentElement *> mBodyElements;
 
 	// graphics styles
 	std::vector<DocumentElement *> mGraphicsStrokeDashStyles;
@@ -105,15 +91,6 @@ public:
 	// page styles
 	std::vector<DocumentElement *> mPageAutomaticStyles;
 	std::vector<DocumentElement *> mPageMasterStyles;
-
-	// paragraph styles
-	ParagraphStyleManager mParagraphManager;
-
-	// span styles
-	SpanStyleManager mSpanManager;
-
-	// font styles
-	FontStyleManager mFontManager;
 
 	::librevenge::RVNGPropertyList mxStyle;
 	int miGradientIndex;
@@ -136,9 +113,7 @@ private:
 
 };
 
-OdgGeneratorPrivate::OdgGeneratorPrivate() :
-	mDocumentStreamHandlers(),
-	mBodyElements(),
+OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 	mGraphicsStrokeDashStyles(),
 	mGraphicsGradientStyles(),
 	mGraphicsBitmapStyles(),
@@ -146,9 +121,6 @@ OdgGeneratorPrivate::OdgGeneratorPrivate() :
 	mGraphicsAutomaticStyles(),
 	mPageAutomaticStyles(),
 	mPageMasterStyles(),
-	mParagraphManager(),
-	mSpanManager(),
-	mFontManager(),
 	mxStyle(),
 	miGradientIndex(1),
 	miBitmapIndex(1),
@@ -169,77 +141,13 @@ OdgGeneratorPrivate::OdgGeneratorPrivate() :
 
 OdgGeneratorPrivate::~OdgGeneratorPrivate()
 {
-
-	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); ++iterBody)
-	{
-		delete(*iterBody);
-		(*iterBody) = 0;
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
-	        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
-	{
-		delete((*iterGraphicsAutomaticStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsStrokeDashStyles = mGraphicsStrokeDashStyles.begin();
-	        iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); ++iterGraphicsStrokeDashStyles)
-	{
-		delete((*iterGraphicsStrokeDashStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsGradientStyles = mGraphicsGradientStyles.begin();
-	        iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); ++iterGraphicsGradientStyles)
-	{
-		delete((*iterGraphicsGradientStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsBitmapStyles = mGraphicsBitmapStyles.begin();
-	        iterGraphicsBitmapStyles != mGraphicsBitmapStyles.end(); ++iterGraphicsBitmapStyles)
-	{
-		delete((*iterGraphicsBitmapStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterGraphicsMarkerStyles = mGraphicsMarkerStyles.begin();
-	        iterGraphicsMarkerStyles != mGraphicsMarkerStyles.end(); ++iterGraphicsMarkerStyles)
-	{
-		delete((*iterGraphicsMarkerStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mPageAutomaticStyles.begin();
-	        iterPageAutomaticStyles != mPageAutomaticStyles.end(); ++iterPageAutomaticStyles)
-	{
-		delete((*iterPageAutomaticStyles));
-	}
-
-	for (std::vector<DocumentElement *>::iterator iterPageMasterStyles = mPageMasterStyles.begin();
-	        iterPageMasterStyles != mPageMasterStyles.end(); ++iterPageMasterStyles)
-	{
-		delete((*iterPageMasterStyles));
-	}
-
-	mParagraphManager.clean();
-	mSpanManager.clean();
-	mFontManager.clean();
-}
-
-std::string OdgGeneratorPrivate::getDocumentType(OdfStreamType streamType) const
-{
-	switch (streamType)
-	{
-	case ODF_FLAT_XML:
-		return "office:document";
-	case ODF_CONTENT_XML:
-		return "office:document-content";
-	case ODF_STYLES_XML:
-		return "office:document-styles";
-	case ODF_SETTINGS_XML:
-		return "office:document-settings";
-	case ODF_META_XML:
-		return "office:document-meta";
-	default:
-		return "office:document";
-	}
+	emptyStorage(&mGraphicsAutomaticStyles);
+	emptyStorage(&mGraphicsStrokeDashStyles);
+	emptyStorage(&mGraphicsGradientStyles);
+	emptyStorage(&mGraphicsBitmapStyles);
+	emptyStorage(&mGraphicsMarkerStyles);
+	emptyStorage(&mPageAutomaticStyles);
+	emptyStorage(&mPageMasterStyles);
 }
 
 void OdgGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
@@ -291,10 +199,7 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
-		for (std::vector<DocumentElement *>::iterator iterGraphicsAutomaticStyles = mGraphicsAutomaticStyles.begin();
-		        iterGraphicsAutomaticStyles != mGraphicsAutomaticStyles.end(); ++iterGraphicsAutomaticStyles)
-			(*iterGraphicsAutomaticStyles)->write(pHandler);
-
+		sendStorage(&mGraphicsAutomaticStyles, pHandler);
 		mParagraphManager.write(pHandler);
 		mSpanManager.write(pHandler);
 	}
@@ -308,10 +213,7 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 void OdgGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:master-styles").write(pHandler);
-
-	for (std::vector<DocumentElement *>::const_iterator pageMasterIter = mPageMasterStyles.begin();
-	        pageMasterIter != mPageMasterStyles.end(); ++pageMasterIter)
-		(*pageMasterIter)->write(pHandler);
+	sendStorage(&mPageMasterStyles, pHandler);
 	pHandler->endElement("office:master-styles");
 }
 
@@ -354,10 +256,7 @@ void OdgGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 
 	pHandler->endElement("style:style");
 #else
-	// writing out the page automatic styles
-	for (std::vector<DocumentElement *>::iterator iterPageAutomaticStyles = mPageAutomaticStyles.begin();
-	        iterPageAutomaticStyles != mPageAutomaticStyles.end(); ++iterPageAutomaticStyles)
-		(*iterPageAutomaticStyles)->write(pHandler);
+	sendStorage(&mPageAutomaticStyles, pHandler);
 #endif
 
 }
@@ -365,26 +264,14 @@ void OdgGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 void OdgGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
-
-	for (std::vector<DocumentElement *>::const_iterator iterGraphicsStrokeDashStyles = mGraphicsStrokeDashStyles.begin();
-	        iterGraphicsStrokeDashStyles != mGraphicsStrokeDashStyles.end(); ++iterGraphicsStrokeDashStyles)
-		(*iterGraphicsStrokeDashStyles)->write(pHandler);
-
-	for (std::vector<DocumentElement *>::const_iterator iterGraphicsGradientStyles = mGraphicsGradientStyles.begin();
-	        iterGraphicsGradientStyles != mGraphicsGradientStyles.end(); ++iterGraphicsGradientStyles)
-		(*iterGraphicsGradientStyles)->write(pHandler);
-
-	for (std::vector<DocumentElement *>::const_iterator iterGraphicsBitmapStyles = mGraphicsBitmapStyles.begin();
-	        iterGraphicsBitmapStyles != mGraphicsBitmapStyles.end(); ++iterGraphicsBitmapStyles)
-		(*iterGraphicsBitmapStyles)->write(pHandler);
-
-	for (std::vector<DocumentElement *>::const_iterator iterGraphicsMarkerStyles = mGraphicsMarkerStyles.begin();
-	        iterGraphicsMarkerStyles != mGraphicsMarkerStyles.end(); ++iterGraphicsMarkerStyles)
-		(*iterGraphicsMarkerStyles)->write(pHandler);
+	sendStorage(&mGraphicsStrokeDashStyles, pHandler);
+	sendStorage(&mGraphicsGradientStyles, pHandler);
+	sendStorage(&mGraphicsBitmapStyles, pHandler);
+	sendStorage(&mGraphicsMarkerStyles, pHandler);
 	pHandler->endElement("office:styles");
 }
 
-bool OdgGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
+bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	pHandler->startDocument();
 
@@ -407,6 +294,14 @@ bool OdgGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_SETTINGS_XML))
 		_writeSettings(pHandler);
 
+	if (streamType == ODF_FLAT_XML || streamType == ODF_META_XML)
+	{
+		// write out the metadata
+		TagOpenElement("office:meta").write(pHandler);
+		sendStorage(&mMetaDataStorage, pHandler);
+		pHandler->endElement("office:meta");
+	}
+
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
 		mFontManager.writeFontsDeclaration(pHandler);
 
@@ -423,11 +318,7 @@ bool OdgGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 	{
 		TagOpenElement("office:body").write(pHandler);
 		TagOpenElement("office:drawing").write(pHandler);
-
-		for (std::vector<DocumentElement *>::const_iterator bodyIter = mBodyElements.begin();
-		        bodyIter != mBodyElements.end(); ++bodyIter)
-			(*bodyIter)->write(pHandler);
-
+		sendStorage(&mBodyStorage, pHandler);
 		pHandler->endElement("office:drawing");
 		pHandler->endElement("office:body");
 	}
@@ -460,13 +351,12 @@ void OdgGenerator::startDocument(const librevenge::RVNGPropertyList &)
 void OdgGenerator::endDocument()
 {
 	// Write out the collected document
-	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
-	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
-		mpImpl->_writeTargetDocument(iter->second, iter->first);
+	mpImpl->writeTargetDocuments();
 }
 
-void OdgGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &)
+void OdgGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propList)
 {
+	mpImpl->setDocumentMetaData(propList);
 }
 
 void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
@@ -545,11 +435,10 @@ void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 	pStyleMasterPageOpenElement->addAttribute("style:name", sValue);
 #endif
 
-	mpImpl->mBodyElements.push_back(pDrawPageOpenElement);
+	mpImpl->getCurrentStorage()->push_back(pDrawPageOpenElement);
 
 	mpImpl->mPageMasterStyles.push_back(pStyleMasterPageOpenElement);
 	mpImpl->mPageMasterStyles.push_back(new TagCloseElement("style:master-page"));
-
 
 	TagOpenElement *pStyleDrawingPagePropertiesOpenElement = new TagOpenElement("style:drawing-page-properties");
 	pStyleDrawingPagePropertiesOpenElement->addAttribute("draw:fill", "none");
@@ -562,7 +451,7 @@ void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 
 void OdgGenerator::endPage()
 {
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:page"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:page"));
 	mpImpl->miPageIndex++;
 }
 
@@ -574,12 +463,12 @@ void OdgGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
 
 void OdgGenerator::startLayer(const ::librevenge::RVNGPropertyList & /* propList */)
 {
-	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:g"));
+	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:g"));
 }
 
 void OdgGenerator::endLayer()
 {
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:g"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
 }
 
 void OdgGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
@@ -604,8 +493,8 @@ void OdgGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 		pDrawRectElement->addAttribute("draw:corner-radius", propList["svg:rx"]->getStr());
 	else
 		pDrawRectElement->addAttribute("draw:corner-radius", "0.0000in");
-	mpImpl->mBodyElements.push_back(pDrawRectElement);
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:rect"));
+	mpImpl->getCurrentStorage()->push_back(pDrawRectElement);
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:rect"));
 }
 
 void OdgGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
@@ -659,8 +548,8 @@ void OdgGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 		sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:y", sValue);
 	}
-	mpImpl->mBodyElements.push_back(pDrawEllipseElement);
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:ellipse"));
+	mpImpl->getCurrentStorage()->push_back(pDrawEllipseElement);
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:ellipse"));
 }
 
 void OdgGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
@@ -699,8 +588,8 @@ void OdgGeneratorPrivate::_drawPolySomething(const ::librevenge::RVNGPropertyLis
 		pDrawLineElement->addAttribute("svg:y1", vertices[0]["svg:y"]->getStr());
 		pDrawLineElement->addAttribute("svg:x2", vertices[1]["svg:x"]->getStr());
 		pDrawLineElement->addAttribute("svg:y2", vertices[1]["svg:y"]->getStr());
-		mBodyElements.push_back(pDrawLineElement);
-		mBodyElements.push_back(new TagCloseElement("draw:line"));
+		getCurrentStorage()->push_back(pDrawLineElement);
+		getCurrentStorage()->push_back(new TagCloseElement("draw:line"));
 	}
 	else
 	{
@@ -919,8 +808,8 @@ void OdgGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 			sValue.append(" Z");
 	}
 	pDrawPathElement->addAttribute("svg:d", sValue);
-	mBodyElements.push_back(pDrawPathElement);
-	mBodyElements.push_back(new TagCloseElement("draw:path"));
+	getCurrentStorage()->push_back(pDrawPathElement);
+	getCurrentStorage()->push_back(new TagCloseElement("draw:path"));
 }
 
 void OdgGenerator::drawPath(const librevenge::RVNGPropertyList &propList)
@@ -1015,25 +904,11 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 		pDrawFrameElement->addAttribute("svg:x", framePropList["svg:x"]->getStr());
 		pDrawFrameElement->addAttribute("svg:y", framePropList["svg:y"]->getStr());
 	}
-	mpImpl->mBodyElements.push_back(pDrawFrameElement);
+	mpImpl->getCurrentStorage()->push_back(pDrawFrameElement);
 
-	if (propList["librevenge:mime-type"]->getStr() == "object/ole")
-		mpImpl->mBodyElements.push_back(new TagOpenElement("draw:object-ole"));
-	else
-		mpImpl->mBodyElements.push_back(new TagOpenElement("draw:image"));
+	mpImpl->insertBinaryObject(propList);
 
-	mpImpl->mBodyElements.push_back(new TagOpenElement("office:binary-data"));
-
-	mpImpl->mBodyElements.push_back(new CharDataElement(propList["office:binary-data"]->getStr().cstr()));
-
-	mpImpl->mBodyElements.push_back(new TagCloseElement("office:binary-data"));
-
-	if (propList["librevenge:mime-type"]->getStr() == "object/ole")
-		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:object-ole"));
-	else
-		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:image"));
-
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 }
 
 void OdgGeneratorPrivate::_storeGraphicsStyle()
@@ -1569,8 +1444,8 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	}
 	delete svg_x;
 	delete svg_y;
-	mpImpl->mBodyElements.push_back(pDrawFrameOpenElement);
-	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:text-box"));
+	mpImpl->getCurrentStorage()->push_back(pDrawFrameOpenElement);
+	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:text-box"));
 	mpImpl->mGraphicsAutomaticStyles.push_back(pStyleGraphicPropertiesOpenElement);
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:style"));
@@ -1581,8 +1456,8 @@ void OdgGenerator::endTextObject()
 {
 	if (mpImpl->mbIsTextBox)
 	{
-		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:text-box"));
-		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 		mpImpl->mbIsTextBox = false;
 	}
 }
@@ -1611,98 +1486,77 @@ void OdgGenerator::closeListElement()
 {
 }
 
+void OdgGenerator::defineParagraphStyle(librevenge::RVNGPropertyList const &propList)
+{
+	mpImpl->defineParagraphStyle(propList);
+}
+
 void OdgGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList finalPropList(propList);
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
-
-
-	// create a document element corresponding to the paragraph, and append it to our list of document elements
-	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
-	pParagraphOpenElement->addAttribute("text:style-name", paragName);
-	mpImpl->mBodyElements.push_back(pParagraphOpenElement);
+	mpImpl->openParagraph(finalPropList);
 }
 
 void OdgGenerator::closeParagraph()
 {
-	mpImpl->mBodyElements.push_back(new TagCloseElement("text:p"));
+	mpImpl->closeParagraph();
 }
+
+void OdgGenerator::defineCharacterStyle(librevenge::RVNGPropertyList const &propList)
+{
+	mpImpl->defineCharacterStyle(propList);
+}
+
 
 void OdgGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 {
-	if (propList["style:font-name"])
-		mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
-
-	librevenge::RVNGString sName = mpImpl->mSpanManager.findOrAdd(propList);
-
-	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
-	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());
-	mpImpl->mBodyElements.push_back(pSpanOpenElement);
+	mpImpl->openSpan(propList);
 }
 
 void OdgGenerator::closeSpan()
 {
-	mpImpl->mBodyElements.push_back(new TagCloseElement("text:span"));
+	mpImpl->closeSpan();
 }
 
 void OdgGenerator::insertTab()
 {
-	mpImpl->mBodyElements.push_back(new TagOpenElement("text:tab"));
-	mpImpl->mBodyElements.push_back(new TagCloseElement("text:tab"));
+	mpImpl->insertTab();
 }
 
 void OdgGenerator::insertSpace()
 {
-	mpImpl->mBodyElements.push_back(new TagOpenElement("text:s"));
-	mpImpl->mBodyElements.push_back(new TagCloseElement("text:s"));
+	mpImpl->insertSpace();
 }
 
 void OdgGenerator::insertLineBreak()
 {
-	mpImpl->mBodyElements.push_back(new TagOpenElement("text:line-break"));
-	mpImpl->mBodyElements.push_back(new TagCloseElement("text:line-break"));
+	mpImpl->insertLineBreak();
 }
 
-void OdgGenerator::insertField(const librevenge::RVNGPropertyList &)
+void OdgGenerator::insertField(const librevenge::RVNGPropertyList &propList)
 {
+	mpImpl->insertField(propList);
 }
 
 void OdgGenerator::insertText(const librevenge::RVNGString &text)
 {
-	librevenge::RVNGString out;
-	librevenge::RVNGString::Iter i(text);
-	for (i.rewind(); i.next();)
-	{
-		if ((*i()) == '\n' || (*i()) == '\t')
-		{
-			if (out.len() != 0)
-			{
-				DocumentElement *pText = new TextElement(out);
-				mpImpl->mBodyElements.push_back(pText);
-				out.clear();
-			}
-			if ((*i()) == '\n')
-			{
-				mpImpl->mBodyElements.push_back(new TagOpenElement("text:line-break"));
-				mpImpl->mBodyElements.push_back(new TagCloseElement("text:line-break"));
-			}
-			else if ((*i()) == '\t')
-			{
-				mpImpl->mBodyElements.push_back(new TagOpenElement("text:tab"));
-				mpImpl->mBodyElements.push_back(new TagCloseElement("text:tab"));
-			}
-		}
-		else
-		{
-			out.append(i());
-		}
-	}
-	if (out.len() != 0)
-	{
-		DocumentElement *pText = new TextElement(out);
-		mpImpl->mBodyElements.push_back(pText);
-	}
+	mpImpl->insertText(text);
+}
+
+void OdgGenerator::initStateWith(OdfGenerator const &orig)
+{
+	mpImpl->initStateWith(orig);
+}
+
+void OdgGenerator::registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler)
+{
+	mpImpl->registerEmbeddedObjectHandler(mimeType, objectHandler);
+}
+
+void OdgGenerator::registerEmbeddedImageHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedImage imageHandler)
+{
+	mpImpl->registerEmbeddedImageHandler(mimeType, imageHandler);
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
