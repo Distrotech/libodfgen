@@ -347,6 +347,7 @@ OdpGenerator::OdpGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 	TagOpenElement tmpOfficeDocumentContent(mpImpl->getDocumentType().c_str());
 	tmpOfficeDocumentContent.addAttribute("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
+	tmpOfficeDocumentContent.addAttribute("xmlns:table", "urn:oasis:names:tc:opendocument:xmlns:table:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:draw", "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
