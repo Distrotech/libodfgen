@@ -455,6 +455,12 @@ OdpGenerator::~OdpGenerator()
 		}
 		mpImpl->mParagraphManager.write(mpImpl->mpHandler);
 		mpImpl->mSpanManager.write(mpImpl->mpHandler);
+
+		// writing out the table styles
+		for (std::vector<TableStyle *>::const_iterator iterTableStyles = mpImpl->mTableStyles.begin(); iterTableStyles != mpImpl->mTableStyles.end(); ++iterTableStyles)
+		{
+			(*iterTableStyles)->write(mpImpl->mpHandler);
+		}
 	}
 #ifdef MULTIPAGE_WORKAROUND
 	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
