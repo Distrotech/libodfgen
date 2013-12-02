@@ -753,12 +753,10 @@ void OdpGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
 
 void OdpGenerator::startLayer(const ::librevenge::RVNGPropertyList & /* propList */)
 {
-	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:g"));
 }
 
 void OdpGenerator::endLayer()
 {
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:g"));
 }
 
 void OdpGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
