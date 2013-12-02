@@ -728,12 +728,10 @@ void OdpGenerator::setStyle(const ::WPXPropertyList &propList, const ::WPXProper
 
 void OdpGenerator::startLayer(const ::WPXPropertyList & /* propList */)
 {
-	mpImpl->mBodyElements.push_back(new TagOpenElement("draw:g"));
 }
 
 void OdpGenerator::endLayer()
 {
-	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:g"));
 }
 
 void OdpGenerator::drawRectangle(const ::WPXPropertyList &propList)
