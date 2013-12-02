@@ -1869,6 +1869,21 @@ void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
 
 	mpImpl->mpCurrentTableStyle = pTableStyle;
 
+	// table must be inside a frame
+	TagOpenElement *pFrameOpenElement = new TagOpenElement("draw:frame");
+
+	pFrameOpenElement->addAttribute("draw:style-name", "standard");
+	if (propList["svg:x"])
+		pFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+	if (propList["svg:y"])
+		pFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	if (propList["svg:width"])
+		pFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	if (propList["svg:height"])
+		pFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+
+	mpImpl->mBodyElements.push_back(pFrameOpenElement);
+
 	TagOpenElement *pTableOpenElement = new TagOpenElement("table:table");
 
 	pTableOpenElement->addAttribute("table:name", sTableName.cstr());
@@ -1989,6 +2004,7 @@ void OdpGenerator::closeTable()
 	if (!mpImpl->mState.mInComment)
 	{
 		mpImpl->mBodyElements.push_back(new TagCloseElement("table:table"));
+		mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
 	}
 }
 
