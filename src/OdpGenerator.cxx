@@ -410,6 +410,12 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	mParagraphManager.write(pHandler);
 	mSpanManager.write(pHandler);
 
+	// writing out the table styles
+	for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
+	{
+		(*iterTableStyles)->write(pHandler);
+	}
+
 	// CHECKME: previously, this part was not done in CONTENT
 	_writePageLayouts(pHandler);
 
