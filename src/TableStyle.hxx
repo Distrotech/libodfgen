@@ -40,6 +40,8 @@ public:
 	TableCellStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
+	virtual void writeCompat(OdfDocumentHandler *pHandler, const librevenge::RVNGPropertyList &propList) const;
+private:
 	librevenge::RVNGPropertyList mPropList;
 };
 

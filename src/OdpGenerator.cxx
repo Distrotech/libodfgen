@@ -124,6 +124,65 @@ ListState::ListState(const ListState &state) :
 
 }
 
+namespace
+{
+
+class GraphicTableCellStyle : public TableCellStyle
+{
+public:
+	GraphicTableCellStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
+	virtual ~GraphicTableCellStyle();
+
+private:
+	virtual void writeCompat(OdfDocumentHandler *pHandler, const librevenge::RVNGPropertyList &propList) const;
+};
+
+GraphicTableCellStyle::GraphicTableCellStyle(const librevenge::RVNGPropertyList &xPropList, const char *const psName)
+	: TableCellStyle(xPropList, psName)
+{
+}
+
+GraphicTableCellStyle::~GraphicTableCellStyle()
+{
+}
+
+void GraphicTableCellStyle::writeCompat(OdfDocumentHandler *const pHandler, const librevenge::RVNGPropertyList &propList) const
+{
+	using librevenge::RVNGPropertyList;
+
+	RVNGPropertyList stylePropList;
+	RVNGPropertyList::Iter i(propList);
+
+	/* first set padding, so that mPropList can redefine, if
+	   mPropList["fo:padding"] is defined */
+	stylePropList.insert("fo:padding", "0.0382in");
+	stylePropList.insert("draw:fill", "none");
+	stylePropList.insert("draw:textarea-horizontal-align", "center");
+
+	for (i.rewind(); i.next();)
+	{
+		if (strcmp(i.key(), "fo:background-color") == 0)
+		{
+			stylePropList.insert("draw:fill", "solid");
+			stylePropList.insert("draw:fill-color", i()->clone());
+		}
+		else if (strcmp(i.key(), "style:vertical-align")==0)
+			stylePropList.insert("draw:textarea-vertical-align", i()->clone());
+	}
+
+	pHandler->startElement("style:graphic-properties", stylePropList);
+	pHandler->endElement("style:graphic-properties");
+
+	// HACK to get visible borders
+	RVNGPropertyList paraPropList;
+	paraPropList.insert("fo:border", "0.03pt solid #000000");
+
+	pHandler->startElement("style:paragraph-properties", paraPropList);
+	pHandler->endElement("style:paragraph-properties");
+}
+
+}
+
 class OdpGeneratorPrivate
 {
 public:
@@ -1966,7 +2025,7 @@ void OdpGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)
 
 	librevenge::RVNGString sTableCellStyleName;
 	sTableCellStyleName.sprintf("%s.Cell%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableCellStyles());
-	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
+	TableCellStyle *pTableCellStyle = new GraphicTableCellStyle(propList, sTableCellStyleName.cstr());
 	mpImpl->mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
 
 	TagOpenElement *pTableCellOpenElement = new TagOpenElement("table:table-cell");

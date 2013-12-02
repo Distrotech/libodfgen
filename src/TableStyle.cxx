@@ -74,7 +74,13 @@ void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->startElement("style:table-cell-properties", stylePropList);
 	pHandler->endElement("style:table-cell-properties");
 
+	writeCompat(pHandler, mPropList);
+
 	pHandler->endElement("style:style");
+}
+
+void TableCellStyle::writeCompat(OdfDocumentHandler *, const librevenge::RVNGPropertyList &) const
+{
 }
 
 TableRowStyle::TableRowStyle(const librevenge::RVNGPropertyList &propList, const char *psName) :
