@@ -1,3 +1,7 @@
+libodfgen 0.0.4
+
+- fix handling of presentation tables
+
 libodfgen 0.0.3
 
 - handle more table properties
