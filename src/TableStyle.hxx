@@ -40,6 +40,8 @@ public:
 	TableCellStyle(const WPXPropertyList &xPropList, const char *psName);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 private:
+	virtual void writeCompat(OdfDocumentHandler *pHandler, const WPXPropertyList &propList) const;
+private:
 	WPXPropertyList mPropList;
 };
 

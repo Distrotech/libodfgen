@@ -74,7 +74,13 @@ void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->startElement("style:table-cell-properties", stylePropList);
 	pHandler->endElement("style:table-cell-properties");
 
+	writeCompat(pHandler, mPropList);
+
 	pHandler->endElement("style:style");
+}
+
+void TableCellStyle::writeCompat(OdfDocumentHandler *, const WPXPropertyList &) const
+{
 }
 
 TableRowStyle::TableRowStyle(const WPXPropertyList &propList, const char *psName) :
