@@ -86,8 +86,16 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 			mMetaDataStorage.push_back(new TagCloseElement(i.key()));
 		}
 	}
-
 }
+
+void OdfGenerator::writeDocumentMetaData(OdfDocumentHandler *pHandler)
+{
+	if (mMetaDataStorage.empty()) return;
+	TagOpenElement("office:meta").write(pHandler);
+	sendStorage(&mMetaDataStorage, pHandler);
+	pHandler->endElement("office:meta");
+}
+
 
 void OdfGenerator::initStateWith(OdfGenerator const &orig)
 {

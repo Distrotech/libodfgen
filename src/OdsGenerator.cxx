@@ -596,12 +596,7 @@ bool OdsGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 	pHandler->startElement(documentType.c_str(), docContentPropList);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_META_XML)
-	{
-		// write out the metadata
-		TagOpenElement("office:meta").write(pHandler);
-		sendStorage(&mMetaDataStorage, pHandler);
-		pHandler->endElement("office:meta");
-	}
+		writeDocumentMetaData(pHandler);
 
 	// write out the font styles
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)

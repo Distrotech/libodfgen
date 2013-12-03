@@ -49,8 +49,6 @@
 // remove this
 #define MULTIPAGE_WORKAROUND 1
 
-using namespace libodfgen;
-
 namespace
 {
 
@@ -402,16 +400,11 @@ bool OdpGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		docContentPropList.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.presentation");
 	docContentPropList.write(pHandler);
 
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_META_XML))
+		writeDocumentMetaData(pHandler);
+
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_SETTINGS_XML))
 		_writeSettings(pHandler);
-
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_META_XML))
-	{
-		// write out the metadata
-		TagOpenElement("office:meta").write(pHandler);
-		sendStorage(&mMetaDataStorage, pHandler);
-		pHandler->endElement("office:meta");
-	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
 		mFontManager.writeFontsDeclaration(pHandler);
@@ -735,117 +728,10 @@ void OdpGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 {
 	if (path.count() == 0)
 		return;
-	// This must be a mistake and we do not want to crash lower
-	if (!path[0]["librevenge:path-action"] || path[0]["librevenge:path-action"]->getStr() == "Z")
-		return;
-
-	// try to find the bounding box
-	// this is simple convex hull technique, the bounding box might not be
-	// accurate but that should be enough for this purpose
-	bool isFirstPoint = true;
 
 	double px = 0.0, py = 0.0, qx = 0.0, qy = 0.0;
-	double lastX = 0.0;
-	double lastY = 0.0;
-	double lastPrevX = 0.0;
-	double lastPrevY = 0.0;
-
-	for (unsigned k = 0; k < path.count(); ++k)
-	{
-		if (!path[k]["librevenge:path-action"])
-			continue;
-		std::string action=path[k]["librevenge:path-action"]->getStr().cstr();
-		if (action.length()!=1 || action[0]=='Z') continue;
-
-		bool coordOk=path[k]["svg:x"]&&path[k]["svg:y"];
-		bool coord1Ok=coordOk && path[k]["svg:x1"]&&path[k]["svg:y1"];
-		bool coord2Ok=coord1Ok && path[k]["svg:x2"]&&path[k]["svg:y2"];
-		double x=lastX, y=lastY;
-		if (isFirstPoint)
-		{
-			if (!coordOk)
-			{
-				ODFGEN_DEBUG_MSG(("OdpGeneratorPrivate::_drawPath: the first point has no coordinate\n"));
-				continue;
-			}
-			qx = px = x = path[k]["svg:x"]->getDouble();
-			qy = py = y = path[k]["svg:y"]->getDouble();
-			lastPrevX = lastX = px;
-			lastPrevY = lastY = py;
-			isFirstPoint = false;
-		}
-		else
-		{
-			if (path[k]["svg:x"]) x=path[k]["svg:x"]->getDouble();
-			if (path[k]["svg:y"]) y=path[k]["svg:y"]->getDouble();
-			px = (px > x) ? x : px;
-			py = (py > y) ? y : py;
-			qx = (qx < x) ? x : qx;
-			qy = (qy < y) ? y : qy;
-		}
-
-		double xmin=px, xmax=qx, ymin=py, ymax=qy;
-		bool lastPrevSet=false;
-
-		if (action[0] == 'C' && coord2Ok)
-		{
-			getCubicBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
-			                   path[k]["svg:x2"]->getDouble(), path[k]["svg:y2"]->getDouble(),
-			                   x, y, xmin, ymin, xmax, ymax);
-			lastPrevSet=true;
-			lastPrevX=2*x-path[k]["svg:x2"]->getDouble();
-			lastPrevY=2*y-path[k]["svg:y2"]->getDouble();
-		}
-		else if (action[0] == 'S' && coord1Ok)
-		{
-			getCubicBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
-			                   path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
-			                   x, y, xmin, ymin, xmax, ymax);
-			lastPrevSet=true;
-			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
-			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
-		}
-		else if (action[0] == 'Q' && coord1Ok)
-		{
-			getQuadraticBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
-			                       x, y, xmin, ymin, xmax, ymax);
-			lastPrevSet=true;
-			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
-			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
-		}
-		else if (action[0] == 'T' && coordOk)
-		{
-			getQuadraticBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
-			                       x, y, xmin, ymin, xmax, ymax);
-			lastPrevSet=true;
-			lastPrevX=2*x-lastPrevX;
-			lastPrevY=2*y-lastPrevY;
-		}
-		else if (action[0] == 'A' && coordOk && path[k]["svg:rx"] && path[k]["svg:ry"])
-		{
-			getEllipticalArcBBox(lastX, lastY, path[k]["svg:rx"]->getDouble(), path[k]["svg:ry"]->getDouble(),
-			                     path[k]["librevenge:rotate"] ? path[k]["librevenge:rotate"]->getDouble() : 0.0,
-			                     path[k]["librevenge:large-arc"] ? path[k]["librevenge:large-arc"]->getInt() : 1,
-			                     path[k]["librevenge:sweep"] ? path[k]["librevenge:sweep"]->getInt() : 1,
-			                     x, y, xmin, ymin, xmax, ymax);
-		}
-		else if (action[0] != 'M' && action[0] != 'L' && action[0] != 'H' && action[0] != 'V')
-		{
-			ODFGEN_DEBUG_MSG(("OdpGeneratorPrivate::_drawPath: problem reading a path\n"));
-		}
-		px = (px > xmin ? xmin : px);
-		py = (py > ymin ? ymin : py);
-		qx = (qx < xmax ? xmax : qx);
-		qy = (qy < ymax ? ymax : qy);
-		lastX = x;
-		lastY = y;
-		if (!lastPrevSet)
-		{
-			lastPrevX=lastX;
-			lastPrevY=lastY;
-		}
-	}
-
+	if (!libodfgen::getPathBBox(path, px, py, qx, qy))
+		return;
 
 	librevenge::RVNGString sValue;
 	_writeGraphicsStyle();
@@ -868,62 +754,7 @@ void OdpGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &pa
 	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)(2540*(qx - px)), (unsigned)(2540*(qy - py)));
 	pDrawPathElement->addAttribute("svg:viewBox", sValue);
 
-	sValue.clear();
-	for (unsigned i = 0; i < path.count(); ++i)
-	{
-		if (!path[i]["librevenge:path-action"])
-			continue;
-		std::string action=path[i]["librevenge:path-action"]->getStr().cstr();
-		if (action.length()!=1) continue;
-		bool coordOk=path[i]["svg:x"]&&path[i]["svg:y"];
-		bool coord1Ok=coordOk && path[i]["svg:x1"]&&path[i]["svg:y1"];
-		bool coord2Ok=coord1Ok && path[i]["svg:x2"]&&path[i]["svg:y2"];
-		librevenge::RVNGString sElement;
-		// 2540 is 2.54*1000, 2.54 in = 1 inch
-		if (path[i]["svg:x"] && action[0] == 'H')
-		{
-			sElement.sprintf("H%i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540));
-			sValue.append(sElement);
-		}
-		else if (path[i]["svg:y"] && action[0] == 'V')
-		{
-			sElement.sprintf("V%i", (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
-			sValue.append(sElement);
-		}
-		else if (coordOk && (action[0] == 'M' || action[0] == 'L' || action[0] == 'T'))
-		{
-			sElement.sprintf("%c%i %i", action[0], (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
-			sValue.append(sElement);
-		}
-		else if (coord1Ok && (action[0] == 'Q' || action[0] == 'S'))
-		{
-			sElement.sprintf("%c%i %i %i %i", action[0], (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
-			sValue.append(sElement);
-		}
-		else if (coord2Ok && action[0] == 'C')
-		{
-			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
-			sValue.append(sElement);
-		}
-		else if (coordOk && path[i]["svg:rx"] && path[i]["svg:ry"] && action[0] == 'A')
-		{
-			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
-			                 (unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["librevenge:rotate"] ? path[i]["librevenge:rotate"]->getInt() : 0),
-			                 (path[i]["librevenge:large-arc"] ? path[i]["librevenge:large-arc"]->getInt() : 1),
-			                 (path[i]["librevenge:sweep"] ? path[i]["librevenge:sweep"]->getInt() : 1),
-			                 (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
-			sValue.append(sElement);
-		}
-		else if (action[0] == 'Z')
-			sValue.append(" Z");
-	}
-	pDrawPathElement->addAttribute("svg:d", sValue);
+	pDrawPathElement->addAttribute("svg:d", libodfgen::convertPath(path, px, py));
 	getCurrentStorage()->push_back(pDrawPathElement);
 	getCurrentStorage()->push_back(new TagCloseElement("draw:path"));
 }

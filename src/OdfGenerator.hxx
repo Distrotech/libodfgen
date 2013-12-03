@@ -62,6 +62,8 @@ public:
 	static std::string getDocumentType(OdfStreamType streamType);
 	//! store the document meta data
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
+	//! write the document meta data
+	void writeDocumentMetaData(OdfDocumentHandler *pHandler);
 
 	//
 	// document handler
