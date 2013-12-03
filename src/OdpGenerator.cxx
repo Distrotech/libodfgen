@@ -1877,7 +1877,7 @@ void OdpGenerator::endComment()
 	}
 
 	mpImpl->mState.mInComment = false;
-	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("office:annotation"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("officeooo:annotation"));
 }
 
 void OdpGenerator::startNotes(const ::librevenge::RVNGPropertyList &/*propList*/)
