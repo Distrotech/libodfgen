@@ -2139,7 +2139,7 @@ void OdpGenerator::endComment()
 	}
 
 	mpImpl->mState.mInComment = false;
-	mpImpl->mBodyElements.push_back(new TagCloseElement("office:annotation"));
+	mpImpl->mBodyElements.push_back(new TagCloseElement("officeooo:annotation"));
 }
 
 void OdpGenerator::startNotes(const ::WPXPropertyList &/*propList*/)
