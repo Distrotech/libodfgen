@@ -291,21 +291,21 @@ void OdfGenerator::insertText(const librevenge::RVNGString &text)
 
 void OdfGenerator::defineCharacterStyle(const librevenge::RVNGPropertyList &propList)
 {
-	if (!propList["librevenge:id"])
+	if (!propList["librevenge:span-id"])
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::defineCharacterStyle: called without id\n"));
 		return;
 	}
-	mIdSpanMap[propList["librevenge:id"]->getInt()]=propList;
+	mIdSpanMap[propList["librevenge:span-id"]->getInt()]=propList;
 }
 
 void OdfGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGString sName("");
 	librevenge::RVNGPropertyList pList(propList);
-	if (pList["librevenge:id"])
+	if (pList["librevenge:span-id"])
 	{
-		int id=pList["librevenge:id"]->getInt();
+		int id=pList["librevenge:span-id"]->getInt();
 		if (mIdSpanNameMap.find(id)!=mIdSpanNameMap.end())
 			sName=mIdSpanNameMap.find(id)->second;
 		else if (mIdSpanMap.find(id)!=mIdSpanMap.end())
@@ -322,8 +322,8 @@ void OdfGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
 		sName = mSpanManager.findOrAdd(pList);
-		if (pList["librevenge:id"])
-			mIdSpanNameMap[pList["librevenge:id"]->getInt()]=sName;
+		if (pList["librevenge:span-id"])
+			mIdSpanNameMap[pList["librevenge:span-id"]->getInt()]=sName;
 	}
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
 	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());
@@ -337,21 +337,21 @@ void OdfGenerator::closeSpan()
 
 void OdfGenerator::defineParagraphStyle(const librevenge::RVNGPropertyList &propList)
 {
-	if (!propList["librevenge:id"])
+	if (!propList["librevenge:paragraph-id"])
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::defineParagraphStyle: called without id\n"));
 		return;
 	}
-	mIdParagraphMap[propList["librevenge:id"]->getInt()]=propList;
+	mIdParagraphMap[propList["librevenge:paragraph-id"]->getInt()]=propList;
 }
 
 void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList pList(propList);
 	librevenge::RVNGString paragraphName("");
-	if (pList["librevenge:id"])
+	if (pList["librevenge:paragraph-id"])
 	{
-		int id=pList["librevenge:id"]->getInt();
+		int id=pList["librevenge:paragraph-id"]->getInt();
 		if (mIdParagraphNameMap.find(id)!=mIdParagraphNameMap.end())
 			paragraphName=mIdParagraphNameMap.find(id)->second;
 		else if (mIdParagraphMap.find(id)!=mIdParagraphMap.end())
@@ -368,8 +368,8 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
 		paragraphName = mParagraphManager.findOrAdd(pList);
-		if (pList["librevenge:id"])
-			mIdParagraphNameMap[pList["librevenge:id"]->getInt()]=paragraphName;
+		if (pList["librevenge:paragraph-id"])
+			mIdParagraphNameMap[pList["librevenge:paragraph-id"]->getInt()]=paragraphName;
 	}
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
