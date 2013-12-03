@@ -189,6 +189,7 @@ public:
 	/** update a graphic style element */
 	void _updateGraphicPropertiesElement(TagOpenElement &element, ::WPXPropertyList const &style, ::WPXPropertyListVector const &gradient);
 	void _writeGraphicsStyle();
+	void writeNotesStyles();
 	void _drawPolySomething(const ::WPXPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const WPXPropertyListVector &path);
 
@@ -338,6 +339,69 @@ OdpGeneratorPrivate::~OdpGeneratorPrivate()
 	mParagraphManager.clean();
 	mSpanManager.clean();
 	mFontManager.clean();
+}
+
+void OdpGeneratorPrivate::writeNotesStyles()
+{
+	{
+		WPXPropertyList styleProps;
+		styleProps.insert("style:name", "PresentationNotesPage");
+		styleProps.insert("style:family", "drawing-page");
+
+		mpHandler->startElement("style:style", styleProps);
+
+		WPXPropertyList pageProps;
+		pageProps.insert("presentation:display-header", "true");
+		pageProps.insert("presentation:display-footer", "true");
+		pageProps.insert("presentation:display-date-time", "true");
+		pageProps.insert("presentation:display-page-number", "false");
+
+		mpHandler->startElement("style:drawing-page-properties", pageProps);
+		mpHandler->endElement("style:drawing-page-properties");
+
+		mpHandler->endElement("style:style");
+	}
+
+	{
+		WPXPropertyList styleProps;
+		styleProps.insert("style:name", "PresentationNotesFrame");
+		styleProps.insert("style:family", "presentation");
+
+		mpHandler->startElement("style:style", styleProps);
+
+		WPXPropertyList graphicProps;
+		graphicProps.insert("draw:fill", "none");
+		graphicProps.insert("fo:min-height", "5in");
+
+		mpHandler->startElement("style:graphic-properties", graphicProps);
+		mpHandler->endElement("style:graphic-properties");
+
+		WPXPropertyList paraProps;
+		paraProps.insert("fo:margin-left", "0.24in");
+		paraProps.insert("fo:margin-right", "0in");
+		paraProps.insert("fo:text-indent", "0in");
+
+		mpHandler->startElement("style:para-properties", paraProps);
+		mpHandler->endElement("style:para-properties");
+
+		mpHandler->endElement("style:style");
+	}
+
+	{
+		WPXPropertyList styleProps;
+		styleProps.insert("style:name", "PresentationNotesTextBox");
+		styleProps.insert("style:family", "graphic");
+
+		mpHandler->startElement("style:style", styleProps);
+
+		WPXPropertyList graphicProps;
+		graphicProps.insert("draw:fill", "none");
+
+		mpHandler->startElement("style:graphic-properties", graphicProps);
+		mpHandler->endElement("style:graphic-properties");
+
+		mpHandler->endElement("style:style");
+	}
 }
 
 void OdpGeneratorPrivate::openListLevel(TagOpenElement *pListLevelOpenElement)
@@ -519,6 +583,8 @@ OdpGenerator::~OdpGenerator()
 		{
 			(*iterTableStyles)->write(mpImpl->mpHandler);
 		}
+
+		mpImpl->writeNotesStyles();
 	}
 #ifdef MULTIPAGE_WORKAROUND
 	if ((mpImpl->mxStreamType == ODF_FLAT_XML) || (mpImpl->mxStreamType == ODF_STYLES_XML))
@@ -2084,11 +2150,35 @@ void OdpGenerator::startNotes(const ::WPXPropertyList &/*propList*/)
 		return;
 	}
 
-	mpImpl->mBodyElements.push_back(new TagOpenElement("presentation:notes"));
+	TagOpenElement *const notesElement = new TagOpenElement("presentation:notes");
+	notesElement->addAttribute("draw:style-name", "PresentationNotesPage");
+
+	mpImpl->mBodyElements.push_back(notesElement);
+
+	TagOpenElement *const thumbnailElement = new TagOpenElement("draw:page-thumbnail");
+	thumbnailElement->addAttribute("draw:layer", "layout");
+	thumbnailElement->addAttribute("presentation:class", "page");
+	// TODO: should the dimensions be hardcoded? If not, where
+	// should they come from?
+	thumbnailElement->addAttribute("svg:width", "5.5in");
+	thumbnailElement->addAttribute("svg:height", "4.12in");
+	thumbnailElement->addAttribute("svg:x", "1.5in");
+	thumbnailElement->addAttribute("svg:y", "0.84in");
+	WPXString pageNumber;
+	pageNumber.sprintf("%i", mpImpl->miPageIndex);
+	thumbnailElement->addAttribute("draw:page-number", pageNumber);
+
+	mpImpl->mBodyElements.push_back(thumbnailElement);
+	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:page-thumbnail"));
 
 	TagOpenElement *const frameElement = new TagOpenElement("draw:frame");
+	frameElement->addAttribute("presentation:style-name", "PresentationNotesFrame");
 	frameElement->addAttribute("draw:layer", "layout");
 	frameElement->addAttribute("presentation:class", "notes");
+	frameElement->addAttribute("svg:width", "6.8in");
+	frameElement->addAttribute("svg:height", "4.95in");
+	frameElement->addAttribute("svg:x", "0.85in");
+	frameElement->addAttribute("svg:y", "5.22in");
 
 	mpImpl->mBodyElements.push_back(frameElement);
 
