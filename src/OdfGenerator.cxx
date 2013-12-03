@@ -268,7 +268,7 @@ void OdfGenerator::insertField(const librevenge::RVNGPropertyList &propList)
 
 void OdfGenerator::insertText(const librevenge::RVNGString &text)
 {
-	if (text.empty())
+	if (!text.empty())
 		mpCurrentStorage->push_back(new TextElement(text));
 }
 
