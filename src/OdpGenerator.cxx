@@ -1842,6 +1842,8 @@ void OdpGenerator::endNotes()
 		return;
 	}
 
+	mpImpl->mState.mInNotes = false;
+
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("presentation:notes"));
