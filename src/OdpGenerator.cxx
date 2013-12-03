@@ -476,7 +476,9 @@ OdpGenerator::OdpGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 	tmpOfficeDocumentContent.addAttribute("xmlns:svg", "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:config", "urn:oasis:names:tc:opendocument:xmlns:config:1.0");
+	// WARNING: this is not ODF!
 	tmpOfficeDocumentContent.addAttribute("xmlns:ooo", "http://openoffice.org/2004/office");
+	tmpOfficeDocumentContent.addAttribute("xmlns:officeooo", "http://openoffice.org/2009/office");
 	tmpOfficeDocumentContent.addAttribute("office:version", "1.0");
 	if (mpImpl->mxStreamType == ODF_FLAT_XML)
 		tmpOfficeDocumentContent.addAttribute("office:mimetype", "application/vnd.oasis.opendocument.presentation");
@@ -2114,8 +2116,6 @@ void OdpGenerator::startComment(const ::WPXPropertyList &propList)
 	mpImpl->mState.mInComment = true;
 
 	TagOpenElement *const commentElement = new TagOpenElement("officeooo:annotation");
-	// WARNING: this is not ODF!
-	commentElement->addAttribute("xmlns:officeooo", "http://openoffice.org/2009/office");
 
 	// position & size
 	if (propList["svg:x"])
