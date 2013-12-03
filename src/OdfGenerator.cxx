@@ -37,8 +37,8 @@ OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
 	mFontManager(), mSpanManager(), mParagraphManager(),
 	mIdSpanMap(), mIdSpanNameMap(), mIdParagraphMap(), mIdParagraphNameMap(),
-	mIdListStorageMap(),	miFrameNumber(0), mFrameNameIdMap(),
-	mImageHandlers(), mObjectHandlers()
+	mIdListStorageMap(), miFrameNumber(0), mFrameNameIdMap(),
+	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
 {
 }
 
