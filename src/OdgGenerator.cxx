@@ -1670,39 +1670,8 @@ void OdgGenerator::insertField(const librevenge::RVNGPropertyList &)
 
 void OdgGenerator::insertText(const librevenge::RVNGString &text)
 {
-	librevenge::RVNGString out;
-	librevenge::RVNGString::Iter i(text);
-	for (i.rewind(); i.next();)
-	{
-		if ((*i()) == '\n' || (*i()) == '\t')
-		{
-			if (out.len() != 0)
-			{
-				DocumentElement *pText = new TextElement(out);
-				mpImpl->mBodyElements.push_back(pText);
-				out.clear();
-			}
-			if ((*i()) == '\n')
-			{
-				mpImpl->mBodyElements.push_back(new TagOpenElement("text:line-break"));
-				mpImpl->mBodyElements.push_back(new TagCloseElement("text:line-break"));
-			}
-			else if ((*i()) == '\t')
-			{
-				mpImpl->mBodyElements.push_back(new TagOpenElement("text:tab"));
-				mpImpl->mBodyElements.push_back(new TagCloseElement("text:tab"));
-			}
-		}
-		else
-		{
-			out.append(i());
-		}
-	}
-	if (out.len() != 0)
-	{
-		DocumentElement *pText = new TextElement(out);
-		mpImpl->mBodyElements.push_back(pText);
-	}
+	if (!text.empty())
+		mpImpl->mBodyElements.push_back(new TextElement(text));
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
