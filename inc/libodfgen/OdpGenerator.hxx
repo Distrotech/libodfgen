@@ -68,8 +68,10 @@ public:
 
 	void startTextObject(const ::librevenge::RVNGPropertyList &propList);
 	void endTextObject();
+	void defineParagraphStyle(const librevenge::RVNGPropertyList &propList);
 	void openParagraph(const ::librevenge::RVNGPropertyList &propList);
 	void closeParagraph();
+	void defineCharacterStyle(const librevenge::RVNGPropertyList &propList);
 	void openSpan(const ::librevenge::RVNGPropertyList &propList);
 	void closeSpan();
 	void insertText(const ::librevenge::RVNGString &str);

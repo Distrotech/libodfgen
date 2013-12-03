@@ -129,7 +129,7 @@ public:
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
-	void _openListLevel(TagOpenElement *pListLevelOpenElement);
+	void _openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
 	void _closeListLevel();
 
 	/** stores a list style: update mListStyles,
@@ -780,49 +780,17 @@ void OdtGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &
 	}
 }
 
-void OdtGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &propList)
+void OdtGeneratorPrivate::_openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
 {
-	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
+	if (mWriterListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
-		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
+		closeParagraph();
+		mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
-	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
-	{
-		// first item of a list, be sure to use the list with given id
-		mpImpl->_retrieveListStyle(propList["librevenge:id"]->getInt());
-	}
+	// first item of a list, be sure to use the list with given id
+	if (mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
+		_retrieveListStyle(propList["librevenge:id"]->getInt());
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
-	mpImpl->_openListLevel(pListLevelOpenElement);
-
-	if (mpImpl->mWriterListStates.top().mbListContinueNumbering)
-	{
-		pListLevelOpenElement->addAttribute("text:continue-numbering", "true");
-	}
-
-	mpImpl->getCurrentStorage()->push_back(pListLevelOpenElement);
-}
-
-void OdtGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
-		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
-	}
-	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
-	{
-		// first item of a list, be sure to use the list with given id
-		mpImpl->_retrieveListStyle(propList["librevenge:id"]->getInt());
-	}
-	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
-	mpImpl->_openListLevel(pListLevelOpenElement);
-
-	mpImpl->getCurrentStorage()->push_back(pListLevelOpenElement);
-}
-
-void OdtGeneratorPrivate::_openListLevel(TagOpenElement *pListLevelOpenElement)
-{
 	if (!mWriterListStates.top().mbListElementOpened.empty() &&
 	        !mWriterListStates.top().mbListElementOpened.top())
 	{
@@ -839,16 +807,10 @@ void OdtGeneratorPrivate::_openListLevel(TagOpenElement *pListLevelOpenElement)
 			pListLevelOpenElement->addAttribute("text:style-name", mWriterListStates.top().mpCurrentListStyle->getName());
 		}
 	}
-}
 
-void OdtGenerator::closeOrderedListLevel()
-{
-	mpImpl->_closeListLevel();
-}
-
-void OdtGenerator::closeUnorderedListLevel()
-{
-	mpImpl->_closeListLevel();
+	if (ordered && mWriterListStates.top().mbListContinueNumbering)
+		pListLevelOpenElement->addAttribute("text:continue-numbering", "true");
+	mpCurrentStorage->push_back(pListLevelOpenElement);
 }
 
 void OdtGeneratorPrivate::_closeListLevel()
@@ -867,6 +829,26 @@ void OdtGeneratorPrivate::_closeListLevel()
 
 	getCurrentStorage()->push_back(new TagCloseElement("text:list"));
 	mWriterListStates.top().mbListElementOpened.pop();
+}
+
+void OdtGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->_openListLevel(propList, true);
+}
+
+void OdtGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->_openListLevel(propList, false);
+}
+
+void OdtGenerator::closeOrderedListLevel()
+{
+	mpImpl->_closeListLevel();
+}
+
+void OdtGenerator::closeUnorderedListLevel()
+{
+	mpImpl->_closeListLevel();
 }
 
 void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
@@ -915,7 +897,7 @@ void OdtGenerator::closeListElement()
 
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
+		mpImpl->closeParagraph();
 		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
 }

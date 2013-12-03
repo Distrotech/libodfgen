@@ -1488,6 +1488,11 @@ void OdpGenerator::endTextObject()
 	}
 }
 
+void OdpGenerator::defineParagraphStyle(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->defineParagraphStyle(propList);
+}
+
 void OdpGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->openParagraph(propList);
@@ -1496,6 +1501,11 @@ void OdpGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 void OdpGenerator::closeParagraph()
 {
 	mpImpl->closeParagraph();
+}
+
+void OdpGenerator::defineCharacterStyle(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->defineCharacterStyle(propList);
 }
 
 void OdpGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
@@ -1537,7 +1547,7 @@ void OdpGenerator::openOrderedListLevel(const ::librevenge::RVNGPropertyList &/*
 {
 	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
+		mpImpl->closeParagraph();
 		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
 	}
 
@@ -1551,7 +1561,7 @@ void OdpGenerator::openUnorderedListLevel(const ::librevenge::RVNGPropertyList &
 {
 	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
+		mpImpl->closeParagraph();
 		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
 	}
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
@@ -1603,7 +1613,7 @@ void OdpGenerator::closeListElement()
 
 	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
+		mpImpl->closeParagraph();
 		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
 	}
 }
