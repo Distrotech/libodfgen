@@ -2104,6 +2104,8 @@ void OdpGenerator::endNotes()
 		return;
 	}
 
+	mpImpl->mState.mInNotes = false;
+
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:text-box"));
 	mpImpl->mBodyElements.push_back(new TagCloseElement("draw:frame"));
 	mpImpl->mBodyElements.push_back(new TagCloseElement("presentation:notes"));
