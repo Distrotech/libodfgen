@@ -32,6 +32,7 @@
 #include "OdfDocumentHandler.hxx"
 
 class OdtGeneratorPrivate;
+class OdfGenerator;
 
 /** A generator for text documents.
   *
@@ -62,11 +63,11 @@ public:
 	void openFooter(const librevenge::RVNGPropertyList &propList);
 	void closeFooter();
 
-	void defineParagraphStyle(const librevenge::RVNGPropertyList &);
+	void defineParagraphStyle(const librevenge::RVNGPropertyList &propList);
 	void openParagraph(const librevenge::RVNGPropertyList &propList);
 	void closeParagraph();
 
-	void defineCharacterStyle(const librevenge::RVNGPropertyList &);
+	void defineCharacterStyle(const librevenge::RVNGPropertyList &propList);
 	void openSpan(const librevenge::RVNGPropertyList &propList);
 	void closeSpan();
 
@@ -126,6 +127,8 @@ public:
 	  *		the images's data and generating output
 	  */
 	void registerEmbeddedImageHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedImage imageHandler);
+	//! retrieve data from another odfgenerator ( the list and the embedded handler)
+	void initStateWith(OdfGenerator const &orig);
 
 private:
 	OdtGenerator(OdtGenerator const &);

@@ -27,27 +27,19 @@
 #ifndef GRAPHIC_FUNCTIONS_HXX_INCLUDED
 #define GRAPHIC_FUNCTIONS_HXX_INCLUDED
 
+namespace librevenge
+{
+class RVNGPropertyList;
+class RVNGPropertyListVector;
+
+class RVNGString;
+}
+
 namespace libodfgen
 {
 
-double getAngle(double bx, double by);
-
-void getEllipticalArcBBox(double x0, double y0,
-                          double rx, double ry, double phi, bool largeArc, bool sweep, double x, double y,
-                          double &xmin, double &ymin, double &xmax, double &ymax);
-
-double quadraticExtreme(double t, double a, double b, double c);
-
-double quadraticDerivative(double a, double b, double c);
-
-void getQuadraticBezierBBox(double x0, double y0, double x1, double y1, double x, double y,
-                            double &xmin, double &ymin, double &xmax, double &ymax);
-
-double cubicBase(double t, double a, double b, double c, double d);
-
-void getCubicBezierBBox(double x0, double y0, double x1, double y1, double x2, double y2, double x, double y,
-                        double &xmin, double &ymin, double &xmax, double &ymax);
-
+bool getPathBBox(const librevenge::RVNGPropertyListVector &path, double &xmin, double &ymin, double &xmax, double &ymax);
+librevenge::RVNGString convertPath(const librevenge::RVNGPropertyListVector &path, double xmin, double xmax);
 }
 
 #endif // GRAPHIC_FUNCTIONS_HXX_INCLUDED

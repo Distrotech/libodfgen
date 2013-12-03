@@ -24,8 +24,15 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include <algorithm>
 #include <math.h>
+
+#include <algorithm>
+#include <string>
+
+#include <librevenge/librevenge.h>
+
+// removeme for ODFGEN_DEBUG_MSG
+#include "FilterInternal.hxx"
 
 #include "GraphicFunctions.hxx"
 
@@ -35,6 +42,18 @@
 
 namespace libodfgen
 {
+double getAngle(double bx, double by);
+void getEllipticalArcBBox(double x0, double y0,
+                          double rx, double ry, double phi, bool largeArc, bool sweep, double x, double y,
+                          double &xmin, double &ymin, double &xmax, double &ymax);
+double quadraticExtreme(double t, double a, double b, double c);
+double quadraticDerivative(double a, double b, double c);
+void getQuadraticBezierBBox(double x0, double y0, double x1, double y1, double x, double y,
+                            double &xmin, double &ymin, double &xmax, double &ymax);
+double cubicBase(double t, double a, double b, double c, double d);
+void getCubicBezierBBox(double x0, double y0, double x1, double y1, double x2, double y2, double x, double y,
+                        double &xmin, double &ymin, double &xmax, double &ymax);
+
 
 double getAngle(double bx, double by)
 {
@@ -118,7 +137,8 @@ void getEllipticalArcBBox(double x0, double y0,
 	double txmin, txmax, tymin, tymax;
 
 	// First handle special cases
-	if (phi == 0 || phi == M_PI)
+	double const absError=1e-5;
+	if ((phi > -absError&&phi < absError) || (phi > M_PI-absError && phi < M_PI+absError))
 	{
 		xmin = cx - rx;
 		txmin = getAngle(-rx, 0);
@@ -129,7 +149,8 @@ void getEllipticalArcBBox(double x0, double y0,
 		ymax = cy + ry;
 		tymax = getAngle(0, ry);
 	}
-	else if (phi == M_PI / 2.0 || phi == 3.0*M_PI/2.0)
+	else if ((phi > M_PI / 2.0-absError && phi < M_PI / 2.0-absError) ||
+	         (phi > 3.0*M_PI/2.0-absError && phi < 3.0*M_PI/2.0+absError))
 	{
 		xmin = cx - ry;
 		txmin = getAngle(-ry, 0);
@@ -263,6 +284,184 @@ void getCubicBezierBBox(double x0, double y0, double x1, double y1, double x2, d
 		ymin = tmpy < ymin ? tmpy : ymin;
 		ymax = tmpy > ymax ? tmpy : ymax;
 	}
+}
+
+bool getPathBBox(const librevenge::RVNGPropertyListVector &path, double &px, double &py, double &qx, double &qy)
+{
+	// This must be a mistake and we do not want to crash lower
+	if (!path.count() || !path[0]["librevenge:path-action"] || path[0]["librevenge:path-action"]->getStr() == "Z")
+	{
+		ODFGEN_DEBUG_MSG(("libodfgen:getPathBdBox: get a spurious path\n"));
+		return false;
+	}
+
+	// try to find the bounding box
+	// this is simple convex hull technique, the bounding box might not be
+	// accurate but that should be enough for this purpose
+	bool isFirstPoint = true;
+
+	double lastX = 0.0;
+	double lastY = 0.0;
+	double lastPrevX = 0.0;
+	double lastPrevY = 0.0;
+	px = py = qx = qy = 0.0;
+
+	for (unsigned k = 0; k < path.count(); ++k)
+	{
+		if (!path[k]["librevenge:path-action"])
+			continue;
+		std::string action=path[k]["librevenge:path-action"]->getStr().cstr();
+		if (action.length()!=1 || action[0]=='Z') continue;
+
+		bool coordOk=path[k]["svg:x"]&&path[k]["svg:y"];
+		bool coord1Ok=coordOk && path[k]["svg:x1"]&&path[k]["svg:y1"];
+		bool coord2Ok=coord1Ok && path[k]["svg:x2"]&&path[k]["svg:y2"];
+		double x=lastX, y=lastY;
+		if (isFirstPoint)
+		{
+			if (!coordOk)
+			{
+				ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: the first point has no coordinate\n"));
+				continue;
+			}
+			qx = px = x = path[k]["svg:x"]->getDouble();
+			qy = py = y = path[k]["svg:y"]->getDouble();
+			lastPrevX = lastX = px;
+			lastPrevY = lastY = py;
+			isFirstPoint = false;
+		}
+		else
+		{
+			if (path[k]["svg:x"]) x=path[k]["svg:x"]->getDouble();
+			if (path[k]["svg:y"]) y=path[k]["svg:y"]->getDouble();
+			px = (px > x) ? x : px;
+			py = (py > y) ? y : py;
+			qx = (qx < x) ? x : qx;
+			qy = (qy < y) ? y : qy;
+		}
+
+		double xmin=px, xmax=qx, ymin=py, ymax=qy;
+		bool lastPrevSet=false;
+
+		if (action[0] == 'C' && coord2Ok)
+		{
+			getCubicBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
+			                   path[k]["svg:x2"]->getDouble(), path[k]["svg:y2"]->getDouble(),
+			                   x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-path[k]["svg:x2"]->getDouble();
+			lastPrevY=2*y-path[k]["svg:y2"]->getDouble();
+		}
+		else if (action[0] == 'S' && coord1Ok)
+		{
+			getCubicBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
+			                   path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
+			                   x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
+			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
+		}
+		else if (action[0] == 'Q' && coord1Ok)
+		{
+			getQuadraticBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
+			                       x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
+			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
+		}
+		else if (action[0] == 'T' && coordOk)
+		{
+			getQuadraticBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
+			                       x, y, xmin, ymin, xmax, ymax);
+			lastPrevSet=true;
+			lastPrevX=2*x-lastPrevX;
+			lastPrevY=2*y-lastPrevY;
+		}
+		else if (action[0] == 'A' && coordOk && path[k]["svg:rx"] && path[k]["svg:ry"])
+		{
+			getEllipticalArcBBox(lastX, lastY, path[k]["svg:rx"]->getDouble(), path[k]["svg:ry"]->getDouble(),
+			                     path[k]["librevenge:rotate"] ? path[k]["librevenge:rotate"]->getDouble() : 0.0,
+			                     path[k]["librevenge:large-arc"] ? path[k]["librevenge:large-arc"]->getInt() : 1,
+			                     path[k]["librevenge:sweep"] ? path[k]["librevenge:sweep"]->getInt() : 1,
+			                     x, y, xmin, ymin, xmax, ymax);
+		}
+		else if (action[0] != 'M' && action[0] != 'L' && action[0] != 'H' && action[0] != 'V')
+		{
+			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: problem reading a path\n"));
+		}
+		px = (px > xmin ? xmin : px);
+		py = (py > ymin ? ymin : py);
+		qx = (qx < xmax ? xmax : qx);
+		qy = (qy < ymax ? ymax : qy);
+		lastX = x;
+		lastY = y;
+		if (!lastPrevSet)
+		{
+			lastPrevX=lastX;
+			lastPrevY=lastY;
+		}
+	}
+	return true;
+}
+
+librevenge::RVNGString convertPath(const librevenge::RVNGPropertyListVector &path, double px, double py)
+{
+	librevenge::RVNGString sValue("");
+	for (unsigned i = 0; i < path.count(); ++i)
+	{
+		if (!path[i]["librevenge:path-action"])
+			continue;
+		std::string action=path[i]["librevenge:path-action"]->getStr().cstr();
+		if (action.length()!=1) continue;
+		bool coordOk=path[i]["svg:x"]&&path[i]["svg:y"];
+		bool coord1Ok=coordOk && path[i]["svg:x1"]&&path[i]["svg:y1"];
+		bool coord2Ok=coord1Ok && path[i]["svg:x2"]&&path[i]["svg:y2"];
+		librevenge::RVNGString sElement;
+		// 2540 is 2.54*1000, 2.54 in = 1 inch
+		if (path[i]["svg:x"] && action[0] == 'H')
+		{
+			sElement.sprintf("H%i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540));
+			sValue.append(sElement);
+		}
+		else if (path[i]["svg:y"] && action[0] == 'V')
+		{
+			sElement.sprintf("V%i", (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (coordOk && (action[0] == 'M' || action[0] == 'L' || action[0] == 'T'))
+		{
+			sElement.sprintf("%c%i %i", action[0], (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (coord1Ok && (action[0] == 'Q' || action[0] == 'S'))
+		{
+			sElement.sprintf("%c%i %i %i %i", action[0], (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (coord2Ok && action[0] == 'C')
+		{
+			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
+			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (coordOk && path[i]["svg:rx"] && path[i]["svg:ry"] && action[0] == 'A')
+		{
+			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
+			                 (unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["librevenge:rotate"] ? path[i]["librevenge:rotate"]->getInt() : 0),
+			                 (path[i]["librevenge:large-arc"] ? path[i]["librevenge:large-arc"]->getInt() : 1),
+			                 (path[i]["librevenge:sweep"] ? path[i]["librevenge:sweep"]->getInt() : 1),
+			                 (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sValue.append(sElement);
+		}
+		else if (action[0] == 'Z')
+			sValue.append(" Z");
+	}
+	return sValue;
 }
 
 }

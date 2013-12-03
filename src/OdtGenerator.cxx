@@ -36,6 +36,7 @@
 #include "TextRunStyle.hxx"
 #include "FontStyle.hxx"
 #include "ListStyle.hxx"
+#include "OdfGenerator.hxx"
 #include "PageSpan.hxx"
 #include "SectionStyle.hxx"
 #include "TableStyle.hxx"
@@ -116,23 +117,13 @@ WriterListState::WriterListState(const WriterListState &state) :
 {
 }
 
-class OdtGeneratorPrivate
+class OdtGeneratorPrivate : public OdfGenerator
 {
 public:
 	OdtGeneratorPrivate();
 	~OdtGeneratorPrivate();
-	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType)
-	{
-		if (!pHandler)
-		{
-			ODFGEN_DEBUG_MSG(("OdtGeneratorPrivate::addDocumentHandler: called without handler\n"));
-			return;
-		}
-		mDocumentStreamHandlers[streamType] = pHandler;
-	}
 
-	static std::string getDocumentType(OdfStreamType streamType);
-	bool _writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
+	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeStyles(OdfDocumentHandler *pHandler);
 	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
@@ -149,25 +140,10 @@ public:
 	/** retrieves the list style corresponding to a given id. */
 	void _retrieveListStyle(int id);
 
-	OdfEmbeddedObject _findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType);
-	OdfEmbeddedImage _findEmbeddedImageHandler(const librevenge::RVNGString &mimeType);
-
-	unsigned _getObjectId(librevenge::RVNGString val="");
-
-	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
 
 	std::stack<WriterDocumentState> mWriterDocumentStates;
 
 	std::stack<WriterListState> mWriterListStates;
-
-	// paragraph styles
-	ParagraphStyleManager mParagraphManager;
-
-	// span styles
-	SpanStyleManager mSpanManager;
-
-	// font styles
-	FontStyleManager mFontManager;
 
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
@@ -182,20 +158,8 @@ public:
 
 	std::map<librevenge::RVNGString, unsigned, ltstr> mFrameIdMap;
 
-	// embedded object handlers
-	std::map<librevenge::RVNGString, OdfEmbeddedObject, ltstr > mObjectHandlers;
-	std::map<librevenge::RVNGString, OdfEmbeddedImage, ltstr > mImageHandlers;
-
-	// metadata
-	std::vector<DocumentElement *> mMetaData;
-
 	// list styles
 	unsigned int miNumListStyles;
-
-	// content elements
-	std::vector<DocumentElement *> mBodyElements;
-	// the current set of elements that we're writing to
-	std::vector<DocumentElement *> *mpCurrentContentElements;
 
 	// page state
 	std::vector<PageSpan *> mPageSpans;
@@ -207,13 +171,8 @@ public:
 	// a map id -> last list style defined with id
 	std::map<int, ListStyle *> mIdListStyleMap;
 
-	// object state
-	unsigned miObjectNumber;
-
 	// table state
 	TableStyle *mpCurrentTableStyle;
-
-	const char *mpPassword;
 
 private:
 	OdtGeneratorPrivate(const OdtGeneratorPrivate &);
@@ -222,24 +181,17 @@ private:
 };
 
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
-	mDocumentStreamHandlers(),
 	mWriterDocumentStates(),
 	mWriterListStates(),
-	mParagraphManager(), mSpanManager(), mFontManager(),
 	mSectionStyles(), mTableStyles(),
 	mFrameStyles(), mFrameAutomaticStyles(), mFrameIdMap(),
-	mObjectHandlers(), mImageHandlers(), mMetaData(),
 	miNumListStyles(0),
-	mBodyElements(),
-	mpCurrentContentElements(&mBodyElements),
 	mPageSpans(),
 	mpCurrentPageSpan(0),
 	miNumPageStyles(0),
 	mListStyles(),
 	mIdListStyleMap(),
-	miObjectNumber(0),
-	mpCurrentTableStyle(0),
-	mpPassword(0)
+	mpCurrentTableStyle(0)
 {
 	mWriterDocumentStates.push(WriterDocumentState());
 	mWriterListStates.push(WriterListState());
@@ -251,16 +203,6 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Cleaning up our mess..\n"));
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Destroying the body elements\n"));
-	for (std::vector<DocumentElement *>::iterator iterBody = mBodyElements.begin(); iterBody != mBodyElements.end(); ++iterBody)
-	{
-		delete(*iterBody);
-		(*iterBody) = 0;
-	}
-
-	mParagraphManager.clean();
-	mSpanManager.clean();
-	mFontManager.clean();
-
 	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
 	        iterListStyles != mListStyles.end(); ++iterListStyles)
 	{
@@ -282,76 +224,14 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	{
 		delete(*iterPageSpans);
 	}
-	for (std::vector<DocumentElement *>::iterator iterFrameStyles = mFrameStyles.begin();
-	        iterFrameStyles != mFrameStyles.end(); ++iterFrameStyles)
-	{
-		delete(*iterFrameStyles);
-	}
-	for (std::vector<DocumentElement *>::iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
-	        iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); ++iterFrameAutomaticStyles)
-	{
-		delete(*iterFrameAutomaticStyles);
-	}
-	for (std::vector<DocumentElement *>::iterator iterMetaData = mMetaData.begin();
-	        iterMetaData != mMetaData.end(); ++iterMetaData)
-	{
-		delete(*iterMetaData);
-	}
+	emptyStorage(&mFrameStyles);
+	emptyStorage(&mFrameAutomaticStyles);
 }
 
-OdfEmbeddedObject OdtGeneratorPrivate::_findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType)
-{
-	std::map<librevenge::RVNGString, OdfEmbeddedObject, ltstr>::iterator i = mObjectHandlers.find(mimeType);
-	if (i != mObjectHandlers.end())
-		return i->second;
-
-	return 0;
-}
-
-OdfEmbeddedImage OdtGeneratorPrivate::_findEmbeddedImageHandler(const librevenge::RVNGString &mimeType)
-{
-	std::map<librevenge::RVNGString, OdfEmbeddedImage, ltstr>::iterator i = mImageHandlers.find(mimeType);
-	if (i != mImageHandlers.end())
-		return i->second;
-
-	return 0;
-}
-
-unsigned OdtGeneratorPrivate::_getObjectId(librevenge::RVNGString val)
-{
-	bool hasLabel = val.cstr() && val.len();
-	if (hasLabel && mFrameIdMap.find(val) != mFrameIdMap.end())
-		return mFrameIdMap.find(val)->second;
-	unsigned id=miObjectNumber++;
-	if (hasLabel)
-		mFrameIdMap[val]=id;
-	return id;
-}
-
-std::string OdtGeneratorPrivate::getDocumentType(OdfStreamType streamType)
-{
-	switch (streamType)
-	{
-	case ODF_FLAT_XML:
-		return "office:document";
-	case ODF_CONTENT_XML:
-		return "office:document-content";
-	case ODF_STYLES_XML:
-		return "office:document-styles";
-	case ODF_SETTINGS_XML:
-		return "office:document-settings";
-	case ODF_META_XML:
-		return "office:document-meta";
-	default:
-		return "office:document";
-	}
-}
 void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
-	for (std::vector<DocumentElement *>::const_iterator iterFrameAutomaticStyles = mFrameAutomaticStyles.begin();
-	        iterFrameAutomaticStyles != mFrameAutomaticStyles.end(); ++iterFrameAutomaticStyles)
-		(*iterFrameAutomaticStyles)->write(pHandler);
+	sendStorage(&mFrameAutomaticStyles, pHandler);
 	mFontManager.write(pHandler); // do nothing
 	mSpanManager.write(pHandler);
 	mParagraphManager.write(pHandler);
@@ -471,9 +351,7 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:text-properties");
 		pHandler->endElement("style:style");
 	}
-	for (std::vector<DocumentElement *>::const_iterator iter = mFrameStyles.begin();
-	        iter != mFrameStyles.end(); ++iter)
-		(*iter)->write(pHandler);
+	sendStorage(&mFrameStyles, pHandler);
 
 	TagOpenElement lineOpenElement("text:linenumbering-configuration");
 	lineOpenElement.addAttribute("text:number-lines", "false");
@@ -574,7 +452,7 @@ void OdtGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 		mPageSpans[i]->writePageLayout((int)i, pHandler);
 }
 
-bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
+bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Printing out the header stuff..\n"));
 
@@ -608,12 +486,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 
 	// write out the metadata
 	if (streamType == ODF_FLAT_XML || streamType == ODF_META_XML)
-	{
-		TagOpenElement("office:meta").write(pHandler);
-		for (std::vector<DocumentElement *>::const_iterator iterMetaData = mMetaData.begin(); iterMetaData != mMetaData.end(); ++iterMetaData)
-			(*iterMetaData)->write(pHandler);
-		pHandler->endElement("office:meta");
-	}
+		writeDocumentMetaData(pHandler);
 
 	// write out the font styles
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
@@ -637,9 +510,7 @@ bool OdtGeneratorPrivate::_writeTargetDocument(OdfDocumentHandler *pHandler, Odf
 		// writing out the document
 		TagOpenElement("office:body").write(pHandler);
 		TagOpenElement("office:text").write(pHandler);
-
-		for (std::vector<DocumentElement *>::const_iterator iterBodyElements = mBodyElements.begin(); iterBodyElements != mBodyElements.end(); ++iterBodyElements)
-			(*iterBodyElements)->write(pHandler);
+		sendStorage(&mBodyStorage, pHandler);
 		ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Finished writing all doc els..\n"));
 
 		pHandler->endElement("office:text");
@@ -672,19 +543,7 @@ void OdtGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStr
 
 void OdtGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propList)
 {
-	librevenge::RVNGPropertyList::Iter i(propList);
-	for (i.rewind(); i.next();)
-	{
-		// filter out librevenge elements
-		if (strncmp(i.key(), "librevenge", 10) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
-		{
-			mpImpl->mMetaData.push_back(new TagOpenElement(i.key()));
-			librevenge::RVNGString sStringValue(i()->getStr(), true);
-			mpImpl->mMetaData.push_back(new CharDataElement(sStringValue.cstr()));
-			mpImpl->mMetaData.push_back(new TagCloseElement(i.key()));
-		}
-	}
-
+	mpImpl->setDocumentMetaData(propList);
 }
 
 void OdtGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
@@ -706,12 +565,12 @@ void OdtGenerator::openHeader(const librevenge::RVNGPropertyList &propList)
 	else
 		mpImpl->mpCurrentPageSpan->setHeaderContent(pHeaderFooterContentElements);
 
-	mpImpl->mpCurrentContentElements = pHeaderFooterContentElements;
+	mpImpl->pushStorage(pHeaderFooterContentElements);
 }
 
 void OdtGenerator::closeHeader()
 {
-	mpImpl->mpCurrentContentElements = &(mpImpl->mBodyElements);
+	mpImpl->popStorage();
 }
 
 void OdtGenerator::openFooter(const librevenge::RVNGPropertyList &propList)
@@ -723,12 +582,12 @@ void OdtGenerator::openFooter(const librevenge::RVNGPropertyList &propList)
 	else
 		mpImpl->mpCurrentPageSpan->setFooterContent(pHeaderFooterContentElements);
 
-	mpImpl->mpCurrentContentElements = pHeaderFooterContentElements;
+	mpImpl->pushStorage(pHeaderFooterContentElements);
 }
 
 void OdtGenerator::closeFooter()
 {
-	mpImpl->mpCurrentContentElements = &(mpImpl->mBodyElements);
+	mpImpl->popStorage();
 }
 
 void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
@@ -755,7 +614,7 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
 		pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
 		pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
-		mpImpl->mpCurrentContentElements->push_back(pSectionOpenElement);
+		mpImpl->getCurrentStorage()->push_back(pSectionOpenElement);
 	}
 	else
 		mpImpl->mWriterDocumentStates.top().mbInFakeSection = true;
@@ -764,7 +623,7 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 void OdtGenerator::closeSection()
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInFakeSection)
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:section"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:section"));
 	else
 		mpImpl->mWriterDocumentStates.top().mbInFakeSection = false;
 }
@@ -775,7 +634,7 @@ void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	// from "Table Contents"
 
 	librevenge::RVNGPropertyList finalPropList(propList);
-	if (mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan && mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
+	if (mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 	{
 		librevenge::RVNGString sPageStyleName;
 		sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
@@ -793,37 +652,22 @@ void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	}
 	else
 		finalPropList.insert("style:parent-style-name", "Standard");
-
-	librevenge::RVNGString sName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
-
-	// create a document element corresponding to the paragraph, and append it to our list of document elements
-	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
-	pParagraphOpenElement->addAttribute("text:style-name", sName);
-	mpImpl->mpCurrentContentElements->push_back(pParagraphOpenElement);
+	mpImpl->openParagraph(finalPropList);
 }
 
 void OdtGenerator::closeParagraph()
 {
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:p"));
+	mpImpl->closeParagraph();
 }
 
 void OdtGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 {
-	if (propList["style:font-name"])
-		mpImpl->mFontManager.findOrAdd(propList["style:font-name"]->getStr().cstr());
-
-	// Get the style
-	librevenge::RVNGString sName = mpImpl->mSpanManager.findOrAdd(propList);
-
-	// create a document element corresponding to the paragraph, and append it to our list of document elements
-	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
-	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());
-	mpImpl->mpCurrentContentElements->push_back(pSpanOpenElement);
+	mpImpl->openSpan(propList);
 }
 
 void OdtGenerator::closeSpan()
 {
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:span"));
+	mpImpl->closeSpan();
 }
 
 void OdtGeneratorPrivate::_storeListStyle(ListStyle *listStyle)
@@ -940,7 +784,7 @@ void OdtGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &prop
 {
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:p"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
 		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
 	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
@@ -956,14 +800,14 @@ void OdtGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &prop
 		pListLevelOpenElement->addAttribute("text:continue-numbering", "true");
 	}
 
-	mpImpl->mpCurrentContentElements->push_back(pListLevelOpenElement);
+	mpImpl->getCurrentStorage()->push_back(pListLevelOpenElement);
 }
 
 void OdtGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:p"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
 		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
 	if (mpImpl->mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
@@ -974,7 +818,7 @@ void OdtGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &pr
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	mpImpl->_openListLevel(pListLevelOpenElement);
 
-	mpImpl->mpCurrentContentElements->push_back(pListLevelOpenElement);
+	mpImpl->getCurrentStorage()->push_back(pListLevelOpenElement);
 }
 
 void OdtGeneratorPrivate::_openListLevel(TagOpenElement *pListLevelOpenElement)
@@ -982,7 +826,7 @@ void OdtGeneratorPrivate::_openListLevel(TagOpenElement *pListLevelOpenElement)
 	if (!mWriterListStates.top().mbListElementOpened.empty() &&
 	        !mWriterListStates.top().mbListElementOpened.top())
 	{
-		mpCurrentContentElements->push_back(new TagOpenElement("text:list-item"));
+		getCurrentStorage()->push_back(new TagOpenElement("text:list-item"));
 		mWriterListStates.top().mbListElementOpened.top() = true;
 	}
 
@@ -1017,11 +861,11 @@ void OdtGeneratorPrivate::_closeListLevel()
 	}
 	if (mWriterListStates.top().mbListElementOpened.top())
 	{
-		mpCurrentContentElements->push_back(new TagCloseElement("text:list-item"));
+		getCurrentStorage()->push_back(new TagCloseElement("text:list-item"));
 		mWriterListStates.top().mbListElementOpened.top() = false;
 	}
 
-	mpCurrentContentElements->push_back(new TagCloseElement("text:list"));
+	getCurrentStorage()->push_back(new TagCloseElement("text:list"));
 	mWriterListStates.top().mbListElementOpened.pop();
 }
 
@@ -1033,7 +877,7 @@ void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 
 	if (mpImpl->mWriterListStates.top().mbListElementOpened.top())
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:list-item"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:list-item"));
 		mpImpl->mWriterListStates.top().mbListElementOpened.top() = false;
 	}
 
@@ -1044,18 +888,18 @@ void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 		finalPropList.insert("style:list-style-name", mpImpl->mWriterListStates.top().mpCurrentListStyle->getName());
 #endif
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->mParagraphManager.findOrAdd(finalPropList);
+	librevenge::RVNGString paragName = mpImpl->getParagraphName(finalPropList);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
 		pOpenListItem->addAttribute("text:start-value", propList["text:start-value"]->getStr());
-	mpImpl->mpCurrentContentElements->push_back(pOpenListItem);
+	mpImpl->getCurrentStorage()->push_back(pOpenListItem);
 
 	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
 	pOpenListElementParagraph->addAttribute("text:style-name", paragName);
-	mpImpl->mpCurrentContentElements->push_back(pOpenListElementParagraph);
+	mpImpl->getCurrentStorage()->push_back(pOpenListElementParagraph);
 
-	if (mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
+	if (mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 		mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;
 
 	mpImpl->mWriterListStates.top().mbListElementOpened.top() = true;
@@ -1071,7 +915,7 @@ void OdtGenerator::closeListElement()
 
 	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:p"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:p"));
 		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
 	}
 }
@@ -1087,7 +931,7 @@ void OdtGenerator::openFootnote(const librevenge::RVNGPropertyList &propList)
 		tmpString.append(propList["librevenge:number"]->getStr());
 		pOpenFootNote->addAttribute("text:id", tmpString);
 	}
-	mpImpl->mpCurrentContentElements->push_back(pOpenFootNote);
+	mpImpl->getCurrentStorage()->push_back(pOpenFootNote);
 
 	TagOpenElement *pOpenFootCitation = new TagOpenElement("text:note-citation");
 	if (propList["text:label"])
@@ -1095,15 +939,15 @@ void OdtGenerator::openFootnote(const librevenge::RVNGPropertyList &propList)
 		librevenge::RVNGString tmpString(propList["text:label"]->getStr(),true);
 		pOpenFootCitation->addAttribute("text:label", tmpString);
 	}
-	mpImpl->mpCurrentContentElements->push_back(pOpenFootCitation);
+	mpImpl->getCurrentStorage()->push_back(pOpenFootCitation);
 
 	if (propList["text:label"])
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["text:label"]->getStr().cstr()));
+		mpImpl->getCurrentStorage()->push_back(new CharDataElement(propList["text:label"]->getStr().cstr()));
 	else if (propList["librevenge:number"])
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["librevenge:number"]->getStr().cstr()));
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note-citation"));
+		mpImpl->getCurrentStorage()->push_back(new CharDataElement(propList["librevenge:number"]->getStr().cstr()));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-citation"));
 
-	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("text:note-body"));
+	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("text:note-body"));
 
 	mpImpl->mWriterDocumentStates.top().mbInNote = true;
 }
@@ -1114,8 +958,8 @@ void OdtGenerator::closeFootnote()
 	if (mpImpl->mWriterListStates.size() > 1)
 		mpImpl->mWriterListStates.pop();
 
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note-body"));
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-body"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note"));
 }
 
 void OdtGenerator::openEndnote(const librevenge::RVNGPropertyList &propList)
@@ -1129,7 +973,7 @@ void OdtGenerator::openEndnote(const librevenge::RVNGPropertyList &propList)
 		tmpString.append(propList["librevenge:number"]->getStr());
 		pOpenEndNote->addAttribute("text:id", tmpString);
 	}
-	mpImpl->mpCurrentContentElements->push_back(pOpenEndNote);
+	mpImpl->getCurrentStorage()->push_back(pOpenEndNote);
 
 	TagOpenElement *pOpenEndCitation = new TagOpenElement("text:note-citation");
 	if (propList["text:label"])
@@ -1137,15 +981,15 @@ void OdtGenerator::openEndnote(const librevenge::RVNGPropertyList &propList)
 		librevenge::RVNGString tmpString(propList["text:label"]->getStr(),true);
 		pOpenEndCitation->addAttribute("text:label", tmpString);
 	}
-	mpImpl->mpCurrentContentElements->push_back(pOpenEndCitation);
+	mpImpl->getCurrentStorage()->push_back(pOpenEndCitation);
 
 	if (propList["text:label"])
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["text:label"]->getStr().cstr()));
+		mpImpl->getCurrentStorage()->push_back(new CharDataElement(propList["text:label"]->getStr().cstr()));
 	else if (propList["librevenge:number"])
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["librevenge:number"]->getStr().cstr()));
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note-citation"));
+		mpImpl->getCurrentStorage()->push_back(new CharDataElement(propList["librevenge:number"]->getStr().cstr()));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-citation"));
 
-	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("text:note-body"));
+	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("text:note-body"));
 
 	mpImpl->mWriterDocumentStates.top().mbInNote = true;
 }
@@ -1156,14 +1000,14 @@ void OdtGenerator::closeEndnote()
 	if (mpImpl->mWriterListStates.size() > 1)
 		mpImpl->mWriterListStates.pop();
 
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note-body"));
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:note"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-body"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note"));
 }
 
 void OdtGenerator::openComment(const librevenge::RVNGPropertyList &)
 {
 	mpImpl->mWriterListStates.push(WriterListState());
-	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:annotation"));
+	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("office:annotation"));
 
 	mpImpl->mWriterDocumentStates.top().mbInNote = true;
 }
@@ -1174,7 +1018,7 @@ void OdtGenerator::closeComment()
 	if (mpImpl->mWriterListStates.size() > 1)
 		mpImpl->mWriterListStates.pop();
 
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:annotation"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("office:annotation"));
 }
 
 void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
@@ -1189,7 +1033,7 @@ void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 		const librevenge::RVNGPropertyListVector *columns = propList.child("librevenge:table-columns");
 		TableStyle *pTableStyle = new TableStyle(propList, (columns ? *columns : librevenge::RVNGPropertyListVector()), sTableName.cstr());
 
-		if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->mpCurrentContentElements == &(mpImpl->mBodyElements))
+		if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 		{
 			librevenge::RVNGString sMasterPageName("Page_Style_1");
 			pTableStyle->setMasterPageName(sMasterPageName);
@@ -1204,7 +1048,7 @@ void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 
 		pTableOpenElement->addAttribute("table:name", sTableName.cstr());
 		pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
-		mpImpl->mpCurrentContentElements->push_back(pTableOpenElement);
+		mpImpl->getCurrentStorage()->push_back(pTableOpenElement);
 
 		for (int i=0; i<pTableStyle->getNumColumns(); ++i)
 		{
@@ -1212,10 +1056,10 @@ void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 			librevenge::RVNGString sColumnStyleName;
 			sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
 			pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
-			mpImpl->mpCurrentContentElements->push_back(pTableColumnOpenElement);
+			mpImpl->getCurrentStorage()->push_back(pTableColumnOpenElement);
 
 			TagCloseElement *pTableColumnCloseElement = new TagCloseElement("table:table-column");
-			mpImpl->mpCurrentContentElements->push_back(pTableColumnCloseElement);
+			mpImpl->getCurrentStorage()->push_back(pTableColumnCloseElement);
 		}
 	}
 }
@@ -1231,7 +1075,7 @@ void OdtGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 	}
 	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("table:table-header-rows"));
+		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("table:table-header-rows"));
 		mpImpl->mWriterDocumentStates.top().mbHeaderRow = true;
 	}
 
@@ -1242,17 +1086,17 @@ void OdtGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 
 	TagOpenElement *pTableRowOpenElement = new TagOpenElement("table:table-row");
 	pTableRowOpenElement->addAttribute("table:style-name", sTableRowStyleName);
-	mpImpl->mpCurrentContentElements->push_back(pTableRowOpenElement);
+	mpImpl->getCurrentStorage()->push_back(pTableRowOpenElement);
 }
 
 void OdtGenerator::closeTableRow()
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote && mpImpl->mpCurrentTableStyle)
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("table:table-row"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-row"));
 		if (mpImpl->mWriterDocumentStates.top().mbHeaderRow)
 		{
-			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("table:table-header-rows"));
+			mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-header-rows"));
 			mpImpl->mWriterDocumentStates.top().mbHeaderRow = false;
 		}
 	}
@@ -1282,7 +1126,7 @@ void OdtGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 		pTableCellOpenElement->addAttribute("table:number-rows-spanned",
 		                                    propList["table:number-rows-spanned"]->getStr().cstr());
 	// pTableCellOpenElement->addAttribute("table:value-type", "string");
-	mpImpl->mpCurrentContentElements->push_back(pTableCellOpenElement);
+	mpImpl->getCurrentStorage()->push_back(pTableCellOpenElement);
 
 	mpImpl->mWriterDocumentStates.top().mbTableCellOpened = true;
 }
@@ -1291,7 +1135,7 @@ void OdtGenerator::closeTableCell()
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote && mpImpl->mpCurrentTableStyle)
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("table:table-cell"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-cell"));
 		mpImpl->mWriterDocumentStates.top().mbTableCellOpened = false;
 	}
 }
@@ -1300,8 +1144,8 @@ void OdtGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote && mpImpl->mpCurrentTableStyle)
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("table:covered-table-cell"));
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("table:covered-table-cell"));
+		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("table:covered-table-cell"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:covered-table-cell"));
 	}
 }
 
@@ -1309,51 +1153,34 @@ void OdtGenerator::closeTable()
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInNote)
 	{
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("table:table"));
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table"));
 	}
 }
 
 
 void OdtGenerator::insertTab()
 {
-	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("text:tab"));
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:tab"));
+	mpImpl->insertTab();
 }
 
 void OdtGenerator::insertSpace()
 {
-	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("text:s"));
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:s"));
+	mpImpl->insertSpace();
 }
 
 void OdtGenerator::insertLineBreak()
 {
-	mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("text:line-break"));
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("text:line-break"));
+	mpImpl->insertLineBreak();
 }
 
 void OdtGenerator::insertField(const librevenge::RVNGPropertyList &propList)
 {
-	if (!propList["librevenge:field-type"] || propList["librevenge:field-type"]->getStr().empty())
-		return;
-
-	const librevenge::RVNGString &type = propList["librevenge:field-type"]->getStr();
-
-	TagOpenElement *openElement = new TagOpenElement(type);
-	if (type == "text:page-number")
-		openElement->addAttribute("text:select-page", "current");
-
-	if (propList["style:num-format"])
-		openElement->addAttribute("style:num-format", propList["style:num-format"]->getStr());
-
-	mpImpl->mpCurrentContentElements->push_back(openElement);
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement(type));
+	mpImpl->insertField(propList);
 }
 
 void OdtGenerator::insertText(const librevenge::RVNGString &text)
 {
-	DocumentElement *pText = new TextElement(text);
-	mpImpl->mpCurrentContentElements->push_back(pText);
+	mpImpl->insertText(text);
 }
 
 void OdtGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
@@ -1365,9 +1192,9 @@ void OdtGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGString frameStyleName;
 	unsigned objectId = 0;
 	if (propList["librevenge:frame-name"])
-		objectId= mpImpl->_getObjectId(propList["librevenge:frame-name"]->getStr());
+		objectId= mpImpl->getFrameId(propList["librevenge:frame-name"]->getStr());
 	else
-		objectId= mpImpl->_getObjectId("");
+		objectId= mpImpl->getFrameId("");
 	frameStyleName.sprintf("GraphicFrame_%i", objectId);
 	frameStyleOpenElement->addAttribute("style:name", frameStyleName);
 	frameStyleOpenElement->addAttribute("style:family", "graphic");
@@ -1530,7 +1357,7 @@ void OdtGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	if (propList["draw:z-index"])
 		drawFrameOpenElement->addAttribute("draw:z-index", propList["draw:z-index"]->getStr());
 
-	mpImpl->mpCurrentContentElements->push_back(drawFrameOpenElement);
+	mpImpl->getCurrentStorage()->push_back(drawFrameOpenElement);
 
 	mpImpl->mWriterDocumentStates.top().mbInFrame = true;
 }
@@ -1540,78 +1367,16 @@ void OdtGenerator::closeFrame()
 	if (mpImpl->mWriterListStates.size() > 1)
 		mpImpl->mWriterListStates.pop();
 
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:frame"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 
 	mpImpl->mWriterDocumentStates.top().mbInFrame = false;
 }
 
 void OdtGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propList)
 {
-	if (!propList["office:binary-data"])
-		return;
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
-	if (!propList["librevenge:mime-type"])
-		return;
-
-	OdfEmbeddedObject tmpObjectHandler = mpImpl->_findEmbeddedObjectHandler(propList["librevenge:mime-type"]->getStr());
-	OdfEmbeddedImage tmpImageHandler = mpImpl->_findEmbeddedImageHandler(propList["librevenge:mime-type"]->getStr());
-
-	if (tmpObjectHandler || tmpImageHandler)
-	{
-		librevenge::RVNGBinaryData data(propList["office:binary-data"]->getStr());
-		if (tmpObjectHandler)
-		{
-			std::vector<DocumentElement *> tmpContentElements;
-			InternalHandler tmpHandler(&tmpContentElements);
-
-
-			if (tmpObjectHandler(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
-			{
-				mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:object"));
-				for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); ++iter)
-					mpImpl->mpCurrentContentElements->push_back(*iter);
-				mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:object"));
-			}
-		}
-		if (tmpImageHandler)
-		{
-			librevenge::RVNGBinaryData output;
-			if (tmpImageHandler(data, output))
-			{
-				mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
-
-				mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
-
-				librevenge::RVNGString binaryBase64Data = output.getBase64Data();
-
-				mpImpl->mpCurrentContentElements->push_back(new CharDataElement(binaryBase64Data.cstr()));
-
-				mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:binary-data"));
-
-				mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:image"));
-			}
-		}
-	}
-	else
-		// assuming we have a binary image or a object_ole that we can just insert as it is
-	{
-		if (propList["librevenge:mime-type"]->getStr() == "object/ole")
-			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:object-ole"));
-		else
-			mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("draw:image"));
-
-		mpImpl->mpCurrentContentElements->push_back(new TagOpenElement("office:binary-data"));
-
-		mpImpl->mpCurrentContentElements->push_back(new CharDataElement(propList["office:binary-data"]->getStr().cstr()));
-
-		mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("office:binary-data"));
-
-		if (propList["librevenge:mime-type"]->getStr() == "object/ole")
-			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:object-ole"));
-		else
-			mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:image"));
-	}
+	mpImpl->insertBinaryObject(propList);
 }
 
 void OdtGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
@@ -1624,11 +1389,11 @@ void OdtGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 	if (propList["librevenge:next-frame-name"])
 	{
 		librevenge::RVNGString frameName;
-		unsigned id=mpImpl->_getObjectId(propList["librevenge:next-frame-name"]->getStr());
+		unsigned id=mpImpl->getFrameId(propList["librevenge:next-frame-name"]->getStr());
 		frameName.sprintf("Object%i", id);
 		textBoxOpenElement->addAttribute("draw:chain-next-name", frameName);
 	}
-	mpImpl->mpCurrentContentElements->push_back(textBoxOpenElement);
+	mpImpl->getCurrentStorage()->push_back(textBoxOpenElement);
 	mpImpl->mWriterDocumentStates.top().mbInTextBox = true;
 	mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
 }
@@ -1642,7 +1407,7 @@ void OdtGenerator::closeTextBox()
 	if (mpImpl->mWriterDocumentStates.size() > 1)
 		mpImpl->mWriterDocumentStates.pop();
 
-	mpImpl->mpCurrentContentElements->push_back(new TagCloseElement("draw:text-box"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 }
 
 void OdtGenerator::defineSectionStyle(librevenge::RVNGPropertyList const &)
@@ -1656,9 +1421,7 @@ void OdtGenerator::insertEquation(librevenge::RVNGPropertyList const &)
 void OdtGenerator::endDocument()
 {
 	// Write out the collected document
-	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mpImpl->mDocumentStreamHandlers.begin();
-	for (; iter != mpImpl->mDocumentStreamHandlers.end(); ++iter)
-		mpImpl->_writeTargetDocument(iter->second, iter->first);
+	mpImpl->writeTargetDocuments();
 }
 
 void OdtGenerator::startDocument()
@@ -1673,22 +1436,29 @@ void OdtGenerator::definePageStyle(librevenge::RVNGPropertyList const &)
 {
 }
 
-void OdtGenerator::defineParagraphStyle(librevenge::RVNGPropertyList const &)
+void OdtGenerator::defineParagraphStyle(librevenge::RVNGPropertyList const &propList)
 {
+	mpImpl->defineParagraphStyle(propList);
 }
 
-void OdtGenerator::defineCharacterStyle(librevenge::RVNGPropertyList const &)
+void OdtGenerator::defineCharacterStyle(librevenge::RVNGPropertyList const &propList)
 {
+	mpImpl->defineCharacterStyle(propList);
+}
+
+void OdtGenerator::initStateWith(OdfGenerator const &orig)
+{
+	mpImpl->initStateWith(orig);
 }
 
 void OdtGenerator::registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler)
 {
-	mpImpl->mObjectHandlers[mimeType] = objectHandler;
+	mpImpl->registerEmbeddedObjectHandler(mimeType, objectHandler);
 }
 
 void OdtGenerator::registerEmbeddedImageHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedImage imageHandler)
 {
-	mpImpl->mImageHandlers[mimeType] = imageHandler;
+	mpImpl->registerEmbeddedImageHandler(mimeType, imageHandler);
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

@@ -29,6 +29,7 @@
 
 #include "OdfDocumentHandler.hxx"
 
+class OdfGenerator;
 class OdgGeneratorPrivate;
 
 /** A generator for vector drawings.
@@ -74,12 +75,32 @@ public:
 	void closeUnorderedListLevel();
 	void openListElement(const librevenge::RVNGPropertyList &);
 	void closeListElement();
+	void defineParagraphStyle(const librevenge::RVNGPropertyList &);
 	void openParagraph(const librevenge::RVNGPropertyList &);
 	void closeParagraph();
+	void defineCharacterStyle(const librevenge::RVNGPropertyList &);
 	void openSpan(const librevenge::RVNGPropertyList &);
 	void closeSpan();
 	void startDocument(const librevenge::RVNGPropertyList &);
 	void endDocument();
+
+	/** Registers a handler for embedded images.
+	  *
+	  * @param[in] mimeType MIME type of the image
+	  * @param[in] imageHandler a function that handles processing of
+	  *		the image's data and generating output
+	  */
+	void registerEmbeddedImageHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedImage imageHandler);
+	/** Registers a handler for embedded objects.
+	  *
+	  * @param[in] mimeType MIME type of the object
+	  * @param[in] objectHandler a function that handles processing of
+	  *		the object's data and generating output
+	  */
+	void registerEmbeddedObjectHandler(const librevenge::RVNGString &mimeType, OdfEmbeddedObject objectHandler);
+
+	//! retrieve data from another odfgenerator ( the list and the embedded handler)
+	void initStateWith(OdfGenerator const &orig);
 private:
 	OdgGenerator(OdgGenerator const &);
 	OdgGenerator &operator=(OdgGenerator const &);
