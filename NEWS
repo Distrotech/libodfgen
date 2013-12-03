@@ -1,6 +1,8 @@
 libodfgen 0.0.4
 
 - fix handling of presentation tables
+- fix handling of presentation notes
+- fix handling of presentation comments
 
 libodfgen 0.0.3
 
