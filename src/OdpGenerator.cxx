@@ -403,6 +403,7 @@ OdpGenerator::OdpGenerator(OdfDocumentHandler *pHandler, const OdfStreamType str
 	mpImpl->mpHandler->startDocument();
 	TagOpenElement tmpOfficeDocumentContent(mpImpl->getDocumentType().c_str());
 	tmpOfficeDocumentContent.addAttribute("xmlns:office", "urn:oasis:names:tc:opendocument:xmlns:office:1.0");
+	tmpOfficeDocumentContent.addAttribute("xmlns:presentation", "urn:oasis:names:tc:opendocument:xmlns:presentation:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:table", "urn:oasis:names:tc:opendocument:xmlns:table:1.0");
 	tmpOfficeDocumentContent.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
