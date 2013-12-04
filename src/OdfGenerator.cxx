@@ -37,7 +37,8 @@
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
 	mFontManager(), mSpanManager(), mParagraphManager(),
-	mIdSpanMap(), mIdSpanNameMap(), mIdParagraphMap(), mIdParagraphNameMap(),
+	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
+	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
 	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(), mIdListStorageMap(),
 	miFrameNumber(0), mFrameNameIdMap(),
 	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
@@ -244,10 +245,27 @@ void OdfGenerator::insertSpace()
 	mpCurrentStorage->push_back(new TagCloseElement("text:s"));
 }
 
-void OdfGenerator::insertLineBreak()
+void OdfGenerator::insertLineBreak(bool forceParaClose)
 {
-	mpCurrentStorage->push_back(new TagOpenElement("text:line-break"));
-	mpCurrentStorage->push_back(new TagCloseElement("text:line-break"));
+	if (!forceParaClose)
+	{
+		mpCurrentStorage->push_back(new TagOpenElement("text:line-break"));
+		mpCurrentStorage->push_back(new TagCloseElement("text:line-break"));
+		return;
+	}
+	closeSpan();
+	closeParagraph();
+
+	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
+	if (!mLastParagraphName.empty())
+		pParagraphOpenElement->addAttribute("text:style-name", mLastParagraphName.cstr());
+	mpCurrentStorage->push_back(pParagraphOpenElement);
+
+	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
+	if (!mLastSpanName.empty())
+		pSpanOpenElement->addAttribute("text:style-name", mLastSpanName.cstr());
+	mpCurrentStorage->push_back(pSpanOpenElement);
+
 }
 
 void OdfGenerator::insertField(const librevenge::RVNGPropertyList &propList)
@@ -313,6 +331,7 @@ void OdfGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 	TagOpenElement *pSpanOpenElement = new TagOpenElement("text:span");
 	pSpanOpenElement->addAttribute("text:style-name", sName.cstr());
 	mpCurrentStorage->push_back(pSpanOpenElement);
+	mLastSpanName=sName;
 }
 
 void OdfGenerator::closeSpan()
@@ -361,6 +380,7 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
 	pParagraphOpenElement->addAttribute("text:style-name", paragraphName);
 	mpCurrentStorage->push_back(pParagraphOpenElement);
+	mLastParagraphName=paragraphName;
 }
 
 void OdfGenerator::closeParagraph()
@@ -471,20 +491,22 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 		closeParagraph();
 		state.mbListElementParagraphOpened = false;
 	}
+	librevenge::RVNGPropertyList pList(propList);
+	if (!pList["librevenge:level"])
+		pList.insert("librevenge:level", int(state.mbListElementOpened.size())+1);
 	if (!propList["librevenge:id"])
-		// suppose that propList define the style
-		defineListLevel(propList, ordered);
+		defineListLevel(pList, ordered);
 	else if (state.mbListElementOpened.empty())
 	{
 		// first item of a list, be sure to use the list with given id
-		retrieveListStyle(propList["librevenge:id"]->getInt());
+		retrieveListStyle(pList["librevenge:id"]->getInt());
 	}
 	// check if the list level is defined
-	if (propList["librevenge:level"] && state.mpCurrentListStyle &&
-	        !state.mpCurrentListStyle->isListLevelDefined(propList["librevenge:level"]->getInt()-1))
+	if (state.mpCurrentListStyle &&
+	        !state.mpCurrentListStyle->isListLevelDefined(pList["librevenge:level"]->getInt()-1))
 	{
-		int id=propList["librevenge:id"] ? propList["librevenge:id"]->getInt() : -1;
-		int level=propList["librevenge:level"]->getInt();
+		int id=pList["librevenge:id"] ? pList["librevenge:id"]->getInt() : -1;
+		int level=pList["librevenge:level"]->getInt();
 		ListStorage &list=getListStorage(id);
 		if (list.mLevelMap.find(level) != list.mLevelMap.end())
 			defineListLevel(list.mLevelMap.find(level)->second.mLevel, ordered);

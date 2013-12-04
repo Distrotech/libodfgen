@@ -128,7 +128,7 @@ public:
 
 	void insertTab();
 	void insertSpace();
-	void insertLineBreak();
+	void insertLineBreak(bool forceParaClose=false);
 	void insertField(const librevenge::RVNGPropertyList &field);
 	void insertText(const librevenge::RVNGString &text);
 
@@ -260,10 +260,15 @@ protected:
 	std::map<int, librevenge::RVNGPropertyList> mIdSpanMap;
 	// id to span name map
 	std::map<int, librevenge::RVNGString> mIdSpanNameMap;
+	// the last span name
+	librevenge::RVNGString mLastSpanName;
+
 	// id to paragraph map
 	std::map<int, librevenge::RVNGPropertyList> mIdParagraphMap;
 	// id to paragraph name map
 	std::map<int, librevenge::RVNGString> mIdParagraphNameMap;
+	// the last span name
+	librevenge::RVNGString mLastParagraphName;
 
 	// list styles
 	unsigned int miNumListStyles;
@@ -273,9 +278,6 @@ protected:
 	std::stack<ListState> mListStates;
 	// a map id -> last list style defined with id
 	std::map<int, ListStyle *> mIdListStyleMap;
-
-
-
 	// the list of seen list
 	std::map<int, ListStorage> mIdListStorageMap;
 

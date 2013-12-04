@@ -80,6 +80,8 @@ public:
 	void insertLineBreak();
 	void insertField(const ::librevenge::RVNGPropertyList &propList);
 
+	void defineOrderedListLevel(const librevenge::RVNGPropertyList &propList);
+	void defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList);
 	void openOrderedListLevel(const ::librevenge::RVNGPropertyList &propList);
 	void openUnorderedListLevel(const ::librevenge::RVNGPropertyList &propList);
 	void closeOrderedListLevel();

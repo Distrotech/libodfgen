@@ -1374,7 +1374,7 @@ void OdsGenerator::insertLineBreak()
 		return mpImpl->mAuxiliarOdgState->get().insertLineBreak();
 	if (!mpImpl->canWriteText())
 		return;
-	mpImpl->insertLineBreak();
+	mpImpl->insertLineBreak(mpImpl->getState().mbInSheetCell);
 }
 
 void OdsGenerator::insertField(const librevenge::RVNGPropertyList &propList)
