@@ -171,6 +171,16 @@ AS_IF([test "x$enable_debug" = "xyes"], [
 ])
 AC_SUBST(DEBUG_CXXFLAGS)
 
+# ============
+# Test switch
+# ============
+AC_ARG_ENABLE([test],
+	[AS_HELP_STRING([--enable-test], [Compile extra test executables])],
+	[enable_test="$enableval"],
+	[enable_test=no]
+)
+AM_CONDITIONAL([COMPILE_TEST], [test "x$enable_test" = "xyes"])
+
 # ========
 # shared_ptr implementation
 # ========
@@ -267,6 +277,7 @@ inc/Makefile
 inc/libodfgen/Makefile
 src/Makefile
 src/libodfgen.rc
+test/Makefile
 ])
 AC_OUTPUT
 

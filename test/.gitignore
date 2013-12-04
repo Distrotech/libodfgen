@@ -1,0 +1,13 @@
+.deps
+.libs
+Makefile
+Makefile.in
+*.rc
+*.lo
+*.la
+*.o
+*.odg
+*.odp
+*.ods
+*.odt
+testSpan1
