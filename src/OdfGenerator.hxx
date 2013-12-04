@@ -41,9 +41,14 @@
 #include "TextRunStyle.hxx"
 
 class DocumentElement;
+class ListStyle;
+
+// REMOVEME
+class OdpGenerator;
 
 class OdfGenerator
 {
+	friend class OdpGenerator;
 public:
 	typedef std::vector<DocumentElement *> Storage;
 
@@ -150,34 +155,21 @@ public:
 	// list function
 	//
 
-	//! list state
-	struct ListStorage
-	{
-	public:
-		//! constructor
-		ListStorage() : mLevelMap(), mbUsed(false) { }
-		//! a level
-		struct Level
-		{
-			//! constructor
-			Level(librevenge::RVNGPropertyList const &lvl=librevenge::RVNGPropertyList(), bool ordered=true) : mLevel(lvl), mbOrdered(ordered) { }
-			//! the property list
-			librevenge::RVNGPropertyList mLevel;
-			//! true if this is an ordered list
-			bool mbOrdered;
-		};
-		//! the level list
-		std::map<int, Level> mLevelMap;
-		//! a flag to know if the list is use (or not)
-		mutable bool mbUsed;
-	};
+	/// pop the list state (if possible)
+	void popListState();
+	/// push the list state by adding an empty value
+	void pushListState();
 
-	//! returns the list corresponding to an id
-	ListStorage &getList(int id);
-	//! store a level
-	void storeLevel(int id, const librevenge::RVNGPropertyList &level, bool ordered);
-	//! update if possible a list property list
-	void updateListLevelProperty(int id, bool ordered, librevenge::RVNGPropertyList &pList) const;
+	/// call to define a list level
+	void defineListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
+	/// call to open a list level
+	void openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
+	/// call to close a list level
+	void closeListLevel();
+	/// call to open a list element
+	void openListElement(const librevenge::RVNGPropertyList &propList);
+	/// call to close a list element
+	void closeListElement();
 
 	//
 	// frame
@@ -192,6 +184,60 @@ public:
 
 	//! inserts a binary object
 	void insertBinaryObject(const librevenge::RVNGPropertyList &propList);
+
+protected:
+	// list state
+	struct ListState
+	{
+		ListState();
+		ListState(const ListState &state);
+
+		ListStyle *mpCurrentListStyle;
+		unsigned int miCurrentListLevel;
+		unsigned int miLastListLevel;
+		unsigned int miLastListNumber;
+		bool mbListContinueNumbering;
+		bool mbListElementParagraphOpened;
+		std::stack<bool> mbListElementOpened;
+	private:
+		ListState &operator=(const ListState &state);
+	};
+
+	/// access to the current list state
+	ListState &getListState();
+protected:
+	/** stores a list style: update mListStyles,
+		mWriterListStates.top().mpCurrentListStyle and the different
+		maps
+	 */
+	void storeListStyle(ListStyle *listStyle);
+	/** retrieves the list style corresponding to a given id. */
+	void retrieveListStyle(int id);
+
+	//! list basic storage
+	struct ListStorage
+	{
+	public:
+		//! constructor
+		ListStorage() : mLevelMap() { }
+		//! a level
+		struct Level
+		{
+			//! constructor
+			Level(librevenge::RVNGPropertyList const &lvl=librevenge::RVNGPropertyList(), bool ordered=true) : mLevel(lvl), mbOrdered(ordered) { }
+			//! the property list
+			librevenge::RVNGPropertyList mLevel;
+			//! true if this is an ordered list
+			bool mbOrdered;
+		};
+		//! the level list
+		std::map<int, Level> mLevelMap;
+	};
+
+	//! returns the list corresponding to an id
+	ListStorage &getListStorage(int id);
+	//! store a level
+	void updateListStorage(const librevenge::RVNGPropertyList &level, int id, bool ordered);
 
 protected:
 	// the current set of elements that we're writing to
@@ -219,8 +265,20 @@ protected:
 	// id to paragraph name map
 	std::map<int, librevenge::RVNGString> mIdParagraphNameMap;
 
+	// list styles
+	unsigned int miNumListStyles;
+	// list styles
+	std::vector<ListStyle *> mListStyles;
+	// list states
+	std::stack<ListState> mListStates;
+	// a map id -> last list style defined with id
+	std::map<int, ListStyle *> mIdListStyleMap;
+
+
+
 	// the list of seen list
 	std::map<int, ListStorage> mIdListStorageMap;
+
 	// the number of created frame
 	unsigned miFrameNumber;
 	// the list of frame seens

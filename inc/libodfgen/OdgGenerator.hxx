@@ -43,6 +43,7 @@ public:
 	OdgGenerator();
 	~OdgGenerator();
 	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	void setDocumentMetaData(const librevenge::RVNGPropertyList &);
 
 	void startPage(const librevenge::RVNGPropertyList &);
 	void endPage();
@@ -63,24 +64,29 @@ public:
 	void startTextObject(const ::librevenge::RVNGPropertyList &propList);
 	void endTextObject();
 
-	void setDocumentMetaData(const librevenge::RVNGPropertyList &);
+	void defineParagraphStyle(const librevenge::RVNGPropertyList &propList);
+	void openParagraph(const librevenge::RVNGPropertyList &propList);
+	void closeParagraph();
+
+	void defineCharacterStyle(const librevenge::RVNGPropertyList &propList);
+	void openSpan(const librevenge::RVNGPropertyList &propList);
+	void closeSpan();
+
 	void insertText(const librevenge::RVNGString &text);
 	void insertTab();
 	void insertSpace();
 	void insertLineBreak();
-	void insertField(const librevenge::RVNGPropertyList &);
-	void openOrderedListLevel(const librevenge::RVNGPropertyList &);
-	void openUnorderedListLevel(const librevenge::RVNGPropertyList &);
+	void insertField(const librevenge::RVNGPropertyList &propList);
+
+	void defineOrderedListLevel(const librevenge::RVNGPropertyList &propList);
+	void defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList);
+	void openOrderedListLevel(const librevenge::RVNGPropertyList &propList);
+	void openUnorderedListLevel(const librevenge::RVNGPropertyList &propList);
 	void closeOrderedListLevel();
 	void closeUnorderedListLevel();
-	void openListElement(const librevenge::RVNGPropertyList &);
+	void openListElement(const librevenge::RVNGPropertyList &propList);
 	void closeListElement();
-	void defineParagraphStyle(const librevenge::RVNGPropertyList &);
-	void openParagraph(const librevenge::RVNGPropertyList &);
-	void closeParagraph();
-	void defineCharacterStyle(const librevenge::RVNGPropertyList &);
-	void openSpan(const librevenge::RVNGPropertyList &);
-	void closeSpan();
+
 	void startDocument(const librevenge::RVNGPropertyList &);
 	void endDocument();
 

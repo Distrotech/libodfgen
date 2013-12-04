@@ -30,6 +30,7 @@
 
 #include "DocumentElement.hxx"
 #include "InternalHandler.hxx"
+#include "ListStyle.hxx"
 
 #include "OdfGenerator.hxx"
 
@@ -37,9 +38,11 @@ OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
 	mFontManager(), mSpanManager(), mParagraphManager(),
 	mIdSpanMap(), mIdSpanNameMap(), mIdParagraphMap(), mIdParagraphNameMap(),
-	mIdListStorageMap(), miFrameNumber(0), mFrameNameIdMap(),
+	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(), mIdListStorageMap(),
+	miFrameNumber(0), mFrameNameIdMap(),
 	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
 {
+	mListStates.push(ListState());
 }
 
 OdfGenerator::~OdfGenerator()
@@ -48,9 +51,11 @@ OdfGenerator::~OdfGenerator()
 	mSpanManager.clean();
 	mFontManager.clean();
 
-
 	emptyStorage(&mMetaDataStorage);
 	emptyStorage(&mBodyStorage);
+	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
+	        iterListStyles != mListStyles.end(); ++iterListStyles)
+		delete(*iterListStyles);
 }
 
 std::string OdfGenerator::getDocumentType(OdfStreamType streamType)
@@ -104,9 +109,6 @@ void OdfGenerator::initStateWith(OdfGenerator const &orig)
 	mIdSpanMap=orig.mIdSpanMap;
 	mIdParagraphMap=orig.mIdParagraphMap;
 	mIdListStorageMap=orig.mIdListStorageMap;
-	std::map<int, ListStorage>::iterator it=mIdListStorageMap.begin();
-	for (; it != mIdListStorageMap.end() ; ++it)
-		it->second.mbUsed=false;
 }
 
 ////////////////////////////////////////////////////////////
@@ -369,7 +371,239 @@ void OdfGenerator::closeParagraph()
 ////////////////////////////////////////////////////////////
 // list
 ////////////////////////////////////////////////////////////
-OdfGenerator::ListStorage &OdfGenerator::getList(int id)
+OdfGenerator::ListState::ListState() :
+	mpCurrentListStyle(0),
+	miCurrentListLevel(0),
+	miLastListLevel(0),
+	miLastListNumber(0),
+	mbListContinueNumbering(false),
+	mbListElementParagraphOpened(false),
+	mbListElementOpened()
+{
+}
+
+OdfGenerator::ListState::ListState(const OdfGenerator::ListState &state) :
+	mpCurrentListStyle(state.mpCurrentListStyle),
+	miCurrentListLevel(state.miCurrentListLevel),
+	miLastListLevel(state.miCurrentListLevel),
+	miLastListNumber(state.miLastListNumber),
+	mbListContinueNumbering(state.mbListContinueNumbering),
+	mbListElementParagraphOpened(state.mbListElementParagraphOpened),
+	mbListElementOpened(state.mbListElementOpened)
+{
+}
+
+OdfGenerator::ListState &OdfGenerator::getListState()
+{
+	if (!mListStates.empty()) return mListStates.top();
+	ODFGEN_DEBUG_MSG(("OdfGenerator::getListState: call with no state\n"));
+	static OdfGenerator::ListState bad;
+	return bad;
+}
+
+void OdfGenerator::popListState()
+{
+	if (mListStates.size()>1)
+		mListStates.pop();
+}
+
+void OdfGenerator::pushListState()
+{
+	mListStates.push(ListState());
+}
+
+void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
+{
+	int id = -1;
+	if (propList["librevenge:id"])
+		id = propList["librevenge:id"]->getInt();
+	updateListStorage(propList, id, ordered);
+
+	ListStyle *pListStyle = 0;
+	ListState &state=getListState();
+	if (state.mpCurrentListStyle && state.mpCurrentListStyle->getListID() == id)
+		pListStyle = state.mpCurrentListStyle;
+
+	// this rather appalling conditional makes sure we only start a
+	// new list (rather than continue an old one) if: (1) we have no
+	// prior list or the prior list has another listId OR (2) we can
+	// tell that the user actually is starting a new list at level 1
+	// (and only level 1)
+	if (pListStyle == 0 ||
+	        (ordered && propList["librevenge:level"] && propList["librevenge:level"]->getInt()==1 &&
+	         (propList["text:start-value"] && propList["text:start-value"]->getInt() != int(state.miLastListNumber+1))))
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
+		librevenge::RVNGString sName;
+		if (ordered)
+			sName.sprintf("OL%i", miNumListStyles);
+		else
+			sName.sprintf("UL%i", miNumListStyles);
+		miNumListStyles++;
+		pListStyle = new ListStyle(sName.cstr(), id);
+		storeListStyle(pListStyle);
+		if (ordered)
+		{
+			state.mbListContinueNumbering = false;
+			state.miLastListNumber = 0;
+		}
+	}
+	else if (ordered)
+		state.mbListContinueNumbering = true;
+
+	if (!propList["librevenge:level"])
+		return;
+	// Iterate through ALL list styles with the same WordPerfect list id and define a level if it is not already defined
+	// This solves certain problems with lists that start and finish without reaching certain levels and then begin again
+	// and reach those levels. See gradguide0405_PC.wpd in the regression suite
+	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
+	{
+		if ((* iterListStyles) && (* iterListStyles)->getListID() == id)
+			(* iterListStyles)->updateListLevel((propList["librevenge:level"]->getInt() - 1), propList, ordered);
+	}
+}
+
+void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
+{
+	ListState &state=getListState();
+	if (state.mbListElementParagraphOpened)
+	{
+		closeParagraph();
+		state.mbListElementParagraphOpened = false;
+	}
+	if (!propList["librevenge:id"])
+		// suppose that propList define the style
+		defineListLevel(propList, ordered);
+	else if (state.mbListElementOpened.empty())
+	{
+		// first item of a list, be sure to use the list with given id
+		retrieveListStyle(propList["librevenge:id"]->getInt());
+	}
+	// check if the list level is defined
+	if (propList["librevenge:level"] && state.mpCurrentListStyle &&
+		!state.mpCurrentListStyle->isListLevelDefined(propList["librevenge:level"]->getInt()-1))
+	{
+		int id=propList["librevenge:id"] ? propList["librevenge:id"]->getInt() : -1;
+		int level=propList["librevenge:level"]->getInt();
+		ListStorage &list=getListStorage(id);
+		if (list.mLevelMap.find(level) != list.mLevelMap.end())
+			defineListLevel(list.mLevelMap.find(level)->second.mLevel, ordered);
+	}
+
+	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
+	if (!state.mbListElementOpened.empty() && !state.mbListElementOpened.top())
+	{
+		mpCurrentStorage->push_back(new TagOpenElement("text:list-item"));
+		state.mbListElementOpened.top() = true;
+	}
+
+	state.mbListElementOpened.push(false);
+	if (state.mbListElementOpened.size() == 1)
+	{
+		// add a sanity check ( to avoid a crash if mpCurrentListStyle is NULL)
+		if (state.mpCurrentListStyle)
+			pListLevelOpenElement->addAttribute("text:style-name", state.mpCurrentListStyle->getName());
+	}
+
+	if (ordered && state.mbListContinueNumbering)
+		pListLevelOpenElement->addAttribute("text:continue-numbering", "true");
+	mpCurrentStorage->push_back(pListLevelOpenElement);
+}
+
+void OdfGenerator::closeListLevel()
+{
+	ListState &state=getListState();
+	if (state.mbListElementOpened.empty())
+	{
+		// this implies that openListLevel was not called, so it is better to stop here
+		ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to close an unexisting level\n"));
+		return;
+	}
+	if (state.mbListElementOpened.top())
+	{
+		mpCurrentStorage->push_back(new TagCloseElement("text:list-item"));
+		state.mbListElementOpened.top() = false;
+	}
+
+	mpCurrentStorage->push_back(new TagCloseElement("text:list"));
+	state.mbListElementOpened.pop();
+}
+
+void OdfGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
+{
+	ListState &state=getListState();
+	state.miLastListLevel = state.miCurrentListLevel;
+	if (state.miCurrentListLevel == 1)
+		state.miLastListNumber++;
+
+	if (state.mbListElementOpened.top())
+	{
+		mpCurrentStorage->push_back(new TagCloseElement("text:list-item"));
+		state.mbListElementOpened.top() = false;
+	}
+
+	librevenge::RVNGPropertyList finalPropList(propList);
+#if 0
+	// this property is ignored in TextRunStyle.c++
+	if (state.mpCurrentListStyle)
+		finalPropList.insert("style:list-style-name", state.mpCurrentListStyle->getName());
+#endif
+	finalPropList.insert("style:parent-style-name", "Standard");
+	librevenge::RVNGString paragName = getParagraphName(finalPropList);
+
+	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
+	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
+		pOpenListItem->addAttribute("text:start-value", propList["text:start-value"]->getStr());
+	mpCurrentStorage->push_back(pOpenListItem);
+
+	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
+	pOpenListElementParagraph->addAttribute("text:style-name", paragName);
+	mpCurrentStorage->push_back(pOpenListElementParagraph);
+
+	state.mbListElementOpened.top() = true;
+	state.mbListElementParagraphOpened = true;
+	state.mbListContinueNumbering = false;
+}
+
+void OdfGenerator::closeListElement()
+{
+	// this code is kind of tricky, because we don't actually close the list element (because this list element
+	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
+	// code (or when we open another list element)
+	if (getListState().mbListElementParagraphOpened)
+	{
+		closeParagraph();
+		getListState().mbListElementParagraphOpened = false;
+	}
+}
+
+void OdfGenerator::storeListStyle(ListStyle *listStyle)
+{
+	if (!listStyle || listStyle == getListState().mpCurrentListStyle)
+		return;
+	mListStyles.push_back(listStyle);
+	getListState().mpCurrentListStyle = listStyle;
+	mIdListStyleMap[listStyle->getListID()]=listStyle;
+}
+
+void OdfGenerator::retrieveListStyle(int id)
+{
+	// first look if the current style is ok
+	if (getListState().mpCurrentListStyle &&
+		id == getListState().mpCurrentListStyle->getListID())
+		return;
+
+	// use the global map
+	if (mIdListStyleMap.find(id) != mIdListStyleMap.end())
+	{
+		getListState().mpCurrentListStyle = mIdListStyleMap.find(id)->second;
+		return;
+	}
+
+	ODFGEN_DEBUG_MSG(("OdfGenerator: impossible to find a list with id=%d\n",id));
+}
+
+OdfGenerator::ListStorage &OdfGenerator::getListStorage(int id)
 {
 	if (mIdListStorageMap.find(id)!=mIdListStorageMap.end())
 		return mIdListStorageMap.find(id)->second;
@@ -377,35 +611,11 @@ OdfGenerator::ListStorage &OdfGenerator::getList(int id)
 	return  mIdListStorageMap.find(id)->second;
 }
 
-void OdfGenerator::storeLevel(int id, const librevenge::RVNGPropertyList &level, bool ordered)
+void OdfGenerator::updateListStorage(const librevenge::RVNGPropertyList &level, int id, bool ordered)
 {
 	if (!level["librevenge:level"]) return;
-	ListStorage &list=getList(id);
+	ListStorage &list=getListStorage(id);
 	list.mLevelMap[level["librevenge:level"]->getInt()]=ListStorage::Level(level, ordered);
-}
-
-void OdfGenerator::updateListLevelProperty(int id, bool ordered, librevenge::RVNGPropertyList &pList) const
-{
-	if (!pList["librevenge:level"] || mIdListStorageMap.find(id)==mIdListStorageMap.end()) return;
-	ListStorage const &list=mIdListStorageMap.find(id)->second;
-	int lvl=pList["librevenge:level"]->getInt();
-	std::map<int, ListStorage::Level>::const_iterator it=list.mLevelMap.begin();
-	while (it!=list.mLevelMap.end())
-	{
-		if (it->first!=lvl)
-		{
-			++it;
-			continue;
-		}
-		ListStorage::Level const &level=it++->second;
-		if (level.mbOrdered!=ordered) continue;
-		librevenge::RVNGPropertyList::Iter i(level.mLevel);
-		for (i.rewind(); i.next();)
-		{
-			if (pList[i.key()] || i.child()) continue;
-			pList.insert(i.key(), i()->clone());
-		}
-	}
 }
 
 ////////////////////////////////////////////////////////////

@@ -190,37 +190,6 @@ public:
 	}
 
 	//
-	// List gestion
-	//
-
-	// send list level to odt auxiliary
-	bool sendListLevelsToAuxiliary(int id)
-	{
-		if (!mAuxiliarOdtState) return true;
-		ListStorage &list=getList(id);
-		if (list.mbUsed) return false;
-		std::map<int, ListStorage::Level>::const_iterator it=list.mLevelMap.begin();
-		while (it!=list.mLevelMap.end())
-		{
-			ListStorage::Level const &level=it++->second;
-			if (level.mbOrdered)
-				mAuxiliarOdtState->get().defineOrderedListLevel(level.mLevel);
-			else
-				mAuxiliarOdtState->get().defineUnorderedListLevel(level.mLevel);
-		}
-		list.mbUsed=true;
-		return true;
-	}
-
-	// reset all list send flag
-	void resetSendFlagsList() const
-	{
-		std::map<int, ListStorage>::const_iterator it=mIdListStorageMap.begin();
-		while (it != mIdListStorageMap.end())
-			(it++)->second.mbUsed=false;
-	}
-
-	//
 	// auxilliar generator
 	//
 	bool createAuxiliarOdtGenerator()
@@ -445,10 +414,15 @@ void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
 	sendStorage(&mFrameAutomaticStyles, pHandler);
-	_writePageLayouts(pHandler);
+
 	mFontManager.write(pHandler); // do nothing
-	mParagraphManager.write(pHandler);
 	mSpanManager.write(pHandler);
+	mParagraphManager.write(pHandler);
+
+	_writePageLayouts(pHandler);
+	// writing out the lists styles
+	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
+		(*iterListStyles)->write(pHandler);
 	mSheetManager.write(pHandler);
 
 	pHandler->endElement("office:automatic-styles");
@@ -1129,10 +1103,9 @@ void OdsGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &pr
 		ODFGEN_DEBUG_MSG(("OdsGenerator:defineOrderedListLevel: can not find list level\n"));
 		return;
 	}
-	int id = propList["librevenge:id"] ? propList["librevenge:id"]->getInt() : 0;
-	mpImpl->storeLevel(id, propList, true);
-	if (!mpImpl->mAuxiliarOdtState) return;
-	if (!mpImpl->sendListLevelsToAuxiliary(id))
+
+	mpImpl->defineListLevel(propList, true);
+	if (mpImpl->mAuxiliarOdtState)
 		mpImpl->mAuxiliarOdtState->get().defineOrderedListLevel(propList);
 }
 
@@ -1143,11 +1116,9 @@ void OdsGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &
 		ODFGEN_DEBUG_MSG(("OdsGenerator:defineUnorderedListLevel: can not find list level\n"));
 		return;
 	}
-	int id = propList["librevenge:id"] ? propList["librevenge:id"]->getInt() : 0;
-	mpImpl->storeLevel(id, propList, false);
-	if (!mpImpl->mAuxiliarOdtState)
-		return;
-	if (!mpImpl->sendListLevelsToAuxiliary(id))
+
+	mpImpl->defineListLevel(propList, false);
+	if (mpImpl->mAuxiliarOdtState)
 		mpImpl->mAuxiliarOdtState->get().defineUnorderedListLevel(propList);
 }
 
@@ -1155,38 +1126,24 @@ void OdsGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &prop
 {
 	mpImpl->open(OdsGeneratorPrivate::C_OrderedList);
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		int id = propList["librevenge:id"] ? propList["librevenge:id"]->getInt() : 0;
-		mpImpl->sendListLevelsToAuxiliary(id);
 		return mpImpl->mAuxiliarOdtState->get().openOrderedListLevel(propList);
-	}
 	if (mpImpl->mAuxiliarOdgState)
-	{
-		librevenge::RVNGPropertyList pList(propList);
-		if (pList["librevenge:id"])
-			mpImpl->updateListLevelProperty(propList["librevenge:id"]->getInt(), true, pList);
-		return mpImpl->mAuxiliarOdgState->get().openOrderedListLevel(pList);
-	}
-	ODFGEN_DEBUG_MSG(("OdsGenerator::openOrderedListLevel: ignored\n"));
+		return mpImpl->mAuxiliarOdgState->get().openOrderedListLevel(propList);
+	if (mpImpl->canWriteText())
+		return mpImpl->openListLevel(propList,true);
+	ODFGEN_DEBUG_MSG(("OdsGenerator::openOrderedListLevel: call outside a text zone\n"));
 }
 
 void OdsGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_UnorderedList);
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		int id = propList["librevenge:id"] ? propList["librevenge:id"]->getInt() : 0;
-		mpImpl->sendListLevelsToAuxiliary(id);
 		return mpImpl->mAuxiliarOdtState->get().openUnorderedListLevel(propList);
-	}
 	if (mpImpl->mAuxiliarOdgState)
-	{
-		librevenge::RVNGPropertyList pList(propList);
-		if (pList["librevenge:id"])
-			mpImpl->updateListLevelProperty(propList["librevenge:id"]->getInt(), false, pList);
-		return mpImpl->mAuxiliarOdgState->get().openUnorderedListLevel(pList);
-	}
-	ODFGEN_DEBUG_MSG(("OdsGenerator::openUnorderedListLevel: ignored\n"));
+		return mpImpl->mAuxiliarOdgState->get().openUnorderedListLevel(propList);
+	if (mpImpl->canWriteText())
+		return mpImpl->openListLevel(propList,false);
+	ODFGEN_DEBUG_MSG(("OdsGenerator::openUnorderedListLevel: call outside a text zone\n"));
 }
 
 void OdsGenerator::closeOrderedListLevel()
@@ -1196,6 +1153,8 @@ void OdsGenerator::closeOrderedListLevel()
 		mpImpl->mAuxiliarOdtState->get().closeOrderedListLevel();
 	if (mpImpl->mAuxiliarOdgState)
 		mpImpl->mAuxiliarOdgState->get().closeOrderedListLevel();
+	if (mpImpl->canWriteText())
+		return mpImpl->closeListLevel();
 }
 
 void OdsGenerator::closeUnorderedListLevel()
@@ -1205,6 +1164,8 @@ void OdsGenerator::closeUnorderedListLevel()
 		mpImpl->mAuxiliarOdtState->get().closeUnorderedListLevel();
 	if (mpImpl->mAuxiliarOdgState)
 		mpImpl->mAuxiliarOdgState->get().closeOrderedListLevel();
+	if (mpImpl->canWriteText())
+		return mpImpl->closeListLevel();
 }
 
 void OdsGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
@@ -1214,15 +1175,11 @@ void OdsGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 		return mpImpl->mAuxiliarOdtState->get().openListElement(propList);
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().openListElement(propList);
-	if (!mpImpl->canWriteText())
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::openListElement call outside a text zone\n"));
-		return;
-	}
-	librevenge::RVNGPropertyList finalPropList(propList);
-	finalPropList.insert("style:parent-style-name", "Standard");
-	// fixme
-	mpImpl->openParagraph(finalPropList);
+	if (mpImpl->canWriteText())
+		return mpImpl->openListElement(propList);
+
+	ODFGEN_DEBUG_MSG(("OdsGenerator::openListElement call outside a text zone\n"));
+	return;
 }
 
 void OdsGenerator::closeListElement()
@@ -1232,9 +1189,8 @@ void OdsGenerator::closeListElement()
 		return mpImpl->mAuxiliarOdtState->get().closeListElement();
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().closeListElement();
-	if (!mpImpl->canWriteText())
-		return;
-	mpImpl->closeParagraph();
+	if (mpImpl->canWriteText())
+		return closeListElement();
 }
 
 void OdsGenerator::openFootnote(const librevenge::RVNGPropertyList &)
@@ -1273,6 +1229,7 @@ void OdsGenerator::openComment(const librevenge::RVNGPropertyList &propList)
 	}
 
 	mpImpl->getState().mbInComment=true;
+	mpImpl->pushListState();
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("office:annotation"));
 }
 
@@ -1286,6 +1243,7 @@ void OdsGenerator::closeComment()
 		return mpImpl->mAuxiliarOdtState->get().closeComment();
 
 	if (!state.mbInComment) return;
+	mpImpl->popListState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("office:annotation"));
 }
 
@@ -1437,11 +1395,8 @@ void OdsGenerator::insertText(const librevenge::RVNGString &text)
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().insertText(text);
 	if (mpImpl->canWriteText())
-		mpImpl->insertText(text);
-	else
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::insertText ignored\n"));
-	}
+		return mpImpl->insertText(text);
+	ODFGEN_DEBUG_MSG(("OdsGenerator::insertText ignored\n"));
 }
 
 void OdsGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
@@ -1450,6 +1405,7 @@ void OdsGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	OdsGeneratorPrivate::State state=mpImpl->getState();
 	state.mbInFrame=state.mbFirstInFrame=true;
 	mpImpl->pushState(state);
+	mpImpl->pushListState();
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openFrame(propList);
 	if (mpImpl->mAuxiliarOdgState)
@@ -1641,6 +1597,7 @@ void OdsGenerator::closeFrame()
 {
 	if (!mpImpl->close(OdsGeneratorPrivate::C_Frame)) return;
 	OdsGeneratorPrivate::State state=mpImpl->getState();
+	mpImpl->popListState();
 	mpImpl->popState();
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().closeFrame();
@@ -1754,6 +1711,7 @@ void OdsGenerator::startGraphic(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->getState().mbFirstInFrame=false;
 	state.mbInGraphics=true;
 	mpImpl->pushState(state);
+	mpImpl->pushListState();
 
 	if (mpImpl->mAuxiliarOdtState)
 	{
@@ -1775,6 +1733,7 @@ void OdsGenerator::endGraphic()
 {
 	OdsGeneratorPrivate::State state=mpImpl->getState();
 	mpImpl->popState();
+	mpImpl->popListState();
 	if (!mpImpl->close(OdsGeneratorPrivate::C_Graphics))
 		return;
 	if (!state.mbInGraphics || !state.mbNewOdgGenerator || !mpImpl->mAuxiliarOdgState)

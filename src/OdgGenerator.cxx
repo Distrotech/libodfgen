@@ -1283,40 +1283,58 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:style"));
 	mpImpl->mbIsTextBox = true;
+
+	mpImpl->pushListState();
 }
 
 void OdgGenerator::endTextObject()
 {
-	if (mpImpl->mbIsTextBox)
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
-		mpImpl->mbIsTextBox = false;
-	}
+	if (!mpImpl->mbIsTextBox) return;
+	mpImpl->popListState();
+
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
+	mpImpl->mbIsTextBox = false;
 }
 
-void OdgGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &)
+void OdgGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
+	mpImpl->defineListLevel(propList, true);
 }
 
-void OdgGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &)
+void OdgGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
+	mpImpl->defineListLevel(propList, false);
+}
+
+void OdgGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->openListLevel(propList, true);
+}
+
+void OdgGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->openListLevel(propList, false);
 }
 
 void OdgGenerator::closeOrderedListLevel()
 {
+	mpImpl->closeListLevel();
 }
 
 void OdgGenerator::closeUnorderedListLevel()
 {
+	mpImpl->closeListLevel();
 }
 
-void OdgGenerator::openListElement(const librevenge::RVNGPropertyList &)
+void OdgGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 {
+	mpImpl->openListElement(propList);
 }
 
 void OdgGenerator::closeListElement()
 {
+	mpImpl->closeListElement();
 }
 
 void OdgGenerator::defineParagraphStyle(librevenge::RVNGPropertyList const &propList)

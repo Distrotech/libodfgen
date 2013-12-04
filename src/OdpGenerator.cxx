@@ -94,38 +94,6 @@ GeneratorState::GeneratorState()
 namespace
 {
 
-// list state
-struct ListState
-{
-	ListState();
-	ListState(const ListState &state);
-
-	ListStyle *mpCurrentListStyle;
-	bool mbListElementParagraphOpened;
-	std::stack<bool> mbListElementOpened;
-private:
-	ListState &operator=(const ListState &state);
-};
-
-ListState::ListState() :
-	mpCurrentListStyle(0),
-	mbListElementParagraphOpened(false),
-	mbListElementOpened()
-{
-}
-
-ListState::ListState(const ListState &state) :
-	mpCurrentListStyle(state.mpCurrentListStyle),
-	mbListElementParagraphOpened(state.mbListElementParagraphOpened),
-	mbListElementOpened(state.mbListElementOpened)
-{
-}
-
-}
-
-namespace
-{
-
 class GraphicTableCellStyle : public TableCellStyle
 {
 public:
@@ -235,7 +203,6 @@ public:
 
 	// generator state
 	GeneratorState mState;
-	std::stack<ListState> mListStates;
 
 private:
 	OdpGeneratorPrivate(const OdpGeneratorPrivate &);
@@ -265,8 +232,7 @@ OdpGeneratorPrivate::OdpGeneratorPrivate() :
 	mfMaxWidth(0.0),
 	mfHeight(0.0),
 	mfMaxHeight(0.0),
-	mState(),
-	mListStates()
+	mState()
 {
 }
 
@@ -346,40 +312,42 @@ void OdpGeneratorPrivate::writeNotesStyles(OdfDocumentHandler *pHandler)
 
 void OdpGeneratorPrivate::openListLevel(TagOpenElement *pListLevelOpenElement)
 {
-	if (!mListStates.top().mbListElementOpened.empty() &&
-	        !mListStates.top().mbListElementOpened.top())
+	ListState &state=getListState();
+	if (!state.mbListElementOpened.empty() &&
+	        !state.mbListElementOpened.top())
 	{
 		mpCurrentStorage->push_back(new TagOpenElement("text:list-item"));
-		mListStates.top().mbListElementOpened.top() = true;
+		state.mbListElementOpened.top() = true;
 	}
 
-	mListStates.top().mbListElementOpened.push(false);
-	if (mListStates.top().mbListElementOpened.size() == 1)
+	state.mbListElementOpened.push(false);
+	if (state.mbListElementOpened.size() == 1)
 	{
 		// add a sanity check ( to avoid a crash if mpCurrentListStyle is NULL)
-		if (mListStates.top().mpCurrentListStyle)
+		if (state.mpCurrentListStyle)
 		{
-			pListLevelOpenElement->addAttribute("text:style-name", mListStates.top().mpCurrentListStyle->getName());
+			pListLevelOpenElement->addAttribute("text:style-name", state.mpCurrentListStyle->getName());
 		}
 	}
 }
 
 void OdpGeneratorPrivate::closeListLevel()
 {
-	if (mListStates.top().mbListElementOpened.empty())
+	ListState &state=getListState();
+	if (state.mbListElementOpened.empty())
 	{
 		// this implies that openListLevel was not called, so it is better to stop here
-		ODFGEN_DEBUG_MSG(("OdtGenerator: Attempting to close an unexisting level\n"));
+		ODFGEN_DEBUG_MSG(("OdpGenerator: Attempting to close an unexisting level\n"));
 		return;
 	}
-	if (mListStates.top().mbListElementOpened.top())
+	if (state.mbListElementOpened.top())
 	{
 		mpCurrentStorage->push_back(new TagCloseElement("text:list-item"));
-		mListStates.top().mbListElementOpened.top() = false;
+		state.mbListElementOpened.top() = false;
 	}
 
 	mpCurrentStorage->push_back(new TagCloseElement("text:list"));
-	mListStates.top().mbListElementOpened.pop();
+	state.mbListElementOpened.pop();
 }
 
 void OdpGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
@@ -437,6 +405,9 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	mParagraphManager.write(pHandler);
 	mSpanManager.write(pHandler);
 
+	// writing out the lists styles
+	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
+		(*iterListStyles)->write(pHandler);
 	// writing out the table styles
 	for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
 	{
@@ -1614,10 +1585,10 @@ void OdpGenerator::insertField(const ::librevenge::RVNGPropertyList &propList)
 
 void OdpGenerator::openOrderedListLevel(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
-	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
+	if (mpImpl->getListState().mbListElementParagraphOpened)
 	{
 		mpImpl->closeParagraph();
-		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
+		mpImpl->getListState().mbListElementParagraphOpened = false;
 	}
 
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
@@ -1628,10 +1599,10 @@ void OdpGenerator::openOrderedListLevel(const ::librevenge::RVNGPropertyList &/*
 
 void OdpGenerator::openUnorderedListLevel(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
-	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
+	if (mpImpl->getListState().mbListElementParagraphOpened)
 	{
 		mpImpl->closeParagraph();
-		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
+		mpImpl->getListState().mbListElementParagraphOpened = false;
 	}
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	mpImpl->openListLevel(pListLevelOpenElement);
@@ -1651,10 +1622,10 @@ void OdpGenerator::closeUnorderedListLevel()
 
 void OdpGenerator::openListElement(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mListStates.top().mbListElementOpened.top())
+	if (mpImpl->getListState().mbListElementOpened.top())
 	{
 		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:list-item"));
-		mpImpl->mListStates.top().mbListElementOpened.top() = false;
+		mpImpl->getListState().mbListElementOpened.top() = false;
 	}
 
 	librevenge::RVNGPropertyList finalPropList(propList);
@@ -1670,8 +1641,8 @@ void OdpGenerator::openListElement(const ::librevenge::RVNGPropertyList &propLis
 	pOpenListElementParagraph->addAttribute("text:style-name", paragName);
 	mpImpl->getCurrentStorage()->push_back(pOpenListElementParagraph);
 
-	mpImpl->mListStates.top().mbListElementOpened.top() = true;
-	mpImpl->mListStates.top().mbListElementParagraphOpened = true;
+	mpImpl->getListState().mbListElementOpened.top() = true;
+	mpImpl->getListState().mbListElementParagraphOpened = true;
 }
 
 void OdpGenerator::closeListElement()
@@ -1680,10 +1651,10 @@ void OdpGenerator::closeListElement()
 	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
 	// code (or when we open another list element)
 
-	if (mpImpl->mListStates.top().mbListElementParagraphOpened)
+	if (mpImpl->getListState().mbListElementParagraphOpened)
 	{
 		mpImpl->closeParagraph();
-		mpImpl->mListStates.top().mbListElementParagraphOpened = false;
+		mpImpl->getListState().mbListElementParagraphOpened = false;
 	}
 }
 
@@ -1745,7 +1716,7 @@ void OdpGenerator::openTableRow(const ::librevenge::RVNGPropertyList &propList)
 
 	if (!mpImpl->mpCurrentTableStyle)
 	{
-		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableRow called with no table\n"));
+		ODFGEN_DEBUG_MSG(("OdpGenerator::openTableRow called with no table\n"));
 		return;
 	}
 
@@ -1782,7 +1753,7 @@ void OdpGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->mpCurrentTableStyle)
 	{
-		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableCell called with no table\n"));
+		ODFGEN_DEBUG_MSG(("OdpGenerator::openTableCell called with no table\n"));
 		return;
 	}
 

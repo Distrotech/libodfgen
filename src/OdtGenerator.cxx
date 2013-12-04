@@ -59,27 +59,6 @@ struct WriterDocumentState
 	bool mbInFrame;
 };
 
-// list state
-struct WriterListState
-{
-	WriterListState();
-	WriterListState(const WriterListState &state);
-
-	ListStyle *mpCurrentListStyle;
-	unsigned int miCurrentListLevel;
-	unsigned int miLastListLevel;
-	unsigned int miLastListNumber;
-	bool mbListContinueNumbering;
-	bool mbListElementParagraphOpened;
-	std::stack<bool> mbListElementOpened;
-	// a map id -> last list style defined with such id
-	std::map<int, ListStyle *> mIdListStyleMap;
-private:
-	WriterListState &operator=(const WriterListState &state);
-};
-
-enum WriterListType { unordered, ordered };
-
 WriterDocumentState::WriterDocumentState() :
 	mbFirstElement(true),
 	mbFirstParagraphInPageSpan(true),
@@ -90,30 +69,6 @@ WriterDocumentState::WriterDocumentState() :
 	mbInNote(false),
 	mbInTextBox(false),
 	mbInFrame(false)
-{
-}
-
-WriterListState::WriterListState() :
-	mpCurrentListStyle(0),
-	miCurrentListLevel(0),
-	miLastListLevel(0),
-	miLastListNumber(0),
-	mbListContinueNumbering(false),
-	mbListElementParagraphOpened(false),
-	mbListElementOpened(),
-	mIdListStyleMap()
-{
-}
-
-WriterListState::WriterListState(const WriterListState &state) :
-	mpCurrentListStyle(state.mpCurrentListStyle),
-	miCurrentListLevel(state.miCurrentListLevel),
-	miLastListLevel(state.miCurrentListLevel),
-	miLastListNumber(state.miLastListNumber),
-	mbListContinueNumbering(state.mbListContinueNumbering),
-	mbListElementParagraphOpened(state.mbListElementParagraphOpened),
-	mbListElementOpened(state.mbListElementOpened),
-	mIdListStyleMap(state.mIdListStyleMap)
 {
 }
 
@@ -129,21 +84,8 @@ public:
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
-	void _openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
-	void _closeListLevel();
-
-	/** stores a list style: update mListStyles,
-		mWriterListStates.top().mpCurrentListStyle and the different
-		maps
-	 */
-	void _storeListStyle(ListStyle *listStyle);
-	/** retrieves the list style corresponding to a given id. */
-	void _retrieveListStyle(int id);
-
 
 	std::stack<WriterDocumentState> mWriterDocumentStates;
-
-	std::stack<WriterListState> mWriterListStates;
 
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
@@ -158,18 +100,10 @@ public:
 
 	std::map<librevenge::RVNGString, unsigned, ltstr> mFrameIdMap;
 
-	// list styles
-	unsigned int miNumListStyles;
-
 	// page state
 	std::vector<PageSpan *> mPageSpans;
 	PageSpan *mpCurrentPageSpan;
 	int miNumPageStyles;
-
-	// list styles
-	std::vector<ListStyle *> mListStyles;
-	// a map id -> last list style defined with id
-	std::map<int, ListStyle *> mIdListStyleMap;
 
 	// table state
 	TableStyle *mpCurrentTableStyle;
@@ -182,19 +116,14 @@ private:
 
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
 	mWriterDocumentStates(),
-	mWriterListStates(),
 	mSectionStyles(), mTableStyles(),
 	mFrameStyles(), mFrameAutomaticStyles(), mFrameIdMap(),
-	miNumListStyles(0),
 	mPageSpans(),
 	mpCurrentPageSpan(0),
 	miNumPageStyles(0),
-	mListStyles(),
-	mIdListStyleMap(),
 	mpCurrentTableStyle(0)
 {
 	mWriterDocumentStates.push(WriterDocumentState());
-	mWriterListStates.push(WriterListState());
 }
 
 OdtGeneratorPrivate::~OdtGeneratorPrivate()
@@ -203,27 +132,18 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Cleaning up our mess..\n"));
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Destroying the body elements\n"));
-	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
-	        iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		delete(*iterListStyles);
-	}
 	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin();
 	        iterSectionStyles != mSectionStyles.end(); ++iterSectionStyles)
-	{
 		delete(*iterSectionStyles);
-	}
+
 	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin();
 	        iterTableStyles != mTableStyles.end(); ++iterTableStyles)
-	{
 		delete((*iterTableStyles));
-	}
 
 	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
 	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
-	{
 		delete(*iterPageSpans);
-	}
+
 	emptyStorage(&mFrameStyles);
 	emptyStorage(&mFrameAutomaticStyles);
 }
@@ -670,241 +590,55 @@ void OdtGenerator::closeSpan()
 	mpImpl->closeSpan();
 }
 
-void OdtGeneratorPrivate::_storeListStyle(ListStyle *listStyle)
-{
-	if (!listStyle || listStyle == mWriterListStates.top().mpCurrentListStyle)
-	{
-		return;
-	}
-	mListStyles.push_back(listStyle);
-	mWriterListStates.top().mpCurrentListStyle = listStyle;
-	mWriterListStates.top().mIdListStyleMap[listStyle->getListID()]=listStyle;
-	mIdListStyleMap[listStyle->getListID()]=listStyle;
-}
-
-void OdtGeneratorPrivate::_retrieveListStyle(int id)
-{
-	// first look if the current style is ok
-	if (mWriterListStates.top().mpCurrentListStyle &&
-	        id == mWriterListStates.top().mpCurrentListStyle->getListID())
-	{
-		return;
-	}
-
-	// use the current map
-	if (mWriterListStates.top().mIdListStyleMap.find(id) !=
-	        mWriterListStates.top().mIdListStyleMap.end())
-	{
-		mWriterListStates.top().mpCurrentListStyle =
-		    mWriterListStates.top().mIdListStyleMap.find(id)->second;
-		return;
-	}
-
-	// use the global map
-	if (mIdListStyleMap.find(id) != mIdListStyleMap.end())
-	{
-		mWriterListStates.top().mpCurrentListStyle =
-		    mIdListStyleMap.find(id)->second;
-		return;
-	}
-
-	ODFGEN_DEBUG_MSG(("OdtGenerator: impossible to find a list with id=%d\n",id));
-}
-
+// -------------------------------
+//      list
+// -------------------------------
 void OdtGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
-	int id = 0;
-	if (propList["librevenge:id"])
-		id = propList["librevenge:id"]->getInt();
-
-	ListStyle *pListStyle = 0;
-	if (mpImpl->mWriterListStates.top().mpCurrentListStyle && mpImpl->mWriterListStates.top().mpCurrentListStyle->getListID() == id)
-		pListStyle = mpImpl->mWriterListStates.top().mpCurrentListStyle;
-
-	// this rather appalling conditional makes sure we only start a
-	// new list (rather than continue an old one) if: (1) we have no
-	// prior list or the prior list has another listId OR (2) we can
-	// tell that the user actually is starting a new list at level 1
-	// (and only level 1)
-	if (pListStyle == 0 ||
-	        (propList["librevenge:level"] && propList["librevenge:level"]->getInt()==1 &&
-	         (propList["text:start-value"] && propList["text:start-value"]->getInt() != int(mpImpl->mWriterListStates.top().miLastListNumber+1))))
-	{
-		ODFGEN_DEBUG_MSG(("OdtGenerator: Attempting to create a new ordered list style (listid: %i)\n", id));
-		librevenge::RVNGString sName;
-		sName.sprintf("OL%i", mpImpl->miNumListStyles);
-		mpImpl->miNumListStyles++;
-		pListStyle = new ListStyle(sName.cstr(), id);
-		mpImpl->_storeListStyle(pListStyle);
-		mpImpl->mWriterListStates.top().mbListContinueNumbering = false;
-		mpImpl->mWriterListStates.top().miLastListNumber = 0;
-	}
-	else
-		mpImpl->mWriterListStates.top().mbListContinueNumbering = true;
-
-	// Iterate through ALL list styles with the same WordPerfect list id and define a level if it is not already defined
-	// This solves certain problems with lists that start and finish without reaching certain levels and then begin again
-	// and reach those levels. See gradguide0405_PC.wpd in the regression suite
-	for (std::vector<ListStyle *>::iterator iterListStyles = mpImpl->mListStyles.begin(); iterListStyles != mpImpl->mListStyles.end(); ++iterListStyles)
-	{
-		if ((* iterListStyles) && (* iterListStyles)->getListID() == id && propList["librevenge:level"])
-			(* iterListStyles)->updateListLevel((propList["librevenge:level"]->getInt() - 1), propList, true);
-	}
+	mpImpl->defineListLevel(propList, true);
 }
 
 void OdtGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
-	int id = 0;
-	if (propList["librevenge:id"])
-		id = propList["librevenge:id"]->getInt();
-
-	ListStyle *pListStyle = 0;
-	if (mpImpl->mWriterListStates.top().mpCurrentListStyle && mpImpl->mWriterListStates.top().mpCurrentListStyle->getListID() == id)
-		pListStyle = mpImpl->mWriterListStates.top().mpCurrentListStyle;
-
-	if (pListStyle == 0)
-	{
-		ODFGEN_DEBUG_MSG(("OdtGenerator: Attempting to create a new unordered list style (listid: %i)\n", id));
-		librevenge::RVNGString sName;
-		sName.sprintf("UL%i", mpImpl->miNumListStyles);
-		mpImpl->miNumListStyles++;
-		pListStyle = new ListStyle(sName.cstr(), id);
-		mpImpl->_storeListStyle(pListStyle);
-	}
-
-	// See comment in OdtGenerator::defineOrderedListLevel
-	for (std::vector<ListStyle *>::iterator iterListStyles = mpImpl->mListStyles.begin(); iterListStyles != mpImpl->mListStyles.end(); ++iterListStyles)
-	{
-		if ((* iterListStyles) && (* iterListStyles)->getListID() == id && propList["librevenge:level"])
-			(* iterListStyles)->updateListLevel((propList["librevenge:level"]->getInt() - 1), propList, false);
-	}
-}
-
-void OdtGeneratorPrivate::_openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
-{
-	if (mWriterListStates.top().mbListElementParagraphOpened)
-	{
-		closeParagraph();
-		mWriterListStates.top().mbListElementParagraphOpened = false;
-	}
-	// first item of a list, be sure to use the list with given id
-	if (mWriterListStates.top().mbListElementOpened.empty() && propList["librevenge:id"])
-		_retrieveListStyle(propList["librevenge:id"]->getInt());
-	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
-	if (!mWriterListStates.top().mbListElementOpened.empty() &&
-	        !mWriterListStates.top().mbListElementOpened.top())
-	{
-		getCurrentStorage()->push_back(new TagOpenElement("text:list-item"));
-		mWriterListStates.top().mbListElementOpened.top() = true;
-	}
-
-	mWriterListStates.top().mbListElementOpened.push(false);
-	if (mWriterListStates.top().mbListElementOpened.size() == 1)
-	{
-		// add a sanity check ( to avoid a crash if mpCurrentListStyle is NULL)
-		if (mWriterListStates.top().mpCurrentListStyle)
-		{
-			pListLevelOpenElement->addAttribute("text:style-name", mWriterListStates.top().mpCurrentListStyle->getName());
-		}
-	}
-
-	if (ordered && mWriterListStates.top().mbListContinueNumbering)
-		pListLevelOpenElement->addAttribute("text:continue-numbering", "true");
-	mpCurrentStorage->push_back(pListLevelOpenElement);
-}
-
-void OdtGeneratorPrivate::_closeListLevel()
-{
-	if (mWriterListStates.top().mbListElementOpened.empty())
-	{
-		// this implies that openListLevel was not called, so it is better to stop here
-		ODFGEN_DEBUG_MSG(("OdtGenerator: Attempting to close an unexisting level\n"));
-		return;
-	}
-	if (mWriterListStates.top().mbListElementOpened.top())
-	{
-		getCurrentStorage()->push_back(new TagCloseElement("text:list-item"));
-		mWriterListStates.top().mbListElementOpened.top() = false;
-	}
-
-	getCurrentStorage()->push_back(new TagCloseElement("text:list"));
-	mWriterListStates.top().mbListElementOpened.pop();
+	mpImpl->defineListLevel(propList, false);
 }
 
 void OdtGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->_openListLevel(propList, true);
+	mpImpl->openListLevel(propList, true);
 }
 
 void OdtGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->_openListLevel(propList, false);
+	mpImpl->openListLevel(propList, false);
 }
 
 void OdtGenerator::closeOrderedListLevel()
 {
-	mpImpl->_closeListLevel();
+	mpImpl->closeListLevel();
 }
 
 void OdtGenerator::closeUnorderedListLevel()
 {
-	mpImpl->_closeListLevel();
+	mpImpl->closeListLevel();
 }
 
 void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->mWriterListStates.top().miLastListLevel = mpImpl->mWriterListStates.top().miCurrentListLevel;
-	if (mpImpl->mWriterListStates.top().miCurrentListLevel == 1)
-		mpImpl->mWriterListStates.top().miLastListNumber++;
-
-	if (mpImpl->mWriterListStates.top().mbListElementOpened.top())
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:list-item"));
-		mpImpl->mWriterListStates.top().mbListElementOpened.top() = false;
-	}
-
-	librevenge::RVNGPropertyList finalPropList(propList);
-#if 0
-	// this property is ignored in TextRunStyle.c++
-	if (mpImpl->mWriterListStates.top().mpCurrentListStyle)
-		finalPropList.insert("style:list-style-name", mpImpl->mWriterListStates.top().mpCurrentListStyle->getName());
-#endif
-	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->getParagraphName(finalPropList);
-
-	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
-	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
-		pOpenListItem->addAttribute("text:start-value", propList["text:start-value"]->getStr());
-	mpImpl->getCurrentStorage()->push_back(pOpenListItem);
-
-	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
-	pOpenListElementParagraph->addAttribute("text:style-name", paragName);
-	mpImpl->getCurrentStorage()->push_back(pOpenListElementParagraph);
+	mpImpl->openListElement(propList);
 
 	if (mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 		mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;
-
-	mpImpl->mWriterListStates.top().mbListElementOpened.top() = true;
-	mpImpl->mWriterListStates.top().mbListElementParagraphOpened = true;
-	mpImpl->mWriterListStates.top().mbListContinueNumbering = false;
 }
 
 void OdtGenerator::closeListElement()
 {
-	// this code is kind of tricky, because we don't actually close the list element (because this list element
-	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
-	// code (or when we open another list element)
-
-	if (mpImpl->mWriterListStates.top().mbListElementParagraphOpened)
-	{
-		mpImpl->closeParagraph();
-		mpImpl->mWriterListStates.top().mbListElementParagraphOpened = false;
-	}
+	mpImpl->closeListElement();
 }
 
 void OdtGenerator::openFootnote(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->mWriterListStates.push(WriterListState());
+	mpImpl->pushListState();
 	TagOpenElement *pOpenFootNote = new TagOpenElement("text:note");
 	pOpenFootNote->addAttribute("text:note-class", "footnote");
 	if (propList["librevenge:number"])
@@ -937,8 +671,7 @@ void OdtGenerator::openFootnote(const librevenge::RVNGPropertyList &propList)
 void OdtGenerator::closeFootnote()
 {
 	mpImpl->mWriterDocumentStates.top().mbInNote = false;
-	if (mpImpl->mWriterListStates.size() > 1)
-		mpImpl->mWriterListStates.pop();
+	mpImpl->popListState();
 
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-body"));
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note"));
@@ -946,7 +679,7 @@ void OdtGenerator::closeFootnote()
 
 void OdtGenerator::openEndnote(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->mWriterListStates.push(WriterListState());
+	mpImpl->pushListState();
 	TagOpenElement *pOpenEndNote = new TagOpenElement("text:note");
 	pOpenEndNote->addAttribute("text:note-class", "endnote");
 	if (propList["librevenge:number"])
@@ -979,16 +712,14 @@ void OdtGenerator::openEndnote(const librevenge::RVNGPropertyList &propList)
 void OdtGenerator::closeEndnote()
 {
 	mpImpl->mWriterDocumentStates.top().mbInNote = false;
-	if (mpImpl->mWriterListStates.size() > 1)
-		mpImpl->mWriterListStates.pop();
-
+	mpImpl->popListState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-body"));
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note"));
 }
 
 void OdtGenerator::openComment(const librevenge::RVNGPropertyList &)
 {
-	mpImpl->mWriterListStates.push(WriterListState());
+	mpImpl->pushListState();
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("office:annotation"));
 
 	mpImpl->mWriterDocumentStates.top().mbInNote = true;
@@ -997,9 +728,7 @@ void OdtGenerator::openComment(const librevenge::RVNGPropertyList &)
 void OdtGenerator::closeComment()
 {
 	mpImpl->mWriterDocumentStates.top().mbInNote = false;
-	if (mpImpl->mWriterListStates.size() > 1)
-		mpImpl->mWriterListStates.pop();
-
+	mpImpl->popListState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("office:annotation"));
 }
 
@@ -1167,7 +896,7 @@ void OdtGenerator::insertText(const librevenge::RVNGString &text)
 
 void OdtGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->mWriterListStates.push(WriterListState());
+	mpImpl->pushListState();
 
 	// First, let's create a Frame Style for this box
 	TagOpenElement *frameStyleOpenElement = new TagOpenElement("style:style");
@@ -1346,9 +1075,7 @@ void OdtGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 
 void OdtGenerator::closeFrame()
 {
-	if (mpImpl->mWriterListStates.size() > 1)
-		mpImpl->mWriterListStates.pop();
-
+	mpImpl->popListState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 
 	mpImpl->mWriterDocumentStates.top().mbInFrame = false;
@@ -1365,7 +1092,7 @@ void OdtGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Text box without a frame simply doesn't make sense for us
 		return;
-	mpImpl->mWriterListStates.push(WriterListState());
+	mpImpl->pushListState();
 	mpImpl->mWriterDocumentStates.push(WriterDocumentState());
 	TagOpenElement *textBoxOpenElement = new TagOpenElement("draw:text-box");
 	if (propList["librevenge:next-frame-name"])
@@ -1384,8 +1111,7 @@ void OdtGenerator::closeTextBox()
 {
 	if (!mpImpl->mWriterDocumentStates.top().mbInTextBox)
 		return;
-	if (mpImpl->mWriterListStates.size() > 1)
-		mpImpl->mWriterListStates.pop();
+	mpImpl->popListState();
 	if (mpImpl->mWriterDocumentStates.size() > 1)
 		mpImpl->mWriterDocumentStates.pop();
 
