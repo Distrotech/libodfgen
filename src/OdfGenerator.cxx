@@ -481,7 +481,7 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 	}
 	// check if the list level is defined
 	if (propList["librevenge:level"] && state.mpCurrentListStyle &&
-		!state.mpCurrentListStyle->isListLevelDefined(propList["librevenge:level"]->getInt()-1))
+	        !state.mpCurrentListStyle->isListLevelDefined(propList["librevenge:level"]->getInt()-1))
 	{
 		int id=propList["librevenge:id"] ? propList["librevenge:id"]->getInt() : -1;
 		int level=propList["librevenge:level"]->getInt();
@@ -590,7 +590,7 @@ void OdfGenerator::retrieveListStyle(int id)
 {
 	// first look if the current style is ok
 	if (getListState().mpCurrentListStyle &&
-		id == getListState().mpCurrentListStyle->getListID())
+	        id == getListState().mpCurrentListStyle->getListID())
 		return;
 
 	// use the global map
