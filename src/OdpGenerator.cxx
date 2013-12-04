@@ -163,9 +163,6 @@ public:
 	void _drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const librevenge::RVNGPropertyListVector &path);
 
-	void openListLevel(TagOpenElement *pListLevelOpenElement);
-	void closeListLevel();
-
 	//! returns the document type
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeSettings(OdfDocumentHandler *pHandler);
@@ -308,46 +305,6 @@ void OdpGeneratorPrivate::writeNotesStyles(OdfDocumentHandler *pHandler)
 
 		pHandler->endElement("style:style");
 	}
-}
-
-void OdpGeneratorPrivate::openListLevel(TagOpenElement *pListLevelOpenElement)
-{
-	ListState &state=getListState();
-	if (!state.mbListElementOpened.empty() &&
-	        !state.mbListElementOpened.top())
-	{
-		mpCurrentStorage->push_back(new TagOpenElement("text:list-item"));
-		state.mbListElementOpened.top() = true;
-	}
-
-	state.mbListElementOpened.push(false);
-	if (state.mbListElementOpened.size() == 1)
-	{
-		// add a sanity check ( to avoid a crash if mpCurrentListStyle is NULL)
-		if (state.mpCurrentListStyle)
-		{
-			pListLevelOpenElement->addAttribute("text:style-name", state.mpCurrentListStyle->getName());
-		}
-	}
-}
-
-void OdpGeneratorPrivate::closeListLevel()
-{
-	ListState &state=getListState();
-	if (state.mbListElementOpened.empty())
-	{
-		// this implies that openListLevel was not called, so it is better to stop here
-		ODFGEN_DEBUG_MSG(("OdpGenerator: Attempting to close an unexisting level\n"));
-		return;
-	}
-	if (state.mbListElementOpened.top())
-	{
-		mpCurrentStorage->push_back(new TagCloseElement("text:list-item"));
-		state.mbListElementOpened.top() = false;
-	}
-
-	mpCurrentStorage->push_back(new TagCloseElement("text:list"));
-	state.mbListElementOpened.pop();
 }
 
 void OdpGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
@@ -1516,6 +1473,7 @@ void OdpGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
 	mpImpl->mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:style"));
 	mpImpl->mState.mbIsTextBox = true;
+	mpImpl->pushListState();
 }
 
 void OdpGenerator::endTextObject()
@@ -1525,6 +1483,7 @@ void OdpGenerator::endTextObject()
 		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 		mpImpl->mState.mbIsTextBox = false;
+		mpImpl->popListState();
 	}
 }
 
@@ -1583,41 +1542,24 @@ void OdpGenerator::insertField(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->insertField(propList);
 }
 
-void OdpGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &)
+void OdpGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
-	// TODO
+	mpImpl->defineListLevel(propList, true);
 }
 
-void OdpGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &)
+void OdpGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
-	// TODO
+	mpImpl->defineListLevel(propList, false);
 }
 
-void OdpGenerator::openOrderedListLevel(const ::librevenge::RVNGPropertyList &/*propList*/)
+void OdpGenerator::openOrderedListLevel(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->getListState().mbListElementParagraphOpened)
-	{
-		mpImpl->closeParagraph();
-		mpImpl->getListState().mbListElementParagraphOpened = false;
-	}
-
-	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
-	mpImpl->openListLevel(pListLevelOpenElement);
-
-	mpImpl->getCurrentStorage()->push_back(pListLevelOpenElement);
+	mpImpl->openListLevel(propList, true);
 }
 
-void OdpGenerator::openUnorderedListLevel(const ::librevenge::RVNGPropertyList &/*propList*/)
+void OdpGenerator::openUnorderedListLevel(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->getListState().mbListElementParagraphOpened)
-	{
-		mpImpl->closeParagraph();
-		mpImpl->getListState().mbListElementParagraphOpened = false;
-	}
-	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
-	mpImpl->openListLevel(pListLevelOpenElement);
-
-	mpImpl->getCurrentStorage()->push_back(pListLevelOpenElement);
+	mpImpl->openListLevel(propList, false);
 }
 
 void OdpGenerator::closeOrderedListLevel()
@@ -1632,46 +1574,19 @@ void OdpGenerator::closeUnorderedListLevel()
 
 void OdpGenerator::openListElement(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->getListState().mbListElementOpened.top())
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:list-item"));
-		mpImpl->getListState().mbListElementOpened.top() = false;
-	}
-
-	librevenge::RVNGPropertyList finalPropList(propList);
-	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = mpImpl->getParagraphName(finalPropList);
-
-	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
-	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
-		pOpenListItem->addAttribute("text:start-value", propList["text:start-value"]->getStr());
-	mpImpl->getCurrentStorage()->push_back(pOpenListItem);
-
-	TagOpenElement *pOpenListElementParagraph = new TagOpenElement("text:p");
-	pOpenListElementParagraph->addAttribute("text:style-name", paragName);
-	mpImpl->getCurrentStorage()->push_back(pOpenListElementParagraph);
-
-	mpImpl->getListState().mbListElementOpened.top() = true;
-	mpImpl->getListState().mbListElementParagraphOpened = true;
+	mpImpl->openListElement(propList);
 }
 
 void OdpGenerator::closeListElement()
 {
-	// this code is kind of tricky, because we don't actually close the list element (because this list element
-	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
-	// code (or when we open another list element)
-
-	if (mpImpl->getListState().mbListElementParagraphOpened)
-	{
-		mpImpl->closeParagraph();
-		mpImpl->getListState().mbListElementParagraphOpened = false;
-	}
+	mpImpl->closeListElement();
 }
 
 void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mState.mInComment)
 		return;
+	mpImpl->pushListState();
 
 	librevenge::RVNGString sTableName;
 	sTableName.sprintf("Table%i", mpImpl->mTableStyles.size());
@@ -1750,7 +1665,6 @@ void OdpGenerator::closeTableRow()
 {
 	if (mpImpl->mState.mInComment || !mpImpl->mpCurrentTableStyle)
 		return;
-
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-row"));
 	if (mpImpl->mState.mHeaderRow)
 	{
@@ -1821,6 +1735,7 @@ void OdpGenerator::closeTable()
 	{
 		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table"));
 		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
+		mpImpl->popListState();
 	}
 }
 
@@ -1831,7 +1746,7 @@ void OdpGenerator::startComment(const ::librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("a comment within a comment?!\n"));
 		return;
 	}
-
+	mpImpl->pushListState();
 	mpImpl->mState.mInComment = true;
 
 	TagOpenElement *const commentElement = new TagOpenElement("officeooo:annotation");
@@ -1856,7 +1771,7 @@ void OdpGenerator::endComment()
 		ODFGEN_DEBUG_MSG(("there is no comment to close\n"));
 		return;
 	}
-
+	mpImpl->popListState();
 	mpImpl->mState.mInComment = false;
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("officeooo:annotation"));
 }
@@ -1869,6 +1784,7 @@ void OdpGenerator::startNotes(const ::librevenge::RVNGPropertyList &/*propList*/
 		return;
 	}
 
+	mpImpl->pushListState();
 	TagOpenElement *const notesElement = new TagOpenElement("presentation:notes");
 	notesElement->addAttribute("draw:style-name", "PresentationNotesPage");
 
@@ -1913,7 +1829,7 @@ void OdpGenerator::endNotes()
 		ODFGEN_DEBUG_MSG(("no notes opened\n"));
 		return;
 	}
-
+	mpImpl->popListState();
 	mpImpl->mState.mInNotes = false;
 
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));

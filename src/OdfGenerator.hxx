@@ -43,12 +43,8 @@
 class DocumentElement;
 class ListStyle;
 
-// REMOVEME
-class OdpGenerator;
-
 class OdfGenerator
 {
-	friend class OdpGenerator;
 public:
 	typedef std::vector<DocumentElement *> Storage;
 
