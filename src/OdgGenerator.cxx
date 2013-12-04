@@ -30,6 +30,7 @@
 #include "DocumentElement.hxx"
 #include "FontStyle.hxx"
 #include "GraphicFunctions.hxx"
+#include "ListStyle.hxx"
 #include "OdfGenerator.hxx"
 #include "TextRunStyle.hxx"
 #include <locale.h>
@@ -202,6 +203,9 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 		sendStorage(&mGraphicsAutomaticStyles, pHandler);
 		mParagraphManager.write(pHandler);
 		mSpanManager.write(pHandler);
+		// writing out the lists styles
+		for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
+			(*iterListStyles)->write(pHandler);
 	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
