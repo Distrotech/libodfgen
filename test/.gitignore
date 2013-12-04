@@ -10,4 +10,6 @@ Makefile.in
 *.odp
 *.ods
 *.odt
+testList1
+testParagraph1
 testSpan1
