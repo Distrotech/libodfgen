@@ -52,7 +52,7 @@ static void sendText(Generator &generator)
 	para.insert("librevenge:paragraph-id",1);
 	generator.openParagraph(para);
 	generator.openSpan(span);
-	generator.insertText("basic ");
+	generator.insertText("basic "); // basic
 	generator.closeSpan();
 	generator.closeParagraph();
 
@@ -76,7 +76,7 @@ static void sendText(Generator &generator)
 	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("level 1");
+	generator.insertText("level 1");  // 1 level 1
 	generator.closeSpan();
 	generator.closeListElement();
 
@@ -86,7 +86,7 @@ static void sendText(Generator &generator)
 	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("level 2");
+	generator.insertText("level 2");  // I level 2
 	generator.closeSpan();
 	generator.closeListElement();
 	generator.closeOrderedListLevel();
@@ -111,7 +111,7 @@ static void sendText(Generator &generator)
 	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("level 2 (redef)");
+	generator.insertText("level 2 (redef)"); // A level 2 (redef)
 	generator.closeSpan();
 	generator.closeListElement();
 	generator.closeOrderedListLevel();
@@ -124,7 +124,7 @@ static void sendText(Generator &generator)
 	list.insert("text:start-value", 2);
 	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("level 1 again");
+	generator.insertText("level 1 again"); // 2 level 1 again
 	generator.closeSpan();
 	generator.closeListElement();
 
@@ -134,7 +134,7 @@ static void sendText(Generator &generator)
 	para.insert("librevenge:paragraph-id",1);
 	generator.openParagraph(para);
 	generator.openSpan(span);
-	generator.insertText("basic again");
+	generator.insertText("basic again"); // basic again
 	generator.closeSpan();
 	generator.closeParagraph();
 
@@ -149,7 +149,7 @@ static void sendText(Generator &generator)
 	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("level 1(def by hand)");
+	generator.insertText("level 1(def by hand)"); // i level 1(def by hand)
 	generator.closeSpan();
 	generator.closeListElement();
 
@@ -161,7 +161,7 @@ static void sendText(Generator &generator)
 	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("level 2(def by hand)");
+	generator.insertText("level 2(def by hand)");  // 1 level 2(def by hand)
 	generator.closeSpan();
 	generator.closeListElement();
 	generator.closeOrderedListLevel();

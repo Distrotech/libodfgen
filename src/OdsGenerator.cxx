@@ -1129,7 +1129,7 @@ void OdsGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &prop
 		return mpImpl->mAuxiliarOdtState->get().openOrderedListLevel(propList);
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().openOrderedListLevel(propList);
-	if (mpImpl->canWriteText())
+	if (mpImpl->canWriteText() && !mpImpl->getState().mbInSheetCell)
 		return mpImpl->openListLevel(propList,true);
 	ODFGEN_DEBUG_MSG(("OdsGenerator::openOrderedListLevel: call outside a text zone\n"));
 }
@@ -1141,7 +1141,7 @@ void OdsGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &pr
 		return mpImpl->mAuxiliarOdtState->get().openUnorderedListLevel(propList);
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().openUnorderedListLevel(propList);
-	if (mpImpl->canWriteText())
+	if (mpImpl->canWriteText() && !mpImpl->getState().mbInSheetCell)
 		return mpImpl->openListLevel(propList,false);
 	ODFGEN_DEBUG_MSG(("OdsGenerator::openUnorderedListLevel: call outside a text zone\n"));
 }
@@ -1153,7 +1153,7 @@ void OdsGenerator::closeOrderedListLevel()
 		mpImpl->mAuxiliarOdtState->get().closeOrderedListLevel();
 	if (mpImpl->mAuxiliarOdgState)
 		mpImpl->mAuxiliarOdgState->get().closeOrderedListLevel();
-	if (mpImpl->canWriteText())
+	if (mpImpl->canWriteText() && !mpImpl->getState().mbInSheetCell)
 		return mpImpl->closeListLevel();
 }
 
@@ -1164,7 +1164,7 @@ void OdsGenerator::closeUnorderedListLevel()
 		mpImpl->mAuxiliarOdtState->get().closeUnorderedListLevel();
 	if (mpImpl->mAuxiliarOdgState)
 		mpImpl->mAuxiliarOdgState->get().closeOrderedListLevel();
-	if (mpImpl->canWriteText())
+	if (mpImpl->canWriteText() && !mpImpl->getState().mbInSheetCell)
 		return mpImpl->closeListLevel();
 }
 
@@ -1176,7 +1176,11 @@ void OdsGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().openListElement(propList);
 	if (mpImpl->canWriteText())
+	{
+		if (mpImpl->getState().mbInSheetCell)
+			return mpImpl->openParagraph(propList);
 		return mpImpl->openListElement(propList);
+	}
 
 	ODFGEN_DEBUG_MSG(("OdsGenerator::openListElement call outside a text zone\n"));
 	return;
@@ -1190,7 +1194,11 @@ void OdsGenerator::closeListElement()
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().closeListElement();
 	if (mpImpl->canWriteText())
-		return closeListElement();
+	{
+		if (mpImpl->getState().mbInSheetCell)
+			return mpImpl->closeParagraph();
+		return mpImpl->closeListElement();
+	}
 }
 
 void OdsGenerator::openFootnote(const librevenge::RVNGPropertyList &)
