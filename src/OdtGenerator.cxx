@@ -579,6 +579,16 @@ void OdtGenerator::closeSpan()
 	mpImpl->closeSpan();
 }
 
+void OdtGenerator::openLink(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->openLink(propList);
+}
+
+void OdtGenerator::closeLink()
+{
+	mpImpl->closeLink();
+}
+
 // -------------------------------
 //      list
 // -------------------------------

@@ -74,6 +74,10 @@ public:
 	void defineCharacterStyle(const librevenge::RVNGPropertyList &propList);
 	void openSpan(const ::librevenge::RVNGPropertyList &propList);
 	void closeSpan();
+
+	void openLink(const librevenge::RVNGPropertyList &propList);
+	void closeLink();
+
 	void insertText(const ::librevenge::RVNGString &str);
 	void insertTab();
 	void insertSpace();

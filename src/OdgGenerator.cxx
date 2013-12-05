@@ -1374,6 +1374,16 @@ void OdgGenerator::closeSpan()
 	mpImpl->closeSpan();
 }
 
+void OdgGenerator::openLink(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->openLink(propList);
+}
+
+void OdgGenerator::closeLink()
+{
+	mpImpl->closeLink();
+}
+
 void OdgGenerator::insertTab()
 {
 	mpImpl->insertTab();

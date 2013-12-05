@@ -1511,6 +1511,16 @@ void OdpGenerator::closeSpan()
 	mpImpl->closeSpan();
 }
 
+void OdpGenerator::openLink(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->openLink(propList);
+}
+
+void OdpGenerator::closeLink()
+{
+	mpImpl->closeLink();
+}
+
 void OdpGenerator::insertText(const librevenge::RVNGString &text)
 {
 	mpImpl->insertText(text);
