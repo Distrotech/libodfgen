@@ -129,6 +129,11 @@ public:
 	void insertField(const librevenge::RVNGPropertyList &field);
 	void insertText(const librevenge::RVNGString &text);
 
+	//! open a link
+	void openLink(const librevenge::RVNGPropertyList &propList);
+	//! close a link
+	void closeLink();
+
 	//! define a character style
 	void defineCharacterStyle(const librevenge::RVNGPropertyList &propList);
 	//! open a span

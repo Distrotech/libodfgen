@@ -344,6 +344,23 @@ void OdfGenerator::closeSpan()
 	mpCurrentStorage->push_back(new TagCloseElement("text:span"));
 }
 
+void OdfGenerator::openLink(const librevenge::RVNGPropertyList &propList)
+{
+	TagOpenElement *pLinkOpenElement = new TagOpenElement("text:a");
+	librevenge::RVNGPropertyList::Iter i(propList);
+	for (i.rewind(); i.next();)
+	{
+		if (!i.child()) // write out simple properties only
+			pLinkOpenElement->addAttribute(i.key(), i()->getStr());
+	}
+	mpCurrentStorage->push_back(pLinkOpenElement);
+}
+
+void OdfGenerator::closeLink()
+{
+	mpCurrentStorage->push_back(new TagCloseElement("text:a"));
+}
+
 void OdfGenerator::defineParagraphStyle(const librevenge::RVNGPropertyList &propList)
 {
 	if (!propList["librevenge:paragraph-id"])

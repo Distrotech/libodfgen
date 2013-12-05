@@ -80,6 +80,9 @@ public:
 	void openSpan(const librevenge::RVNGPropertyList &propList);
 	void closeSpan();
 
+	void openLink(const librevenge::RVNGPropertyList &propList);
+	void closeLink();
+
 	void insertText(const librevenge::RVNGString &text);
 	void insertTab();
 	void insertSpace();

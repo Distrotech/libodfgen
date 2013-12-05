@@ -1125,6 +1125,16 @@ void OdsGenerator::closeSpan()
 	mpImpl->closeSpan();
 }
 
+void OdsGenerator::openLink(const librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->openLink(propList);
+}
+
+void OdsGenerator::closeLink()
+{
+	mpImpl->closeLink();
+}
+
 
 void OdsGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
