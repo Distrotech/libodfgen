@@ -55,7 +55,7 @@ public:
 		State() : mbStarted(false),
 			mbInSheet(false), mbInSheetShapes(false), mbInSheetRow(false), mbInSheetCell(false), miLastSheetRow(0), miLastSheetColumn(0),
 			mbInFootnote(false), mbInComment(false), mbInHeaderFooter(false), mbInFrame(false), mbFirstInFrame(false), mbInChart(false),
-			mbInTable(false), mbInTableWithoutFrame(false),
+			mbInTable(false), mbInTableWithoutFrame(false), mbInTextBox(false),
 			mbInGraphics(false),
 			mbNewOdtGenerator(false), mbNewOdgGenerator(false)
 		{
@@ -81,6 +81,7 @@ public:
 		bool mbInChart;
 		bool mbInTable;
 		bool mbInTableWithoutFrame;
+		bool mbInTextBox;
 
 		bool mbInGraphics;
 
@@ -186,7 +187,8 @@ public:
 	bool canWriteText() const
 	{
 		if (mStateStack.empty() || mStateStack.top().mbInFootnote)  return false;
-		return mStateStack.top().mbInComment || mStateStack.top().mbInSheetCell || mStateStack.top().mbInHeaderFooter;
+		return mStateStack.top().mbInComment || mStateStack.top().mbInSheetCell ||
+		       mStateStack.top().mbInHeaderFooter || mStateStack.top().mbInTextBox;
 	}
 
 	//
@@ -201,11 +203,27 @@ public:
 		}
 		mAuxiliarOdtState.reset(new OdtGeneratorState);
 		mAuxiliarOdtState->mGenerator.initStateWith(*this);
+		mAuxiliarOdtState->mGenerator.startDocument();
+		librevenge::RVNGPropertyList page;
+		page.insert("librevenge:num-pages", 1);
+		page.insert("fo:margin-left", 0.0, librevenge::RVNG_INCH);
+		page.insert("fo:margin-right", 0.0, librevenge::RVNG_INCH);
+		page.insert("fo:margin-top", 0.0, librevenge::RVNG_INCH);
+		page.insert("fo:margin-bottom", 0.0, librevenge::RVNG_INCH);
+		mAuxiliarOdtState->mGenerator.openPageSpan(page);
+
 		return true;
 	}
 	bool sendAuxiliarOdtGenerator()
 	{
-		if (!mAuxiliarOdtState || mAuxiliarOdtState->mContentElements.empty())
+		if (!mAuxiliarOdtState)
+		{
+			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::sendAuxiliarOdtGenerator: data seems bad\n"));
+			return false;
+		}
+		mAuxiliarOdtState->mGenerator.closePageSpan();
+		mAuxiliarOdtState->mGenerator.endDocument();
+		if (mAuxiliarOdtState->mContentElements.empty())
 		{
 			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::sendAuxiliarOdtGenerator: data seems bad\n"));
 			return false;
@@ -445,6 +463,19 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	defaultParagraphStylePropertiesOpenElement.addAttribute("style:writing-mode", "page");
 	defaultParagraphStylePropertiesOpenElement.write(pHandler);
 	pHandler->endElement("style:paragraph-properties");
+	pHandler->endElement("style:default-style");
+
+	// graphic
+	TagOpenElement defaultGraphicStyleOpenElement("style:default-style");
+	defaultGraphicStyleOpenElement.addAttribute("style:family", "graphic");
+	defaultGraphicStyleOpenElement.write(pHandler);
+	TagOpenElement defaultGraphicStylePropertiesOpenElement("style:graphic-properties");
+	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:fill","solid");
+	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:fill-color","#ffffff");
+	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:stroke","none");
+	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:shadow","none");
+	defaultGraphicStylePropertiesOpenElement.write(pHandler);
+	pHandler->endElement("style:graphic-properties");
 	pHandler->endElement("style:default-style");
 
 	// table
@@ -1410,7 +1441,8 @@ void OdsGenerator::insertText(const librevenge::RVNGString &text)
 void OdsGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Frame);
-	OdsGeneratorPrivate::State state=mpImpl->getState();
+	OdsGeneratorPrivate::State &prevState=mpImpl->getState();
+	OdsGeneratorPrivate::State state=prevState;
 	state.mbInFrame=state.mbFirstInFrame=true;
 	mpImpl->pushState(state);
 	mpImpl->pushListState();
@@ -1596,7 +1628,7 @@ void OdsGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	if (!state.mbInSheetRow && !state.mbInSheetShapes)
 	{
 		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("table:shapes"));
-		mpImpl->getState().mbInSheetShapes=true;
+		prevState.mbInSheetShapes=true;
 	}
 	mpImpl->getCurrentStorage()->push_back(drawFrameOpenElement);
 }
@@ -1644,16 +1676,23 @@ void OdsGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 	}
 	mpImpl->getState().mbFirstInFrame=false;
 	mpImpl->pushState(state);
+	mpImpl->pushListState();
 
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTextBox(propList);
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().startTextObject(propList);
-	if (!mpImpl->createAuxiliarOdtGenerator())
-		return;
 
-	mpImpl->getState().mbNewOdtGenerator=true;
-	mpImpl->mAuxiliarOdtState->get().openTextBox(propList);
+	TagOpenElement *textBoxOpenElement = new TagOpenElement("draw:text-box");
+	if (propList["librevenge:next-frame-name"])
+	{
+		librevenge::RVNGString frameName;
+		unsigned id=mpImpl->getFrameId(propList["librevenge:next-frame-name"]->getStr());
+		frameName.sprintf("Object%i", id);
+		textBoxOpenElement->addAttribute("draw:chain-next-name", frameName);
+	}
+	mpImpl->getCurrentStorage()->push_back(textBoxOpenElement);
+	mpImpl->getState().mbInTextBox = true;
 }
 
 void OdsGenerator::closeTextBox()
@@ -1661,18 +1700,16 @@ void OdsGenerator::closeTextBox()
 	if (!mpImpl->close(OdsGeneratorPrivate::C_TextBox))
 		return;
 	OdsGeneratorPrivate::State state=mpImpl->getState();
+	mpImpl->popListState();
 	mpImpl->popState();
 
 	if (mpImpl->mAuxiliarOdgState)
 		return mpImpl->mAuxiliarOdgState->get().endTextObject();
-	if (!mpImpl->mAuxiliarOdtState)
+	if (mpImpl->mAuxiliarOdtState)
+		return mpImpl->mAuxiliarOdtState->get().closeTextBox();
+	if (!state.mbInTextBox)
 		return;
-	mpImpl->mAuxiliarOdtState->get().closeTextBox();
-	if (!state.mbNewOdtGenerator)
-		return;
-
-	mpImpl->sendAuxiliarOdtGenerator();
-	mpImpl->resetAuxiliarOdtGenerator();
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 }
 
 void OdsGenerator::startDocument()

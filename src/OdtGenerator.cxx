@@ -90,9 +90,6 @@ public:
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
 
-	// table styles
-	std::vector<TableStyle *> mTableStyles;
-
 	// frame styles
 	std::vector<DocumentElement *> mFrameStyles;
 
@@ -105,9 +102,6 @@ public:
 	PageSpan *mpCurrentPageSpan;
 	int miNumPageStyles;
 
-	// table state
-	TableStyle *mpCurrentTableStyle;
-
 private:
 	OdtGeneratorPrivate(const OdtGeneratorPrivate &);
 	OdtGeneratorPrivate &operator=(const OdtGeneratorPrivate &);
@@ -116,12 +110,11 @@ private:
 
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
 	mWriterDocumentStates(),
-	mSectionStyles(), mTableStyles(),
+	mSectionStyles(),
 	mFrameStyles(), mFrameAutomaticStyles(), mFrameIdMap(),
 	mPageSpans(),
 	mpCurrentPageSpan(0),
-	miNumPageStyles(0),
-	mpCurrentTableStyle(0)
+	miNumPageStyles(0)
 {
 	mWriterDocumentStates.push(WriterDocumentState());
 }
@@ -135,10 +128,6 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin();
 	        iterSectionStyles != mSectionStyles.end(); ++iterSectionStyles)
 		delete(*iterSectionStyles);
-
-	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin();
-	        iterTableStyles != mTableStyles.end(); ++iterTableStyles)
-		delete((*iterTableStyles));
 
 	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
 	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
@@ -734,140 +723,63 @@ void OdtGenerator::closeComment()
 
 void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+		return;
+
+	librevenge::RVNGPropertyList pList(propList);
+	if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 	{
-		librevenge::RVNGString sTableName;
-		sTableName.sprintf("Table%i", mpImpl->mTableStyles.size());
-
-		// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
-		// state which is transmitted inside the page. could this lead to unacceptable behaviour?
-		const librevenge::RVNGPropertyListVector *columns = propList.child("librevenge:table-columns");
-		TableStyle *pTableStyle = new TableStyle(propList, (columns ? *columns : librevenge::RVNGPropertyListVector()), sTableName.cstr());
-
-		if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
-		{
-			librevenge::RVNGString sMasterPageName("Page_Style_1");
-			pTableStyle->setMasterPageName(sMasterPageName);
-			mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
-		}
-
-		mpImpl->mTableStyles.push_back(pTableStyle);
-
-		mpImpl->mpCurrentTableStyle = pTableStyle;
-
-		TagOpenElement *pTableOpenElement = new TagOpenElement("table:table");
-
-		pTableOpenElement->addAttribute("table:name", sTableName.cstr());
-		pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
-		mpImpl->getCurrentStorage()->push_back(pTableOpenElement);
-
-		for (int i=0; i<pTableStyle->getNumColumns(); ++i)
-		{
-			TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
-			librevenge::RVNGString sColumnStyleName;
-			sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
-			pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
-			mpImpl->getCurrentStorage()->push_back(pTableColumnOpenElement);
-
-			TagCloseElement *pTableColumnCloseElement = new TagCloseElement("table:table-column");
-			mpImpl->getCurrentStorage()->push_back(pTableColumnCloseElement);
-		}
+		pList.insert("style:master-page-name", "Page_Style_1");
+		mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
 	}
+	mpImpl->openTable(pList);
+}
+
+void OdtGenerator::closeTable()
+{
+	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+		return;
+	mpImpl->closeTable();
 }
 
 void OdtGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->mWriterDocumentStates.top().mbInNote || !mpImpl->openTableRow(propList))
 		return;
-	if (!mpImpl->mpCurrentTableStyle)
-	{
-		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableRow called with no table\n"));
-		return;
-	}
 	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("table:table-header-rows"));
 		mpImpl->mWriterDocumentStates.top().mbHeaderRow = true;
-	}
-
-	librevenge::RVNGString sTableRowStyleName;
-	sTableRowStyleName.sprintf("%s.Row%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableRowStyles());
-	TableRowStyle *pTableRowStyle = new TableRowStyle(propList, sTableRowStyleName.cstr());
-	mpImpl->mpCurrentTableStyle->addTableRowStyle(pTableRowStyle);
-
-	TagOpenElement *pTableRowOpenElement = new TagOpenElement("table:table-row");
-	pTableRowOpenElement->addAttribute("table:style-name", sTableRowStyleName);
-	mpImpl->getCurrentStorage()->push_back(pTableRowOpenElement);
 }
 
 void OdtGenerator::closeTableRow()
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInNote && mpImpl->mpCurrentTableStyle)
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-row"));
-		if (mpImpl->mWriterDocumentStates.top().mbHeaderRow)
-		{
-			mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-header-rows"));
-			mpImpl->mWriterDocumentStates.top().mbHeaderRow = false;
-		}
-	}
+	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+		return;
+	mpImpl->closeTableRow(mpImpl->mWriterDocumentStates.top().mbHeaderRow);
+	mpImpl->mWriterDocumentStates.top().mbHeaderRow = false;
 }
 
 void OdtGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mWriterDocumentStates.top().mbInNote)
 		return;
-	if (!mpImpl->mpCurrentTableStyle)
-	{
-		ODFGEN_DEBUG_MSG(("OdtGenerator::openTableCell called with no table\n"));
-		return;
-	}
 
-	librevenge::RVNGString sTableCellStyleName;
-	sTableCellStyleName.sprintf("%s.Cell%i", mpImpl->mpCurrentTableStyle->getName().cstr(), mpImpl->mpCurrentTableStyle->getNumTableCellStyles());
-	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
-	mpImpl->mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
-
-	TagOpenElement *pTableCellOpenElement = new TagOpenElement("table:table-cell");
-	pTableCellOpenElement->addAttribute("table:style-name", sTableCellStyleName);
-	if (propList["table:number-columns-spanned"])
-		pTableCellOpenElement->addAttribute("table:number-columns-spanned",
-		                                    propList["table:number-columns-spanned"]->getStr().cstr());
-	if (propList["table:number-rows-spanned"])
-		pTableCellOpenElement->addAttribute("table:number-rows-spanned",
-		                                    propList["table:number-rows-spanned"]->getStr().cstr());
-	// pTableCellOpenElement->addAttribute("table:value-type", "string");
-	mpImpl->getCurrentStorage()->push_back(pTableCellOpenElement);
-
-	mpImpl->mWriterDocumentStates.top().mbTableCellOpened = true;
+	mpImpl->mWriterDocumentStates.top().mbTableCellOpened = mpImpl->openTableCell(propList);
 }
 
 void OdtGenerator::closeTableCell()
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInNote && mpImpl->mpCurrentTableStyle)
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-cell"));
-		mpImpl->mWriterDocumentStates.top().mbTableCellOpened = false;
-	}
+	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+		return;
+	mpImpl->closeTableCell();
+	mpImpl->mWriterDocumentStates.top().mbTableCellOpened = false;
 }
 
-void OdtGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &)
+void OdtGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInNote && mpImpl->mpCurrentTableStyle)
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("table:covered-table-cell"));
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:covered-table-cell"));
-	}
+	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+		return;
+	mpImpl->insertCoveredTableCell(propList);
 }
-
-void OdtGenerator::closeTable()
-{
-	if (!mpImpl->mWriterDocumentStates.top().mbInNote)
-	{
-		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table"));
-	}
-}
-
 
 void OdtGenerator::insertTab()
 {

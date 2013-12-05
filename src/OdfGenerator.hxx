@@ -42,9 +42,13 @@
 
 class DocumentElement;
 class ListStyle;
+class TableStyle;
+
+class OdpGenerator; // REMOVE ME
 
 class OdfGenerator
 {
+	friend class OdpGenerator;
 public:
 	typedef std::vector<DocumentElement *> Storage;
 
@@ -168,6 +172,24 @@ public:
 	void closeListElement();
 
 	//
+	// table
+	//
+
+	/// call to open a table
+	void openTable(const librevenge::RVNGPropertyList &propList);
+	/// call to close a table
+	void closeTable();
+	/// call to open a table row
+	bool openTableRow(const librevenge::RVNGPropertyList &propList);
+	/// call to close a table row
+	void closeTableRow(bool isHeaderRow);
+	/// call to open a table cell
+	bool openTableCell(const librevenge::RVNGPropertyList &propList);
+	/// call to close a table cell
+	void closeTableCell();
+	void insertCoveredTableCell(const librevenge::RVNGPropertyList &propList);
+
+	//
 	// frame
 	//
 
@@ -276,6 +298,11 @@ protected:
 	std::map<int, ListStyle *> mIdListStyleMap;
 	// the list of seen list
 	std::map<int, ListStorage> mIdListStorageMap;
+
+	// table styles
+	std::vector<TableStyle *> mTableStyles;
+	// table state
+	TableStyle *mpCurrentTableStyle;
 
 	// the number of created frame
 	unsigned miFrameNumber;

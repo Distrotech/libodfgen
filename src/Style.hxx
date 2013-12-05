@@ -32,25 +32,12 @@
 class TopLevelElementStyle
 {
 public:
-	TopLevelElementStyle() : mpsMasterPageName(0) {}
-	virtual ~TopLevelElementStyle()
-	{
-		if (mpsMasterPageName) delete mpsMasterPageName;
-	}
-	void setMasterPageName(librevenge::RVNGString &sMasterPageName)
-	{
-		if (mpsMasterPageName) delete mpsMasterPageName;
-		mpsMasterPageName = new librevenge::RVNGString(sMasterPageName);
-	}
-	const librevenge::RVNGString *getMasterPageName() const
-	{
-		return mpsMasterPageName;
-	}
+	TopLevelElementStyle() {}
+	virtual ~TopLevelElementStyle() {}
 
 private:
 	TopLevelElementStyle(const TopLevelElementStyle &);
 	TopLevelElementStyle &operator=(const TopLevelElementStyle &);
-	librevenge::RVNGString *mpsMasterPageName;
 };
 
 class Style

@@ -182,10 +182,6 @@ public:
 	std::vector<DocumentElement *> mPageAutomaticStyles;
 	std::vector<DocumentElement *> mPageMasterStyles;
 
-	// table styles
-	std::vector<TableStyle *> mTableStyles;
-	TableStyle *mpCurrentTableStyle;
-
 	::librevenge::RVNGPropertyList mxStyle;
 	::librevenge::RVNGPropertyListVector mxGradient;
 	int miGradientIndex;
@@ -215,8 +211,6 @@ OdpGeneratorPrivate::OdpGeneratorPrivate() :
 	mGraphicsAutomaticStyles(),
 	mPageAutomaticStyles(),
 	mPageMasterStyles(),
-	mTableStyles(),
-	mpCurrentTableStyle(0),
 	mxStyle(), mxGradient(),
 	miGradientIndex(1),
 	miBitmapIndex(1),

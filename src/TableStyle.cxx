@@ -133,8 +133,8 @@ void TableStyle::write(OdfDocumentHandler *pHandler) const
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
 	styleOpen.addAttribute("style:family", "table");
-	if (getMasterPageName())
-		styleOpen.addAttribute("style:master-page-name", getMasterPageName()->cstr());
+	if (mPropList["style:master-page-name"])
+		styleOpen.addAttribute("style:master-page-name", mPropList["style:master-page-name"]->getStr());
 	styleOpen.write(pHandler);
 
 	TagOpenElement stylePropertiesOpen("style:table-properties");

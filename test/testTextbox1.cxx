@@ -35,44 +35,62 @@
 template <class Generator>
 static void sendText(Generator &generator)
 {
+	librevenge::RVNGPropertyList paragraph;
+	generator.openParagraph(paragraph);
+
 	librevenge::RVNGPropertyList span;
-	span.insert("style:font-name","Geneva");
-	span.insert("fo:font-size", 12, librevenge::RVNG_POINT);
+	span.insert("style:font-name","Courier");
+	span.insert("fo:font-size", 13, librevenge::RVNG_POINT);
 	span.insert("librevenge:span-id",1);
 	generator.defineCharacterStyle(span);
 	span.clear();
 	span.insert("librevenge:span-id",1);
-
-	librevenge::RVNGPropertyList para;
-	para.insert("librevenge:paragraph-id",1);
-	generator.defineParagraphStyle(para);
-
-	para.clear();
-	para.insert("librevenge:paragraph-id",1);
-	generator.openParagraph(para);
 	generator.openSpan(span);
 	generator.insertText("basic ");
 	generator.closeSpan();
+
+	span.clear();
+	span.insert("style:font-name","Geneva");
+	span.insert("fo:font-size", 11, librevenge::RVNG_POINT);
+	span.insert("fo:font-style", "italic");
+	generator.openSpan(span);
+	generator.insertText("italic ");
+	generator.closeSpan();
+
+	span.clear();
+	span.insert("librevenge:span-id",1);
+	generator.openSpan(span);
+	generator.insertText("basic again");
+	generator.closeSpan();
+
 	generator.closeParagraph();
 
-	para.clear();
-	para.insert("fo:margin-left",1,librevenge::RVNG_INCH);
-	para.insert("fo:text-align","center");
-	generator.openParagraph(para);
-	generator.openSpan(span);
-	generator.insertText("user");
-	generator.closeSpan();
-	generator.closeParagraph();
+	// now test if the list works or not
 
-	para.clear();
-	para.insert("librevenge:paragraph-id",1);
-	generator.openParagraph(para);
+	librevenge::RVNGPropertyList list;
+	list.clear();
+	list.insert("librevenge:id",1);
+	list.insert("librevenge:level",1);
+	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
+	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
+	list.insert("style:num-format", "1");
+	generator.defineOrderedListLevel(list);
+	list.insert("librevenge:level",2);
+	list.insert("style:num-format", "I");
+	generator.defineOrderedListLevel(list);
+
+	list.clear();
+	list.insert("librevenge:id",1);
+	generator.openOrderedListLevel(list);
+
+	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
+	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("basic");
-	generator.insertLineBreak();
-	generator.insertText("again");
+	generator.insertText("level 1");  // 1 level 1
 	generator.closeSpan();
-	generator.closeParagraph();
+	generator.closeListElement();
+
+	generator.closeOrderedListLevel();
 }
 
 static void createOdt()
@@ -92,11 +110,31 @@ static void createOdt()
 	page.insert("fo:margin-top", 0.1, librevenge::RVNG_INCH);
 	page.insert("fo:margin-bottom", 0.1, librevenge::RVNG_INCH);
 	generator.openPageSpan(page);
+
+	librevenge::RVNGPropertyList textbox;
+	textbox.insert("svg:x",0.2, librevenge::RVNG_INCH);
+	textbox.insert("svg:y",0.2, librevenge::RVNG_INCH);
+	textbox.insert("svg:width",200, librevenge::RVNG_POINT);
+	textbox.insert("svg:height",100, librevenge::RVNG_POINT);
+	textbox.insert("text:anchor-type", "page");
+	textbox.insert("text:anchor-page-number", 1);
+	textbox.insert("style:vertical-rel", "page");
+	textbox.insert("style:horizontal-rel", "page");
+	textbox.insert("style:horizontal-pos", "from-left");
+	textbox.insert("style:vertical-pos", "from-top");
+
+	textbox.insert("draw:stroke", "none");
+	textbox.insert("draw:fill", "none");
+	generator.openFrame(textbox);
+	generator.openTextBox(librevenge::RVNGPropertyList());
 	sendText(generator);
+	generator.closeTextBox();
+	generator.closeFrame();
+
 	generator.closePageSpan();
 	generator.endDocument();
 
-	std::ofstream file("testParagraph1.odt");
+	std::ofstream file("testTextbox1.odt");
 	file << content.cstr();
 }
 
@@ -128,24 +166,37 @@ static void createOds()
 	}
 	list.insert("librevenge:columns", columns);
 	generator.openSheet(list);
+
+	librevenge::RVNGPropertyList textbox;
+	textbox.insert("svg:x",0.2, librevenge::RVNG_INCH);
+	textbox.insert("svg:y",0.2, librevenge::RVNG_INCH);
+	textbox.insert("svg:width",200, librevenge::RVNG_POINT);
+	textbox.insert("svg:height",100, librevenge::RVNG_POINT);
+	textbox.insert("text:anchor-type", "page");
+	textbox.insert("text:anchor-page-number", 1);
+	textbox.insert("style:vertical-rel", "page");
+	textbox.insert("style:horizontal-rel", "page");
+	textbox.insert("style:horizontal-pos", "from-left");
+	textbox.insert("style:vertical-pos", "from-top");
+
+	textbox.insert("draw:stroke", "none");
+	textbox.insert("draw:fill", "none");
+	generator.openFrame(textbox);
+	generator.openTextBox(librevenge::RVNGPropertyList());
+	sendText(generator);
+	generator.closeTextBox();
+	generator.closeFrame();
+
 	list.clear();
 	list.insert("style:row-height", 40, librevenge::RVNG_POINT);
 	generator.openSheetRow(list);
-	list.clear();
-	list.insert("librevenge:column", 1);
-	list.insert("librevenge:row", 1);
-	list.insert("table:number-columns-spanned", 1);
-	list.insert("table:number-rows-spanned", 1);
-	generator.openSheetCell(list);
-	sendText(generator);
-	generator.closeSheetCell();
 	generator.closeSheetRow();
 	generator.closeSheet();
 
 	generator.closePageSpan();
 	generator.endDocument();
 
-	std::ofstream file("testParagraph1.ods");
+	std::ofstream file("testTextbox1.ods");
 	file << content.cstr();
 }
 
@@ -177,7 +228,7 @@ static void createOdg()
 	generator.endPage();
 	generator.endDocument();
 
-	std::ofstream file("testParagraph1.odg");
+	std::ofstream file("testTextbox1.odg");
 	file << content.cstr();
 }
 
@@ -209,7 +260,7 @@ static void createOdp()
 	generator.endSlide();
 	generator.endDocument();
 
-	std::ofstream file("testParagraph1.odp");
+	std::ofstream file("testTextbox1.odp");
 	file << content.cstr();
 }
 
