@@ -60,8 +60,10 @@ static void sendTableContent(Generator &generator)
 	generator.openTableRow(row);
 	cell.insert("librevenge:row", 1);
 	cell.insert("librevenge:column", 1);
+	cell.insert("fo:border", "1pt dashed #00ff00");
 	generator.openTableCell(cell);
 	generator.closeTableCell();
+	cell.remove("fo:border");
 
 	cell.insert("librevenge:column", 2);
 	generator.openTableCell(cell);
@@ -73,8 +75,10 @@ static void sendTableContent(Generator &generator)
 	generator.closeTableCell();
 
 	cell.insert("librevenge:column", 3);
+	cell.insert("fo:background-color", "#ff0000");
 	generator.openTableCell(cell);
 	generator.closeTableCell();
+	cell.remove("fo:background-color");
 	generator.closeTableRow();
 
 	row.insert("style:row-height", 0.3, librevenge::RVNG_INCH);
@@ -91,6 +95,7 @@ static void sendTableContent(Generator &generator)
 	generator.closeSpan();
 	generator.closeParagraph();
 	generator.closeTableCell();
+	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
 	cell.insert("librevenge:column", 3);
 	cell.insert("table:number-rows-spanned", 2);
 	cell.insert("table:number-columns-spanned", 1);
@@ -105,6 +110,9 @@ static void sendTableContent(Generator &generator)
 
 	row.insert("style:row-height", 1, librevenge::RVNG_INCH);
 	generator.openTableRow(row);
+	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
+	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
+	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
 	generator.closeTableRow();
 
 }
@@ -200,7 +208,7 @@ static void createOds()
 	librevenge::RVNGPropertyList textbox;
 	textbox.insert("svg:x",0.2, librevenge::RVNG_INCH);
 	textbox.insert("svg:y",0.2, librevenge::RVNG_INCH);
-	textbox.insert("svg:width",200, librevenge::RVNG_POINT);
+	textbox.insert("svg:width",6, librevenge::RVNG_INCH);
 	textbox.insert("svg:height",100, librevenge::RVNG_POINT);
 	textbox.insert("text:anchor-type", "page");
 	textbox.insert("text:anchor-page-number", 1);
@@ -240,7 +248,6 @@ static void createOds()
 	file << content.cstr();
 }
 
-#if 0
 static void createOdg()
 {
 	StringDocumentHandler content;
@@ -256,23 +263,33 @@ static void createOdg()
 	page.insert("librevenge:enforce-frame",true);
 	generator.startPage(page);
 
-	librevenge::RVNGPropertyList textbox;
-	textbox.insert("svg:x",0.2, librevenge::RVNG_INCH);
-	textbox.insert("svg:y",0.02, librevenge::RVNG_INCH);
-	textbox.insert("svg:width",200, librevenge::RVNG_POINT);
-	textbox.insert("svg:height",100, librevenge::RVNG_POINT);
-	textbox.insert("draw:stroke", "none");
-	textbox.insert("draw:fill", "none");
-	generator.startTextObject(textbox);
+	librevenge::RVNGPropertyList table;
+	table.insert("svg:x",2, librevenge::RVNG_INCH);
+	table.insert("svg:y",2, librevenge::RVNG_INCH);
+	table.insert("svg:width",200, librevenge::RVNG_POINT);
+	table.insert("fo:min-height",100, librevenge::RVNG_POINT);
+	table.insert("draw:stroke", "none");
+	table.insert("draw:fill", "none");
+
+	librevenge::RVNGPropertyListVector columns;
+	for (size_t c = 0; c < 3; ++c)
+	{
+		librevenge::RVNGPropertyList column;
+		column.insert("style:column-width", 2, librevenge::RVNG_INCH);
+		columns.append(column);
+	}
+	table.insert("librevenge:table-columns", columns);
+
+	generator.openTable(table);
 	sendTableContent(generator);
-	generator.endTextObject();
+	generator.closeTable();
+
 	generator.endPage();
 	generator.endDocument();
 
 	std::ofstream file("testTable1.odg");
 	file << content.cstr();
 }
-#endif
 
 static void createOdp()
 {
@@ -319,9 +336,7 @@ static void createOdp()
 
 int main()
 {
-#if 0
 	createOdg();
-#endif
 	createOdp();
 	createOds();
 	createOdt();

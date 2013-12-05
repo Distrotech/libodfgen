@@ -32,6 +32,7 @@
 #include "GraphicFunctions.hxx"
 #include "ListStyle.hxx"
 #include "OdfGenerator.hxx"
+#include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 #include <locale.h>
 #include <math.h>
@@ -108,6 +109,8 @@ public:
 	bool mbIsParagraph;
 	bool mbIsTextOnPath;
 
+	bool mbInTableHeaderRow;
+	bool mbInTableCell;
 private:
 	OdgGeneratorPrivate(const OdgGeneratorPrivate &);
 	OdgGeneratorPrivate &operator=(const OdgGeneratorPrivate &);
@@ -136,7 +139,9 @@ OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 	mfMaxHeight(0.0),
 	mbIsTextBox(false),
 	mbIsParagraph(false),
-	mbIsTextOnPath(false)
+	mbIsTextOnPath(false),
+	mbInTableHeaderRow(false),
+	mbInTableCell(false)
 {
 }
 
@@ -206,6 +211,9 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 		// writing out the lists styles
 		for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
 			(*iterListStyles)->write(pHandler);
+		// writing out the table styles
+		for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
+			(*iterTableStyles)->writeStyles(pHandler, true);
 	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
@@ -285,6 +293,7 @@ bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 	docContentPropList.addAttribute("xmlns:style", "urn:oasis:names:tc:opendocument:xmlns:style:1.0");
 	docContentPropList.addAttribute("xmlns:text", "urn:oasis:names:tc:opendocument:xmlns:text:1.0");
 	docContentPropList.addAttribute("xmlns:draw", "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0");
+	docContentPropList.addAttribute("xmlns:table", "urn:oasis:names:tc:opendocument:xmlns:table:1.0");
 	docContentPropList.addAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
 	docContentPropList.addAttribute("xmlns:svg", "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0");
 	docContentPropList.addAttribute("xmlns:fo", "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0");
@@ -1299,6 +1308,87 @@ void OdgGenerator::endTextObject()
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 	mpImpl->mbIsTextBox = false;
+}
+
+void OdgGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->pushListState();
+
+	// table must be inside a frame
+	TagOpenElement *pFrameOpenElement = new TagOpenElement("draw:frame");
+
+	pFrameOpenElement->addAttribute("draw:style-name", "standard");
+	if (propList["svg:x"])
+		pFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+	if (propList["svg:y"])
+		pFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	if (propList["svg:width"])
+		pFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	if (propList["svg:height"])
+		pFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+
+	mpImpl->getCurrentStorage()->push_back(pFrameOpenElement);
+	mpImpl->openTable(propList);
+}
+
+void OdgGenerator::closeTable()
+{
+	mpImpl->closeTable();
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
+	mpImpl->popListState();
+}
+
+void OdgGenerator::openTableRow(const ::librevenge::RVNGPropertyList &propList)
+{
+	if (!mpImpl->openTableRow(propList))
+		return;
+	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
+		mpImpl->mbInTableHeaderRow = true;
+}
+
+void OdgGenerator::closeTableRow()
+{
+	mpImpl->closeTableRow(mpImpl->mbInTableHeaderRow);
+	mpImpl->mbInTableHeaderRow= false;
+}
+
+void OdgGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)
+{
+	if (mpImpl->mbInTableCell)
+	{
+		ODFGEN_DEBUG_MSG(("a table cell in a table cell?!\n"));
+		return;
+	}
+	librevenge::RVNGPropertyList pList(propList);
+	pList.insert("fo:padding", "0.0382in");
+	pList.insert("draw:fill", "none");
+	pList.insert("draw:textarea-horizontal-align", "center");
+
+	if (pList["fo:background-color"])
+	{
+		pList.insert("draw:fill", "solid");
+		pList.insert("draw:fill-color", pList["fo:background-color"]->getStr());
+	}
+	if (!propList["fo:border"])
+		pList.insert("fo:border", "0.03pt solid #000000");
+	mpImpl->mbInTableCell = mpImpl->openTableCell(pList);
+}
+
+void OdgGenerator::closeTableCell()
+{
+	if (!mpImpl->mbInTableCell)
+	{
+		ODFGEN_DEBUG_MSG(("no table cell is opened\n"));
+		return;
+	}
+
+	mpImpl->closeTableCell();
+	mpImpl->mbInTableCell = false;
+}
+
+void OdgGenerator::insertCoveredTableCell(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->insertCoveredTableCell(propList);
 }
 
 void OdgGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)

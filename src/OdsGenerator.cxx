@@ -55,7 +55,7 @@ public:
 		State() : mbStarted(false),
 			mbInSheet(false), mbInSheetShapes(false), mbInSheetRow(false), mbInSheetCell(false), miLastSheetRow(0), miLastSheetColumn(0),
 			mbInFootnote(false), mbInComment(false), mbInHeaderFooter(false), mbInFrame(false), mbFirstInFrame(false), mbInChart(false),
-			mbInTable(false), mbInTableWithoutFrame(false), mbInTextBox(false),
+			mbInTable(false), mbInTextBox(false),
 			mbInGraphics(false),
 			mbNewOdtGenerator(false), mbNewOdgGenerator(false)
 		{
@@ -63,7 +63,7 @@ public:
 		bool canOpenFrame() const
 		{
 			return mbStarted && mbInSheet && !mbInSheetCell && !mbInFootnote && !mbInComment
-			       && !mbInHeaderFooter && !mbInFrame && !mbInChart && !mbInTableWithoutFrame;
+			       && !mbInHeaderFooter && !mbInFrame && !mbInChart;
 		}
 		bool mbStarted;
 
@@ -80,7 +80,6 @@ public:
 		bool mbFirstInFrame;
 		bool mbInChart;
 		bool mbInTable;
-		bool mbInTableWithoutFrame;
 		bool mbInTextBox;
 
 		bool mbInGraphics;
@@ -1288,28 +1287,8 @@ void OdsGenerator::closeComment()
 
 void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->open(OdsGeneratorPrivate::C_Table);
 	OdsGeneratorPrivate::State state=mpImpl->getState();
-	bool needFrame = !state.mbInFrame && !mpImpl->mAuxiliarOdtState && !mpImpl->mAuxiliarOdgState;
-	if (needFrame)
-	{
-		if (!state.canOpenFrame() && !mpImpl->canWriteText())
-		{
-			mpImpl->pushState(state);
-			ODFGEN_DEBUG_MSG(("OdsGenerator::openTable can not open a frame!!!\n"));
-		}
-		else
-		{
-			librevenge::RVNGPropertyList fPropList;
-			fPropList.insert("text:anchor-type","as-char");
-			fPropList.insert("style:vertical-rel", "baseline");
-			fPropList.insert("style:vertical-pos", "middle");
-			fPropList.insert("style:wrap","none");
-			openFrame(fPropList);
-			state=mpImpl->getState();
-			state.mbInTableWithoutFrame=true;
-		}
-	}
+	mpImpl->open(OdsGeneratorPrivate::C_Table);
 	state.mbInTable=true;
 	mpImpl->pushState(state);
 	if (mpImpl->mAuxiliarOdtState)
@@ -1320,6 +1299,11 @@ void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 		  to create an OLE and then send the OLE to the
 		  OdgGenerator */
 		ODFGEN_DEBUG_MSG(("OdsGenerator::openTable call in graphics!!!\n"));
+		return;
+	}
+	if (!state.mbInFrame)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator::openTable a table must be in a frame!!!\n"));
 		return;
 	}
 	if (mpImpl->createAuxiliarOdtGenerator())
@@ -1344,8 +1328,6 @@ void OdsGenerator::closeTable()
 			mpImpl->resetAuxiliarOdtGenerator();
 		}
 	}
-	if (state.mbInTableWithoutFrame)
-		closeFrame();
 }
 
 void OdsGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)

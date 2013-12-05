@@ -41,7 +41,7 @@ TableCellStyle::TableCellStyle(const librevenge::RVNGPropertyList &xPropList, co
 {
 }
 
-void TableCellStyle::write(OdfDocumentHandler *pHandler) const
+void TableCellStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
@@ -74,13 +74,31 @@ void TableCellStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->startElement("style:table-cell-properties", stylePropList);
 	pHandler->endElement("style:table-cell-properties");
 
-	writeCompat(pHandler, mPropList);
+	if (compatibleOdp)
+	{
+		librevenge::RVNGPropertyList pList;
+		pList.insert("fo:padding", "0.0382in");
+		if (mPropList["draw:fill"])
+			pList.insert("draw:fill", mPropList["draw:fill"]->getStr());
+		if (mPropList["draw:fill-color"])
+			pList.insert("draw:fill-color", mPropList["draw:fill-color"]->getStr());
+		if (mPropList["fo:padding"])
+			pList.insert("fo:padding", mPropList["fo:padding"]->getStr());
+		if (mPropList["draw:textarea-horizontal-align"])
+			pList.insert("draw:textarea-horizontal-align", mPropList["draw:textarea-horizontal-align"]->getStr());
+		pHandler->startElement("style:graphic-properties", pList);
+		pHandler->endElement("style:graphic-properties");
 
+		// HACK to get visible borders
+		if (mPropList["fo:border"])
+		{
+			pList.clear();
+			pList.insert("fo:border", mPropList["fo:border"]->getStr());
+			pHandler->startElement("style:paragraph-properties", pList);
+			pHandler->endElement("style:paragraph-properties");
+		}
+	}
 	pHandler->endElement("style:style");
-}
-
-void TableCellStyle::writeCompat(OdfDocumentHandler *, const librevenge::RVNGPropertyList &) const
-{
 }
 
 TableRowStyle::TableRowStyle(const librevenge::RVNGPropertyList &propList, const char *psName) :
@@ -128,7 +146,7 @@ TableStyle::~TableStyle()
 		delete(*iterTableRowStyles);
 }
 
-void TableStyle::write(OdfDocumentHandler *pHandler) const
+void TableStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
@@ -181,7 +199,7 @@ void TableStyle::write(OdfDocumentHandler *pHandler) const
 
 	typedef std::vector<TableCellStyle *>::const_iterator TCSVIter;
 	for (TCSVIter iterTableCell = mTableCellStyles.begin() ; iterTableCell != mTableCellStyles.end(); ++iterTableCell)
-		(*iterTableCell)->write(pHandler);
+		(*iterTableCell)->writeStyles(pHandler, compatibleOdp);
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

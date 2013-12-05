@@ -154,7 +154,7 @@ void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 		(*iterListStyles)->write(pHandler);
 	// writing out the table styles
 	for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
-		(*iterTableStyles)->write(pHandler);
+		(*iterTableStyles)->writeStyles(pHandler);
 
 	pHandler->endElement("office:automatic-styles");
 }

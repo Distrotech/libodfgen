@@ -38,9 +38,7 @@ class TableCellStyle : public Style
 public:
 	virtual ~TableCellStyle() {};
 	TableCellStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
-	virtual void write(OdfDocumentHandler *pHandler) const;
-private:
-	virtual void writeCompat(OdfDocumentHandler *pHandler, const librevenge::RVNGPropertyList &propList) const;
+	virtual void writeStyles(OdfDocumentHandler *pHandler, bool odpCompat=false) const;
 private:
 	librevenge::RVNGPropertyList mPropList;
 };
@@ -60,7 +58,7 @@ class TableStyle : public Style, public TopLevelElementStyle
 public:
 	TableStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName);
 	virtual ~TableStyle();
-	virtual void write(OdfDocumentHandler *pHandler) const;
+	virtual void writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
 	int getNumColumns() const
 	{
 		return (int)mColumns.count();
