@@ -512,10 +512,6 @@ void OdtGenerator::closeFooter()
 
 void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 {
-	size_t iNumColumns = 0;
-	const librevenge::RVNGPropertyListVector *columns = propList.child("style:columns");
-	if (columns)
-		iNumColumns = columns->count();
 	double fSectionMarginLeft = 0.0;
 	double fSectionMarginRight = 0.0;
 	if (propList["fo:margin-left"])
@@ -523,12 +519,13 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 	if (propList["fo:margin-right"])
 		fSectionMarginRight = propList["fo:margin-right"]->getDouble();
 
-	if (iNumColumns > 1 || fSectionMarginLeft != 0 || fSectionMarginRight != 0)
+	const librevenge::RVNGPropertyListVector *columns = propList.child("style:columns");
+	if ((columns && columns->count() > 1) || fSectionMarginLeft != 0 || fSectionMarginRight != 0)
 	{
 		librevenge::RVNGString sSectionName;
 		sSectionName.sprintf("Section%i", mpImpl->mSectionStyles.size());
 
-		SectionStyle *pSectionStyle = new SectionStyle(propList, *columns, sSectionName.cstr());
+		SectionStyle *pSectionStyle = new SectionStyle(propList, sSectionName.cstr());
 		mpImpl->mSectionStyles.push_back(pSectionStyle);
 
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");

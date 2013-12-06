@@ -33,12 +33,11 @@
 class SectionStyle : public Style
 {
 public:
-	SectionStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &xColumns, const char *psName);
+	SectionStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
 	librevenge::RVNGPropertyList mPropList;
-	librevenge::RVNGPropertyListVector mColumns;
 };
 #endif
 

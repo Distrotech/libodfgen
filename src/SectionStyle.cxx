@@ -33,11 +33,9 @@ double rint(double x);
 #endif /* _WIN32 */
 
 SectionStyle::SectionStyle(const librevenge::RVNGPropertyList &xPropList,
-                           const librevenge::RVNGPropertyListVector &xColumns,
                            const char *psName) :
 	Style(psName),
-	mPropList(xPropList),
-	mColumns(xColumns)
+	mPropList(xPropList)
 {
 }
 
@@ -62,9 +60,10 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 
 	// if the number of columns is <= 1, we will never come here. This is only an additional check
 	// style properties
-	if (mColumns.count() > 1)
+	const librevenge::RVNGPropertyListVector *columns = mPropList.child("style:columns");
+	if (columns && columns->count() > 1)
 	{
-		columnProps.insert("fo:column-count", (int)mColumns.count());
+		columnProps.insert("fo:column-count", (int)columns->count());
 		pHandler->startElement("style:columns", columnProps);
 
 		if (mPropList["librevenge:colsep-width"] && mPropList["librevenge:colsep-color"])
@@ -83,7 +82,7 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 			pHandler->startElement("style:column-sep", columnSeparator);
 			pHandler->endElement("style:column-sep");
 		}
-		librevenge::RVNGPropertyListVector::Iter i(mColumns);
+		librevenge::RVNGPropertyListVector::Iter i(*columns);
 		for (i.rewind(); i.next();)
 		{
 			pHandler->startElement("style:column", i());
