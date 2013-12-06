@@ -351,7 +351,9 @@ void OdfGenerator::openLink(const librevenge::RVNGPropertyList &propList)
 	for (i.rewind(); i.next();)
 	{
 		if (!i.child()) // write out simple properties only
-			pLinkOpenElement->addAttribute(i.key(), i()->getStr());
+			// The string we get here might be url decoded, so
+			// sscape characters that might mess up the resulting xml
+			pLinkOpenElement->addAttribute(i.key(), librevenge::RVNGString(i()->getStr(), true));
 	}
 	mpCurrentStorage->push_back(pLinkOpenElement);
 }
