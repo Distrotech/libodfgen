@@ -465,7 +465,10 @@ void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList,
 
 	ListStyle *pListStyle = 0;
 	ListState &state=getListState();
-	if (state.mpCurrentListStyle && state.mpCurrentListStyle->getListID() == id)
+	// as all direct list have the same id:-1, we reused the last list
+	// excepted at level 0 where we force the redefinition of a new list
+	if ((id!=-1 || !state.mbListElementOpened.empty()) &&
+	        state.mpCurrentListStyle && state.mpCurrentListStyle->getListID() == id)
 		pListStyle = state.mpCurrentListStyle;
 
 	// this rather appalling conditional makes sure we only start a
@@ -477,14 +480,24 @@ void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList,
 	        (ordered && propList["librevenge:level"] && propList["librevenge:level"]->getInt()==1 &&
 	         (propList["text:start-value"] && propList["text:start-value"]->getInt() != int(state.miLastListNumber+1))))
 	{
-		ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
+		// first retrieve the displayname
+		librevenge::RVNGString displayName("");
+		if (propList["style:display-name"])
+			displayName=propList["style:display-name"]->getStr();
+		else if (pListStyle)
+			displayName=pListStyle->getDisplayName()
+
+			            ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
 		librevenge::RVNGString sName;
 		if (ordered)
 			sName.sprintf("OL%i", miNumListStyles);
 		else
 			sName.sprintf("UL%i", miNumListStyles);
 		miNumListStyles++;
+
 		pListStyle = new ListStyle(sName.cstr(), id);
+		if (!displayName.empty())
+			pListStyle->setDisplayName(displayName.cstr());
 		storeListStyle(pListStyle);
 		if (ordered)
 		{

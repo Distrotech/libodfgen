@@ -114,7 +114,6 @@ static void sendTableContent(Generator &generator)
 	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
 	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
 	generator.closeTableRow();
-
 }
 
 static void createOdt()

@@ -151,7 +151,10 @@ void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 		(*iterSectionStyles)->write(pHandler);
 	// writing out the lists styles
 	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-		(*iterListStyles)->write(pHandler);
+	{
+		if (!(*iterListStyles)->hasDisplayName())
+			(*iterListStyles)->write(pHandler);
+	}
 	// writing out the table styles
 	for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
 		(*iterTableStyles)->writeStyles(pHandler);
@@ -262,6 +265,11 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	}
 	mSpanManager.writeNamedStyles(pHandler);
 	mParagraphManager.writeNamedStyles(pHandler);
+	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
+	{
+		if ((*iterListStyles)->hasDisplayName())
+			(*iterListStyles)->write(pHandler);
+	}
 
 	sendStorage(&mFrameStyles, pHandler);
 

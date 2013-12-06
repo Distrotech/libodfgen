@@ -125,6 +125,7 @@ void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) co
 
 ListStyle::ListStyle(const char *psName, const int iListID) :
 	Style(psName),
+	mDisplayName(""),
 	mxListLevels(),
 	miListID(iListID)
 {
@@ -176,6 +177,8 @@ void ListStyle::write(OdfDocumentHandler *pHandler) const
 {
 	TagOpenElement listStyleOpenElement("text:list-style");
 	listStyleOpenElement.addAttribute("style:name", getName());
+	if (!mDisplayName.empty())
+		listStyleOpenElement.addAttribute("style:display-name", mDisplayName);
 	listStyleOpenElement.write(pHandler);
 
 	for (std::map<int, ListLevelStyle *>::const_iterator iter = mxListLevels.begin();

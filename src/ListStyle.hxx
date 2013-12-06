@@ -67,6 +67,21 @@ public:
 		return miListID;
 	}
 	bool isListLevelDefined(int iLevel) const;
+	librevenge::RVNGString getDisplayName() const
+	{
+		return mDisplayName;
+	}
+	bool hasDisplayName() const
+	{
+		return !mDisplayName.empty();
+	}
+	void setDisplayName(const char *displayName=0)
+	{
+		if (!displayName || !*displayName)
+			mDisplayName="";
+		else
+			mDisplayName = displayName;
+	}
 
 protected:
 	void setListLevel(int iLevel, ListLevelStyle *iListLevelStyle);
@@ -74,6 +89,7 @@ protected:
 private:
 	ListStyle(const ListStyle &);
 	ListStyle &operator=(const ListStyle &);
+	librevenge::RVNGString mDisplayName;
 	std::map<int, ListLevelStyle *> mxListLevels;
 	const int miListID;
 };
