@@ -35,137 +35,40 @@
 template <class Generator>
 static void sendText(Generator &generator)
 {
+	librevenge::RVNGPropertyList paragraph;
+	generator.openParagraph(paragraph);
+
 	librevenge::RVNGPropertyList span;
-	span.insert("style:font-name","Geneva");
-	span.insert("fo:font-size", 12, librevenge::RVNG_POINT);
+	span.insert("style:font-name","Courier");
+	span.insert("fo:font-size", 13, librevenge::RVNG_POINT);
 	span.insert("librevenge:span-id",1);
 	generator.defineCharacterStyle(span);
 	span.clear();
 	span.insert("librevenge:span-id",1);
-
-	// begin by a basic paragraph
-	librevenge::RVNGPropertyList para;
-	para.insert("librevenge:paragraph-id",1);
-	generator.defineParagraphStyle(span);
-
-	para.clear();
-	para.insert("librevenge:paragraph-id",1);
-	generator.openParagraph(para);
 	generator.openSpan(span);
-	generator.insertText("basic "); // basic
+	generator.insertText("test of links, a http link: ");
+	librevenge::RVNGPropertyList link;
+	link.insert("xlink:type","simple");
+	link.insert("xlink:href","http://www.google.com");
+	generator.openLink(link);
+	generator.insertText("search a word");
+	generator.closeLink();
+
+	generator.insertText(", a ftp link: ");
+	link.insert("xlink:href","ftp://localhost");
+	generator.openLink(link);
+	generator.insertText("ftp");
+	generator.closeLink();
+
+	generator.insertText(", a mail link: ");
+	link.insert("xlink:href","mail:toto@server.com");
+	generator.openLink(link);
+	generator.insertText("mail");
+	generator.closeLink();
+	generator.insertText(".");
 	generator.closeSpan();
+
 	generator.closeParagraph();
-
-	librevenge::RVNGPropertyList list;
-	// first test list using librevenge:list-id
-	list.clear();
-	list.insert("librevenge:list-id",1);
-	list.insert("librevenge:level",1);
-	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
-	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
-	list.insert("style:num-format", "1");
-	generator.defineOrderedListLevel(list);
-	list.insert("librevenge:level",2);
-	list.insert("style:num-format", "I");
-	generator.defineOrderedListLevel(list);
-
-	list.clear();
-	list.insert("librevenge:list-id",1);
-	generator.openOrderedListLevel(list);
-
-	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
-	generator.openListElement(list);
-	generator.openSpan(span);
-	generator.insertText("level 1");  // 1 level 1
-	generator.closeSpan();
-	generator.closeListElement();
-
-	list.clear();
-	list.insert("librevenge:list-id",2);
-	generator.openOrderedListLevel(list);
-	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
-	generator.openListElement(list);
-	generator.openSpan(span);
-	generator.insertText("level 2");  // I level 2
-	generator.closeSpan();
-	generator.closeListElement();
-	generator.closeOrderedListLevel();
-	generator.closeOrderedListLevel();
-
-	// now redefine level 2 and try again
-	list.clear();
-	list.insert("librevenge:list-id",2);
-	list.insert("librevenge:level",1);
-	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
-	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
-	list.insert("style:num-format", "1");
-	generator.defineOrderedListLevel(list);
-	list.insert("librevenge:level",2);
-	list.insert("style:num-format", "A");
-	generator.defineOrderedListLevel(list);
-
-	list.clear();
-	list.insert("librevenge:list-id",2);
-	generator.openOrderedListLevel(list);
-	generator.openOrderedListLevel(list);
-	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
-	generator.openListElement(list);
-	generator.openSpan(span);
-	generator.insertText("level 2 (redef)"); // A level 2 (redef)
-	generator.closeSpan();
-	generator.closeListElement();
-	generator.closeOrderedListLevel();
-	generator.closeOrderedListLevel();
-
-	list.clear();
-	list.insert("librevenge:list-id",1);
-	generator.openOrderedListLevel(list);
-	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
-	list.insert("text:start-value", 2);
-	generator.openListElement(list);
-	generator.openSpan(span);
-	generator.insertText("level 1 again"); // 2 level 1 again
-	generator.closeSpan();
-	generator.closeListElement();
-
-	generator.closeOrderedListLevel();
-
-	// paragraph
-	para.insert("librevenge:paragraph-id",1);
-	generator.openParagraph(para);
-	generator.openSpan(span);
-	generator.insertText("basic again"); // basic again
-	generator.closeSpan();
-	generator.closeParagraph();
-
-	// now test list without id
-	list.clear();
-	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
-	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
-	list.insert("style:num-format", "i");
-	generator.openOrderedListLevel(list);
-
-	list.clear();
-	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
-	generator.openListElement(list);
-	generator.openSpan(span);
-	generator.insertText("level 1(def by hand)"); // i level 1(def by hand)
-	generator.closeSpan();
-	generator.closeListElement();
-
-	list.clear();
-	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
-	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
-	list.insert("style:num-format", "1");
-	generator.openOrderedListLevel(list);
-	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
-	generator.openListElement(list);
-	generator.openSpan(span);
-	generator.insertText("level 2(def by hand)");  // 1 level 2(def by hand)
-	generator.closeSpan();
-	generator.closeListElement();
-	generator.closeOrderedListLevel();
-	generator.closeOrderedListLevel();
 }
 
 static void createOdt()
@@ -189,7 +92,7 @@ static void createOdt()
 	generator.closePageSpan();
 	generator.endDocument();
 
-	std::ofstream file("testList1.odt");
+	std::ofstream file("testLink1.odt");
 	file << content.cstr();
 }
 
@@ -238,7 +141,7 @@ static void createOds()
 	generator.closePageSpan();
 	generator.endDocument();
 
-	std::ofstream file("testList1.ods");
+	std::ofstream file("testLink1.ods");
 	file << content.cstr();
 }
 
@@ -270,7 +173,7 @@ static void createOdg()
 	generator.endPage();
 	generator.endDocument();
 
-	std::ofstream file("testList1.odg");
+	std::ofstream file("testLink1.odg");
 	file << content.cstr();
 }
 
@@ -302,7 +205,7 @@ static void createOdp()
 	generator.endSlide();
 	generator.endDocument();
 
-	std::ofstream file("testList1.odp");
+	std::ofstream file("testLink1.odp");
 	file << content.cstr();
 }
 

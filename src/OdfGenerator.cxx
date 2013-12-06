@@ -457,7 +457,9 @@ void OdfGenerator::pushListState()
 void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
 {
 	int id = -1;
-	if (propList["librevenge:id"])
+	if (propList["librevenge:list-id"])
+		id = propList["librevenge:list-id"]->getInt();
+	else if (propList["librevenge:id"]) // REMOVEME
 		id = propList["librevenge:id"]->getInt();
 	updateListStorage(propList, id, ordered);
 
@@ -516,18 +518,24 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 	librevenge::RVNGPropertyList pList(propList);
 	if (!pList["librevenge:level"])
 		pList.insert("librevenge:level", int(state.mbListElementOpened.size())+1);
-	if (!propList["librevenge:id"])
+
+	int id=-1;
+	if (propList["librevenge:list-id"])
+		id = propList["librevenge:list-id"]->getInt();
+	else if (propList["librevenge:id"]) // REMOVEME
+		id = propList["librevenge:id"]->getInt();
+
+	if (id==-1)
 		defineListLevel(pList, ordered);
 	else if (state.mbListElementOpened.empty())
 	{
 		// first item of a list, be sure to use the list with given id
-		retrieveListStyle(pList["librevenge:id"]->getInt());
+		retrieveListStyle(id);
 	}
 	// check if the list level is defined
 	if (state.mpCurrentListStyle &&
 	        !state.mpCurrentListStyle->isListLevelDefined(pList["librevenge:level"]->getInt()-1))
 	{
-		int id=pList["librevenge:id"] ? pList["librevenge:id"]->getInt() : -1;
 		int level=pList["librevenge:level"]->getInt();
 		ListStorage &list=getListStorage(id);
 		if (list.mLevelMap.find(level) != list.mLevelMap.end())

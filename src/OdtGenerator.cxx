@@ -142,8 +142,8 @@ void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	TagOpenElement("office:automatic-styles").write(pHandler);
 	sendStorage(&mFrameAutomaticStyles, pHandler);
 	mFontManager.write(pHandler); // do nothing
-	mSpanManager.write(pHandler);
-	mParagraphManager.write(pHandler);
+	mSpanManager.writeAutomaticStyles(pHandler);
+	mParagraphManager.writeAutomaticStyles(pHandler);
 
 	_writePageLayouts(pHandler);
 	// writing out the sections styles
@@ -260,6 +260,9 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:text-properties");
 		pHandler->endElement("style:style");
 	}
+	mSpanManager.writeNamedStyles(pHandler);
+	mParagraphManager.writeNamedStyles(pHandler);
+
 	sendStorage(&mFrameStyles, pHandler);
 
 	TagOpenElement lineOpenElement("text:linenumbering-configuration");

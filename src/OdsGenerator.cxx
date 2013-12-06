@@ -558,6 +558,7 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:text-properties");
 		pHandler->endElement("style:style");
 	}
+
 	sendStorage(&mFrameStyles, pHandler);
 	pHandler->endElement("office:styles");
 }
@@ -1304,13 +1305,7 @@ void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTable(propList);
 	if (mpImpl->mAuxiliarOdgState)
-	{
-		/*CHECKME: maybe we can create a auxiliar odt generator, use it
-		  to create an OLE and then send the OLE to the
-		  OdgGenerator */
-		ODFGEN_DEBUG_MSG(("OdsGenerator::openTable call in graphics!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdgState->get().openTable(propList);
 	if (!state.mbInFrame)
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::openTable a table must be in a frame!!!\n"));
@@ -1328,8 +1323,10 @@ void OdsGenerator::closeTable()
 	if (!mpImpl->close(OdsGeneratorPrivate::C_Table)) return;
 	OdsGeneratorPrivate::State state=mpImpl->getState();
 	mpImpl->popState();
-
-	if (state.mbInTable && mpImpl->mAuxiliarOdtState)
+	if (!state.mbInTable) return;
+	if (mpImpl->mAuxiliarOdgState)
+		return mpImpl->mAuxiliarOdgState->get().closeTable();
+	if (mpImpl->mAuxiliarOdtState)
 	{
 		mpImpl->mAuxiliarOdtState->get().closeTable();
 		if (state.mbNewOdtGenerator)
@@ -1345,6 +1342,8 @@ void OdsGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 	mpImpl->open(OdsGeneratorPrivate::C_TableRow);
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTableRow(propList);
+	if (mpImpl->mAuxiliarOdgState)
+		return mpImpl->mAuxiliarOdgState->get().openTableRow(propList);
 }
 
 void OdsGenerator::closeTableRow()
@@ -1352,6 +1351,8 @@ void OdsGenerator::closeTableRow()
 	if (!mpImpl->close(OdsGeneratorPrivate::C_TableRow)) return;
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().closeTableRow();
+	if (mpImpl->mAuxiliarOdgState)
+		return mpImpl->mAuxiliarOdgState->get().closeTableRow();
 }
 
 void OdsGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
@@ -1359,6 +1360,8 @@ void OdsGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 	mpImpl->open(OdsGeneratorPrivate::C_TableCell);
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTableCell(propList);
+	if (mpImpl->mAuxiliarOdgState)
+		return mpImpl->mAuxiliarOdgState->get().openTableCell(propList);
 }
 
 void OdsGenerator::closeTableCell()
@@ -1366,12 +1369,16 @@ void OdsGenerator::closeTableCell()
 	if (!mpImpl->close(OdsGeneratorPrivate::C_TableCell)) return;
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().closeTableCell();
+	if (mpImpl->mAuxiliarOdgState)
+		return mpImpl->mAuxiliarOdgState->get().closeTableCell();
 }
 
 void OdsGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().insertCoveredTableCell(propList);
+	if (mpImpl->mAuxiliarOdgState)
+		return mpImpl->mAuxiliarOdgState->get().insertCoveredTableCell(propList);
 }
 
 

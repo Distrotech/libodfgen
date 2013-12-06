@@ -47,6 +47,8 @@ public:
 	{
 		return msName;
 	}
+	bool hasDisplayName() const;
+
 private:
 	librevenge::RVNGPropertyList mpPropList;
 	librevenge::RVNGString msName;
@@ -58,7 +60,7 @@ class SpanStyle : public Style
 public:
 	SpanStyle(const char *psName, const librevenge::RVNGPropertyList &xPropList);
 	virtual void write(OdfDocumentHandler *pHandler) const;
-
+	bool hasDisplayName() const;
 private:
 	librevenge::RVNGPropertyList mPropList;
 };
@@ -66,7 +68,7 @@ private:
 class ParagraphStyleManager : public StyleManager
 {
 public:
-	ParagraphStyleManager() : mNameHash(), mStyleHash() {}
+	ParagraphStyleManager() : mHashNameMap(), mStyleHash(), mDisplayNameMap() {}
 	virtual ~ParagraphStyleManager()
 	{
 		clean();
@@ -79,25 +81,42 @@ public:
 
 	/* returns the style corresponding to a given name ( if it exists ) */
 	shared_ptr<ParagraphStyle> const get(const librevenge::RVNGString &name) const;
+	//! return the file name corresponding to a display name
+	librevenge::RVNGString getFinalDisplayName(const librevenge::RVNGString &displayName);
 
 	virtual void clean();
-	virtual void write(OdfDocumentHandler *) const;
-
+	// write all
+	virtual void write(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, false);
+		write(pHandler, true);
+	}
+	// write named style
+	void writeNamedStyles(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, false);
+	}
+	// write basic style
+	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, true);
+	}
 
 protected:
-	// return a unique key
-	librevenge::RVNGString getKey(const librevenge::RVNGPropertyList &xPropList) const;
-
+	// write automatic/named style
+	void write(OdfDocumentHandler *, bool automaticStyle) const;
 	// hash key -> name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mHashNameMap;
 	// style name -> paragraph style
 	std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr> mStyleHash;
+	// display name -> style name
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mDisplayNameMap;
 };
 
 class SpanStyleManager : public StyleManager
 {
 public:
-	SpanStyleManager() : mNameHash(), mStyleHash() {}
+	SpanStyleManager() : mHashNameMap(), mStyleHash(), 	mDisplayNameMap() {}
 	virtual ~SpanStyleManager()
 	{
 		clean();
@@ -107,18 +126,38 @@ public:
 
 	Note: using Span%i as new name*/
 	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList);
-
 	/* returns the style corresponding to a given name ( if it exists ) */
 	shared_ptr<SpanStyle> const get(const librevenge::RVNGString &name) const;
+	//! return the file name corresponding to a display name
+	librevenge::RVNGString getFinalDisplayName(const librevenge::RVNGString &displayName);
 
 	virtual void clean();
-	virtual void write(OdfDocumentHandler *) const;
+	// write all
+	virtual void write(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, false);
+		write(pHandler, true);
+	}
+	// write named style
+	void writeNamedStyles(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, false);
+	}
+	// write basic style
+	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, true);
+	}
 
 protected:
+	// write automatic/named style
+	void write(OdfDocumentHandler *, bool automaticStyle) const;
 	// hash key -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mHashNameMap;
 	// style name -> SpanStyle
 	std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr> mStyleHash;
+	// display name -> style name
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mDisplayNameMap;
 };
 #endif
 

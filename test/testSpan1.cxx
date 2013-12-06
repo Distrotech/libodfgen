@@ -39,6 +39,7 @@ static void sendText(Generator &generator)
 	generator.openParagraph(paragraph);
 
 	librevenge::RVNGPropertyList span;
+	span.insert("style:display-name","A Imported Style");
 	span.insert("style:font-name","Courier");
 	span.insert("fo:font-size", 13, librevenge::RVNG_POINT);
 	span.insert("librevenge:span-id",1);

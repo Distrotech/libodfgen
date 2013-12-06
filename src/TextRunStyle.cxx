@@ -33,28 +33,6 @@
 
 #include <string.h>
 
-namespace
-{
-
-librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyList &xPropList)
-{
-	librevenge::RVNGString sKey;
-	librevenge::RVNGPropertyList::Iter i(xPropList);
-	for (i.rewind(); i.next();)
-	{
-		if (!i.child()) // write out simple properties only
-		{
-			librevenge::RVNGString sProp;
-			sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
-			sKey.append(sProp);
-		}
-	}
-
-	return sKey;
-}
-
-} // anonymous namespace
-
 ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName) :
 	mpPropList(pPropList),
 	msName(sName)
@@ -65,6 +43,11 @@ ParagraphStyle::~ParagraphStyle()
 {
 }
 
+bool ParagraphStyle::hasDisplayName() const
+{
+	return mpPropList["style:display-name"] && !mpPropList["style:display-name"]->getStr().empty();
+}
+
 void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 {
 	ODFGEN_DEBUG_MSG(("ParagraphStyle: Writing a paragraph style..\n"));
@@ -72,6 +55,8 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	librevenge::RVNGPropertyList propList;
 	propList.insert("style:name", msName.cstr());
 	propList.insert("style:family", "paragraph");
+	if (mpPropList["style:display-name"])
+		propList.insert("style:display-name", mpPropList["style:display-name"]->getStr());
 	if (mpPropList["style:parent-style-name"])
 		propList.insert("style:parent-style-name", mpPropList["style:parent-style-name"]->getStr());
 	if (mpPropList["style:master-page-name"])
@@ -172,15 +157,26 @@ SpanStyle::SpanStyle(const char *psName, const librevenge::RVNGPropertyList &xPr
 {
 }
 
+bool SpanStyle::hasDisplayName() const
+{
+	return mPropList["style:display-name"] && !mPropList["style:display-name"]->getStr().empty();
+}
+
 void SpanStyle::write(OdfDocumentHandler *pHandler) const
 {
+	librevenge::RVNGPropertyList propList(mPropList);
+
 	ODFGEN_DEBUG_MSG(("SpanStyle: Writing a span style..\n"));
 	librevenge::RVNGPropertyList styleOpenList;
 	styleOpenList.insert("style:name", getName());
+	if (mPropList["style:display-name"])
+	{
+		styleOpenList.insert("style:display-name", mPropList["style:display-name"]->getStr());
+		propList.remove("style:display-name");
+	}
 	styleOpenList.insert("style:family", "text");
 	pHandler->startElement("style:style", styleOpenList);
 
-	librevenge::RVNGPropertyList propList(mPropList);
 
 	if (mPropList["style:font-name"])
 	{
@@ -210,7 +206,6 @@ void SpanStyle::write(OdfDocumentHandler *pHandler) const
 		propList.insert("style:font-style-asian", mPropList["fo:font-style"]->getStr());
 		propList.insert("style:font-style-complex", mPropList["fo:font-style"]->getStr());
 	}
-
 	pHandler->startElement("style:text-properties", propList);
 
 	pHandler->endElement("style:text-properties");
@@ -219,55 +214,38 @@ void SpanStyle::write(OdfDocumentHandler *pHandler) const
 
 void ParagraphStyleManager::clean()
 {
-	mNameHash.clear();
+	mHashNameMap.clear();
 	mStyleHash.clear();
+	mDisplayNameMap.clear();
 }
 
-void ParagraphStyleManager::write(OdfDocumentHandler *pHandler) const
+void ParagraphStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) const
 {
 	for (std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
-		if (strcmp(iter->second->getName().cstr(), "Standard") == 0)
-			continue;
-		(iter->second)->write(pHandler);
+		if (iter->second && iter->second->hasDisplayName()!=automatic)
+			(iter->second)->write(pHandler);
 	}
-}
-
-librevenge::RVNGString ParagraphStyleManager::getKey(const librevenge::RVNGPropertyList &xPropList) const
-{
-	librevenge::RVNGString sKey = propListToStyleKey(xPropList);
-	const librevenge::RVNGPropertyListVector *pTabStops = xPropList.child("style:tab-stops");
-	if (pTabStops)
-	{
-		librevenge::RVNGString sTabStops;
-		sTabStops.sprintf("[num-tab-stops:%i]", pTabStops->count());
-		librevenge::RVNGPropertyListVector::Iter i(*pTabStops);
-		for (i.rewind(); i.next();)
-		{
-			sTabStops.append(propListToStyleKey(i()));
-		}
-		sKey.append(sTabStops);
-	}
-
-	return sKey;
 }
 
 librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList)
 {
-	librevenge::RVNGString hashKey = getKey(propList);
+	librevenge::RVNGString hashKey = propList.getPropString();
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
-	    mNameHash.find(hashKey);
-	if (iter!=mNameHash.end()) return iter->second;
+	    mHashNameMap.find(hashKey);
+	if (iter!=mHashNameMap.end()) return iter->second;
 
 	// ok create a new list
+	librevenge::RVNGString sName("");
 	ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
-
-	librevenge::RVNGString sName;
 	sName.sprintf("S%i", mStyleHash.size());
 	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(propList, sName));
 	mStyleHash[sName] =parag;
-	mNameHash[hashKey] = sName;
+	mHashNameMap[hashKey] = sName;
+	if (parag->hasDisplayName())
+		mDisplayNameMap[propList["style:display-name"]->getStr()]=sName;
+
 	return sName;
 }
 
@@ -281,35 +259,47 @@ shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const librevenge::RV
 
 void SpanStyleManager::clean()
 {
-	mNameHash.clear();
+	mHashNameMap.clear();
 	mStyleHash.clear();
+	mDisplayNameMap.clear();
 }
 
-void SpanStyleManager::write(OdfDocumentHandler *pHandler) const
+void SpanStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) const
 {
 	for (std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
-		(iter->second)->write(pHandler);
+		if (iter->second && iter->second->hasDisplayName()!=automatic)
+			(iter->second)->write(pHandler);
 	}
 }
 
 librevenge::RVNGString SpanStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList)
 {
-	librevenge::RVNGString hashKey = propListToStyleKey(propList);
+	librevenge::RVNGString hashKey = propList.getPropString();
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
-	    mNameHash.find(hashKey);
-	if (iter!=mNameHash.end()) return iter->second;
+	    mHashNameMap.find(hashKey);
+	if (iter!=mHashNameMap.end()) return iter->second;
 
 	// ok create a new list
 	ODFGEN_DEBUG_MSG(("SpanStyleManager::findOrAdd: Span Hash Key: %s\n", hashKey.cstr()));
 
-	librevenge::RVNGString sName;
+	librevenge::RVNGString sName("");
 	sName.sprintf("Span%i", mStyleHash.size());
 	shared_ptr<SpanStyle> span(new SpanStyle(sName.cstr(), propList));
 	mStyleHash[sName] = span;
-	mNameHash[hashKey] = sName;
+	mHashNameMap[hashKey] = sName;
+	if (span->hasDisplayName())
+		mDisplayNameMap[propList["style:display-name"]->getStr()]=sName;
 	return sName;
+}
+
+librevenge::RVNGString SpanStyleManager::getFinalDisplayName(const librevenge::RVNGString &displayName)
+{
+	if (mDisplayNameMap.find(displayName) != mDisplayNameMap.end())
+		return mDisplayNameMap.find(displayName)->second;
+	ODFGEN_DEBUG_MSG(("SpanStyleManager::getName: can not find style with display name: %s\n", displayName.cstr()));
+	return librevenge::RVNGString("");
 }
 
 shared_ptr<SpanStyle> const SpanStyleManager::get(const librevenge::RVNGString &name) const

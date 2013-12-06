@@ -12,5 +12,7 @@ Makefile.in
 *.ods
 *.odt
 testList1
-testParagraph1
+testPara1
 testSpan1
+testTable1
+testTextbox1

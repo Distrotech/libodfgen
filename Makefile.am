@@ -2,9 +2,11 @@ ACLOCAL_AMFLAGS = -I m4
 
 pkgconfdir = $(libdir)/pkgconfig
 
-
-
 SUBDIRS = build inc src
+
+if COMPILE_TEST
+SUBDIRS += test
+endif
 
 if WITH_LIBEBOOK_DOCS
 SUBDIRS += docs

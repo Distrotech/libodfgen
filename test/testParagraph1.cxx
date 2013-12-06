@@ -45,6 +45,7 @@ static void sendText(Generator &generator)
 
 	librevenge::RVNGPropertyList para;
 	para.insert("librevenge:paragraph-id",1);
+	para.insert("style:display-name","Default");
 	generator.defineParagraphStyle(para);
 
 	para.clear();
@@ -58,9 +59,19 @@ static void sendText(Generator &generator)
 	para.clear();
 	para.insert("fo:margin-left",1,librevenge::RVNG_INCH);
 	para.insert("fo:text-align","center");
+	para.insert("style:display-name","Center");
 	generator.openParagraph(para);
 	generator.openSpan(span);
-	generator.insertText("user");
+	generator.insertText("center(style)");
+	generator.closeSpan();
+	generator.closeParagraph();
+
+	para.clear();
+	para.insert("fo:margin-left",1,librevenge::RVNG_INCH);
+	para.insert("fo:text-align","center");
+	generator.openParagraph(para);
+	generator.openSpan(span);
+	generator.insertText("center(no style)");
 	generator.closeSpan();
 	generator.closeParagraph();
 
