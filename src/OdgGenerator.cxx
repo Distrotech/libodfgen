@@ -1361,17 +1361,13 @@ void OdgGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)
 		return;
 	}
 	librevenge::RVNGPropertyList pList(propList);
-	pList.insert("fo:padding", "0.0382in");
-	pList.insert("draw:fill", "none");
-	pList.insert("draw:textarea-horizontal-align", "center");
-
 	if (pList["fo:background-color"])
 	{
 		pList.insert("draw:fill", "solid");
 		pList.insert("draw:fill-color", pList["fo:background-color"]->getStr());
 	}
-	if (!propList["fo:border"])
-		pList.insert("fo:border", "0.03pt solid #000000");
+	else if (!pList["draw:fill"])
+		pList.insert("draw:fill", "none");
 	mpImpl->mbInTableCell = mpImpl->openTableCell(pList);
 }
 
