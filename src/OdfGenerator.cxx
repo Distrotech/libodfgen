@@ -695,8 +695,7 @@ void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 
 	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
 	// state which is transmitted inside the page. could this lead to unacceptable behaviour?
-	const librevenge::RVNGPropertyListVector *columns = propList.child("librevenge:table-columns");
-	TableStyle *pTableStyle = new TableStyle(propList, (columns ? *columns : librevenge::RVNGPropertyListVector()), sTableName.cstr());
+	TableStyle *pTableStyle = new TableStyle(propList, sTableName.cstr());
 
 	mTableStyles.push_back(pTableStyle);
 

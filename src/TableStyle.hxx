@@ -56,13 +56,10 @@ private:
 class TableStyle : public Style, public TopLevelElementStyle
 {
 public:
-	TableStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName);
+	TableStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
 	virtual ~TableStyle();
 	virtual void writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
-	int getNumColumns() const
-	{
-		return (int)mColumns.count();
-	}
+	int getNumColumns() const;
 	void addTableCellStyle(TableCellStyle *pTableCellStyle)
 	{
 		mTableCellStyles.push_back(pTableCellStyle);
@@ -81,7 +78,6 @@ public:
 	}
 private:
 	librevenge::RVNGPropertyList mPropList;
-	librevenge::RVNGPropertyListVector mColumns;
 	std::vector<TableCellStyle *> mTableCellStyles;
 	std::vector<TableRowStyle *> mTableRowStyles;
 };

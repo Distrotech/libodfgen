@@ -127,10 +127,9 @@ void TableRowStyle::write(OdfDocumentHandler *pHandler) const
 }
 
 
-TableStyle::TableStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGPropertyListVector &columns, const char *psName) :
+TableStyle::TableStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName) :
 	Style(psName),
 	mPropList(xPropList),
-	mColumns(columns),
 	mTableCellStyles(),
 	mTableRowStyles()
 {
@@ -144,6 +143,14 @@ TableStyle::~TableStyle()
 		delete(*iterTableCellStyles);
 	for (TRSVIter iterTableRowStyles = mTableRowStyles.begin() ; iterTableRowStyles != mTableRowStyles.end(); ++iterTableRowStyles)
 		delete(*iterTableRowStyles);
+}
+
+int TableStyle::getNumColumns() const
+{
+	const librevenge::RVNGPropertyListVector *columns = mPropList.child("librevenge:table-columns");
+	if (columns)
+		return (int)(columns->count());
+	return 0;
 }
 
 void TableStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
@@ -174,23 +181,25 @@ void TableStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) c
 
 	pHandler->endElement("style:style");
 
-	int i=1;
-	librevenge::RVNGPropertyListVector::Iter j(mColumns);
-	for (j.rewind(); j.next();)
+	const librevenge::RVNGPropertyListVector *columns = mPropList.child("librevenge:table-columns");
+	if (columns)
 	{
-		TagOpenElement columnStyleOpen("style:style");
-		librevenge::RVNGString sColumnName;
-		sColumnName.sprintf("%s.Column%i", getName().cstr(), i);
-		columnStyleOpen.addAttribute("style:name", sColumnName);
-		columnStyleOpen.addAttribute("style:family", "table-column");
-		columnStyleOpen.write(pHandler);
+		librevenge::RVNGPropertyListVector::Iter j(*columns);
+		int i=1;
+		for (j.rewind(); j.next(); ++i)
+		{
+			TagOpenElement columnStyleOpen("style:style");
+			librevenge::RVNGString sColumnName;
+			sColumnName.sprintf("%s.Column%i", getName().cstr(), i);
+			columnStyleOpen.addAttribute("style:name", sColumnName);
+			columnStyleOpen.addAttribute("style:family", "table-column");
+			columnStyleOpen.write(pHandler);
 
-		pHandler->startElement("style:table-column-properties", j());
-		pHandler->endElement("style:table-column-properties");
+			pHandler->startElement("style:table-column-properties", j());
+			pHandler->endElement("style:table-column-properties");
 
-		pHandler->endElement("style:style");
-
-		i++;
+			pHandler->endElement("style:style");
+		}
 	}
 
 	typedef std::vector<TableRowStyle *>::const_iterator TRSVIter;
