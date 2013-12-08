@@ -239,12 +239,24 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 	// ok create a new list
 	librevenge::RVNGString sName("");
 	ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
+
+	librevenge::RVNGPropertyList pList(propList);
+	if (propList["style:display-name"]) {
+		librevenge::RVNGString name(propList["style:display-name"]->getStr());
+		if (propList["style:master-page-name"])
+			pList.remove("style:display-name");
+		else if (mDisplayNameMap.find(name) != mDisplayNameMap.end()) {
+			ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: a paragraph with name %s already exists\n", name.cstr()));
+			pList.remove("style:display-name");
+		}
+		else
+			mDisplayNameMap[name]=sName;
+	}
+
 	sName.sprintf("S%i", mStyleHash.size());
-	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(propList, sName));
+	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(pList, sName));
 	mStyleHash[sName] =parag;
 	mHashNameMap[hashKey] = sName;
-	if (parag->hasDisplayName())
-		mDisplayNameMap[propList["style:display-name"]->getStr()]=sName;
 
 	return sName;
 }
