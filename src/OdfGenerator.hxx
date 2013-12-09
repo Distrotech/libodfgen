@@ -38,11 +38,11 @@
 
 #include "FilterInternal.hxx"
 #include "FontStyle.hxx"
+#include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 
 class DocumentElement;
 class ListStyle;
-class TableStyle;
 
 class OdfGenerator
 {
@@ -184,7 +184,9 @@ public:
 	/// call to open a table row
 	bool openTableRow(const librevenge::RVNGPropertyList &propList);
 	/// call to close a table row
-	void closeTableRow(bool isHeaderRow);
+	void closeTableRow();
+	/// returns true if a table row is opened
+	bool isInTableRow(bool &inHeaderRow) const;
 	/// call to open a table cell
 	bool openTableCell(const librevenge::RVNGPropertyList &propList);
 	/// call to close a table cell
@@ -279,6 +281,8 @@ protected:
 	SpanStyleManager mSpanManager;
 	// paragraph manager
 	ParagraphStyleManager mParagraphManager;
+	// table manager
+	TableManager mTableManager;
 
 	// id to span map
 	std::map<int, librevenge::RVNGPropertyList> mIdSpanMap;
@@ -304,11 +308,6 @@ protected:
 	std::map<int, ListStyle *> mIdListStyleMap;
 	// the list of seen list
 	std::map<int, ListStorage> mIdListStorageMap;
-
-	// table styles
-	std::vector<TableStyle *> mTableStyles;
-	// table state
-	TableStyle *mpCurrentTableStyle;
 
 	// the number of created frame
 	unsigned miFrameNumber;

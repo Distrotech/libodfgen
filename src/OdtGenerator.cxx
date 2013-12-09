@@ -53,7 +53,6 @@ struct WriterDocumentState
 	bool mbInFakeSection;
 	bool mbListElementOpenedAtCurrentLevel;
 	bool mbTableCellOpened;
-	bool mbHeaderRow;
 	bool mbInNote;
 	bool mbInTextBox;
 	bool mbInFrame;
@@ -65,7 +64,6 @@ WriterDocumentState::WriterDocumentState() :
 	mbInFakeSection(false),
 	mbListElementOpenedAtCurrentLevel(false),
 	mbTableCellOpened(false),
-	mbHeaderRow(false),
 	mbInNote(false),
 	mbInTextBox(false),
 	mbInFrame(false)
@@ -144,10 +142,7 @@ void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 		if (!(*iterListStyles)->hasDisplayName())
 			(*iterListStyles)->write(pHandler);
 	}
-	// writing out the table styles
-	for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
-		(*iterTableStyles)->writeStyles(pHandler);
-
+	mTableManager.write(pHandler);
 	pHandler->endElement("office:automatic-styles");
 }
 
@@ -551,7 +546,8 @@ void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 
 	if (mpImpl->mWriterDocumentStates.top().mbTableCellOpened)
 	{
-		if (mpImpl->mWriterDocumentStates.top().mbHeaderRow)
+		bool inHeader=false;
+		if (mpImpl->isInTableRow(inHeader) && inHeader)
 			finalPropList.insert("style:parent-style-name", "Table_Heading");
 		else
 			finalPropList.insert("style:parent-style-name", "Table_Contents");
@@ -751,18 +747,16 @@ void OdtGenerator::closeTable()
 
 void OdtGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote || !mpImpl->openTableRow(propList))
+	if (mpImpl->mWriterDocumentStates.top().mbInNote)
 		return;
-	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
-		mpImpl->mWriterDocumentStates.top().mbHeaderRow = true;
+	mpImpl->openTableRow(propList);
 }
 
 void OdtGenerator::closeTableRow()
 {
 	if (mpImpl->mWriterDocumentStates.top().mbInNote)
 		return;
-	mpImpl->closeTableRow(mpImpl->mWriterDocumentStates.top().mbHeaderRow);
-	mpImpl->mWriterDocumentStates.top().mbHeaderRow = false;
+	mpImpl->closeTableRow();
 }
 
 void OdtGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)

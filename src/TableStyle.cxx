@@ -129,6 +129,7 @@ void TableRowStyle::write(OdfDocumentHandler *pHandler) const
 
 TableStyle::TableStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName) :
 	Style(psName),
+	mbRowOpened(false), mbRowHeaderOpened(false), mbCellOpened(false),
 	mPropList(xPropList),
 	mTableCellStyles(),
 	mTableRowStyles()
@@ -151,6 +152,70 @@ int TableStyle::getNumColumns() const
 	if (columns)
 		return (int)(columns->count());
 	return 0;
+}
+
+librevenge::RVNGString TableStyle::openRow(const librevenge::RVNGPropertyList &propList)
+{
+	if (mbRowOpened)
+	{
+		ODFGEN_DEBUG_MSG(("TableStyle::openRow: a row is already open\n"));
+		return "";
+	}
+
+	librevenge::RVNGString rowName;
+	rowName.sprintf("%s.Row%i", getName().cstr(), (int)mTableRowStyles.size());
+	mTableRowStyles.push_back(new TableRowStyle(propList, rowName.cstr()));
+	mbRowOpened=true;
+	mbRowHeaderOpened=propList["librevenge:is-header-row"] &&
+	                  propList["librevenge:is-header-row"]->getInt();
+	return rowName;
+}
+
+bool TableStyle::closeRow()
+{
+	if (!mbRowOpened)
+	{
+		ODFGEN_DEBUG_MSG(("TableStyle::closeRow: no row is open\n"));
+		return false;
+	}
+	mbRowOpened=mbRowHeaderOpened=false;
+	return true;
+}
+
+librevenge::RVNGString TableStyle::openCell(const librevenge::RVNGPropertyList &propList)
+{
+	if (!mbRowOpened || mbCellOpened)
+	{
+		ODFGEN_DEBUG_MSG(("TableStyle::openCell: can not open a cell\n"));
+		return "";
+	}
+
+	librevenge::RVNGString cellName;
+	cellName.sprintf("%s.Cell%i", getName().cstr(), (int) mTableCellStyles.size());
+	mTableCellStyles.push_back(new TableCellStyle(propList, cellName.cstr()));
+	mbCellOpened=true;
+	return cellName;
+}
+
+bool TableStyle::closeCell()
+{
+	if (!mbCellOpened)
+	{
+		ODFGEN_DEBUG_MSG(("TableStyle::closeCell: no cell are opened\n"));
+		return false;
+	}
+	mbCellOpened=false;
+	return true;
+}
+
+bool TableStyle::insertCoveredCell(const librevenge::RVNGPropertyList &)
+{
+	if (!mbRowOpened || mbCellOpened)
+	{
+		ODFGEN_DEBUG_MSG(("TableStyle::insertCoveredCell: can not open a cell\n"));
+		return false;
+	}
+	return true;
 }
 
 void TableStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
@@ -225,6 +290,50 @@ void TableStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) c
 	typedef std::vector<TableCellStyle *>::const_iterator TCSVIter;
 	for (TCSVIter iterTableCell = mTableCellStyles.begin() ; iterTableCell != mTableCellStyles.end(); ++iterTableCell)
 		(*iterTableCell)->writeStyles(pHandler, compatibleOdp);
+}
+
+TableManager::TableManager() : mTableOpened(), mTableStyles()
+{
+}
+
+TableManager::~TableManager()
+{
+}
+
+void TableManager::clean()
+{
+	mTableOpened.clear();
+	mTableStyles.clear();
+}
+
+bool TableManager::openTable(const librevenge::RVNGPropertyList &xPropList)
+{
+	librevenge::RVNGString sTableName;
+	sTableName.sprintf("Table%i", (int) mTableStyles.size());
+	shared_ptr<TableStyle> table(new TableStyle(xPropList, sTableName.cstr()));
+	mTableOpened.push_back(table);
+	mTableStyles.push_back(table);
+	return true;
+}
+
+bool TableManager::closeTable()
+{
+	if (mTableOpened.empty())
+	{
+		ODFGEN_DEBUG_MSG(("TableManager::oops: no table are opened\n"));
+		return false;
+	}
+	mTableOpened.pop_back();
+	return true;
+}
+
+void TableManager::write(OdfDocumentHandler *pHandler, bool compatibleOdp) const
+{
+	for (size_t i=0; i < mTableStyles.size(); ++i)
+	{
+		if (mTableStyles[i])
+			mTableStyles[i]->writeStyles(pHandler, compatibleOdp);
+	}
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

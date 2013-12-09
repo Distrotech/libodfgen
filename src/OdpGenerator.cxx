@@ -71,7 +71,6 @@ struct GeneratorState
 	bool mbIsParagraph;
 	bool mbIsTextOnPath;
 	bool mInComment;
-	bool mHeaderRow;
 	bool mTableCellOpened;
 	bool mInNotes;
 
@@ -83,7 +82,6 @@ GeneratorState::GeneratorState()
 	, mbIsParagraph(false)
 	, mbIsTextOnPath(false)
 	, mInComment(false)
-	, mHeaderRow(false)
 	, mTableCellOpened(false)
 	, mInNotes(false)
 {
@@ -300,9 +298,7 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	// writing out the lists styles
 	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
 		(*iterListStyles)->write(pHandler);
-	// writing out the table styles
-	for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
-		(*iterTableStyles)->writeStyles(pHandler, true);
+	mTableManager.write(pHandler, true);
 
 	writeNotesStyles(pHandler);
 
@@ -1560,18 +1556,16 @@ void OdpGenerator::closeTable()
 
 void OdpGenerator::openTableRow(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mState.mInComment  || !mpImpl->openTableRow(propList))
+	if (mpImpl->mState.mInComment)
 		return;
-	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
-		mpImpl->mState.mHeaderRow = true;
+	mpImpl->openTableRow(propList);
 }
 
 void OdpGenerator::closeTableRow()
 {
 	if (mpImpl->mState.mInComment)
 		return;
-	mpImpl->closeTableRow(mpImpl->mState.mHeaderRow);
-	mpImpl->mState.mHeaderRow= false;
+	mpImpl->closeTableRow();
 }
 
 void OdpGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)

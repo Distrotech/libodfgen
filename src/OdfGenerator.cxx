@@ -37,11 +37,10 @@
 
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
-	mFontManager(), mSpanManager(), mParagraphManager(),
+	mFontManager(), mSpanManager(), mParagraphManager(), mTableManager(),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
 	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(), mIdListStorageMap(),
-	mTableStyles(), mpCurrentTableStyle(0),
 	miFrameNumber(0),  mFrameStyles(), mFrameAutomaticStyles(), mFrameNameIdMap(),
 	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
 {
@@ -53,15 +52,12 @@ OdfGenerator::~OdfGenerator()
 	mParagraphManager.clean();
 	mSpanManager.clean();
 	mFontManager.clean();
-
+	mTableManager.clean();
 	emptyStorage(&mMetaDataStorage);
 	emptyStorage(&mBodyStorage);
 	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
 	        iterListStyles != mListStyles.end(); ++iterListStyles)
 		delete(*iterListStyles);
-	for (std::vector<TableStyle *>::iterator iterTableStyles = mTableStyles.begin();
-	        iterTableStyles != mTableStyles.end(); ++iterTableStyles)
-		delete((*iterTableStyles));
 	emptyStorage(&mFrameAutomaticStyles);
 	emptyStorage(&mFrameStyles);
 }
@@ -528,6 +524,10 @@ void OdfGenerator::closeSpan()
 
 void OdfGenerator::openLink(const librevenge::RVNGPropertyList &propList)
 {
+	if (!propList["librevenge:type"])
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::openLink: linked type is not defined, assume link\n"));
+	}
 	TagOpenElement *pLinkOpenElement = new TagOpenElement("text:a");
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
@@ -872,30 +872,28 @@ void OdfGenerator::updateListStorage(const librevenge::RVNGPropertyList &level, 
 ////////////////////////////////////////////////////////////
 void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
-	librevenge::RVNGString sTableName;
-	sTableName.sprintf("Table%i", mTableStyles.size());
+	mTableManager.openTable(propList);
 
-	// FIXME: we base the table style off of the page's margin left, ignoring (potential) wordperfect margin
-	// state which is transmitted inside the page. could this lead to unacceptable behaviour?
-	TableStyle *pTableStyle = new TableStyle(propList, sTableName.cstr());
-
-	mTableStyles.push_back(pTableStyle);
-
-	mpCurrentTableStyle = pTableStyle;
+	TableStyle *table=mTableManager.getActualTable();
+	if (!table)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::openTable: can not retrieve the table data\n"));
+		return;
+	}
+	librevenge::RVNGString tableName=table->getName();
 
 	TagOpenElement *pTableOpenElement = new TagOpenElement("table:table");
-
-	pTableOpenElement->addAttribute("table:name", sTableName.cstr());
-	pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
+	pTableOpenElement->addAttribute("table:name", tableName.cstr());
+	pTableOpenElement->addAttribute("table:style-name", tableName.cstr());
 	mpCurrentStorage->push_back(pTableOpenElement);
 
-	if (pTableStyle->getNumColumns())
+	if (table->getNumColumns())
 	{
-		for (int i=0; i<pTableStyle->getNumColumns(); ++i)
+		for (int i=0; i<table->getNumColumns(); ++i)
 		{
 			TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
 			librevenge::RVNGString sColumnStyleName;
-			sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
+			sColumnStyleName.sprintf("%s.Column%i", tableName.cstr(), (i+1));
 			pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
 			mpCurrentStorage->push_back(pTableColumnOpenElement);
 
@@ -907,7 +905,7 @@ void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 	{
 		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
 		librevenge::RVNGString sColumnStyleName;
-		sColumnStyleName.sprintf("%s.Column0", sTableName.cstr());
+		sColumnStyleName.sprintf("%s.Column0", tableName.cstr());
 		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName);
 		mpCurrentStorage->push_back(pTableColumnOpenElement);
 
@@ -919,57 +917,66 @@ void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 
 void OdfGenerator::closeTable()
 {
-	if (!mpCurrentTableStyle)
+	if (!mTableManager.getActualTable())
 		return;
+	mTableManager.closeTable();
 	mpCurrentStorage->push_back(new TagCloseElement("table:table"));
 }
 
 bool OdfGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpCurrentTableStyle)
+	TableStyle *table=mTableManager.getActualTable();
+	if (!table)
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openTableRow called with no table\n"));
 		return false;
 	}
-	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
+	librevenge::RVNGString rowName=table->openRow(propList);
+	if (rowName.empty())
+		return false;
+	bool inHeader=false;
+	if (table->isRowOpened(inHeader) && inHeader)
 		mpCurrentStorage->push_back(new TagOpenElement("table:table-header-rows"));
 
-	librevenge::RVNGString sTableRowStyleName;
-	sTableRowStyleName.sprintf("%s.Row%i", mpCurrentTableStyle->getName().cstr(), mpCurrentTableStyle->getNumTableRowStyles());
-	TableRowStyle *pTableRowStyle = new TableRowStyle(propList, sTableRowStyleName.cstr());
-	mpCurrentTableStyle->addTableRowStyle(pTableRowStyle);
-
 	TagOpenElement *pTableRowOpenElement = new TagOpenElement("table:table-row");
-	pTableRowOpenElement->addAttribute("table:style-name", sTableRowStyleName);
+	pTableRowOpenElement->addAttribute("table:style-name", rowName);
 	mpCurrentStorage->push_back(pTableRowOpenElement);
 	return true;
 }
 
-void OdfGenerator::closeTableRow(bool isHeaderRow)
+void OdfGenerator::closeTableRow()
 {
-	if (!mpCurrentTableStyle)
-		return;
-
+	TableStyle *table=mTableManager.getActualTable();
+	if (!table) return;
+	bool inHeader=false;
+	if (!table->isRowOpened(inHeader) || !table->closeRow()) return;
 	mpCurrentStorage->push_back(new TagCloseElement("table:table-row"));
-	if (isHeaderRow)
+	if (inHeader)
 		mpCurrentStorage->push_back(new TagCloseElement("table:table-header-rows"));
+}
+
+bool OdfGenerator::isInTableRow(bool &inHeaderRow) const
+{
+	TableStyle const *table=mTableManager.getActualTable();
+	if (!table) return false;
+	return table->isRowOpened(inHeaderRow);
 }
 
 bool OdfGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpCurrentTableStyle)
+	TableStyle *table=mTableManager.getActualTable();
+	if (!table)
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openTableCell called with no table\n"));
 		return false;
 	}
 
-	librevenge::RVNGString sTableCellStyleName;
-	sTableCellStyleName.sprintf("%s.Cell%i", mpCurrentTableStyle->getName().cstr(), mpCurrentTableStyle->getNumTableCellStyles());
-	TableCellStyle *pTableCellStyle = new TableCellStyle(propList, sTableCellStyleName.cstr());
-	mpCurrentTableStyle->addTableCellStyle(pTableCellStyle);
+	librevenge::RVNGString cellName = table->openCell(propList);
+	if (cellName.empty())
+		return false;
 
 	TagOpenElement *pTableCellOpenElement = new TagOpenElement("table:table-cell");
-	pTableCellOpenElement->addAttribute("table:style-name", sTableCellStyleName);
+	pTableCellOpenElement->addAttribute("table:style-name", cellName);
 	if (propList["table:number-columns-spanned"])
 		pTableCellOpenElement->addAttribute("table:number-columns-spanned",
 		                                    propList["table:number-columns-spanned"]->getStr().cstr());
@@ -983,15 +990,16 @@ bool OdfGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 
 void OdfGenerator::closeTableCell()
 {
-	if (!mpCurrentTableStyle)
+	if (!mTableManager.getActualTable() || !mTableManager.getActualTable()->closeCell())
 		return;
 
 	mpCurrentStorage->push_back(new TagCloseElement("table:table-cell"));
 }
 
-void OdfGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &)
+void OdfGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpCurrentTableStyle)
+	if (!mTableManager.getActualTable() ||
+	        !mTableManager.getActualTable()->insertCoveredCell(propList))
 		return;
 
 	mpCurrentStorage->push_back(new TagOpenElement("table:covered-table-cell"));

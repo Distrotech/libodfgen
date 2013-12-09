@@ -109,7 +109,6 @@ public:
 	bool mbIsParagraph;
 	bool mbIsTextOnPath;
 
-	bool mbInTableHeaderRow;
 	bool mbInTableCell;
 private:
 	OdgGeneratorPrivate(const OdgGeneratorPrivate &);
@@ -140,7 +139,6 @@ OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 	mbIsTextBox(false),
 	mbIsParagraph(false),
 	mbIsTextOnPath(false),
-	mbInTableHeaderRow(false),
 	mbInTableCell(false)
 {
 }
@@ -211,9 +209,7 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 		// writing out the lists styles
 		for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
 			(*iterListStyles)->write(pHandler);
-		// writing out the table styles
-		for (std::vector<TableStyle *>::const_iterator iterTableStyles = mTableStyles.begin(); iterTableStyles != mTableStyles.end(); ++iterTableStyles)
-			(*iterTableStyles)->writeStyles(pHandler, true);
+		mTableManager.write(pHandler, true);
 	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
@@ -1341,16 +1337,12 @@ void OdgGenerator::closeTable()
 
 void OdgGenerator::openTableRow(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->openTableRow(propList))
-		return;
-	if (propList["librevenge:is-header-row"] && (propList["librevenge:is-header-row"]->getInt()))
-		mpImpl->mbInTableHeaderRow = true;
+	mpImpl->openTableRow(propList);
 }
 
 void OdgGenerator::closeTableRow()
 {
-	mpImpl->closeTableRow(mpImpl->mbInTableHeaderRow);
-	mpImpl->mbInTableHeaderRow= false;
+	mpImpl->closeTableRow();
 }
 
 void OdgGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)

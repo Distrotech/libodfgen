@@ -31,6 +31,8 @@
 #include <string>
 #include <vector>
 
+#include "FilterInternal.hxx"
+
 #include "Style.hxx"
 
 class OdfDocumentHandler;

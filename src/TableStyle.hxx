@@ -27,7 +27,11 @@
 #ifndef _TABLESTYLE_HXX_
 #define _TABLESTYLE_HXX_
 #include <librevenge/librevenge.h>
+
 #include <vector>
+
+// for shared_ptr
+#include "FilterInternal.hxx"
 
 #include "Style.hxx"
 
@@ -60,27 +64,61 @@ public:
 	virtual ~TableStyle();
 	virtual void writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
 	int getNumColumns() const;
-	void addTableCellStyle(TableCellStyle *pTableCellStyle)
+
+	librevenge::RVNGString openRow(const librevenge::RVNGPropertyList &propList);
+	bool closeRow();
+	bool isRowOpened(bool &inHeaderRow) const
 	{
-		mTableCellStyles.push_back(pTableCellStyle);
+		inHeaderRow=mbRowHeaderOpened;
+		return mbRowOpened;
 	}
-	int getNumTableCellStyles()
+	librevenge::RVNGString openCell(const librevenge::RVNGPropertyList &propList);
+	bool closeCell();
+	bool insertCoveredCell(const librevenge::RVNGPropertyList &propList);
+	bool isCellOpened() const
 	{
-		return (int)mTableCellStyles.size();
+		return mbCellOpened;
 	}
-	void addTableRowStyle(TableRowStyle *pTableRowStyle)
-	{
-		mTableRowStyles.push_back(pTableRowStyle);
-	}
-	int getNumTableRowStyles()
-	{
-		return (int)mTableRowStyles.size();
-	}
+
 private:
+	bool mbRowOpened, mbRowHeaderOpened, mbCellOpened;
 	librevenge::RVNGPropertyList mPropList;
 	std::vector<TableCellStyle *> mTableCellStyles;
 	std::vector<TableRowStyle *> mTableRowStyles;
 };
+
+class TableManager
+{
+public:
+	TableManager();
+	virtual ~TableManager();
+	//! clean all data
+	void clean();
+	void write(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
+
+	bool isTableOpened() const
+	{
+		return !mTableOpened.empty();
+	}
+	TableStyle *getActualTable()
+	{
+		if (mTableOpened.empty()) return 0;
+		return mTableOpened.back().get();
+	}
+	TableStyle const *getActualTable() const
+	{
+		if (mTableOpened.empty()) return 0;
+		return mTableOpened.back().get();
+	}
+	//! open a table and update the list of elements
+	bool openTable(const librevenge::RVNGPropertyList &xPropList);
+	bool closeTable();
+
+private:
+	std::vector<shared_ptr<TableStyle> > mTableOpened;
+	std::vector<shared_ptr<TableStyle> > mTableStyles;
+};
+
 #endif
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

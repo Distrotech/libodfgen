@@ -48,6 +48,7 @@ static void sendText(Generator &generator)
 	generator.openSpan(span);
 	generator.insertText("test of links, a http link: ");
 	librevenge::RVNGPropertyList link;
+	link.insert("librevenge:type","link");
 	link.insert("xlink:type","simple");
 	link.insert("xlink:href","http://www.google.com");
 	generator.openLink(link);
