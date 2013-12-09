@@ -195,6 +195,10 @@ public:
 	// frame
 	//
 
+	/// call to open a frame
+	void openFrame(const librevenge::RVNGPropertyList &propList);
+	/// call to close a frame
+	void closeFrame();
 	//! return a frame id corresponding to a name ( or a new frame id)
 	unsigned getFrameId(librevenge::RVNGString name="");
 
@@ -308,6 +312,11 @@ protected:
 
 	// the number of created frame
 	unsigned miFrameNumber;
+	// frame styles
+	std::vector<DocumentElement *> mFrameStyles;
+	// automatic frame styles
+	std::vector<DocumentElement *> mFrameAutomaticStyles;
+protected:
 	// the list of frame seens
 	std::map<librevenge::RVNGString, unsigned, ltstr > mFrameNameIdMap;
 

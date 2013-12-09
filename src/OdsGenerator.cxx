@@ -286,11 +286,6 @@ public:
 	// table styles
 	SheetManager  mSheetManager;
 
-	// frame styles
-	std::vector<DocumentElement *> mFrameStyles;
-
-	std::vector<DocumentElement *> mFrameAutomaticStyles;
-
 	// page state
 	std::vector<PageSpan *> mPageSpans;
 	PageSpan *mpCurrentPageSpan;
@@ -306,7 +301,7 @@ OdsGeneratorPrivate::OdsGeneratorPrivate() : OdfGenerator(),
 	mCommandStack(),
 	mStateStack(),
 	mAuxiliarOdtState(), mAuxiliarOdgState(),
-	mSheetManager(), mFrameStyles(), mFrameAutomaticStyles(),
+	mSheetManager(),
 	mPageSpans(), mpCurrentPageSpan(0),	miNumPageStyles(0)
 {
 	mStateStack.push(State());
@@ -320,8 +315,6 @@ OdsGeneratorPrivate::~OdsGeneratorPrivate()
 	ODFGEN_DEBUG_MSG(("OdsGenerator: Destroying the body elements\n"));
 	mSheetManager.clean();
 
-	emptyStorage(&mFrameAutomaticStyles);
-	emptyStorage(&mFrameStyles);
 	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
 	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
 		delete(*iterPageSpans);
@@ -1458,178 +1451,13 @@ void OdsGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdsGenerator::openFrame call outside a sheet!!!\n"));
 		return;
 	}
-	// First, let's create a Frame Style for this box
-	TagOpenElement *frameStyleOpenElement = new TagOpenElement("style:style");
-	librevenge::RVNGString frameStyleName;
-	unsigned objectId = mpImpl->getFrameId();
-	frameStyleName.sprintf("GraphicFrame_%i", objectId);
-	frameStyleOpenElement->addAttribute("style:name", frameStyleName);
-	frameStyleOpenElement->addAttribute("style:family", "graphic");
-
-	mpImpl->mFrameStyles.push_back(frameStyleOpenElement);
-
-	TagOpenElement *frameStylePropertiesOpenElement = new TagOpenElement("style:graphic-properties");
-
-	if (propList["text:anchor-type"])
-		frameStylePropertiesOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
-	else
-		frameStylePropertiesOpenElement->addAttribute("text:anchor-type","paragraph");
-
-	if (propList["text:anchor-page-number"])
-		frameStylePropertiesOpenElement->addAttribute("text:anchor-page-number", propList["text:anchor-page-number"]->getStr());
-
-	if (propList["svg:x"])
-		frameStylePropertiesOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-
-	if (propList["svg:y"])
-		frameStylePropertiesOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-
-	if (propList["svg:width"])
-		frameStylePropertiesOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-	else if (propList["fo:min-width"])
-		frameStylePropertiesOpenElement->addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
-
-	if (propList["svg:height"])
-		frameStylePropertiesOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
-	else if (propList["fo:min-height"])
-		frameStylePropertiesOpenElement->addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
-
-	if (propList["style:rel-width"])
-		frameStylePropertiesOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
-
-	if (propList["style:rel-height"])
-		frameStylePropertiesOpenElement->addAttribute("style:rel-height", propList["style:rel-height"]->getStr());
-
-	if (propList["fo:max-width"])
-		frameStylePropertiesOpenElement->addAttribute("fo:max-width", propList["fo:max-width"]->getStr());
-
-	if (propList["fo:max-height"])
-		frameStylePropertiesOpenElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
-
-	if (propList["style:wrap"])
-		frameStylePropertiesOpenElement->addAttribute("style:wrap", propList["style:wrap"]->getStr());
-
-	if (propList["style:run-through"])
-		frameStylePropertiesOpenElement->addAttribute("style:run-through", propList["style:run-through"]->getStr());
-
-	mpImpl->mFrameStyles.push_back(frameStylePropertiesOpenElement);
-
-	mpImpl->mFrameStyles.push_back(new TagCloseElement("style:graphic-properties"));
-
-	mpImpl->mFrameStyles.push_back(new TagCloseElement("style:style"));
-
-	// Now, let's create an automatic style for this frame
-	TagOpenElement *frameAutomaticStyleElement = new TagOpenElement("style:style");
-	librevenge::RVNGString frameAutomaticStyleName;
-	frameAutomaticStyleName.sprintf("fr%i", objectId);
-	frameAutomaticStyleElement->addAttribute("style:name", frameAutomaticStyleName);
-	frameAutomaticStyleElement->addAttribute("style:family", "graphic");
-	frameAutomaticStyleElement->addAttribute("style:parent-style-name", frameStyleName);
-
-	mpImpl->mFrameAutomaticStyles.push_back(frameAutomaticStyleElement);
-
-	TagOpenElement *frameAutomaticStylePropertiesElement = new TagOpenElement("style:graphic-properties");
-	if (propList["style:horizontal-pos"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", propList["style:horizontal-pos"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", "left");
-
-	if (propList["style:horizontal-rel"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", propList["style:horizontal-rel"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", "paragraph");
-
-	if (propList["style:vertical-pos"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-pos", propList["style:vertical-pos"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-pos", "top");
-
-	if (propList["style:vertical-rel"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-rel", propList["style:vertical-rel"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-rel", "page-content");
-
-	if (propList["fo:max-width"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:max-width", propList["fo:max-width"]->getStr());
-
-	if (propList["fo:max-height"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
-
-	// check if the frame has border, shadow, background attributes
-	static char const *(bordersString[])=
-	{
-		"fo:border","fo:border-top","fo:border-left","fo:border-bottom","fo:border-right",
-		"style:border-line-width","style:border-line-width-top","style:border-line-width-left",
-		"style:border-line-width-bottom","style:border-line-width-right",
-		"style:shadow"
-	};
-	for (int b = 0; b < 11; b++)
-	{
-		if (propList[bordersString[b]])
-			frameAutomaticStylePropertiesElement->addAttribute(bordersString[b], propList[bordersString[b]]->getStr());
-	}
-	if (propList["fo:background-color"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:background-color", propList["fo:background-color"]->getStr());
-	if (propList["style:background-transparency"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:background-transparency", propList["style:background-transparency"]->getStr());
-
-	if (propList["fo:clip"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:clip", propList["fo:clip"]->getStr());
-
-	frameAutomaticStylePropertiesElement->addAttribute("draw:ole-draw-aspect", "1");
-
-	mpImpl->mFrameAutomaticStyles.push_back(frameAutomaticStylePropertiesElement);
-
-	mpImpl->mFrameAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
-
-	mpImpl->mFrameAutomaticStyles.push_back(new TagCloseElement("style:style"));
-
-	// And write the frame itself
-	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
-
-	drawFrameOpenElement->addAttribute("draw:style-name", frameAutomaticStyleName);
-	librevenge::RVNGString objectName;
-	objectName.sprintf("Object%i", objectId);
-	drawFrameOpenElement->addAttribute("draw:name", objectName);
-	if (propList["text:anchor-type"])
-		drawFrameOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
-	else
-		drawFrameOpenElement->addAttribute("text:anchor-type","paragraph");
-
-	if (propList["text:anchor-page-number"])
-		drawFrameOpenElement->addAttribute("text:anchor-page-number", propList["text:anchor-page-number"]->getStr());
-
-	if (propList["svg:x"])
-		drawFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-
-	if (propList["svg:y"])
-		drawFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-
-	if (propList["svg:width"])
-		drawFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-	else if (propList["fo:min-width"])
-		drawFrameOpenElement->addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
-
-	if (propList["svg:height"])
-		drawFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
-	else if (propList["fo:min-height"])
-		drawFrameOpenElement->addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
-
-	if (propList["style:rel-width"])
-		drawFrameOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
-
-	if (propList["style:rel-height"])
-		drawFrameOpenElement->addAttribute("style:rel-height", propList["style:rel-height"]->getStr());
-
-	if (propList["draw:z-index"])
-		drawFrameOpenElement->addAttribute("draw:z-index", propList["draw:z-index"]->getStr());
 
 	if (!state.mbInSheetRow && !state.mbInSheetShapes)
 	{
 		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("table:shapes"));
 		prevState.mbInSheetShapes=true;
 	}
-	mpImpl->getCurrentStorage()->push_back(drawFrameOpenElement);
+	mpImpl->openFrame(propList);
 }
 
 void OdsGenerator::closeFrame()
@@ -1643,7 +1471,7 @@ void OdsGenerator::closeFrame()
 	if (mpImpl->mAuxiliarOdgState)
 		return;
 	if (!state.mbInFrame) return;
-	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
+	mpImpl->closeFrame();
 }
 
 void OdsGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propList)
