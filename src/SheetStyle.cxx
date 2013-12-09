@@ -33,28 +33,6 @@
 #include "SheetStyle.hxx"
 #include "DocumentElement.hxx"
 
-namespace
-{
-
-static librevenge::RVNGString propListToStyleKey(const librevenge::RVNGPropertyList &xPropList)
-{
-	librevenge::RVNGString sKey;
-	librevenge::RVNGPropertyList::Iter i(xPropList);
-	for (i.rewind(); i.next();)
-	{
-		if (!i.child()) // write out simple properties only
-		{
-			librevenge::RVNGString sProp;
-			sProp.sprintf("[%s:%s]", i.key(), i()->getStr().cstr());
-			sKey.append(sProp);
-		}
-	}
-
-	return sKey;
-}
-
-} // anonymous namespace
-
 SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGString &psName)
 	: Style(psName), mPropList(xPropList)
 {
@@ -476,7 +454,7 @@ librevenge::RVNGString SheetStyle::addRow(const librevenge::RVNGPropertyList &pr
 			continue;
 		pList.insert(i.key(),i()->clone());
 	}
-	librevenge::RVNGString hashKey = propListToStyleKey(pList);
+	librevenge::RVNGString hashKey = pList.getPropString();
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
 	    mRowNameHash.find(hashKey);
 	if (iter!=mRowNameHash.end()) return iter->second;
@@ -484,7 +462,7 @@ librevenge::RVNGString SheetStyle::addRow(const librevenge::RVNGPropertyList &pr
 	librevenge::RVNGString name;
 	name.sprintf("%s_row%i", getName().cstr(), (int) mRowStyleHash.size());
 	mRowNameHash[hashKey]=name;
-	mRowStyleHash[name]=shared_ptr<SheetRowStyle>(new SheetRowStyle(pList, name.cstr()));
+	mRowStyleHash[name]=shared_ptr<SheetRowStyle>(new SheetRowStyle(propList, name.cstr()));
 	return name;
 }
 
@@ -502,7 +480,7 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 			continue;
 		pList.insert(i.key(),i()->clone());
 	}
-	librevenge::RVNGString hashKey = propListToStyleKey(pList);
+	librevenge::RVNGString hashKey = pList.getPropString();
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
 	    mCellNameHash.find(hashKey);
 	if (iter!=mCellNameHash.end()) return iter->second;
@@ -510,7 +488,7 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 	librevenge::RVNGString name;
 	name.sprintf("%s_cell%i", getName().cstr(), (int) mCellStyleHash.size());
 	mCellNameHash[hashKey]=name;
-	mCellStyleHash[name]=shared_ptr<SheetCellStyle>(new SheetCellStyle(pList, name.cstr()));
+	mCellStyleHash[name]=shared_ptr<SheetCellStyle>(new SheetCellStyle(propList, name.cstr()));
 	return name;
 }
 

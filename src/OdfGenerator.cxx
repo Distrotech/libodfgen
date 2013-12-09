@@ -874,7 +874,7 @@ void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
 	mTableManager.openTable(propList);
 
-	TableStyle *table=mTableManager.getActualTable();
+	Table *table=mTableManager.getActualTable();
 	if (!table)
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openTable: can not retrieve the table data\n"));
@@ -925,7 +925,7 @@ void OdfGenerator::closeTable()
 
 bool OdfGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 {
-	TableStyle *table=mTableManager.getActualTable();
+	Table *table=mTableManager.getActualTable();
 	if (!table)
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openTableRow called with no table\n"));
@@ -946,7 +946,7 @@ bool OdfGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 
 void OdfGenerator::closeTableRow()
 {
-	TableStyle *table=mTableManager.getActualTable();
+	Table *table=mTableManager.getActualTable();
 	if (!table) return;
 	bool inHeader=false;
 	if (!table->isRowOpened(inHeader) || !table->closeRow()) return;
@@ -957,14 +957,14 @@ void OdfGenerator::closeTableRow()
 
 bool OdfGenerator::isInTableRow(bool &inHeaderRow) const
 {
-	TableStyle const *table=mTableManager.getActualTable();
+	Table const *table=mTableManager.getActualTable();
 	if (!table) return false;
 	return table->isRowOpened(inHeaderRow);
 }
 
 bool OdfGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 {
-	TableStyle *table=mTableManager.getActualTable();
+	Table *table=mTableManager.getActualTable();
 	if (!table)
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openTableCell called with no table\n"));

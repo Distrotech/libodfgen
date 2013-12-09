@@ -114,6 +114,33 @@ static void sendTableContent(Generator &generator)
 	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
 	generator.insertCoveredTableCell(librevenge::RVNGPropertyList());
 	generator.closeTableRow();
+
+	// copy of table 1
+	row.insert("style:row-height", 1, librevenge::RVNG_INCH);
+	generator.openTableRow(row);
+	cell.insert("librevenge:row", 4);
+	cell.insert("table:number-rows-spanned", 1);
+	cell.insert("librevenge:column", 1);
+	cell.insert("fo:border", "1pt dashed #00ff00");
+	generator.openTableCell(cell);
+	generator.closeTableCell();
+	cell.remove("fo:border");
+
+	cell.insert("librevenge:column", 2);
+	generator.openTableCell(cell);
+	generator.openParagraph(para);
+	generator.openSpan(span);
+	generator.insertText("B1");
+	generator.closeSpan();
+	generator.closeParagraph();
+	generator.closeTableCell();
+
+	cell.insert("librevenge:column", 3);
+	cell.insert("fo:background-color", "#ff0000");
+	generator.openTableCell(cell);
+	generator.closeTableCell();
+	cell.remove("fo:background-color");
+	generator.closeTableRow();
 }
 
 static void createOdt()
@@ -208,7 +235,7 @@ static void createOds()
 	textbox.insert("svg:x",0.2, librevenge::RVNG_INCH);
 	textbox.insert("svg:y",0.2, librevenge::RVNG_INCH);
 	textbox.insert("svg:width",6, librevenge::RVNG_INCH);
-	textbox.insert("svg:height",100, librevenge::RVNG_POINT);
+	textbox.insert("svg:height",180, librevenge::RVNG_POINT);
 	textbox.insert("text:anchor-type", "page");
 	textbox.insert("text:anchor-page-number", 1);
 	textbox.insert("style:vertical-rel", "page");

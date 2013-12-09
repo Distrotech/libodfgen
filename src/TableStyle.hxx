@@ -28,6 +28,7 @@
 #define _TABLESTYLE_HXX_
 #include <librevenge/librevenge.h>
 
+#include <map>
 #include <vector>
 
 // for shared_ptr
@@ -57,11 +58,11 @@ private:
 	librevenge::RVNGPropertyList mPropList;
 };
 
-class TableStyle : public Style, public TopLevelElementStyle
+class Table : public Style, public TopLevelElementStyle
 {
 public:
-	TableStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
-	virtual ~TableStyle();
+	Table(const librevenge::RVNGPropertyList &xPropList, const char *psName);
+	virtual ~Table();
 	virtual void writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
 	int getNumColumns() const;
 
@@ -81,10 +82,21 @@ public:
 	}
 
 private:
-	bool mbRowOpened, mbRowHeaderOpened, mbCellOpened;
 	librevenge::RVNGPropertyList mPropList;
-	std::vector<TableCellStyle *> mTableCellStyles;
-	std::vector<TableRowStyle *> mTableRowStyles;
+	bool mbRowOpened, mbRowHeaderOpened, mbCellOpened;
+
+	// hash key -> row style name
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mRowNameHash;
+	// style name -> TableRowStyle
+	std::map<librevenge::RVNGString, shared_ptr<TableRowStyle>, ltstr> mRowStyleHash;
+	// hash key -> cell style name
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mCellNameHash;
+	// style name -> TableCellStyle
+	std::map<librevenge::RVNGString, shared_ptr<TableCellStyle>, ltstr> mCellStyleHash;
+
+	// disable copying
+	Table(const Table &);
+	Table &operator=(const Table &);
 };
 
 class TableManager
@@ -100,12 +112,12 @@ public:
 	{
 		return !mTableOpened.empty();
 	}
-	TableStyle *getActualTable()
+	Table *getActualTable()
 	{
 		if (mTableOpened.empty()) return 0;
 		return mTableOpened.back().get();
 	}
-	TableStyle const *getActualTable() const
+	Table const *getActualTable() const
 	{
 		if (mTableOpened.empty()) return 0;
 		return mTableOpened.back().get();
@@ -115,8 +127,12 @@ public:
 	bool closeTable();
 
 private:
-	std::vector<shared_ptr<TableStyle> > mTableOpened;
-	std::vector<shared_ptr<TableStyle> > mTableStyles;
+	std::vector<shared_ptr<Table> > mTableOpened;
+	std::vector<shared_ptr<Table> > mTableStyles;
+
+	// disable copying
+	TableManager(const TableManager &);
+	TableManager &operator=(const TableManager &);
 };
 
 #endif
