@@ -889,17 +889,32 @@ void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 	pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
 	mpCurrentStorage->push_back(pTableOpenElement);
 
-	for (int i=0; i<pTableStyle->getNumColumns(); ++i)
+	if (pTableStyle->getNumColumns())
+	{
+		for (int i=0; i<pTableStyle->getNumColumns(); ++i)
+		{
+			TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
+			librevenge::RVNGString sColumnStyleName;
+			sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
+			pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
+			mpCurrentStorage->push_back(pTableColumnOpenElement);
+
+			TagCloseElement *pTableColumnCloseElement = new TagCloseElement("table:table-column");
+			mpCurrentStorage->push_back(pTableColumnCloseElement);
+		}
+	}
+	else
 	{
 		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
 		librevenge::RVNGString sColumnStyleName;
-		sColumnStyleName.sprintf("%s.Column%i", sTableName.cstr(), (i+1));
-		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
+		sColumnStyleName.sprintf("%s.Column0", sTableName.cstr());
+		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName);
 		mpCurrentStorage->push_back(pTableColumnOpenElement);
 
 		TagCloseElement *pTableColumnCloseElement = new TagCloseElement("table:table-column");
 		mpCurrentStorage->push_back(pTableColumnCloseElement);
 	}
+
 }
 
 void OdfGenerator::closeTable()

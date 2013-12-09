@@ -241,11 +241,13 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 	ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
 
 	librevenge::RVNGPropertyList pList(propList);
-	if (propList["style:display-name"]) {
+	if (propList["style:display-name"])
+	{
 		librevenge::RVNGString name(propList["style:display-name"]->getStr());
 		if (propList["style:master-page-name"])
 			pList.remove("style:display-name");
-		else if (mDisplayNameMap.find(name) != mDisplayNameMap.end()) {
+		else if (mDisplayNameMap.find(name) != mDisplayNameMap.end())
+		{
 			ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: a paragraph with name %s already exists\n", name.cstr()));
 			pList.remove("style:display-name");
 		}
