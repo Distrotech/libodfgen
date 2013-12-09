@@ -182,9 +182,10 @@ void TableStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) c
 	pHandler->endElement("style:style");
 
 	const librevenge::RVNGPropertyListVector *columns = mPropList.child("librevenge:table-columns");
-	if (columns)
+	if (columns && columns->count())
 	{
 		librevenge::RVNGPropertyListVector::Iter j(*columns);
+
 		int i=1;
 		for (j.rewind(); j.next(); ++i)
 		{
@@ -201,6 +202,21 @@ void TableStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) c
 			pHandler->endElement("style:style");
 		}
 	}
+	else
+	{
+		TagOpenElement columnStyleOpen("style:style");
+		librevenge::RVNGString sColumnName;
+		sColumnName.sprintf("%s.Column0", getName().cstr());
+		columnStyleOpen.addAttribute("style:name", sColumnName);
+		columnStyleOpen.addAttribute("style:family", "table-column");
+		columnStyleOpen.write(pHandler);
+
+		pHandler->startElement("style:table-column-properties", librevenge::RVNGPropertyList());
+		pHandler->endElement("style:table-column-properties");
+
+		pHandler->endElement("style:style");
+	}
+
 
 	typedef std::vector<TableRowStyle *>::const_iterator TRSVIter;
 	for (TRSVIter iterTableRow = mTableRowStyles.begin() ; iterTableRow != mTableRowStyles.end(); ++iterTableRow)
