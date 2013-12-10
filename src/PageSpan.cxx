@@ -31,7 +31,11 @@ PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList) :
 	mpHeaderContent(0),
 	mpFooterContent(0),
 	mpHeaderLeftContent(0),
-	mpFooterLeftContent(0)
+	mpFooterLeftContent(0),
+	mpHeaderFirstContent(0),
+	mpFooterFirstContent(0),
+	mpHeaderLastContent(0),
+	mpFooterLastContent(0)
 {
 }
 
@@ -60,6 +64,24 @@ PageSpan::~PageSpan()
 		delete mpHeaderLeftContent;
 	}
 
+	if (mpHeaderFirstContent)
+	{
+		for (DEVIter iterHeaderFirstContent = mpHeaderFirstContent->begin();
+		        iterHeaderFirstContent != mpHeaderFirstContent->end();
+		        ++iterHeaderFirstContent)
+			delete(*iterHeaderFirstContent);
+		delete mpHeaderFirstContent;
+	}
+
+	if (mpHeaderLastContent)
+	{
+		for (DEVIter iterHeaderLastContent = mpHeaderLastContent->begin();
+		        iterHeaderLastContent != mpHeaderLastContent->end();
+		        ++iterHeaderLastContent)
+			delete(*iterHeaderLastContent);
+		delete mpHeaderLastContent;
+	}
+
 	if (mpFooterContent)
 	{
 		for (DEVIter iterFooterContent = mpFooterContent->begin();
@@ -76,6 +98,24 @@ PageSpan::~PageSpan()
 		        ++iterFooterLeftContent)
 			delete(*iterFooterLeftContent);
 		delete mpFooterLeftContent;
+	}
+
+	if (mpFooterFirstContent)
+	{
+		for (DEVIter iterFooterFirstContent = mpFooterFirstContent->begin();
+		        iterFooterFirstContent != mpFooterFirstContent->end();
+		        ++iterFooterFirstContent)
+			delete(*iterFooterFirstContent);
+		delete mpFooterFirstContent;
+	}
+
+	if (mpFooterLastContent)
+	{
+		for (DEVIter iterFooterLastContent = mpFooterLastContent->begin();
+		        iterFooterLastContent != mpFooterLastContent->end();
+		        ++iterFooterLastContent)
+			delete(*iterFooterLastContent);
+		delete mpFooterLastContent;
 	}
 }
 
@@ -141,6 +181,62 @@ void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> *pFooterConte
 	}
 
 	mpFooterLeftContent = pFooterContent;
+}
+
+void PageSpan::setHeaderFirstContent(std::vector<DocumentElement *> *pHeaderContent)
+{
+	if (mpHeaderFirstContent)
+	{
+		for (DEVIter iterHeaderFirstContent = mpHeaderFirstContent->begin();
+		        iterHeaderFirstContent != mpHeaderFirstContent->end();
+		        ++iterHeaderFirstContent)
+			delete(*iterHeaderFirstContent);
+		delete mpHeaderFirstContent;
+	}
+
+	mpHeaderFirstContent = pHeaderContent;
+}
+
+void PageSpan::setFooterFirstContent(std::vector<DocumentElement *> *pFooterContent)
+{
+	if (mpFooterFirstContent)
+	{
+		for (DEVIter iterFooterFirstContent = mpFooterFirstContent->begin();
+		        iterFooterFirstContent != mpFooterFirstContent->end();
+		        ++iterFooterFirstContent)
+			delete(*iterFooterFirstContent);
+		delete mpFooterFirstContent;
+	}
+
+	mpFooterFirstContent = pFooterContent;
+}
+
+void PageSpan::setHeaderLastContent(std::vector<DocumentElement *> *pHeaderContent)
+{
+	if (mpHeaderLastContent)
+	{
+		for (DEVIter iterHeaderLastContent = mpHeaderLastContent->begin();
+		        iterHeaderLastContent != mpHeaderLastContent->end();
+		        ++iterHeaderLastContent)
+			delete(*iterHeaderLastContent);
+		delete mpHeaderLastContent;
+	}
+
+	mpHeaderLastContent = pHeaderContent;
+}
+
+void PageSpan::setFooterLastContent(std::vector<DocumentElement *> *pFooterContent)
+{
+	if (mpFooterLastContent)
+	{
+		for (DEVIter iterFooterLastContent = mpFooterLastContent->begin();
+		        iterFooterLastContent != mpFooterLastContent->end();
+		        ++iterFooterLastContent)
+			delete(*iterFooterLastContent);
+		delete mpFooterLastContent;
+	}
+
+	mpFooterLastContent = pFooterContent;
 }
 
 void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const
@@ -216,6 +312,20 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
 			pHandler->endElement("style:header-left");
 		}
+		else if (mpHeaderFirstContent)
+		{
+			TagOpenElement("style:header").write(pHandler);
+			pHandler->endElement("style:header");
+			_writeHeaderFooter("style:header-first", *mpHeaderFirstContent, pHandler);
+			pHandler->endElement("style:header-first");
+		}
+		else if (mpHeaderLastContent)
+		{
+			TagOpenElement("style:header").write(pHandler);
+			pHandler->endElement("style:header");
+			_writeHeaderFooter("style:header-last", *mpHeaderLastContent, pHandler);
+			pHandler->endElement("style:header-last");
+		}
 
 		if (mpFooterContent)
 		{
@@ -233,6 +343,20 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 			pHandler->endElement("style:footer");
 			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
 			pHandler->endElement("style:footer-left");
+		}
+		else if (mpFooterFirstContent)
+		{
+			TagOpenElement("style:footer").write(pHandler);
+			pHandler->endElement("style:footer");
+			_writeHeaderFooter("style:footer-first", *mpFooterFirstContent, pHandler);
+			pHandler->endElement("style:footer-first");
+		}
+		else if (mpFooterLastContent)
+		{
+			TagOpenElement("style:footer").write(pHandler);
+			pHandler->endElement("style:footer");
+			_writeHeaderFooter("style:footer-last", *mpFooterLastContent, pHandler);
+			pHandler->endElement("style:footer-last");
 		}
 
 		pHandler->endElement("style:master-page");

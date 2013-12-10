@@ -44,6 +44,10 @@ public:
 	void setFooterContent(std::vector<DocumentElement *> *pFooterContent);
 	void setHeaderLeftContent(std::vector<DocumentElement *> *pHeaderContent);
 	void setFooterLeftContent(std::vector<DocumentElement *> *pFooterContent);
+	void setHeaderFirstContent(std::vector<DocumentElement *> *pHeaderContent);
+	void setFooterFirstContent(std::vector<DocumentElement *> *pFooterContent);
+	void setHeaderLastContent(std::vector<DocumentElement *> *pHeaderContent);
+	void setFooterLastContent(std::vector<DocumentElement *> *pFooterContent);
 protected:
 	void _writeHeaderFooter(const char *headerFooterTagName, const std::vector<DocumentElement *> &headerFooterContent,
 	                        OdfDocumentHandler *pHandler) const;
@@ -55,6 +59,10 @@ private:
 	std::vector<DocumentElement *> *mpFooterContent;
 	std::vector<DocumentElement *> *mpHeaderLeftContent;
 	std::vector<DocumentElement *> *mpFooterLeftContent;
+	std::vector<DocumentElement *> *mpHeaderFirstContent;
+	std::vector<DocumentElement *> *mpFooterFirstContent;
+	std::vector<DocumentElement *> *mpHeaderLastContent;
+	std::vector<DocumentElement *> *mpFooterLastContent;
 };
 #endif
 

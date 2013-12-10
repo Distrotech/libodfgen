@@ -464,8 +464,13 @@ void OdtGenerator::openHeader(const librevenge::RVNGPropertyList &propList)
 {
 	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
 
-	if (propList["librevenge:occurence"] && propList["librevenge:occurence"]->getStr() == "even")
+	if (propList["librevenge:occurrence"] && (propList["librevenge:occurrence"]->getStr() == "even" ||
+	        propList["librevenge:occurrence"]->getStr() == "left"))
 		mpImpl->mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
+	else if (propList["librevenge:occurrence"] && propList["librevenge:occurrence"]->getStr() == "first")
+		mpImpl->mpCurrentPageSpan->setHeaderFirstContent(pHeaderFooterContentElements);
+	else if (propList["librevenge:occurrence"] && propList["librevenge:occurrence"]->getStr() == "last")
+		mpImpl->mpCurrentPageSpan->setHeaderLastContent(pHeaderFooterContentElements);
 	else
 		mpImpl->mpCurrentPageSpan->setHeaderContent(pHeaderFooterContentElements);
 
@@ -481,8 +486,13 @@ void OdtGenerator::openFooter(const librevenge::RVNGPropertyList &propList)
 {
 	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
 
-	if (propList["librevenge:occurence"] && propList["librevenge:occurence"]->getStr() == "even")
+	if (propList["librevenge:occurrence"] && (propList["librevenge:occurrence"]->getStr() == "even" ||
+	        propList["librevenge:occurrence"]->getStr() == "left"))
 		mpImpl->mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);
+	else if (propList["librevenge:occurrence"] && propList["librevenge:occurrence"]->getStr() == "first")
+		mpImpl->mpCurrentPageSpan->setFooterFirstContent(pHeaderFooterContentElements);
+	else if (propList["librevenge:occurrence"] && propList["librevenge:occurrence"]->getStr() == "last")
+		mpImpl->mpCurrentPageSpan->setFooterLastContent(pHeaderFooterContentElements);
 	else
 		mpImpl->mpCurrentPageSpan->setFooterContent(pHeaderFooterContentElements);
 
