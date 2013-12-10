@@ -292,20 +292,6 @@ void Table::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
 			pHandler->endElement("style:style");
 		}
 	}
-	else
-	{
-		TagOpenElement columnStyleOpen("style:style");
-		librevenge::RVNGString sColumnName;
-		sColumnName.sprintf("%s.Column0", getName().cstr());
-		columnStyleOpen.addAttribute("style:name", sColumnName);
-		columnStyleOpen.addAttribute("style:family", "table-column");
-		columnStyleOpen.write(pHandler);
-
-		pHandler->startElement("style:table-column-properties", librevenge::RVNGPropertyList());
-		pHandler->endElement("style:table-column-properties");
-
-		pHandler->endElement("style:style");
-	}
 
 	std::map<librevenge::RVNGString, shared_ptr<TableRowStyle>, ltstr>::const_iterator rIt;
 	for (rIt=mRowStyleHash.begin(); rIt!=mRowStyleHash.end(); ++rIt)
