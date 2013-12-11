@@ -625,10 +625,10 @@ void OdpGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 		double radrotation = rotation*M_PI/180.0;
 		double deltax = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
 		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                             - radrotation) - propList["svg:rx"]->getDouble();
+		                                                                      - radrotation) - propList["svg:rx"]->getDouble();
 		double deltay = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
 		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                             - radrotation) - propList["svg:ry"]->getDouble();
+		                                                                      - radrotation) - propList["svg:ry"]->getDouble();
 		sValue = "rotate(";
 		sValue.append(doubleToString(radrotation));
 		sValue.append(") ");
