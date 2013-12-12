@@ -202,7 +202,7 @@ public:
 		}
 		mAuxiliarOdtState.reset(new OdtGeneratorState);
 		mAuxiliarOdtState->mGenerator.initStateWith(*this);
-		mAuxiliarOdtState->mGenerator.startDocument();
+		mAuxiliarOdtState->mGenerator.startDocument(librevenge::RVNGPropertyList());
 		librevenge::RVNGPropertyList page;
 		page.insert("librevenge:num-pages", 1);
 		page.insert("fo:margin-left", 0.0, librevenge::RVNG_INCH);
@@ -1312,7 +1312,7 @@ void OdsGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTable(propList);
 	if (mpImpl->mAuxiliarOdgState)
-		return mpImpl->mAuxiliarOdgState->get().openTable(propList);
+		return mpImpl->mAuxiliarOdgState->get().startTableObject(propList);
 	if (!state.mbInFrame)
 	{
 		ODFGEN_DEBUG_MSG(("OdsGenerator::openTable a table must be in a frame!!!\n"));
@@ -1332,7 +1332,7 @@ void OdsGenerator::closeTable()
 	mpImpl->popState();
 	if (!state.mbInTable) return;
 	if (mpImpl->mAuxiliarOdgState)
-		return mpImpl->mAuxiliarOdgState->get().closeTable();
+		return mpImpl->mAuxiliarOdgState->get().endTableObject();
 	if (mpImpl->mAuxiliarOdtState)
 	{
 		mpImpl->mAuxiliarOdtState->get().closeTable();
@@ -1553,7 +1553,7 @@ void OdsGenerator::closeTextBox()
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 }
 
-void OdsGenerator::startDocument()
+void OdsGenerator::startDocument(const librevenge::RVNGPropertyList &)
 {
 	if (mpImpl->getState().mbStarted)
 	{

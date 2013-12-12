@@ -149,7 +149,7 @@ static void createOdt()
 	OdtGenerator generator;
 	generator.addDocumentHandler(&content, ODF_FLAT_XML);
 
-	generator.startDocument();
+	generator.startDocument(librevenge::RVNGPropertyList());
 	librevenge::RVNGPropertyList page;
 	page.insert("librevenge:num-pages", 1);
 	page.insert("fo:page-height", 11.5, librevenge::RVNG_INCH);
@@ -208,7 +208,7 @@ static void createOds()
 	OdsGenerator generator;
 	generator.addDocumentHandler(&content, ODF_FLAT_XML);
 
-	generator.startDocument();
+	generator.startDocument(librevenge::RVNGPropertyList());
 	librevenge::RVNGPropertyList page;
 	page.insert("librevenge:num-pages", 1);
 	page.insert("fo:page-height", 11.5, librevenge::RVNG_INCH);
@@ -306,9 +306,9 @@ static void createOdg()
 	}
 	table.insert("librevenge:table-columns", columns);
 
-	generator.openTable(table);
+	generator.startTableObject(table);
 	sendTableContent(generator);
-	generator.closeTable();
+	generator.endTableObject();
 
 	generator.endPage();
 	generator.endDocument();

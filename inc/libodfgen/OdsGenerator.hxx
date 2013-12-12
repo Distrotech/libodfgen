@@ -47,7 +47,7 @@ public:
 
 	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
-	void startDocument();
+	void startDocument(const librevenge::RVNGPropertyList &);
 	void endDocument();
 
 	void definePageStyle(const librevenge::RVNGPropertyList &) {}

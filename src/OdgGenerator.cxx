@@ -1307,7 +1307,7 @@ void OdgGenerator::endTextObject()
 	mpImpl->mbIsTextBox = false;
 }
 
-void OdgGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
+void OdgGenerator::startTableObject(const ::librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->pushListState();
 
@@ -1328,7 +1328,7 @@ void OdgGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->openTable(propList);
 }
 
-void OdgGenerator::closeTable()
+void OdgGenerator::endTableObject()
 {
 	mpImpl->closeTable();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));

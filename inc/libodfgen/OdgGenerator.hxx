@@ -61,13 +61,13 @@ public:
 	void drawPath(const ::librevenge::RVNGPropertyList &propList);
 	void drawGraphicObject(const ::librevenge::RVNGPropertyList &propList);
 
-	void openTable(const ::librevenge::RVNGPropertyList &propList);
+	void startTableObject(const ::librevenge::RVNGPropertyList &propList);
 	void openTableRow(const ::librevenge::RVNGPropertyList &propList);
 	void closeTableRow();
 	void openTableCell(const ::librevenge::RVNGPropertyList &propList);
 	void closeTableCell();
 	void insertCoveredTableCell(const ::librevenge::RVNGPropertyList &propList);
-	void closeTable();
+	void endTableObject();
 
 	void startTextObject(const ::librevenge::RVNGPropertyList &propList);
 	void endTextObject();

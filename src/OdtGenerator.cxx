@@ -882,7 +882,7 @@ void OdtGenerator::endDocument()
 	mpImpl->writeTargetDocuments();
 }
 
-void OdtGenerator::startDocument()
+void OdtGenerator::startDocument(const librevenge::RVNGPropertyList &)
 {
 }
 
