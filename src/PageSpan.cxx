@@ -299,30 +299,24 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 		{
 			_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
 			pHandler->endElement("style:header");
-			if (mpHeaderLeftContent)
-			{
-				_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
-				pHandler->endElement("style:header-left");
-			}
 		}
-		else if (mpHeaderLeftContent)
+		else if (mpHeaderLeftContent || mpHeaderFirstContent || mpHeaderLastContent)
 		{
 			TagOpenElement("style:header").write(pHandler);
 			pHandler->endElement("style:header");
+		}
+		if (mpHeaderLeftContent)
+		{
 			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
 			pHandler->endElement("style:header-left");
 		}
-		else if (mpHeaderFirstContent)
+		if (mpHeaderFirstContent)
 		{
-			TagOpenElement("style:header").write(pHandler);
-			pHandler->endElement("style:header");
 			_writeHeaderFooter("style:header-first", *mpHeaderFirstContent, pHandler);
 			pHandler->endElement("style:header-first");
 		}
-		else if (mpHeaderLastContent)
+		if (mpHeaderLastContent)
 		{
-			TagOpenElement("style:header").write(pHandler);
-			pHandler->endElement("style:header");
 			_writeHeaderFooter("style:header-last", *mpHeaderLastContent, pHandler);
 			pHandler->endElement("style:header-last");
 		}
@@ -331,30 +325,24 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 		{
 			_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
 			pHandler->endElement("style:footer");
-			if (mpFooterLeftContent)
-			{
-				_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
-				pHandler->endElement("style:footer-left");
-			}
 		}
-		else if (mpFooterLeftContent)
+		else if (mpFooterLeftContent || mpFooterFirstContent || mpFooterLastContent)
 		{
 			TagOpenElement("style:footer").write(pHandler);
 			pHandler->endElement("style:footer");
+		}
+		if (mpFooterLeftContent)
+		{
 			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
 			pHandler->endElement("style:footer-left");
 		}
-		else if (mpFooterFirstContent)
+		if (mpFooterFirstContent)
 		{
-			TagOpenElement("style:footer").write(pHandler);
-			pHandler->endElement("style:footer");
 			_writeHeaderFooter("style:footer-first", *mpFooterFirstContent, pHandler);
 			pHandler->endElement("style:footer-first");
 		}
-		else if (mpFooterLastContent)
+		if (mpFooterLastContent)
 		{
-			TagOpenElement("style:footer").write(pHandler);
-			pHandler->endElement("style:footer");
 			_writeHeaderFooter("style:footer-last", *mpFooterLastContent, pHandler);
 			pHandler->endElement("style:footer-last");
 		}
