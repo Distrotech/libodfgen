@@ -300,7 +300,7 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 			_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
 			pHandler->endElement("style:header");
 		}
-		else if (mpHeaderLeftContent || mpHeaderFirstContent || mpHeaderLastContent)
+		else if (mpHeaderLeftContent || mpHeaderFirstContent /* || mpHeaderLastContent */)
 		{
 			TagOpenElement("style:header").write(pHandler);
 			pHandler->endElement("style:header");
@@ -315,18 +315,20 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 			_writeHeaderFooter("style:header-first", *mpHeaderFirstContent, pHandler);
 			pHandler->endElement("style:header-first");
 		}
+		/*
 		if (mpHeaderLastContent)
 		{
 			_writeHeaderFooter("style:header-last", *mpHeaderLastContent, pHandler);
 			pHandler->endElement("style:header-last");
 		}
+		*/
 
 		if (mpFooterContent)
 		{
 			_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
 			pHandler->endElement("style:footer");
 		}
-		else if (mpFooterLeftContent || mpFooterFirstContent || mpFooterLastContent)
+		else if (mpFooterLeftContent || mpFooterFirstContent /* || mpFooterLastContent */)
 		{
 			TagOpenElement("style:footer").write(pHandler);
 			pHandler->endElement("style:footer");
@@ -341,11 +343,13 @@ void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum
 			_writeHeaderFooter("style:footer-first", *mpFooterFirstContent, pHandler);
 			pHandler->endElement("style:footer-first");
 		}
+		/*
 		if (mpFooterLastContent)
 		{
 			_writeHeaderFooter("style:footer-last", *mpFooterLastContent, pHandler);
 			pHandler->endElement("style:footer-last");
 		}
+		*/
 
 		pHandler->endElement("style:master-page");
 	}
