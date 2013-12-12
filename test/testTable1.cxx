@@ -348,9 +348,9 @@ static void createOdp()
 	}
 	table.insert("librevenge:table-columns", columns);
 
-	generator.openTable(table);
+	generator.startTableObject(table);
 	sendTableContent(generator);
-	generator.closeTable();
+	generator.endTableObject();
 
 	generator.endSlide();
 	generator.endDocument();

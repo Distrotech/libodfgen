@@ -1522,7 +1522,7 @@ void OdpGenerator::closeListElement()
 	mpImpl->closeListElement();
 }
 
-void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
+void OdpGenerator::startTableObject(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mState.mInComment)
 		return;
@@ -1545,7 +1545,7 @@ void OdpGenerator::openTable(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->openTable(propList);
 }
 
-void OdpGenerator::closeTable()
+void OdpGenerator::endTableObject()
 {
 	if (mpImpl->mState.mInComment)
 		return;
