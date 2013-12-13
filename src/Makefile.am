@@ -32,6 +32,8 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
 	FontStyle.hxx \
 	GraphicFunctions.cxx \
 	GraphicFunctions.hxx \
+	GraphicStyle.cxx \
+	GraphicStyle.hxx \
 	InternalHandler.cxx \
 	InternalHandler.hxx \
 	ListStyle.cxx \

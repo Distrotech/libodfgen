@@ -38,6 +38,7 @@
 
 #include "FilterInternal.hxx"
 #include "FontStyle.hxx"
+#include "GraphicStyle.hxx"
 #include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 
@@ -211,6 +212,10 @@ public:
 	//! inserts a binary object
 	void insertBinaryObject(const librevenge::RVNGPropertyList &propList);
 
+	//
+	// graphic
+	//
+
 protected:
 	// list state
 	struct ListState
@@ -231,6 +236,7 @@ protected:
 
 	/// access to the current list state
 	ListState &getListState();
+
 protected:
 	/** stores a list style: update mListStyles,
 		mWriterListStates.top().mpCurrentListStyle and the different
@@ -265,7 +271,6 @@ protected:
 	//! store a level
 	void updateListStorage(const librevenge::RVNGPropertyList &level, int id, bool ordered);
 
-protected:
 	// the current set of elements that we're writing to
 	Storage *mpCurrentStorage;
 	// the stack of all storage
@@ -277,6 +282,8 @@ protected:
 
 	// font manager
 	FontStyleManager mFontManager;
+	// graphic manager
+	GraphicStyleManager mGraphicManager;
 	// span manager
 	SpanStyleManager mSpanManager;
 	// paragraph manager
@@ -315,7 +322,6 @@ protected:
 	std::vector<DocumentElement *> mFrameStyles;
 	// automatic frame styles
 	std::vector<DocumentElement *> mFrameAutomaticStyles;
-protected:
 	// the list of frame seens
 	std::map<librevenge::RVNGString, unsigned, ltstr > mFrameNameIdMap;
 

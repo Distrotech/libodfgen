@@ -30,6 +30,7 @@
 #include "DocumentElement.hxx"
 #include "FontStyle.hxx"
 #include "GraphicFunctions.hxx"
+#include "GraphicStyle.hxx"
 #include "ListStyle.hxx"
 #include "OdfGenerator.hxx"
 #include "TableStyle.hxx"
@@ -70,8 +71,11 @@ public:
 	~OdgGeneratorPrivate();
 
 	/** update a graphic style element */
-	void _updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style);
 	void _storeGraphicsStyle();
+	GraphicStyleManager &getGraphicManager()
+	{
+		return mGraphicManager;
+	}
 	void _drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
 	void _drawPath(const librevenge::RVNGPropertyListVector &path);
 
@@ -84,10 +88,6 @@ public:
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
 	// graphics styles
-	std::vector<DocumentElement *> mGraphicsStrokeDashStyles;
-	std::vector<DocumentElement *> mGraphicsGradientStyles;
-	std::vector<DocumentElement *> mGraphicsBitmapStyles;
-	std::vector<DocumentElement *> mGraphicsMarkerStyles;
 	std::vector<DocumentElement *> mGraphicsAutomaticStyles;
 
 	// page styles
@@ -95,11 +95,6 @@ public:
 	std::vector<DocumentElement *> mPageMasterStyles;
 
 	::librevenge::RVNGPropertyList mxStyle;
-	int miGradientIndex;
-	int miBitmapIndex;
-	int miStartMarkerIndex;
-	int miEndMarkerIndex;
-	int miDashIndex;
 	int miGraphicsStyleIndex;
 	int miPageIndex;
 	double mfWidth, mfMaxWidth;
@@ -117,19 +112,10 @@ private:
 };
 
 OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
-	mGraphicsStrokeDashStyles(),
-	mGraphicsGradientStyles(),
-	mGraphicsBitmapStyles(),
-	mGraphicsMarkerStyles(),
 	mGraphicsAutomaticStyles(),
 	mPageAutomaticStyles(),
 	mPageMasterStyles(),
 	mxStyle(),
-	miGradientIndex(1),
-	miBitmapIndex(1),
-	miStartMarkerIndex(1),
-	miEndMarkerIndex(1),
-	miDashIndex(1),
 	miGraphicsStyleIndex(1),
 	miPageIndex(1),
 	mfWidth(0.0),
@@ -146,10 +132,6 @@ OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 OdgGeneratorPrivate::~OdgGeneratorPrivate()
 {
 	emptyStorage(&mGraphicsAutomaticStyles);
-	emptyStorage(&mGraphicsStrokeDashStyles);
-	emptyStorage(&mGraphicsGradientStyles);
-	emptyStorage(&mGraphicsBitmapStyles);
-	emptyStorage(&mGraphicsMarkerStyles);
 	emptyStorage(&mPageAutomaticStyles);
 	emptyStorage(&mPageMasterStyles);
 }
@@ -272,10 +254,7 @@ void OdgGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 void OdgGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
-	sendStorage(&mGraphicsStrokeDashStyles, pHandler);
-	sendStorage(&mGraphicsGradientStyles, pHandler);
-	sendStorage(&mGraphicsBitmapStyles, pHandler);
-	sendStorage(&mGraphicsMarkerStyles, pHandler);
+	mGraphicManager.writeStyles(pHandler);
 	pHandler->endElement("office:styles");
 }
 
@@ -765,7 +744,7 @@ void OdgGeneratorPrivate::_storeGraphicsStyle()
 	mGraphicsAutomaticStyles.push_back(pStyleStyleElement);
 
 	TagOpenElement *pStyleGraphicsPropertiesElement = new TagOpenElement("style:graphic-properties");
-	_updateGraphicPropertiesElement(*pStyleGraphicsPropertiesElement, mxStyle);
+	mGraphicManager.updateElement(*pStyleGraphicsPropertiesElement, mxStyle);
 	mGraphicsAutomaticStyles.push_back(pStyleGraphicsPropertiesElement);
 	mGraphicsAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
 
@@ -773,377 +752,6 @@ void OdgGeneratorPrivate::_storeGraphicsStyle()
 	miGraphicsStyleIndex++;
 }
 
-void OdgGeneratorPrivate::_updateGraphicPropertiesElement(TagOpenElement &element, ::librevenge::RVNGPropertyList const &style)
-{
-	bool bUseOpacityGradient = false;
-	const librevenge::RVNGPropertyListVector *gradient = style.child("svg:linearGradient");
-	if (!gradient)
-		gradient = style.child("svg:radialGradient");
-
-	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
-	{
-		TagOpenElement *pDrawStrokeDashElement = new TagOpenElement("draw:stroke-dash");
-		librevenge::RVNGString sValue;
-		sValue.sprintf("Dash_%i", miDashIndex++);
-		pDrawStrokeDashElement->addAttribute("draw:name", sValue);
-		if (style["svg:stoke-linecap"])
-			pDrawStrokeDashElement->addAttribute("draw:style", style["svg:stroke-linecap"]->getStr());
-		else
-			pDrawStrokeDashElement->addAttribute("draw:style", "rect");
-		if (style["draw:distance"])
-			pDrawStrokeDashElement->addAttribute("draw:distance", style["draw:distance"]->getStr());
-		if (style["draw:dots1"])
-			pDrawStrokeDashElement->addAttribute("draw:dots1", style["draw:dots1"]->getStr());
-		if (style["draw:dots1-length"])
-			pDrawStrokeDashElement->addAttribute("draw:dots1-length", style["draw:dots1-length"]->getStr());
-		if (style["draw:dots2"])
-			pDrawStrokeDashElement->addAttribute("draw:dots2", style["draw:dots2"]->getStr());
-		if (style["draw:dots2-length"])
-			pDrawStrokeDashElement->addAttribute("draw:dots2-length", style["draw:dots2-length"]->getStr());
-		mGraphicsStrokeDashStyles.push_back(pDrawStrokeDashElement);
-		mGraphicsStrokeDashStyles.push_back(new TagCloseElement("draw:stroke-dash"));
-	}
-
-	if (style["draw:marker-start-path"])
-	{
-		librevenge::RVNGString sValue;
-		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
-		sValue.sprintf("StartMarker_%i", miStartMarkerIndex);
-		pDrawMarkerElement->addAttribute("draw:name", sValue);
-		if (style["draw:marker-start-viewbox"])
-			pDrawMarkerElement->addAttribute("svg:viewBox", style["draw:marker-start-viewbox"]->getStr());
-		pDrawMarkerElement->addAttribute("svg:d", style["draw:marker-start-path"]->getStr());
-		mGraphicsMarkerStyles.push_back(pDrawMarkerElement);
-		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
-	}
-	if (style["draw:marker-end-path"])
-	{
-		librevenge::RVNGString sValue;
-		TagOpenElement *pDrawMarkerElement = new TagOpenElement("draw:marker");
-		sValue.sprintf("EndMarker_%i", miEndMarkerIndex);
-		pDrawMarkerElement->addAttribute("draw:name", sValue);
-		if (style["draw:marker-end-viewbox"])
-			pDrawMarkerElement->addAttribute("svg:viewBox", style["draw:marker-end-viewbox"]->getStr());
-		pDrawMarkerElement->addAttribute("svg:d", style["draw:marker-end-path"]->getStr());
-		mGraphicsMarkerStyles.push_back(pDrawMarkerElement);
-		mGraphicsMarkerStyles.push_back(new TagCloseElement("draw:marker"));
-	}
-
-	if (style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
-	{
-		TagOpenElement *pDrawGradientElement = new TagOpenElement("draw:gradient");
-		TagOpenElement *pDrawOpacityElement = new TagOpenElement("draw:opacity");
-		if (style["draw:style"])
-		{
-			pDrawGradientElement->addAttribute("draw:style", style["draw:style"]->getStr());
-			pDrawOpacityElement->addAttribute("draw:style", style["draw:style"]->getStr());
-		}
-		else
-		{
-			pDrawGradientElement->addAttribute("draw:style", "linear");
-			pDrawOpacityElement->addAttribute("draw:style", "linear");
-		}
-		librevenge::RVNGString sValue;
-		sValue.sprintf("Gradient_%i", miGradientIndex);
-		pDrawGradientElement->addAttribute("draw:name", sValue);
-		sValue.sprintf("Transparency_%i", miGradientIndex++);
-		pDrawOpacityElement->addAttribute("draw:name", sValue);
-
-		// ODG angle unit is 0.1 degree
-		double angle = style["draw:angle"] ? style["draw:angle"]->getDouble() : 0.0;
-		while (angle < 0)
-			angle += 360;
-		while (angle > 360)
-			angle -= 360;
-		sValue.sprintf("%i", (unsigned)(angle*10));
-		pDrawGradientElement->addAttribute("draw:angle", sValue);
-		pDrawOpacityElement->addAttribute("draw:angle", sValue);
-
-		if (!gradient || !gradient->count())
-		{
-			if (style["draw:start-color"])
-				pDrawGradientElement->addAttribute("draw:start-color", style["draw:start-color"]->getStr());
-			if (style["draw:end-color"])
-				pDrawGradientElement->addAttribute("draw:end-color", style["draw:end-color"]->getStr());
-
-			if (style["draw:border"])
-			{
-				pDrawGradientElement->addAttribute("draw:border", style["draw:border"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:border", style["draw:border"]->getStr());
-			}
-			else
-			{
-				pDrawGradientElement->addAttribute("draw:border", "0%");
-				pDrawOpacityElement->addAttribute("draw:border", "0%");
-			}
-
-			if (style["svg:cx"])
-			{
-				pDrawGradientElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
-			}
-			else if (style["draw:cx"])
-			{
-				pDrawGradientElement->addAttribute("draw:cx", style["draw:cx"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cx", style["draw:cx"]->getStr());
-			}
-
-			if (style["svg:cy"])
-			{
-				pDrawGradientElement->addAttribute("draw:cy", style["svg:cy"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cy", style["svg:cy"]->getStr());
-			}
-			else if (style["draw:cx"])
-			{
-				pDrawGradientElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
-				pDrawOpacityElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
-			}
-
-			if (style["draw:start-intensity"])
-				pDrawGradientElement->addAttribute("draw:start-intensity", style["draw:start-intensity"]->getStr());
-			else
-				pDrawGradientElement->addAttribute("draw:start-intensity", "100%");
-
-			if (style["draw:end-intensity"])
-				pDrawGradientElement->addAttribute("draw:end-intensity", style["draw:end-intensity"]->getStr());
-			else
-				pDrawGradientElement->addAttribute("draw:end-intensity", "100%");
-
-			if (style["librevenge:start-opacity"])
-				pDrawOpacityElement->addAttribute("draw:start", style["librevenge:start-opacity"]->getStr());
-			else
-				pDrawOpacityElement->addAttribute("draw:start", "100%");
-
-			if (style["librevenge:end-opacity"])
-				pDrawOpacityElement->addAttribute("draw:end", style["librevenge:end-opacity"]->getStr());
-			else
-				pDrawOpacityElement->addAttribute("draw:end", "100%");
-
-			mGraphicsGradientStyles.push_back(pDrawGradientElement);
-			mGraphicsGradientStyles.push_back(new TagCloseElement("draw:gradient"));
-
-			// Work around a mess in LibreOffice where both opacities of 100% are interpreted as complete transparency
-			// Nevertheless, when one is different, immediately, they are interpreted correctly
-			if (style["librevenge:start-opacity"] && style["librevenge:end-opacity"]
-			        && (style["librevenge:start-opacity"]->getDouble() != 1.0 || style["librevenge:end-opacity"]->getDouble() != 1.0))
-			{
-				bUseOpacityGradient = true;
-				mGraphicsGradientStyles.push_back(pDrawOpacityElement);
-				mGraphicsGradientStyles.push_back(new TagCloseElement("draw:opacity"));
-			}
-		}
-		else if (gradient->count() >= 2)
-		{
-			sValue.sprintf("%i", (unsigned)(angle*10));
-			pDrawGradientElement->addAttribute("draw:angle", sValue);
-
-			pDrawGradientElement->addAttribute("draw:start-color", (*gradient)[1]["svg:stop-color"]->getStr());
-			pDrawGradientElement->addAttribute("draw:end-color", (*gradient)[0]["svg:stop-color"]->getStr());
-			if (style["svg:cx"])
-				pDrawGradientElement->addAttribute("draw:cx", style["svg:cx"]->getStr());
-			if (style["svg:cy"])
-				pDrawGradientElement->addAttribute("draw:cy", style["svg:cy"]->getStr());
-			if ((*gradient)[1]["svg:stop-opacity"])
-			{
-				pDrawOpacityElement->addAttribute("draw:start", (*gradient)[1]["svg:stop-opacity"]->getStr());
-				bUseOpacityGradient = true;
-			}
-			else
-				pDrawOpacityElement->addAttribute("draw:start", "100%");
-			if ((*gradient)[0]["svg:stop-opacity"])
-			{
-				pDrawOpacityElement->addAttribute("draw:end", (*gradient)[0]["svg:stop-opacity"]->getStr());
-				bUseOpacityGradient = true;
-			}
-			else
-				pDrawOpacityElement->addAttribute("draw:end", "100%");
-			pDrawGradientElement->addAttribute("draw:border", "0%");
-			mGraphicsGradientStyles.push_back(pDrawGradientElement);
-			mGraphicsGradientStyles.push_back(new TagCloseElement("draw:gradient"));
-			if (bUseOpacityGradient)
-			{
-				mGraphicsGradientStyles.push_back(pDrawOpacityElement);
-				mGraphicsGradientStyles.push_back(new TagCloseElement("draw:opacity"));
-			}
-		}
-		else
-		{
-			/* if gradient.count() == 1 for some reason we would leak
-			 * pDrawGradientElement
-			 */
-			delete pDrawGradientElement;
-		}
-		if (!bUseOpacityGradient)
-			delete pDrawOpacityElement;
-	}
-
-	if (style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap" &&
-	        style["draw:fill-image"] && style["librevenge:mime-type"])
-	{
-		TagOpenElement *pDrawBitmapElement = new TagOpenElement("draw:fill-image");
-		librevenge::RVNGString sValue;
-		sValue.sprintf("Bitmap_%i", miBitmapIndex++);
-		pDrawBitmapElement->addAttribute("draw:name", sValue);
-		mGraphicsBitmapStyles.push_back(pDrawBitmapElement);
-		mGraphicsBitmapStyles.push_back(new TagOpenElement("office:binary-data"));
-		mGraphicsBitmapStyles.push_back(new CharDataElement(style["draw:fill-image"]->getStr()));
-		mGraphicsBitmapStyles.push_back(new TagCloseElement("office:binary-data"));
-		mGraphicsBitmapStyles.push_back(new TagCloseElement("draw:fill-image"));
-	}
-
-	if (style["draw:color-mode"] && style["draw:color-mode"]->getStr().len() > 0)
-		element.addAttribute("draw:color-mode", style["draw:color-mode"]->getStr());
-	if (style["draw:luminance"] && style["draw:luminance"]->getStr().len() > 0)
-		element.addAttribute("draw:luminance", style["draw:luminance"]->getStr());
-	if (style["draw:contrast"] && style["draw:contrast"]->getStr().len() > 0)
-		element.addAttribute("draw:contrast", style["draw:contrast"]->getStr());
-	if (style["draw:gamma"] && style["draw:gamma"]->getStr().len() > 0)
-		element.addAttribute("draw:gamma", style["draw:gamma"]->getStr());
-	if (style["draw:red"] && style["draw:red"]->getStr().len() > 0)
-		element.addAttribute("draw:red", style["draw:red"]->getStr());
-	if (style["draw:green"] && style["draw:green"]->getStr().len() > 0)
-		element.addAttribute("draw:green", style["draw:green"]->getStr());
-	if (style["draw:blue"] && style["draw:blue"]->getStr().len() > 0)
-		element.addAttribute("draw:blue", style["draw:blue"]->getStr());
-
-	librevenge::RVNGString sValue;
-	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "none")
-		element.addAttribute("draw:stroke", "none");
-	else
-	{
-		if (style["svg:stroke-width"])
-			element.addAttribute("svg:stroke-width", style["svg:stroke-width"]->getStr());
-
-		if (style["svg:stroke-color"])
-			element.addAttribute("svg:stroke-color", style["svg:stroke-color"]->getStr());
-
-		if (style["svg:stroke-opacity"])
-			element.addAttribute("svg:stroke-opacity", style["svg:stroke-opacity"]->getStr());
-
-		if (style["svg:stroke-linejoin"])
-			element.addAttribute("draw:stroke-linejoin", style["svg:stroke-linejoin"]->getStr());
-
-		if (style["svg:stroke-linecap"])
-			element.addAttribute("svg:stoke-linecap", style["svg:stroke-linecap"]->getStr());
-
-		if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
-		{
-			element.addAttribute("draw:stroke", "dash");
-			sValue.sprintf("Dash_%i", miDashIndex-1);
-			element.addAttribute("draw:stroke-dash", sValue);
-		}
-		else
-			element.addAttribute("draw:stroke", "solid");
-	}
-
-	if (style["draw:fill"] && style["draw:fill"]->getStr() == "none")
-		element.addAttribute("draw:fill", "none");
-	else
-	{
-		if (style["draw:shadow"])
-			element.addAttribute("draw:shadow", style["draw:shadow"]->getStr());
-		else
-			element.addAttribute("draw:shadow", "hidden");
-		if (style["draw:shadow-offset-x"])
-			element.addAttribute("draw:shadow-offset-x", style["draw:shadow-offset-x"]->getStr());
-		if (style["draw:shadow-offset-y"])
-			element.addAttribute("draw:shadow-offset-y", style["draw:shadow-offset-y"]->getStr());
-		if (style["draw:shadow-color"])
-			element.addAttribute("draw:shadow-color", style["draw:shadow-color"]->getStr());
-		if (style["draw:shadow-opacity"])
-			element.addAttribute("draw:shadow-opacity", style["draw:shadow-opacity"]->getStr());
-		if (style["svg:fill-rule"])
-			element.addAttribute("svg:fill-rule", style["svg:fill-rule"]->getStr());
-	}
-
-	if (style["draw:fill"] && style["draw:fill"]->getStr() == "solid")
-	{
-		element.addAttribute("draw:fill", "solid");
-		if (style["draw:fill-color"])
-			element.addAttribute("draw:fill-color", style["draw:fill-color"]->getStr());
-		if (style["draw:opacity"])
-			element.addAttribute("draw:opacity", style["draw:opacity"]->getStr());
-	}
-
-	if (style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
-	{
-		if (!gradient || !gradient->count() || gradient->count() >= 2)
-		{
-			element.addAttribute("draw:fill", "gradient");
-			sValue.sprintf("Gradient_%i", miGradientIndex-1);
-			element.addAttribute("draw:fill-gradient-name", sValue);
-			if (bUseOpacityGradient)
-			{
-				sValue.sprintf("Transparency_%i", miGradientIndex-1);
-				element.addAttribute("draw:opacity-name", sValue);
-			}
-		}
-		else
-		{
-			if ((*gradient)[0]["svg:stop-color"])
-			{
-				element.addAttribute("draw:fill", "solid");
-				element.addAttribute("draw:fill-color", (*gradient)[0]["svg:stop-color"]->getStr());
-			}
-			else
-				element.addAttribute("draw:fill", "solid");
-		}
-	}
-
-	if (style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap")
-	{
-		if (style["draw:fill-image"] && style["librevenge:mime-type"])
-		{
-			element.addAttribute("draw:fill", "bitmap");
-			sValue.sprintf("Bitmap_%i", miBitmapIndex-1);
-			element.addAttribute("draw:fill-image-name", sValue);
-			if (style["draw:fill-image-width"])
-				element.addAttribute("draw:fill-image-width", style["draw:fill-image-width"]->getStr());
-			else if (style["svg:width"])
-				element.addAttribute("draw:fill-image-width", style["svg:width"]->getStr());
-			if (style["draw:fill-image-height"])
-				element.addAttribute("draw:fill-image-height", style["draw:fill-image-height"]->getStr());
-			else if (style["svg:height"])
-				element.addAttribute("draw:fill-image-height", style["svg:height"]->getStr());
-			if (style["style:repeat"])
-				element.addAttribute("style:repeat", style["style:repeat"]->getStr());
-			if (style["draw:fill-image-ref-point"])
-				element.addAttribute("draw:fill-image-ref-point", style["draw:fill-image-ref-point"]->getStr());
-			if (style["draw:fill-image-ref-point-x"])
-				element.addAttribute("draw:fill-image-ref-point-x", style["draw:fill-image-ref-point-x"]->getStr());
-			if (style["draw:fill-image-ref-point-y"])
-				element.addAttribute("draw:fill-image-ref-point-y", style["draw:fill-image-ref-point-y"]->getStr());
-		}
-		else
-			element.addAttribute("draw:fill", "none");
-	}
-
-
-	if (style["draw:marker-start-path"])
-	{
-		sValue.sprintf("StartMarker_%i", miStartMarkerIndex++);
-		element.addAttribute("draw:marker-start", sValue);
-		if (style["draw:marker-start-center"])
-			element.addAttribute("draw:marker-start-center", style["draw:marker-start-center"]->getStr());
-		if (style["draw:marker-start-width"])
-			element.addAttribute("draw:marker-start-width", style["draw:marker-start-width"]->getStr());
-		else
-			element.addAttribute("draw:marker-start-width", "0.118in");
-	}
-	if (style["draw:marker-end-path"])
-	{
-		sValue.sprintf("EndMarker_%i", miEndMarkerIndex++);
-		element.addAttribute("draw:marker-end", sValue);
-		if (style["draw:marker-end-center"])
-			element.addAttribute("draw:marker-end-center", style["draw:marker-end-center"]->getStr());
-		if (style["draw:marker-end-width"])
-			element.addAttribute("draw:marker-end-width", style["draw:marker-end-width"]->getStr());
-		else
-			element.addAttribute("draw:marker-end-width", "0.118in");
-	}
-	if (style["style:mirror"])
-		element.addAttribute("style:mirror", style["style:mirror"]->getStr());
-}
 
 void OdgGenerator::startEmbeddedGraphics(const librevenge::RVNGPropertyList &)
 {
@@ -1177,7 +785,7 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	// the transformation is managed latter, so even if this changes nothing...
 	if (propList["librevenge:rotate"])
 		styleList.insert("librevenge:rotate", 0);
-	mpImpl->_updateGraphicPropertiesElement(*pStyleGraphicPropertiesOpenElement, styleList);
+	mpImpl->getGraphicManager().updateElement(*pStyleGraphicPropertiesOpenElement, styleList);
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{

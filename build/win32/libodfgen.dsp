@@ -93,6 +93,10 @@ SOURCE=..\..\src\FontStyle.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\GraphicStyle.cxx
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\InternalHandler.cxx
 # End Source File
 # Begin Source File
@@ -150,6 +154,10 @@ SOURCE=..\..\src\FilterInternal.hxx
 # Begin Source File
 
 SOURCE=..\..\src\FontStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\GraphicStyle.hxx
 # End Source File
 # Begin Source File
 

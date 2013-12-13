@@ -37,7 +37,7 @@
 
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
-	mFontManager(), mSpanManager(), mParagraphManager(), mTableManager(),
+	mFontManager(), mGraphicManager(), mSpanManager(), mParagraphManager(), mTableManager(),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
 	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(), mIdListStorageMap(),
@@ -52,6 +52,7 @@ OdfGenerator::~OdfGenerator()
 	mParagraphManager.clean();
 	mSpanManager.clean();
 	mFontManager.clean();
+	mGraphicManager.clean();
 	mTableManager.clean();
 	emptyStorage(&mMetaDataStorage);
 	emptyStorage(&mBodyStorage);
