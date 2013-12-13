@@ -87,7 +87,7 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 	for (i.rewind(); i.next();)
 	{
 		// filter out librevenge elements
-		if (strncmp(i.key(), "librevenge", 10) != 0 && strncmp(i.key(), "dcterms", 7) != 0)
+		if (strncmp(i.key(), "librevenge", 10) && strncmp(i.key(), "dcterms", 7))
 		{
 			mMetaDataStorage.push_back(new TagOpenElement(i.key()));
 			librevenge::RVNGString sStringValue(i()->getStr(), true);
