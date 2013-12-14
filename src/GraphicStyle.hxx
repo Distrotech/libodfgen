@@ -37,10 +37,9 @@ class OdfDocumentHandler;
 class GraphicStyleManager : public StyleManager
 {
 public:
-	GraphicStyleManager() : mAutomaticStyles(), mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mStrokeDashStyles(),
-		mAutomaticNameMap(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(), mOpacityNameMap(), mStrokeDashNameMap()
-	{
-	}
+	GraphicStyleManager() : mAutomaticStyles(), mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mOpacityStyles(),
+		mStrokeDashStyles(), mAutomaticNameMap(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(),
+		mOpacityNameMap(), mStrokeDashNameMap() {}
 	virtual ~GraphicStyleManager()
 	{
 		clean();
