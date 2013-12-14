@@ -56,69 +56,57 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 	propList.insert("style:name", msName.cstr());
 	propList.insert("style:family", "paragraph");
 	if (mpPropList["style:display-name"])
-		propList.insert("style:display-name", mpPropList["style:display-name"]->getStr());
+		propList.insert("style:display-name", mpPropList["style:display-name"]->clone());
 	if (mpPropList["style:parent-style-name"])
-		propList.insert("style:parent-style-name", mpPropList["style:parent-style-name"]->getStr());
+		propList.insert("style:parent-style-name", mpPropList["style:parent-style-name"]->clone());
 	if (mpPropList["style:master-page-name"])
-		propList.insert("style:master-page-name", mpPropList["style:master-page-name"]->getStr());
+		propList.insert("style:master-page-name", mpPropList["style:master-page-name"]->clone());
 	pHandler->startElement("style:style", propList);
 
 	propList.clear();
 	librevenge::RVNGPropertyList::Iter i(mpPropList);
 	for (i.rewind(); i.next();)
 	{
-		if (strncmp(i.key(), "fo:margin-",10) == 0)
+		if (i.child() ||
+		        !strcmp(i.key(), "style:display-name") ||
+		        !strcmp(i.key(), "style:parent-style-name") ||
+		        !strcmp(i.key(), "style:master-page-name") ||
+		        !strncmp(i.key(), "librevenge:",11))
+			continue;
+		else if (!strncmp(i.key(), "fo:margin-",10))
 		{
-			if (strcmp(i.key(), "fo:margin-left") == 0 ||
-			        strcmp(i.key(), "fo:margin-right") == 0 ||
-			        strcmp(i.key(), "fo:margin-top") == 0)
-				propList.insert(i.key(), i()->getStr());
-			else if (strcmp(i.key(), "fo:margin-bottom") == 0)
+			if (!strcmp(i.key(), "fo:margin-left") ||
+			        !strcmp(i.key(), "fo:margin-right") ||
+			        !strcmp(i.key(), "fo:margin-top"))
+				propList.insert(i.key(), i()->clone());
+			else if (!strcmp(i.key(), "fo:margin-bottom"))
 			{
 				if (i()->getDouble() > 0.0)
-					propList.insert("fo:margin-bottom", i()->getStr());
+					propList.insert("fo:margin-bottom", i()->clone());
 				else
 					propList.insert("fo:margin-bottom", 0.0);
 			}
 		}
-		else if (strcmp(i.key(), "fo:text-indent") == 0)
-			propList.insert("fo:text-indent", i()->getStr());
-		else if (strcmp(i.key(), "fo:line-height") == 0)
-			propList.insert("fo:line-height", i()->getStr());
-		else if (strcmp(i.key(), "style:line-height-at-least") == 0)
-			propList.insert("style:line-height-at-least", i()->getStr());
-		else if (strcmp(i.key(), "fo:break-before") == 0)
-			propList.insert("fo:break-before", i()->getStr());
-		else if (strcmp(i.key(), "fo:text-align") == 0)
-			propList.insert("fo:text-align", i()->getStr());
-		else if (strcmp(i.key(), "fo:text-align-last") == 0)
-			propList.insert("fo:text-align-last", i()->getStr());
-		else if (strcmp(i.key(), "style:page-number") == 0)
-			propList.insert("style:page-number", i()->getStr());
-		else if (strcmp(i.key(), "fo:background-color") == 0)
-			propList.insert("fo:background-color", i()->getStr());
-		else if (strncmp(i.key(), "style:border-line-width", 23) == 0)
+		else if (!strncmp(i.key(), "style:border-line-width", 23))
 		{
-			if (strcmp(i.key(), "style:border-line-width") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-left") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-right") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-top") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-bottom") == 0)
-				propList.insert(i.key(), i()->getStr());
+			if (!strcmp(i.key(), "style:border-line-width") ||
+			        !strcmp(i.key(), "style:border-line-width-left") ||
+			        !strcmp(i.key(), "style:border-line-width-right") ||
+			        !strcmp(i.key(), "style:border-line-width-top") ||
+			        !strcmp(i.key(), "style:border-line-width-bottom"))
+				propList.insert(i.key(), i()->clone());
 		}
-		else if (strncmp(i.key(), "fo:border", 9) == 0)
+		else if (!strncmp(i.key(), "fo:border", 9))
 		{
-			if (strcmp(i.key(), "fo:border") == 0 ||
-			        strcmp(i.key(), "fo:border-left") == 0 ||
-			        strcmp(i.key(), "fo:border-right") == 0 ||
-			        strcmp(i.key(), "fo:border-top") == 0 ||
-			        strcmp(i.key(), "fo:border-bottom") == 0)
-				propList.insert(i.key(), i()->getStr());
+			if (!strcmp(i.key(), "fo:border") ||
+			        !strcmp(i.key(), "fo:border-left") ||
+			        !strcmp(i.key(), "fo:border-right") ||
+			        !strcmp(i.key(), "fo:border-top") ||
+			        !strcmp(i.key(), "fo:border-bottom"))
+				propList.insert(i.key(), i()->clone());
 		}
-		else if (strcmp(i.key(), "fo:keep-together") == 0)
-			propList.insert("fo:keep-together", i()->getStr());
-		else if (strcmp(i.key(), "fo:keep-with-next") == 0)
-			propList.insert("fo:keep-with-next", i()->getStr());
+		else
+			propList.insert(i.key(), i()->clone());
 	}
 
 	propList.insert("style:justify-single-word", "false");
@@ -171,7 +159,7 @@ void SpanStyle::write(OdfDocumentHandler *pHandler) const
 	styleOpenList.insert("style:name", getName());
 	if (mPropList["style:display-name"])
 	{
-		styleOpenList.insert("style:display-name", mPropList["style:display-name"]->getStr());
+		styleOpenList.insert("style:display-name", mPropList["style:display-name"]->clone());
 		propList.remove("style:display-name");
 	}
 	styleOpenList.insert("style:family", "text");
@@ -180,16 +168,16 @@ void SpanStyle::write(OdfDocumentHandler *pHandler) const
 
 	if (mPropList["style:font-name"])
 	{
-		propList.insert("style:font-name-asian", mPropList["style:font-name"]->getStr());
-		propList.insert("style:font-name-complex", mPropList["style:font-name"]->getStr());
+		propList.insert("style:font-name-asian", mPropList["style:font-name"]->clone());
+		propList.insert("style:font-name-complex", mPropList["style:font-name"]->clone());
 	}
 
 	if (mPropList["fo:font-size"])
 	{
 		if (mPropList["fo:font-size"]->getDouble() > 0.0)
 		{
-			propList.insert("style:font-size-asian", mPropList["fo:font-size"]->getStr());
-			propList.insert("style:font-size-complex", mPropList["fo:font-size"]->getStr());
+			propList.insert("style:font-size-asian", mPropList["fo:font-size"]->clone());
+			propList.insert("style:font-size-complex", mPropList["fo:font-size"]->clone());
 		}
 		else
 			propList.remove("fo:font-size");
@@ -197,14 +185,14 @@ void SpanStyle::write(OdfDocumentHandler *pHandler) const
 
 	if (mPropList["fo:font-weight"])
 	{
-		propList.insert("style:font-weight-asian", mPropList["fo:font-weight"]->getStr());
-		propList.insert("style:font-weight-complex", mPropList["fo:font-weight"]->getStr());
+		propList.insert("style:font-weight-asian", mPropList["fo:font-weight"]->clone());
+		propList.insert("style:font-weight-complex", mPropList["fo:font-weight"]->clone());
 	}
 
 	if (mPropList["fo:font-style"])
 	{
-		propList.insert("style:font-style-asian", mPropList["fo:font-style"]->getStr());
-		propList.insert("style:font-style-complex", mPropList["fo:font-style"]->getStr());
+		propList.insert("style:font-style-asian", mPropList["fo:font-style"]->clone());
+		propList.insert("style:font-style-complex", mPropList["fo:font-style"]->clone());
 	}
 	pHandler->startElement("style:text-properties", propList);
 

@@ -266,27 +266,27 @@ void SheetCellStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle const &
 	for (i.rewind(); i.next();)
 	{
 		int len = (int) strlen(i.key());
-		if (len > 2 && strncmp(i.key(), "fo", 2) == 0)
+		if (len > 2 && !strncmp(i.key(), "fo", 2))
 		{
-			if (len==13 && strcmp(i.key(), "fo:text-align") == 0)
+			if (len==13 && !strcmp(i.key(), "fo:text-align"))
 				hasTextAlign=true;
 			else
 				stylePropList.insert(i.key(), i()->clone());
 		}
-		else if (len > 22  && strncmp(i.key(), "style:border-line-width", 23) == 0)
+		else if (len > 22  && !strncmp(i.key(), "style:border-line-width", 23))
 		{
-			if (strcmp(i.key(), "style:border-line-width") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-left") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-right") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-top") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-bottom") == 0)
+			if (!strcmp(i.key(), "style:border-line-width") ||
+			        !strcmp(i.key(), "style:border-line-width-left") ||
+			        !strcmp(i.key(), "style:border-line-width-right") ||
+			        !strcmp(i.key(), "style:border-line-width-top")||
+			        !strcmp(i.key(), "style:border-line-width-bottom"))
 				stylePropList.insert(i.key(), i()->clone());
 		}
-		else if (len == 23 && strcmp(i.key(), "style:text-align-source") == 0)
+		else if (len == 23 && !strcmp(i.key(), "style:text-align-source"))
 			stylePropList.insert(i.key(), i()->clone());
-		else if (len == 18 && strcmp(i.key(), "style:cell-protect") == 0)
+		else if (len == 18 && !strcmp(i.key(), "style:cell-protect"))
 			stylePropList.insert(i.key(), i()->clone());
-		else if (strcmp(i.key(), "style:vertical-align")==0)
+		else if (!strcmp(i.key(), "style:vertical-align"))
 			stylePropList.insert(i.key(), i()->clone());
 	}
 	pHandler->startElement("style:table-cell-properties", stylePropList);
@@ -296,7 +296,7 @@ void SheetCellStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle const &
 	{
 		librevenge::RVNGPropertyList paragPropList;
 		paragPropList.insert("fo:margin-left", "0cm");
-		paragPropList.insert("fo:text-align", mPropList["fo:text-align"]->getStr());
+		paragPropList.insert("fo:text-align", mPropList["fo:text-align"]->clone());
 		pHandler->startElement("style:paragraph-properties", paragPropList);
 		pHandler->endElement("style:paragraph-properties");
 	}
@@ -448,7 +448,7 @@ librevenge::RVNGString SheetStyle::addRow(const librevenge::RVNGPropertyList &pr
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
 	{
-		if (strncmp(i.key(), "librevenge:", 11)==0)
+		if (!strncmp(i.key(), "librevenge:", 11))
 			continue;
 		if (i.child())
 			continue;
@@ -473,8 +473,8 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
 	{
-		if (strncmp(i.key(), "librevenge:", 11)==0 &&
-		        strncmp(i.key(), "librevenge:numbering-name", 24)!=0)
+		if (!strncmp(i.key(), "librevenge:", 11) &&
+		        strncmp(i.key(), "librevenge:numbering-name", 24))
 			continue;
 		if (i.child())
 			continue;

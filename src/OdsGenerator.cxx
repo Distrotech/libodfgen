@@ -834,8 +834,8 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 			pSheetCellOpenElement->addAttribute("office:value-type", valueType.c_str());
 			if (propList["librevenge:value"])
 			{
-				if (strncmp(propList["librevenge:value"]->getStr().cstr(),"nan",3)==0 ||
-				        strncmp(propList["librevenge:value"]->getStr().cstr(),"NAN",3)==0)
+				if (!strncmp(propList["librevenge:value"]->getStr().cstr(),"nan",3) ||
+				        !strncmp(propList["librevenge:value"]->getStr().cstr(),"NAN",3))
 				{
 					pSheetCellOpenElement->addAttribute("office:string-value", "");
 					pSheetCellOpenElement->addAttribute("office:value-type", "string");

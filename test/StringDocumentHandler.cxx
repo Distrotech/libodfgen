@@ -49,7 +49,7 @@ void StringDocumentHandler::startElement(const char *psName, const librevenge::R
 	for (i.rewind(); i.next();)
 	{
 		// filter out librevenge elements
-		if (strncmp(i.key(), "librevenge", 10) == 0) continue;
+		if (!strncmp(i.key(), "librevenge:", 11)) continue;
 
 		m_data.append(" ");
 		m_data.append(i.key());

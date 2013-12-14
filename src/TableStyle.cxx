@@ -54,21 +54,21 @@ void TableCellStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOd
 	librevenge::RVNGPropertyList::Iter i(mPropList);
 	/* first set padding, so that mPropList can redefine, if
 	   mPropList["fo:padding"] is defined */
-	stylePropList.insert("fo:padding", "0.0382in");
+	stylePropList.insert("fo:padding", 0.0382);
 	for (i.rewind(); i.next();)
 	{
-		if (strncmp(i.key(), "fo", 2) == 0)
+		if (!strncmp(i.key(), "fo", 2))
 			stylePropList.insert(i.key(), i()->clone());
-		else if (strncmp(i.key(), "style:border-line-width", 23) == 0)
+		else if (!strncmp(i.key(), "style:border-line-width", 23))
 		{
-			if (strcmp(i.key(), "style:border-line-width") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-left") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-right") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-top") == 0 ||
-			        strcmp(i.key(), "style:border-line-width-bottom") == 0)
+			if (!strcmp(i.key(), "style:border-line-width") ||
+			        !strcmp(i.key(), "style:border-line-width-left") ||
+			        !strcmp(i.key(), "style:border-line-width-right") ||
+			        !strcmp(i.key(), "style:border-line-width-top") ||
+			        !strcmp(i.key(), "style:border-line-width-bottom"))
 				stylePropList.insert(i.key(), i()->clone());
 		}
-		else if (strcmp(i.key(), "style:vertical-align")==0)
+		else if (!strcmp(i.key(), "style:vertical-align"))
 			stylePropList.insert(i.key(), i()->clone());
 	}
 	pHandler->startElement("style:table-cell-properties", stylePropList);
@@ -203,8 +203,8 @@ librevenge::RVNGString Table::openCell(const librevenge::RVNGPropertyList &propL
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
 	{
-		if (strncmp(i.key(), "librevenge:", 11)==0 &&
-		        strncmp(i.key(), "librevenge:numbering-name", 24)!=0)
+		if (!strncmp(i.key(), "librevenge:", 11) &&
+		        strncmp(i.key(), "librevenge:numbering-name", 24))
 			continue;
 		if (i.child())
 			continue;
