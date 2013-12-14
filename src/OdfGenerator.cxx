@@ -243,9 +243,6 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 
 	if (propList["text:anchor-type"])
 		frameStylePropertiesOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
-	else
-		frameStylePropertiesOpenElement->addAttribute("text:anchor-type","paragraph");
-
 	if (propList["text:anchor-page-number"])
 		frameStylePropertiesOpenElement->addAttribute("text:anchor-page-number", propList["text:anchor-page-number"]->getStr());
 
@@ -362,38 +359,26 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGString objectName;
 	objectName.sprintf("Object%i", objectId);
 	drawFrameOpenElement->addAttribute("draw:name", objectName);
-	if (propList["text:anchor-type"])
-		drawFrameOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
-	else
-		drawFrameOpenElement->addAttribute("text:anchor-type","paragraph");
 
-	if (propList["text:anchor-page-number"])
-		drawFrameOpenElement->addAttribute("text:anchor-page-number", propList["text:anchor-page-number"]->getStr());
-
-	if (propList["svg:x"])
-		drawFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-
-	if (propList["svg:y"])
-		drawFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	static char const *(frameAttrib[])=
+	{
+		"draw:z-index", "svg:x", "svg:y", "style:rel-width", "style:rel-height",
+		"text:anchor-type", "text:anchor-page-number"
+	};
+	for (int i=0; i<7; ++i)
+	{
+		if (propList[frameAttrib[i]])
+			drawFrameOpenElement->addAttribute(frameAttrib[i], propList[frameAttrib[i]]->getStr());
+	}
 
 	if (propList["svg:width"])
 		drawFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
 	else if (propList["fo:min-width"])
 		drawFrameOpenElement->addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
-
 	if (propList["svg:height"])
 		drawFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
 	else if (propList["fo:min-height"])
 		drawFrameOpenElement->addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
-
-	if (propList["style:rel-width"])
-		drawFrameOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
-
-	if (propList["style:rel-height"])
-		drawFrameOpenElement->addAttribute("style:rel-height", propList["style:rel-height"]->getStr());
-
-	if (propList["draw:z-index"])
-		drawFrameOpenElement->addAttribute("draw:z-index", propList["draw:z-index"]->getStr());
 
 	mpCurrentStorage->push_back(drawFrameOpenElement);
 }

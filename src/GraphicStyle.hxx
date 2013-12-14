@@ -37,8 +37,8 @@ class OdfDocumentHandler;
 class GraphicStyleManager : public StyleManager
 {
 public:
-	GraphicStyleManager() : mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mStrokeDashStyles(),
-		mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(), mOpacityNameMap(), mStrokeDashNameMap()
+	GraphicStyleManager() : mAutomaticStyles(), mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mStrokeDashStyles(),
+		mAutomaticNameMap(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(), mOpacityNameMap(), mStrokeDashNameMap()
 	{
 	}
 	virtual ~GraphicStyleManager()
@@ -49,8 +49,16 @@ public:
 	void write(OdfDocumentHandler *) const {}
 	// write basic style
 	void writeStyles(OdfDocumentHandler *pHandler) const;
-	/** update a graphic style element */
-	void updateElement(TagOpenElement &element, librevenge::RVNGPropertyList const &style);
+	// write automatic styles
+	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const;
+
+	/** */
+	librevenge::RVNGString findOrAdd(librevenge::RVNGPropertyList const &propList);
+
+	/** append the graphic in the element, ie. the stroke, pattern, bitmap, marker properties */
+	void addGraphicProperties(librevenge::RVNGPropertyList const &style, librevenge::RVNGPropertyList &element);
+	/** append the frame, ... properties in the element, ie. all properties excepted the graphic properties */
+	void addFrameProperties(librevenge::RVNGPropertyList const &propList, librevenge::RVNGPropertyList &element);
 
 protected:
 	// return a bitmap
@@ -61,12 +69,15 @@ protected:
 	librevenge::RVNGString getStyleNameForOpacity(librevenge::RVNGPropertyList const &style);
 	librevenge::RVNGString getStyleNameForStrokeDash(librevenge::RVNGPropertyList const &style);
 	// graphics styles
+	std::vector<DocumentElement *> mAutomaticStyles;
 	std::vector<DocumentElement *> mBitmapStyles;
 	std::vector<DocumentElement *> mGradientStyles;
 	std::vector<DocumentElement *> mMarkerStyles;
 	std::vector<DocumentElement *> mOpacityStyles;
 	std::vector<DocumentElement *> mStrokeDashStyles;
 
+	// automatic hash -> style name
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mAutomaticNameMap;
 	// bitmap content -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mBitmapNameMap;
 	// gradient hash -> style name

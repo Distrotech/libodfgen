@@ -820,7 +820,10 @@ void OdtGenerator::insertText(const librevenge::RVNGString &text)
 void OdtGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->pushListState();
-	mpImpl->openFrame(propList);
+	librevenge::RVNGPropertyList pList(propList);
+	if (!propList["text:anchor-type"])
+		pList.insert("text:anchor-type","paragraph");
+	mpImpl->openFrame(pList);
 	mpImpl->mWriterDocumentStates.top().mbInFrame = true;
 }
 

@@ -1471,7 +1471,11 @@ void OdsGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("table:shapes"));
 		prevState.mbInSheetShapes=true;
 	}
-	mpImpl->openFrame(propList);
+
+	librevenge::RVNGPropertyList pList(propList);
+	if (!propList["text:anchor-type"])
+		pList.insert("text:anchor-type","paragraph");
+	mpImpl->openFrame(pList);
 }
 
 void OdsGenerator::closeFrame()

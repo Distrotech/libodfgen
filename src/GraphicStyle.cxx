@@ -28,6 +28,8 @@
 
 void GraphicStyleManager::clean()
 {
+	for (size_t i=0; i < mAutomaticStyles.size(); ++i)
+		delete mAutomaticStyles[i];
 	for (size_t i=0; i < mBitmapStyles.size(); ++i)
 		delete mBitmapStyles[i];
 	for (size_t i=0; i < mGradientStyles.size(); ++i)
@@ -38,12 +40,14 @@ void GraphicStyleManager::clean()
 		delete mOpacityStyles[i];
 	for (size_t i=0; i < mStrokeDashStyles.size(); ++i)
 		delete mStrokeDashStyles[i];
+	mAutomaticStyles.resize(0);
 	mBitmapStyles.resize(0);
 	mGradientStyles.resize(0);
 	mMarkerStyles.resize(0);
 	mOpacityStyles.resize(0);
 	mStrokeDashStyles.resize(0);
 
+	mAutomaticNameMap.clear();
 	mBitmapNameMap.clear();
 	mGradientNameMap.clear();
 	mMarkerNameMap.clear();
@@ -53,19 +57,53 @@ void GraphicStyleManager::clean()
 
 void GraphicStyleManager::writeStyles(OdfDocumentHandler *pHandler) const
 {
-	for (size_t i=0; i<mStrokeDashStyles.size(); ++i)
-		mStrokeDashStyles[i]->write(pHandler);
-	for (size_t i=0; i < mGradientStyles.size(); ++i)
-		mGradientStyles[i]->write(pHandler);
-	for (size_t i=0; i < mOpacityStyles.size(); ++i)
-		mOpacityStyles[i]->write(pHandler);
 	for (size_t i=0; i < mBitmapStyles.size(); ++i)
 		mBitmapStyles[i]->write(pHandler);
+	for (size_t i=0; i < mGradientStyles.size(); ++i)
+		mGradientStyles[i]->write(pHandler);
 	for (size_t i=0; i < mMarkerStyles.size(); ++i)
 		mMarkerStyles[i]->write(pHandler);
+	for (size_t i=0; i < mOpacityStyles.size(); ++i)
+		mOpacityStyles[i]->write(pHandler);
+	for (size_t i=0; i<mStrokeDashStyles.size(); ++i)
+		mStrokeDashStyles[i]->write(pHandler);
 }
 
+void GraphicStyleManager::writeAutomaticStyles(OdfDocumentHandler *pHandler) const
+{
+	for (size_t i=0; i < mAutomaticStyles.size(); ++i)
+		mAutomaticStyles[i]->write(pHandler);
+}
 
+librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyList const &propList)
+{
+	librevenge::RVNGString hashKey = propList.getPropString();
+	if (mAutomaticNameMap.find(hashKey) != mAutomaticNameMap.end())
+		return mAutomaticNameMap.find(hashKey)->second;
+
+
+	librevenge::RVNGString name;
+	name.sprintf("gr_%i", (int) mAutomaticNameMap.size());
+	mAutomaticNameMap[hashKey]=name;
+
+	TagOpenElement *openElement = new TagOpenElement("style:style");
+	openElement->addAttribute("style:name", name);
+	openElement->addAttribute("style:family", "graphic");
+	openElement->addAttribute("style:parent-style-name", "standard");
+	mAutomaticStyles.push_back(openElement);
+
+	openElement = new TagOpenElement("style:graphic-properties");
+	librevenge::RVNGPropertyList::Iter i(propList);
+	for (i.rewind(); i.next();)
+		openElement->addAttribute(i.key(),i()->getStr());
+
+	mAutomaticStyles.push_back(openElement);
+	mAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
+
+	mAutomaticStyles.push_back(new TagCloseElement("style:style"));
+
+	return name;
+}
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -336,68 +374,68 @@ librevenge::RVNGString GraphicStyleManager::getStyleNameForStrokeDash(librevenge
 	return name;
 }
 
-void GraphicStyleManager::updateElement(TagOpenElement &element, librevenge::RVNGPropertyList const &style)
+void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList const &style, librevenge::RVNGPropertyList &element)
 {
 	if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "none")
-		element.addAttribute("draw:stroke", "none");
+		element.insert("draw:stroke", "none");
 	else
 	{
 		if (style["svg:stroke-width"])
-			element.addAttribute("svg:stroke-width", style["svg:stroke-width"]->getStr());
+			element.insert("svg:stroke-width", style["svg:stroke-width"]->getStr());
 		if (style["svg:stroke-color"])
-			element.addAttribute("svg:stroke-color", style["svg:stroke-color"]->getStr());
+			element.insert("svg:stroke-color", style["svg:stroke-color"]->getStr());
 		if (style["svg:stroke-opacity"])
-			element.addAttribute("svg:stroke-opacity", style["svg:stroke-opacity"]->getStr());
+			element.insert("svg:stroke-opacity", style["svg:stroke-opacity"]->getStr());
 		if (style["svg:stroke-linejoin"])
-			element.addAttribute("draw:stroke-linejoin", style["svg:stroke-linejoin"]->getStr());
+			element.insert("draw:stroke-linejoin", style["svg:stroke-linejoin"]->getStr());
 		if (style["svg:stroke-linecap"])
-			element.addAttribute("svg:stoke-linecap", style["svg:stroke-linecap"]->getStr());
+			element.insert("svg:stoke-linecap", style["svg:stroke-linecap"]->getStr());
 
 		librevenge::RVNGString name("");
 		if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
 			name=getStyleNameForStrokeDash(style);
 		if (!name.empty())
 		{
-			element.addAttribute("draw:stroke", "dash");
-			element.addAttribute("draw:stroke-dash", name);
+			element.insert("draw:stroke", "dash");
+			element.insert("draw:stroke-dash", name);
 		}
 		else
-			element.addAttribute("draw:stroke", "solid");
+			element.insert("draw:stroke", "solid");
 	}
 
 	if (style["draw:color-mode"] && style["draw:color-mode"]->getStr().len() > 0)
-		element.addAttribute("draw:color-mode", style["draw:color-mode"]->getStr());
+		element.insert("draw:color-mode", style["draw:color-mode"]->getStr());
 	if (style["draw:luminance"] && style["draw:luminance"]->getStr().len() > 0)
-		element.addAttribute("draw:luminance", style["draw:luminance"]->getStr());
+		element.insert("draw:luminance", style["draw:luminance"]->getStr());
 	if (style["draw:contrast"] && style["draw:contrast"]->getStr().len() > 0)
-		element.addAttribute("draw:contrast", style["draw:contrast"]->getStr());
+		element.insert("draw:contrast", style["draw:contrast"]->getStr());
 	if (style["draw:gamma"] && style["draw:gamma"]->getStr().len() > 0)
-		element.addAttribute("draw:gamma", style["draw:gamma"]->getStr());
+		element.insert("draw:gamma", style["draw:gamma"]->getStr());
 	if (style["draw:red"] && style["draw:red"]->getStr().len() > 0)
-		element.addAttribute("draw:red", style["draw:red"]->getStr());
+		element.insert("draw:red", style["draw:red"]->getStr());
 	if (style["draw:green"] && style["draw:green"]->getStr().len() > 0)
-		element.addAttribute("draw:green", style["draw:green"]->getStr());
+		element.insert("draw:green", style["draw:green"]->getStr());
 	if (style["draw:blue"] && style["draw:blue"]->getStr().len() > 0)
-		element.addAttribute("draw:blue", style["draw:blue"]->getStr());
+		element.insert("draw:blue", style["draw:blue"]->getStr());
 
 	if (style["draw:fill"] && style["draw:fill"]->getStr() == "none")
-		element.addAttribute("draw:fill", "none");
+		element.insert("draw:fill", "none");
 	else
 	{
 		if (style["draw:shadow"])
-			element.addAttribute("draw:shadow", style["draw:shadow"]->getStr());
+			element.insert("draw:shadow", style["draw:shadow"]->getStr());
 		else
-			element.addAttribute("draw:shadow", "hidden");
+			element.insert("draw:shadow", "hidden");
 		if (style["draw:shadow-offset-x"])
-			element.addAttribute("draw:shadow-offset-x", style["draw:shadow-offset-x"]->getStr());
+			element.insert("draw:shadow-offset-x", style["draw:shadow-offset-x"]->getStr());
 		if (style["draw:shadow-offset-y"])
-			element.addAttribute("draw:shadow-offset-y", style["draw:shadow-offset-y"]->getStr());
+			element.insert("draw:shadow-offset-y", style["draw:shadow-offset-y"]->getStr());
 		if (style["draw:shadow-color"])
-			element.addAttribute("draw:shadow-color", style["draw:shadow-color"]->getStr());
+			element.insert("draw:shadow-color", style["draw:shadow-color"]->getStr());
 		if (style["draw:shadow-opacity"])
-			element.addAttribute("draw:shadow-opacity", style["draw:shadow-opacity"]->getStr());
+			element.insert("draw:shadow-opacity", style["draw:shadow-opacity"]->getStr());
 		if (style["svg:fill-rule"])
-			element.addAttribute("svg:fill-rule", style["svg:fill-rule"]->getStr());
+			element.insert("svg:fill-rule", style["svg:fill-rule"]->getStr());
 	}
 
 	if (style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap" &&
@@ -406,27 +444,27 @@ void GraphicStyleManager::updateElement(TagOpenElement &element, librevenge::RVN
 		librevenge::RVNGString name=getStyleNameForBitmap(style["draw:fill-image"]->getStr());
 		if (!name.empty())
 		{
-			element.addAttribute("draw:fill", "bitmap");
-			element.addAttribute("draw:fill-image-name", name);
+			element.insert("draw:fill", "bitmap");
+			element.insert("draw:fill-image-name", name);
 			if (style["draw:fill-image-width"])
-				element.addAttribute("draw:fill-image-width", style["draw:fill-image-width"]->getStr());
+				element.insert("draw:fill-image-width", style["draw:fill-image-width"]->getStr());
 			else if (style["svg:width"])
-				element.addAttribute("draw:fill-image-width", style["svg:width"]->getStr());
+				element.insert("draw:fill-image-width", style["svg:width"]->getStr());
 			if (style["draw:fill-image-height"])
-				element.addAttribute("draw:fill-image-height", style["draw:fill-image-height"]->getStr());
+				element.insert("draw:fill-image-height", style["draw:fill-image-height"]->getStr());
 			else if (style["svg:height"])
-				element.addAttribute("draw:fill-image-height", style["svg:height"]->getStr());
+				element.insert("draw:fill-image-height", style["svg:height"]->getStr());
 			if (style["style:repeat"])
-				element.addAttribute("style:repeat", style["style:repeat"]->getStr());
+				element.insert("style:repeat", style["style:repeat"]->getStr());
 			if (style["draw:fill-image-ref-point"])
-				element.addAttribute("draw:fill-image-ref-point", style["draw:fill-image-ref-point"]->getStr());
+				element.insert("draw:fill-image-ref-point", style["draw:fill-image-ref-point"]->getStr());
 			if (style["draw:fill-image-ref-point-x"])
-				element.addAttribute("draw:fill-image-ref-point-x", style["draw:fill-image-ref-point-x"]->getStr());
+				element.insert("draw:fill-image-ref-point-x", style["draw:fill-image-ref-point-x"]->getStr());
 			if (style["draw:fill-image-ref-point-y"])
-				element.addAttribute("draw:fill-image-ref-point-y", style["draw:fill-image-ref-point-y"]->getStr());
+				element.insert("draw:fill-image-ref-point-y", style["draw:fill-image-ref-point-y"]->getStr());
 		}
 		else
-			element.addAttribute("draw:fill", "none");
+			element.insert("draw:fill", "none");
 	}
 	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
 	{
@@ -435,33 +473,33 @@ void GraphicStyleManager::updateElement(TagOpenElement &element, librevenge::RVN
 		gradientName=getStyleNameForGradient(style, bUseOpacityGradient);
 		if (!gradientName.empty())
 		{
-			element.addAttribute("draw:fill", "gradient");
-			element.addAttribute("draw:fill-gradient-name", gradientName);
+			element.insert("draw:fill", "gradient");
+			element.insert("draw:fill-gradient-name", gradientName);
 			if (bUseOpacityGradient)
 			{
 				opacityName=getStyleNameForOpacity(style);
 				if (!opacityName.empty())
-					element.addAttribute("draw:opacity-name", opacityName);
+					element.insert("draw:opacity-name", opacityName);
 			}
 		}
 		else
 		{
-			element.addAttribute("draw:fill", "solid");
+			element.insert("draw:fill", "solid");
 			// try to use the gradient to define the color
 			const librevenge::RVNGPropertyListVector *gradient = style.child("svg:linearGradient");
 			if (!gradient)
 				gradient = style.child("svg:radialGradient");
 			if (gradient && gradient->count() >= 1 && (*gradient)[0]["svg:stop-color"])
-				element.addAttribute("draw:fill-color", (*gradient)[0]["svg:stop-color"]->getStr());
+				element.insert("draw:fill-color", (*gradient)[0]["svg:stop-color"]->getStr());
 		}
 	}
 	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "solid")
 	{
-		element.addAttribute("draw:fill", "solid");
+		element.insert("draw:fill", "solid");
 		if (style["draw:fill-color"])
-			element.addAttribute("draw:fill-color", style["draw:fill-color"]->getStr());
+			element.insert("draw:fill-color", style["draw:fill-color"]->getStr());
 		if (style["draw:opacity"])
-			element.addAttribute("draw:opacity", style["draw:opacity"]->getStr());
+			element.insert("draw:opacity", style["draw:opacity"]->getStr());
 	}
 
 	// marker
@@ -470,13 +508,13 @@ void GraphicStyleManager::updateElement(TagOpenElement &element, librevenge::RVN
 		librevenge::RVNGString marker=getStyleNameForMarker(style, true);
 		if (!marker.empty())
 		{
-			element.addAttribute("draw:marker-start", marker);
+			element.insert("draw:marker-start", marker);
 			if (style["draw:marker-start-center"])
-				element.addAttribute("draw:marker-start-center", style["draw:marker-start-center"]->getStr());
+				element.insert("draw:marker-start-center", style["draw:marker-start-center"]->getStr());
 			if (style["draw:marker-start-width"])
-				element.addAttribute("draw:marker-start-width", style["draw:marker-start-width"]->getStr());
+				element.insert("draw:marker-start-width", style["draw:marker-start-width"]->getStr());
 			else
-				element.addAttribute("draw:marker-start-width", "0.118in");
+				element.insert("draw:marker-start-width", "0.118in");
 		}
 	}
 	if (style["draw:marker-end-path"])
@@ -484,18 +522,33 @@ void GraphicStyleManager::updateElement(TagOpenElement &element, librevenge::RVN
 		librevenge::RVNGString marker=getStyleNameForMarker(style, false);
 		if (!marker.empty())
 		{
-			element.addAttribute("draw:marker-end", marker);
+			element.insert("draw:marker-end", marker);
 			if (style["draw:marker-end-center"])
-				element.addAttribute("draw:marker-end-center", style["draw:marker-end-center"]->getStr());
+				element.insert("draw:marker-end-center", style["draw:marker-end-center"]->getStr());
 			if (style["draw:marker-end-width"])
-				element.addAttribute("draw:marker-end-width", style["draw:marker-end-width"]->getStr());
+				element.insert("draw:marker-end-width", style["draw:marker-end-width"]->getStr());
 			else
-				element.addAttribute("draw:marker-end-width", "0.118in");
+				element.insert("draw:marker-end-width", "0.118in");
 		}
 	}
 	// other
 	if (style["style:mirror"])
-		element.addAttribute("style:mirror", style["style:mirror"]->getStr());
+		element.insert("style:mirror", style["style:mirror"]->getStr());
+}
+
+void GraphicStyleManager::addFrameProperties(librevenge::RVNGPropertyList const &propList, librevenge::RVNGPropertyList &element)
+{
+	element.insert("fo:min-width", "1in");
+	static char const *attrib[]=
+	{
+		"fo:min-width", "fo:min-height", "fo:max-width", "fo:max-height", "fo:padding-top", "fo:padding-bottom",
+		"fo:padding-left", "fo:padding-right", "draw:textarea-vertical-align"
+	};
+	for (int i=0; i<9; ++i)
+	{
+		if (propList[attrib[i]])
+			element.insert(attrib[i], propList[attrib[i]]->getStr());
+	}
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
