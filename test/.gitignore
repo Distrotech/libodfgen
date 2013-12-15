@@ -11,6 +11,7 @@ Makefile.in
 *.odp
 *.ods
 *.odt
+testGraphic1
 testList1
 testPara1
 testSpan1

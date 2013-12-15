@@ -2,12 +2,16 @@ if COMPILE_TEST
 
 AM_CXXFLAGS = $(REVENGE_CFLAGS) -I../inc/
 
-targets=testLink1 testList1 testPara1 testSpan1 testTable1 testTextbox1
+targets=testGraphic1 testLink1 testList1 testPara1 testSpan1 testTable1 testTextbox1
 noinst_PROGRAMS= $(targets)
 
 EXTRA_SRC=StringDocumentHandler.cxx StringDocumentHandler.hxx
 EXTRA_LDD=../src/libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@.la \
 	$(REVENGE_LIBS) $(REVENGE_STREAM_LIBS)
+
+testGraphic1_DEPENDENCIES =
+testGraphic1_LDADD =  $(EXTRA_LDD)
+testGraphic1_SOURCES = $(EXTRA_SRC) testGraphic1.cxx
 
 testLink1_DEPENDENCIES =
 testLink1_LDADD =  $(EXTRA_LDD)
@@ -37,5 +41,5 @@ clean::
 	@rm test*.odg test*.odp test*.ods test*.odt
 
 launch_all:: $(targets)
-	./testLink1 && ./testList1 && ./testPara1 && ./testSpan1 && ./testTable1 && ./testTextbox1
+	./testGraphic1 && ./testLink1 && ./testList1 && ./testPara1 && ./testSpan1 && ./testTable1 && ./testTextbox1
 endif

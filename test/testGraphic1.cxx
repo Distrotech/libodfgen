@@ -1,0 +1,261 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*- */
+/* libodfgen
+ * Version: MPL 2.0 / LGPLv2.1+
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * Major Contributor(s):
+ * Copyright (C) 2006 Ariya Hidayat (ariya@kde.org)
+ * Copyright (C) 2006 Fridrich Strba (fridrich.strba@bluewin.ch)
+ *
+ * For minor contributions see the git repository.
+ *
+ * Alternatively, the contents of this file may be used under the terms
+ * of the GNU Lesser General Public License Version 2.1 or later
+ * (LGPLv2.1+), in which case the provisions of the LGPLv2.1+ are
+ * applicable instead of those above.
+ *
+ * For further information visit http://libwpd.sourceforge.net
+ */
+
+/* "This product is not manufactured, approved, or supported by
+ * Corel Corporation or Corel Corporation Limited."
+ */
+
+#include <iostream>
+#include <fstream>
+
+#include <librevenge/librevenge.h>
+#include <libodfgen/libodfgen.hxx>
+
+#include "StringDocumentHandler.hxx"
+
+template <class Generator>
+static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const librevenge::RVNGPropertyList &))
+{
+	librevenge::RVNGPropertyList style1;
+	style1.insert("draw:stroke", "solid");
+	style1.insert("svg:stroke-color", "#FF0000");
+	style1.insert("svg:stroke-width", 3, librevenge::RVNG_POINT);
+	style1.insert("draw:fill", "none");
+	(generator.*SetStyle)(style1);
+
+	librevenge::RVNGPropertyList shape, point;
+	librevenge::RVNGPropertyListVector vertices;
+	point.insert("svg:x", 20, librevenge::RVNG_POINT);
+	point.insert("svg:y", 40, librevenge::RVNG_POINT);
+	vertices.append(point);
+	point.insert("svg:x", 200, librevenge::RVNG_POINT);
+	point.insert("svg:y", 40, librevenge::RVNG_POINT);
+	vertices.append(point);
+	shape.insert("svg:points", vertices);
+	generator.drawPolyline(shape);
+
+	librevenge::RVNGPropertyList style2;
+	style2.clear();
+	style2.insert("draw:stroke", "dash");
+	style2.insert("draw:dots1", 1);
+	style2.insert("draw:dots1-length", librevenge::RVNG_POINT);
+	style2.insert("svg:stroke-color", "#00FF00");
+	style2.insert("svg:stroke-width", 3, librevenge::RVNG_POINT);
+	style2.insert("draw:fill", "solid");
+	style2.insert("draw:fill-color", "#0000FF");
+	(generator.*SetStyle)(style2);
+
+	shape.clear();
+	shape.insert("svg:x", 70, librevenge::RVNG_POINT);
+	shape.insert("svg:y", 80, librevenge::RVNG_POINT);
+	shape.insert("svg:width", 100, librevenge::RVNG_POINT);
+	shape.insert("svg:height", 30, librevenge::RVNG_POINT);
+	generator.drawRectangle(shape);
+
+	(generator.*SetStyle)(style1);
+	shape.clear();
+	vertices.clear();
+	point.insert("svg:x", 20, librevenge::RVNG_POINT);
+	point.insert("svg:y", 100, librevenge::RVNG_POINT);
+	vertices.append(point);
+	point.insert("svg:x", 200, librevenge::RVNG_POINT);
+	point.insert("svg:y", 100, librevenge::RVNG_POINT);
+	vertices.append(point);
+	shape.insert("svg:points", vertices);
+	generator.drawPolyline(shape);
+
+	librevenge::RVNGPropertyList style(style1);
+	style.insert("draw:marker-start-path", "m10 0-10 30h20z");
+	style.insert("draw:marker-start-viewbox", "0 0 20 30");
+	style.insert("draw:marker-start-center", "false");
+	style.insert("draw:marker-start-width", "5pt");
+	(generator.*SetStyle)(style);
+
+	shape.clear();
+	vertices.clear();
+	point.insert("svg:x", 20, librevenge::RVNG_POINT);
+	point.insert("svg:y", 200, librevenge::RVNG_POINT);
+	vertices.append(point);
+	point.insert("svg:x", 200, librevenge::RVNG_POINT);
+	point.insert("svg:y", 200, librevenge::RVNG_POINT);
+	vertices.append(point);
+	shape.insert("svg:points", vertices);
+	generator.drawPolyline(shape);
+
+	style=style2;
+	style.insert("draw:fill", "gradient");
+	style.insert("draw:style", "axial");
+	style.insert("draw:start-color", "#FF00FF");
+	style.insert("draw:start-opacity", 1., librevenge::RVNG_PERCENT);
+	style.insert("draw:end-color", "#700070");
+	style.insert("draw:end-opacity", 1., librevenge::RVNG_PERCENT);
+	(generator.*SetStyle)(style);
+
+	// point does not works for ellipse so inch
+	shape.clear();
+	shape.insert("svg:cx", 3, librevenge::RVNG_POINT);
+	shape.insert("svg:cy", 1.2, librevenge::RVNG_POINT);
+	shape.insert("svg:rx", 0.8, librevenge::RVNG_POINT);
+	shape.insert("svg:ry", 0.4, librevenge::RVNG_POINT);
+	generator.drawEllipse(shape);
+
+	style.insert("draw:stroke", "solid");
+	style.insert("draw:shadow", "visible");
+	style.insert("draw:shadow-color", "#000020");
+	style.insert("draw:shadow-opacity", 1, librevenge::RVNG_PERCENT);
+	style.insert("draw:shadow-offset-x", "30");
+	style.insert("draw:shadow-offset-y", "30");
+	style.insert("draw:angle", 30);
+	(generator.*SetStyle)(style);
+	shape.insert("svg:cy", 1.8, librevenge::RVNG_POINT);
+	shape.insert("librevenge:rotate", 30);
+	generator.drawEllipse(shape);
+}
+
+static void createOdg()
+{
+	StringDocumentHandler content;
+	OdgGenerator generator;
+	generator.addDocumentHandler(&content, ODF_FLAT_XML);
+
+	generator.startDocument(librevenge::RVNGPropertyList());
+	librevenge::RVNGPropertyList page;
+	page.insert("svg:x",0, librevenge::RVNG_POINT);
+	page.insert("svg:y",0, librevenge::RVNG_POINT);
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+	generator.startPage(page);
+	sendGraphic(generator, &OdgGenerator::setStyle);
+	generator.endPage();
+	generator.endDocument();
+
+	std::ofstream file("testGraphic1.odg");
+	file << content.cstr();
+}
+
+static void createOdp()
+{
+	StringDocumentHandler content;
+	OdpGenerator generator;
+	generator.addDocumentHandler(&content, ODF_FLAT_XML);
+
+	generator.startDocument(librevenge::RVNGPropertyList());
+	librevenge::RVNGPropertyList page;
+	page.insert("svg:x",0, librevenge::RVNG_POINT);
+	page.insert("svg:y",0, librevenge::RVNG_POINT);
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	generator.startSlide(page);
+	sendGraphic(generator,  &OdpGenerator::setStyle);
+	generator.endSlide();
+	generator.endDocument();
+
+	std::ofstream file("testGraphic1.odp");
+	file << content.cstr();
+}
+
+static void createOds()
+{
+	StringDocumentHandler content;
+	OdsGenerator generator;
+	generator.addDocumentHandler(&content, ODF_FLAT_XML);
+
+	generator.startDocument(librevenge::RVNGPropertyList());
+	librevenge::RVNGPropertyList page;
+	page.insert("librevenge:num-pages", 1);
+	page.insert("fo:page-height", 11.5, librevenge::RVNG_INCH);
+	page.insert("fo:page-width", 9, librevenge::RVNG_INCH);
+	page.insert("style:print-orientation", "portrait");
+	page.insert("fo:margin-left", 0.1, librevenge::RVNG_INCH);
+	page.insert("fo:margin-right", 0.1, librevenge::RVNG_INCH);
+	page.insert("fo:margin-top", 0.1, librevenge::RVNG_INCH);
+	page.insert("fo:margin-bottom", 0.1, librevenge::RVNG_INCH);
+	generator.openPageSpan(page);
+
+	librevenge::RVNGPropertyList list;
+	librevenge::RVNGPropertyListVector columns;
+	for (size_t c = 0; c < 2; c++)
+	{
+		librevenge::RVNGPropertyList column;
+		column.insert("style:column-width", 3, librevenge::RVNG_INCH);
+		columns.append(column);
+	}
+	list.insert("librevenge:columns", columns);
+	generator.openSheet(list);
+
+	/* first test graphic created by the OdsGenerator
+	   (TODO after modifying OdsGenerator) */
+
+	// now test graphic created by the OdgGenerator
+	librevenge::RVNGPropertyList frame;
+	frame.insert("svg:x",0.2, librevenge::RVNG_INCH);
+	frame.insert("svg:y",2, librevenge::RVNG_INCH);
+	frame.insert("svg:width",6, librevenge::RVNG_INCH);
+	frame.insert("svg:height",180, librevenge::RVNG_POINT);
+	frame.insert("text:anchor-type", "page");
+	frame.insert("text:anchor-page-number", 1);
+	frame.insert("style:vertical-rel", "page");
+	frame.insert("style:horizontal-rel", "page");
+	frame.insert("style:horizontal-pos", "from-left");
+	frame.insert("style:vertical-pos", "from-top");
+
+	frame.insert("draw:stroke", "none");
+	frame.insert("draw:fill", "none");
+	generator.openFrame(frame);
+
+	librevenge::RVNGPropertyList graphic;
+	generator.startGraphic(graphic);
+	graphic.insert("svg:x",0, librevenge::RVNG_POINT);
+	graphic.insert("svg:y",0, librevenge::RVNG_POINT);
+	graphic.insert("svg:width",6, librevenge::RVNG_INCH);
+	graphic.insert("svg:height",180, librevenge::RVNG_POINT);
+	graphic.insert("librevenge:enforce-frame",true);
+	generator.startGraphicPage(graphic);
+	sendGraphic(generator, &OdsGenerator::setGraphicStyle);
+	generator.endGraphicPage();
+	generator.endGraphic();
+	generator.closeFrame();
+
+	list.clear();
+	list.insert("style:row-height", 40, librevenge::RVNG_POINT);
+	generator.openSheetRow(list);
+	generator.closeSheetRow();
+	generator.closeSheet();
+
+	generator.closePageSpan();
+	generator.endDocument();
+
+	std::ofstream file("testGraphic1.ods");
+	file << content.cstr();
+}
+
+int main()
+{
+	createOdg();
+	createOdp();
+	createOds();
+	return 0;
+}
+
+/* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
+
