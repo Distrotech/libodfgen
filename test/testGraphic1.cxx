@@ -203,38 +203,9 @@ static void createOds()
 	list.insert("librevenge:columns", columns);
 	generator.openSheet(list);
 
-	/* first test graphic created by the OdsGenerator
-	   (TODO after modifying OdsGenerator) */
-
-	// now test graphic created by the OdgGenerator
-	librevenge::RVNGPropertyList frame;
-	frame.insert("svg:x",0.2, librevenge::RVNG_INCH);
-	frame.insert("svg:y",2, librevenge::RVNG_INCH);
-	frame.insert("svg:width",6, librevenge::RVNG_INCH);
-	frame.insert("svg:height",180, librevenge::RVNG_POINT);
-	frame.insert("text:anchor-type", "page");
-	frame.insert("text:anchor-page-number", 1);
-	frame.insert("style:vertical-rel", "page");
-	frame.insert("style:horizontal-rel", "page");
-	frame.insert("style:horizontal-pos", "from-left");
-	frame.insert("style:vertical-pos", "from-top");
-
-	frame.insert("draw:stroke", "none");
-	frame.insert("draw:fill", "none");
-	generator.openFrame(frame);
-
-	librevenge::RVNGPropertyList graphic;
-	generator.startGraphic(graphic);
-	graphic.insert("svg:x",0, librevenge::RVNG_POINT);
-	graphic.insert("svg:y",0, librevenge::RVNG_POINT);
-	graphic.insert("svg:width",6, librevenge::RVNG_INCH);
-	graphic.insert("svg:height",180, librevenge::RVNG_POINT);
-	graphic.insert("librevenge:enforce-frame",true);
-	generator.startGraphicPage(graphic);
-	sendGraphic(generator, &OdsGenerator::setGraphicStyle);
-	generator.endGraphicPage();
-	generator.endGraphic();
-	generator.closeFrame();
+	generator.openGroup(librevenge::RVNGPropertyList());
+	sendGraphic(generator, &OdsGenerator::defineGraphicStyle);
+	generator.closeGroup();
 
 	list.clear();
 	list.insert("style:row-height", 40, librevenge::RVNG_POINT);

@@ -126,16 +126,10 @@ public:
 	// simple Graphic
 	//
 
-	void startGraphic(const librevenge::RVNGPropertyList &propList);
-	void endGraphic();
+	void openGroup(const librevenge::RVNGPropertyList &propList);
+	void closeGroup();
 
-	void startGraphicPage(const librevenge::RVNGPropertyList &propList);
-	void endGraphicPage();
-
-	void setGraphicStyle(const librevenge::RVNGPropertyList &propList);
-	void startGraphicLayer(const librevenge::RVNGPropertyList &propList);
-	void endGraphicLayer();
-
+	void defineGraphicStyle(const librevenge::RVNGPropertyList &propList);
 	void drawRectangle(const librevenge::RVNGPropertyList &propList);
 	void drawEllipse(const librevenge::RVNGPropertyList &propList);
 	void drawPolygon(const librevenge::RVNGPropertyList &propList);

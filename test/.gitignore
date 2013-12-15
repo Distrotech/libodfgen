@@ -12,6 +12,7 @@ Makefile.in
 *.ods
 *.odt
 testGraphic1
+testLink1
 testList1
 testPara1
 testSpan1
