@@ -501,10 +501,6 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	if (propList["draw:blue"])
 		style.insert("draw:blue", propList["draw:blue"]->getStr());
 
-	librevenge::RVNGPropertyList finalStyle;
-	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
-	librevenge::RVNGString sValue=mpImpl->getGraphicManager().findOrAdd(finalStyle);
-
 	double x = propList["svg:x"]->getDouble();
 	double y = propList["svg:y"]->getDouble();
 	double height = propList["svg:height"]->getDouble();
@@ -536,7 +532,9 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 
 	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
 
-	pDrawFrameElement->addAttribute("draw:style-name", sValue);
+	librevenge::RVNGPropertyList finalStyle;
+	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
+	pDrawFrameElement->addAttribute("draw:style-name", mpImpl->getGraphicManager().findOrAdd(finalStyle));
 
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
 	pDrawFrameElement->addAttribute("svg:width", framePropList["svg:width"]->getStr());
@@ -544,6 +542,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	if (angle != 0.0)
 	{
 		framePropList.insert("librevenge:rotate", angle, librevenge::RVNG_GENERIC);
+		librevenge::RVNGString sValue;
 		sValue.sprintf("rotate (%s) translate(%s, %s)",
 		               framePropList["librevenge:rotate"]->getStr().cstr(),
 		               framePropList["svg:x"]->getStr().cstr(),

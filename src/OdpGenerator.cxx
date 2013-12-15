@@ -29,7 +29,6 @@
 #include "DocumentElement.hxx"
 #include "FilterInternal.hxx"
 #include "FontStyle.hxx"
-#include "GraphicFunctions.hxx"
 #include "GraphicStyle.hxx"
 #include "ListStyle.hxx"
 #include "OdfGenerator.hxx"
@@ -99,11 +98,12 @@ public:
 	void openTextBoxFrame(const ::librevenge::RVNGPropertyList &propList);
 	void closeTextBoxFrame();
 
-	librevenge::RVNGString storeGraphicsStyle();
+	GraphicStyleManager &getGraphicManager()
+	{
+		return mGraphicManager;
+	}
 
 	void writeNotesStyles(OdfDocumentHandler *pHandler);
-	void _drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
-	void _drawPath(const librevenge::RVNGPropertyListVector &path);
 
 	//! returns the document type
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
@@ -117,8 +117,6 @@ public:
 	std::vector<DocumentElement *> mPageAutomaticStyles;
 	std::vector<DocumentElement *> mPageMasterStyles;
 
-	::librevenge::RVNGPropertyList mxStyle;
-	::librevenge::RVNGPropertyListVector mxGradient;
 	int miPageIndex;
 	double mfWidth, mfMaxWidth;
 	double mfHeight, mfMaxHeight;
@@ -135,7 +133,6 @@ private:
 OdpGeneratorPrivate::OdpGeneratorPrivate() :
 	mPageAutomaticStyles(),
 	mPageMasterStyles(),
-	mxStyle(), mxGradient(),
 	miPageIndex(1),
 	mfWidth(0.0),
 	mfMaxWidth(0.0),
@@ -149,13 +146,6 @@ OdpGeneratorPrivate::~OdpGeneratorPrivate()
 {
 	emptyStorage(&mPageAutomaticStyles);
 	emptyStorage(&mPageMasterStyles);
-}
-
-librevenge::RVNGString OdpGeneratorPrivate::storeGraphicsStyle()
-{
-	librevenge::RVNGPropertyList styleList;
-	mGraphicManager.addGraphicProperties(mxStyle,styleList);
-	return mGraphicManager.findOrAdd(styleList);
 }
 
 void OdpGeneratorPrivate::openTextBoxFrame(const ::librevenge::RVNGPropertyList &propList)
@@ -494,85 +484,6 @@ bool OdpGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 	return true;
 }
 
-void OdpGeneratorPrivate::_drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed)
-{
-	if (vertices.count() < 2)
-		return;
-
-	if (vertices.count() == 2)
-	{
-		if (!vertices[0]["svg:x"]||!vertices[0]["svg:y"]||!vertices[1]["svg:x"]||!vertices[1]["svg:y"])
-		{
-			ODFGEN_DEBUG_MSG(("OdpGeneratorPrivate::_drawPolySomething: some vertices are not defined\n"));
-			return;
-		}
-		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
-		pDrawLineElement->addAttribute("draw:style-name", storeGraphicsStyle());
-		pDrawLineElement->addAttribute("draw:layer", "layout");
-		pDrawLineElement->addAttribute("svg:x1", vertices[0]["svg:x"]->getStr());
-		pDrawLineElement->addAttribute("svg:y1", vertices[0]["svg:y"]->getStr());
-		pDrawLineElement->addAttribute("svg:x2", vertices[1]["svg:x"]->getStr());
-		pDrawLineElement->addAttribute("svg:y2", vertices[1]["svg:y"]->getStr());
-		getCurrentStorage()->push_back(pDrawLineElement);
-		getCurrentStorage()->push_back(new TagCloseElement("draw:line"));
-	}
-	else
-	{
-		::librevenge::RVNGPropertyListVector path;
-		::librevenge::RVNGPropertyList element;
-
-		for (unsigned long ii = 0; ii < vertices.count(); ++ii)
-		{
-			element = vertices[ii];
-			if (ii == 0)
-				element.insert("librevenge:path-action", "M");
-			else
-				element.insert("librevenge:path-action", "L");
-			path.append(element);
-			element.clear();
-		}
-		if (isClosed)
-		{
-			element.insert("librevenge:path-action", "Z");
-			path.append(element);
-		}
-		_drawPath(path);
-	}
-}
-
-void OdpGeneratorPrivate::_drawPath(const librevenge::RVNGPropertyListVector &path)
-{
-	if (path.count() == 0)
-		return;
-
-	double px = 0.0, py = 0.0, qx = 0.0, qy = 0.0;
-	if (!libodfgen::getPathBBox(path, px, py, qx, qy))
-		return;
-
-	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
-	pDrawPathElement->addAttribute("draw:style-name", storeGraphicsStyle());
-	pDrawPathElement->addAttribute("draw:layer", "layout");
-	librevenge::RVNGString sValue;
-	sValue = doubleToString(px);
-	sValue.append("in");
-	pDrawPathElement->addAttribute("svg:x", sValue);
-	sValue = doubleToString(py);
-	sValue.append("in");
-	pDrawPathElement->addAttribute("svg:y", sValue);
-	sValue = doubleToString((qx - px));
-	sValue.append("in");
-	pDrawPathElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString((qy - py));
-	sValue.append("in");
-	pDrawPathElement->addAttribute("svg:height", sValue);
-	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)(2540*(qx - px)), (unsigned)(2540*(qy - py)));
-	pDrawPathElement->addAttribute("svg:viewBox", sValue);
-
-	pDrawPathElement->addAttribute("svg:d", libodfgen::convertPath(path, px, py));
-	getCurrentStorage()->push_back(pDrawPathElement);
-	getCurrentStorage()->push_back(new TagCloseElement("draw:path"));
-}
-
 OdpGenerator::OdpGenerator(): mpImpl(new OdpGeneratorPrivate)
 {
 }
@@ -702,12 +613,7 @@ void OdpGenerator::endSlide()
 
 void OdpGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->mxStyle.clear();
-	mpImpl->mxStyle = propList;
-	const librevenge::RVNGPropertyListVector *gradient = propList.child("svg:linearGradient");
-	if (!gradient)
-		gradient = propList.child("svg:radialGradient");
-	mpImpl->mxGradient = gradient ? *gradient : librevenge::RVNGPropertyListVector();
+	mpImpl->defineGraphicStyle(propList);
 }
 
 void OdpGenerator::startLayer(const ::librevenge::RVNGPropertyList & /* propList */)
@@ -720,100 +626,33 @@ void OdpGenerator::endLayer()
 
 void OdpGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (!propList["svg:x"] || !propList["svg:y"] ||
-	        !propList["svg:width"] || !propList["svg:height"])
-	{
-		ODFGEN_DEBUG_MSG(("OdpGenerator::drawRectangle: position undefined\n"));
-		return;
-	}
-	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
-	librevenge::RVNGString sValue=mpImpl->storeGraphicsStyle();
-	pDrawRectElement->addAttribute("draw:style-name", sValue);
-	pDrawRectElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-	pDrawRectElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-	pDrawRectElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-	pDrawRectElement->addAttribute("svg:height", propList["svg:height"]->getStr());
-	// FIXME: what to do when rx != ry ?
-	if (propList["svg:rx"])
-		pDrawRectElement->addAttribute("draw:corner-radius", propList["svg:rx"]->getStr());
-	else
-		pDrawRectElement->addAttribute("draw:corner-radius", "0.0000in");
-	mpImpl->getCurrentStorage()->push_back(pDrawRectElement);
-	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:rect"));
+	mpImpl->drawRectangle(propList);
 }
 
 void OdpGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
-	{
-		ODFGEN_DEBUG_MSG(("OdpGenerator::drawEllipse: position undefined\n"));
-		return;
-	}
-	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
-	librevenge::RVNGString sValue=mpImpl->storeGraphicsStyle();
-	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
-	sValue = doubleToString(2 * propList["svg:rx"]->getDouble());
-	sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(2 * propList["svg:ry"]->getDouble());
-	sValue.append("in");
-	pDrawEllipseElement->addAttribute("svg:height", sValue);
-	if (propList["librevenge:rotate"] && propList["librevenge:rotate"]->getDouble() != 0.0)
-	{
-		double rotation = propList["librevenge:rotate"]->getDouble();
-		while (rotation < -180)
-			rotation += 360;
-		while (rotation > 180)
-			rotation -= 360;
-		double radrotation = rotation*M_PI/180.0;
-		double deltax = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
-		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                                                                      - radrotation) - propList["svg:rx"]->getDouble();
-		double deltay = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
-		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                                                                      - radrotation) - propList["svg:ry"]->getDouble();
-		sValue = "rotate(";
-		sValue.append(doubleToString(radrotation));
-		sValue.append(") ");
-		sValue.append("translate(");
-		sValue.append(doubleToString(propList["svg:cx"]->getDouble() - propList["svg:rx"]->getDouble() - deltax));
-		sValue.append("in, ");
-		sValue.append(doubleToString(propList["svg:cy"]->getDouble() - propList["svg:ry"]->getDouble() - deltay));
-		sValue.append("in)");
-		pDrawEllipseElement->addAttribute("draw:transform", sValue);
-	}
-	else
-	{
-		sValue = doubleToString(propList["svg:cx"]->getDouble()-propList["svg:rx"]->getDouble());
-		sValue.append("in");
-		pDrawEllipseElement->addAttribute("svg:x", sValue);
-		sValue = doubleToString(propList["svg:cy"]->getDouble()-propList["svg:ry"]->getDouble());
-		sValue.append("in");
-		pDrawEllipseElement->addAttribute("svg:y", sValue);
-	}
-	mpImpl->getCurrentStorage()->push_back(pDrawEllipseElement);
-	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:ellipse"));
+	mpImpl->drawEllipse(propList);
 }
 
 void OdpGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 {
 	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
 	if (vertices && vertices->count())
-		mpImpl->_drawPolySomething(*vertices, false);
+		mpImpl->drawPolySomething(*vertices, false);
 }
 
 void OdpGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 {
 	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
 	if (vertices && vertices->count())
-		mpImpl->_drawPolySomething(*vertices, true);
+		mpImpl->drawPolySomething(*vertices, true);
 }
 
 void OdpGenerator::drawPath(const librevenge::RVNGPropertyList &propList)
 {
 	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
 	if (path && path->count())
-		mpImpl->_drawPath(*path);
+		mpImpl->drawPath(*path);
 }
 
 void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propList)
@@ -827,24 +666,26 @@ void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 
 	bool flipX(propList["draw:mirror-horizontal"] && propList["draw:mirror-horizontal"]->getInt());
 	bool flipY(propList["draw:mirror-vertical"] && propList["draw:mirror-vertical"]->getInt());
+
+	librevenge::RVNGPropertyList style=mpImpl->getGraphicStyle();
 	if ((flipX && !flipY) || (!flipX && flipY))
-		mpImpl->mxStyle.insert("style:mirror", "horizontal");
+		style.insert("style:mirror", "horizontal");
 	else
-		mpImpl->mxStyle.insert("style:mirror", "none");
+		style.insert("style:mirror", "none");
 	if (propList["draw:color-mode"])
-		mpImpl->mxStyle.insert("draw:color-mode", propList["draw:color-mode"]->getStr());
+		style.insert("draw:color-mode", propList["draw:color-mode"]->getStr());
 	if (propList["draw:luminance"])
-		mpImpl->mxStyle.insert("draw:luminance", propList["draw:luminance"]->getStr());
+		style.insert("draw:luminance", propList["draw:luminance"]->getStr());
 	if (propList["draw:contrast"])
-		mpImpl->mxStyle.insert("draw:contrast", propList["draw:contrast"]->getStr());
+		style.insert("draw:contrast", propList["draw:contrast"]->getStr());
 	if (propList["draw:gamma"])
-		mpImpl->mxStyle.insert("draw:gamma", propList["draw:gamma"]->getStr());
+		style.insert("draw:gamma", propList["draw:gamma"]->getStr());
 	if (propList["draw:red"])
-		mpImpl->mxStyle.insert("draw:red", propList["draw:red"]->getStr());
+		style.insert("draw:red", propList["draw:red"]->getStr());
 	if (propList["draw:green"])
-		mpImpl->mxStyle.insert("draw:green", propList["draw:green"]->getStr());
+		style.insert("draw:green", propList["draw:green"]->getStr());
 	if (propList["draw:blue"])
-		mpImpl->mxStyle.insert("draw:blue", propList["draw:blue"]->getStr());
+		style.insert("draw:blue", propList["draw:blue"]->getStr());
 
 
 	double x = propList["svg:x"]->getDouble();
@@ -878,7 +719,10 @@ void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 
 	TagOpenElement *pDrawFrameElement = new TagOpenElement("draw:frame");
 
-	pDrawFrameElement->addAttribute("draw:style-name", mpImpl->storeGraphicsStyle());
+	librevenge::RVNGPropertyList finalStyle;
+	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
+	pDrawFrameElement->addAttribute("draw:style-name", mpImpl->getGraphicManager().findOrAdd(finalStyle));
+
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
 	pDrawFrameElement->addAttribute("svg:width", framePropList["svg:width"]->getStr());
 
