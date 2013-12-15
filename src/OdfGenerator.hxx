@@ -216,6 +216,23 @@ public:
 	// graphic
 	//
 
+	//! call to define a graphic style
+	void defineGraphicStyle(const librevenge::RVNGPropertyList &propList);
+	//! returns the last graphic style (REMOVEME)
+	librevenge::RVNGPropertyList const &getGraphicStyle() const
+	{
+		return mGraphicStyle;
+	}
+
+	//! call to draw an ellipse
+	void drawEllipse(const ::librevenge::RVNGPropertyList &propList);
+	//! call to draw a path
+	void drawPath(const librevenge::RVNGPropertyListVector &path);
+	//! call to draw a polygon or a polyline
+	void drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
+	//! call to draw a rectangle
+	void drawRectangle(const ::librevenge::RVNGPropertyList &propList);
+
 protected:
 	// list state
 	struct ListState
@@ -237,7 +254,6 @@ protected:
 	/// access to the current list state
 	ListState &getListState();
 
-protected:
 	/** stores a list style: update mListStyles,
 		mWriterListStates.top().mpCurrentListStyle and the different
 		maps
@@ -271,6 +287,9 @@ protected:
 	//! store a level
 	void updateListStorage(const librevenge::RVNGPropertyList &level, int id, bool ordered);
 
+protected:
+	//! returns the current graphic style name ( MODIFYME)
+	librevenge::RVNGString getCurrentGraphicStyleName();
 	// the current set of elements that we're writing to
 	Storage *mpCurrentStorage;
 	// the stack of all storage
@@ -324,6 +343,9 @@ protected:
 	std::vector<DocumentElement *> mFrameAutomaticStyles;
 	// the list of frame seens
 	std::map<librevenge::RVNGString, unsigned, ltstr > mFrameNameIdMap;
+
+	// the last graphic style
+	librevenge::RVNGPropertyList mGraphicStyle;
 
 	// the document handlers
 	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;

@@ -24,16 +24,35 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
+#include <math.h>
+
 #include <string>
 
 #include <librevenge/librevenge.h>
 
 #include "DocumentElement.hxx"
+#include "GraphicFunctions.hxx"
 #include "InternalHandler.hxx"
 #include "ListStyle.hxx"
 #include "TableStyle.hxx"
 
 #include "OdfGenerator.hxx"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+namespace
+{
+
+static librevenge::RVNGString doubleToString(const double value)
+{
+	shared_ptr<librevenge::RVNGProperty> prop(librevenge::RVNGPropertyFactory::newDoubleProp(value));
+	return prop->getStr();
+}
+
+} // anonymous namespace
+
 
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
@@ -42,6 +61,7 @@ OdfGenerator::OdfGenerator() :
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
 	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(), mIdListStorageMap(),
 	miFrameNumber(0),  mFrameStyles(), mFrameAutomaticStyles(), mFrameNameIdMap(),
+	mGraphicStyle(),
 	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
 {
 	mListStates.push(ListState());
@@ -1046,6 +1066,178 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 		else
 			mpCurrentStorage->push_back(new TagCloseElement("draw:image"));
 	}
+}
+
+////////////////////////////////////////////////////////////
+// graphic
+////////////////////////////////////////////////////////////
+void OdfGenerator::defineGraphicStyle(const librevenge::RVNGPropertyList &propList)
+{
+	mGraphicStyle=propList;
+}
+
+librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName()
+{
+	librevenge::RVNGPropertyList styleList;
+	mGraphicManager.addGraphicProperties(mGraphicStyle,styleList);
+	return mGraphicManager.findOrAdd(styleList);
+}
+
+void OdfGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
+{
+	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::drawEllipse: position undefined\n"));
+		return;
+	}
+	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
+	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
+	sValue = doubleToString(2 * propList["svg:rx"]->getDouble());
+	sValue.append("in");
+	pDrawEllipseElement->addAttribute("svg:width", sValue);
+	sValue = doubleToString(2 * propList["svg:ry"]->getDouble());
+	sValue.append("in");
+	pDrawEllipseElement->addAttribute("svg:height", sValue);
+	if (propList["librevenge:rotate"] && propList["librevenge:rotate"]->getDouble() != 0.0)
+	{
+		double rotation = propList["librevenge:rotate"]->getDouble();
+		while (rotation < -180)
+			rotation += 360;
+		while (rotation > 180)
+			rotation -= 360;
+		double radrotation = rotation*M_PI/180.0;
+		double deltax = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
+		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
+		                                                                      - radrotation) - propList["svg:rx"]->getDouble();
+		double deltay = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
+		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
+		                                                                      - radrotation) - propList["svg:ry"]->getDouble();
+		sValue = "rotate(";
+		sValue.append(doubleToString(radrotation));
+		sValue.append(") ");
+		sValue.append("translate(");
+		sValue.append(doubleToString(propList["svg:cx"]->getDouble() - propList["svg:rx"]->getDouble() - deltax));
+		sValue.append("in, ");
+		sValue.append(doubleToString(propList["svg:cy"]->getDouble() - propList["svg:ry"]->getDouble() - deltay));
+		sValue.append("in)");
+		pDrawEllipseElement->addAttribute("draw:transform", sValue);
+	}
+	else
+	{
+		sValue = doubleToString(propList["svg:cx"]->getDouble()-propList["svg:rx"]->getDouble());
+		sValue.append("in");
+		pDrawEllipseElement->addAttribute("svg:x", sValue);
+		sValue = doubleToString(propList["svg:cy"]->getDouble()-propList["svg:ry"]->getDouble());
+		sValue.append("in");
+		pDrawEllipseElement->addAttribute("svg:y", sValue);
+	}
+	mpCurrentStorage->push_back(pDrawEllipseElement);
+	mpCurrentStorage->push_back(new TagCloseElement("draw:ellipse"));
+}
+
+void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path)
+{
+	if (!path.count())
+		return;
+
+	double px = 0.0, py = 0.0, qx = 0.0, qy = 0.0;
+	if (!libodfgen::getPathBBox(path, px, py, qx, qy))
+		return;
+
+	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
+	pDrawPathElement->addAttribute("draw:style-name", sValue);
+	pDrawPathElement->addAttribute("draw:layer", "layout");
+	sValue = doubleToString(px);
+	sValue.append("in");
+	pDrawPathElement->addAttribute("svg:x", sValue);
+	sValue = doubleToString(py);
+	sValue.append("in");
+	pDrawPathElement->addAttribute("svg:y", sValue);
+	sValue = doubleToString((qx - px));
+	sValue.append("in");
+	pDrawPathElement->addAttribute("svg:width", sValue);
+	sValue = doubleToString((qy - py));
+	sValue.append("in");
+	pDrawPathElement->addAttribute("svg:height", sValue);
+	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)(2540*(qx - px)), (unsigned)(2540*(qy - py)));
+	pDrawPathElement->addAttribute("svg:viewBox", sValue);
+
+	pDrawPathElement->addAttribute("svg:d", libodfgen::convertPath(path, px, py));
+	mpCurrentStorage->push_back(pDrawPathElement);
+	mpCurrentStorage->push_back(new TagCloseElement("draw:path"));
+}
+
+void OdfGenerator::drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed)
+{
+	if (vertices.count() < 2)
+		return;
+
+	if (vertices.count() == 2)
+	{
+		if (!vertices[0]["svg:x"]||!vertices[0]["svg:y"]||!vertices[1]["svg:x"]||!vertices[1]["svg:y"])
+		{
+			ODFGEN_DEBUG_MSG(("OdfGenerator::drawPolySomething: some vertices are not defined\n"));
+			return;
+		}
+		librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
+		pDrawLineElement->addAttribute("draw:style-name", sValue);
+		pDrawLineElement->addAttribute("draw:layer", "layout");
+		pDrawLineElement->addAttribute("svg:x1", vertices[0]["svg:x"]->getStr());
+		pDrawLineElement->addAttribute("svg:y1", vertices[0]["svg:y"]->getStr());
+		pDrawLineElement->addAttribute("svg:x2", vertices[1]["svg:x"]->getStr());
+		pDrawLineElement->addAttribute("svg:y2", vertices[1]["svg:y"]->getStr());
+		mpCurrentStorage->push_back(pDrawLineElement);
+		mpCurrentStorage->push_back(new TagCloseElement("draw:line"));
+	}
+	else
+	{
+		::librevenge::RVNGPropertyListVector path;
+		::librevenge::RVNGPropertyList element;
+
+		for (unsigned long ii = 0; ii < vertices.count(); ++ii)
+		{
+			element = vertices[ii];
+			if (ii == 0)
+				element.insert("librevenge:path-action", "M");
+			else
+				element.insert("librevenge:path-action", "L");
+			path.append(element);
+			element.clear();
+		}
+		if (isClosed)
+		{
+			element.insert("librevenge:path-action", "Z");
+			path.append(element);
+		}
+		drawPath(path);
+	}
+}
+
+void OdfGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
+{
+	if (!propList["svg:x"] || !propList["svg:y"] ||
+	        !propList["svg:width"] || !propList["svg:height"])
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::drawRectangle: position undefined\n"));
+		return;
+	}
+	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
+	pDrawRectElement->addAttribute("draw:style-name", sValue);
+	pDrawRectElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+	pDrawRectElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	pDrawRectElement->addAttribute("svg:width", propList["svg:width"]->getStr());
+	pDrawRectElement->addAttribute("svg:height", propList["svg:height"]->getStr());
+	// FIXME: what to do when rx != ry ?
+	if (propList["svg:rx"])
+		pDrawRectElement->addAttribute("draw:corner-radius", propList["svg:rx"]->getStr());
+	else
+		pDrawRectElement->addAttribute("draw:corner-radius", "0.0000in");
+	mpCurrentStorage->push_back(pDrawRectElement);
+	mpCurrentStorage->push_back(new TagCloseElement("draw:rect"));
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
