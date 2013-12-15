@@ -220,11 +220,40 @@ static void createOds()
 	file << content.cstr();
 }
 
+static void createOdt()
+{
+	StringDocumentHandler content;
+	OdtGenerator generator;
+	generator.addDocumentHandler(&content, ODF_FLAT_XML);
+
+	generator.startDocument(librevenge::RVNGPropertyList());
+	librevenge::RVNGPropertyList page;
+	page.insert("librevenge:num-pages", 1);
+	page.insert("fo:page-height", 11.5, librevenge::RVNG_INCH);
+	page.insert("fo:page-width", 9, librevenge::RVNG_INCH);
+	page.insert("style:print-orientation", "portrait");
+	page.insert("fo:margin-left", 0.1, librevenge::RVNG_INCH);
+	page.insert("fo:margin-right", 0.1, librevenge::RVNG_INCH);
+	page.insert("fo:margin-top", 0.1, librevenge::RVNG_INCH);
+	page.insert("fo:margin-bottom", 0.1, librevenge::RVNG_INCH);
+	generator.openPageSpan(page);
+	generator.openGroup(librevenge::RVNGPropertyList());
+	sendGraphic(generator, &OdtGenerator::defineGraphicStyle);
+	generator.closeGroup();
+
+	generator.closePageSpan();
+	generator.endDocument();
+
+	std::ofstream file("testGraphic1.odt");
+	file << content.cstr();
+}
+
 int main()
 {
 	createOdg();
 	createOdp();
 	createOds();
+	createOdt();
 	return 0;
 }
 

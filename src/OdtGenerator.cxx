@@ -131,6 +131,7 @@ void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	mFontManager.write(pHandler); // do nothing
 	mSpanManager.writeAutomaticStyles(pHandler);
 	mParagraphManager.writeAutomaticStyles(pHandler);
+	mGraphicManager.writeAutomaticStyles(pHandler);
 
 	_writePageLayouts(pHandler);
 	// writing out the sections styles
@@ -289,7 +290,7 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		noteOpenElement.write(pHandler);
 		pHandler->endElement("text:notes-configuration");
 	}
-
+	mGraphicManager.writeStyles(pHandler);
 	pHandler->endElement("office:styles");
 }
 
@@ -839,6 +840,55 @@ void OdtGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
 	mpImpl->insertBinaryObject(propList);
+}
+
+void OdtGenerator::openGroup(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:g"));
+}
+
+void OdtGenerator::closeGroup()
+{
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
+}
+
+void OdtGenerator::defineGraphicStyle(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->defineGraphicStyle(propList);
+}
+
+void OdtGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->drawRectangle(propList);
+}
+
+void OdtGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->drawEllipse(propList);
+}
+
+
+void OdtGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
+{
+	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
+	if (vertices && vertices->count())
+		mpImpl->drawPolySomething(*vertices, true);
+}
+
+
+void OdtGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
+{
+	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
+	if (vertices && vertices->count())
+		mpImpl->drawPolySomething(*vertices, false);
+}
+
+
+void OdtGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
+{
+	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
+	if (path && path->count())
+		mpImpl->drawPath(*path);
 }
 
 void OdtGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)

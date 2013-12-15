@@ -395,10 +395,10 @@ void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	TagOpenElement("office:automatic-styles").write(pHandler);
 	sendStorage(&mFrameAutomaticStyles, pHandler);
 
-	mGraphicManager.writeAutomaticStyles(pHandler);
 	mFontManager.write(pHandler); // do nothing
 	mSpanManager.write(pHandler);
 	mParagraphManager.write(pHandler);
+	mGraphicManager.writeAutomaticStyles(pHandler);
 
 	_writePageLayouts(pHandler);
 	// writing out the lists styles
@@ -1485,14 +1485,11 @@ void OdsGenerator::endDocument()
 }
 
 
-void OdsGenerator::openGroup(const ::librevenge::RVNGPropertyList &/*propList*/)
+void OdsGenerator::openGroup(const ::librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_Group);
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::openGroup: call in word zone!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdtState->get().openGroup(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
 	OdsGeneratorPrivate::State state=mpImpl->getState();
@@ -1503,7 +1500,11 @@ void OdsGenerator::openGroup(const ::librevenge::RVNGPropertyList &/*propList*/)
 
 void OdsGenerator::closeGroup()
 {
-	if (!mpImpl->close(OdsGeneratorPrivate::C_Group) || mpImpl->mAuxiliarOdtState || !mpImpl->getState().mbInGroup)
+	if (!mpImpl->close(OdsGeneratorPrivate::C_Group))
+		return;
+	if (mpImpl->mAuxiliarOdtState)
+		return mpImpl->mAuxiliarOdtState->get().closeGroup();
+	if (!mpImpl->getState().mbInGroup)
 		return;
 	mpImpl->popState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
@@ -1512,20 +1513,14 @@ void OdsGenerator::closeGroup()
 void OdsGenerator::defineGraphicStyle(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::defineGraphicStyle: call in word zone!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdtState->get().defineGraphicStyle(propList);
 	mpImpl->defineGraphicStyle(propList);
 }
 
 void OdsGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::drawRectangle: call in word zone!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdtState->get().drawRectangle(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
 	mpImpl->drawRectangle(propList);
@@ -1534,10 +1529,7 @@ void OdsGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 void OdsGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::drawEllipse: call in word zone!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdtState->get().drawEllipse(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
 	mpImpl->drawEllipse(propList);
@@ -1547,10 +1539,7 @@ void OdsGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 void OdsGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::drawPolygon: call in word zone!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdtState->get().drawPolygon(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
 	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
@@ -1562,10 +1551,7 @@ void OdsGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 void OdsGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::drawPolyline: call in word zone!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdtState->get().drawPolyline(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
 	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
@@ -1577,10 +1563,7 @@ void OdsGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (mpImpl->mAuxiliarOdtState)
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::drawPath: call in word zone!!!\n"));
-		return;
-	}
+		return mpImpl->mAuxiliarOdtState->get().drawPath(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
 	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
