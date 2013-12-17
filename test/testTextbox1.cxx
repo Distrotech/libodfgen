@@ -69,7 +69,7 @@ static void sendText(Generator &generator)
 
 	librevenge::RVNGPropertyList list;
 	list.clear();
-	list.insert("librevenge:id",1);
+	list.insert("librevenge:list-id",1);
 	list.insert("librevenge:level",1);
 	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
 	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
@@ -80,7 +80,7 @@ static void sendText(Generator &generator)
 	generator.defineOrderedListLevel(list);
 
 	list.clear();
-	list.insert("librevenge:id",1);
+	list.insert("librevenge:list-id",1);
 	generator.openOrderedListLevel(list);
 
 	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
