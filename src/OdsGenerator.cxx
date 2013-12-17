@@ -1096,32 +1096,6 @@ void OdsGenerator::closeLink()
 }
 
 
-void OdsGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	if (!propList["librevenge:level"])
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator:defineOrderedListLevel: can not find list level\n"));
-		return;
-	}
-
-	mpImpl->defineListLevel(propList, true);
-	if (mpImpl->mAuxiliarOdtState)
-		mpImpl->mAuxiliarOdtState->get().defineOrderedListLevel(propList);
-}
-
-void OdsGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	if (!propList["librevenge:level"])
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator:defineUnorderedListLevel: can not find list level\n"));
-		return;
-	}
-
-	mpImpl->defineListLevel(propList, false);
-	if (mpImpl->mAuxiliarOdtState)
-		mpImpl->mAuxiliarOdtState->get().defineUnorderedListLevel(propList);
-}
-
 void OdsGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_OrderedList);

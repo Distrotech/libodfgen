@@ -596,23 +596,15 @@ void OdtGenerator::closeLink()
 // -------------------------------
 //      list
 // -------------------------------
-void OdtGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	mpImpl->defineListLevel(propList, true);
-}
-
-void OdtGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	mpImpl->defineListLevel(propList, false);
-}
-
 void OdtGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
+	mpImpl->defineListLevel(propList, true);
 	mpImpl->openListLevel(propList, true);
 }
 
 void OdtGenerator::openUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
+	mpImpl->defineListLevel(propList, false);
 	mpImpl->openListLevel(propList, false);
 }
 

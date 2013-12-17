@@ -854,16 +854,6 @@ void OdpGenerator::insertField(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->insertField(propList);
 }
 
-void OdpGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	mpImpl->defineListLevel(propList, true);
-}
-
-void OdpGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	mpImpl->defineListLevel(propList, false);
-}
-
 void OdpGenerator::openOrderedListLevel(const ::librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->openListLevel(propList, true);

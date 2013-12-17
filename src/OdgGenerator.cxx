@@ -740,16 +740,6 @@ void OdgGenerator::insertCoveredTableCell(const ::librevenge::RVNGPropertyList &
 	mpImpl->insertCoveredTableCell(propList);
 }
 
-void OdgGenerator::defineOrderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	mpImpl->defineListLevel(propList, true);
-}
-
-void OdgGenerator::defineUnorderedListLevel(const librevenge::RVNGPropertyList &propList)
-{
-	mpImpl->defineListLevel(propList, false);
-}
-
 void OdgGenerator::openOrderedListLevel(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->openListLevel(propList, true);
