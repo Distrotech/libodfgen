@@ -66,27 +66,55 @@ static void sendText(Generator &generator)
 	generator.closeParagraph();
 
 	// now test if the list works or not
-
 	librevenge::RVNGPropertyList list;
-	list.clear();
-	list.insert("librevenge:list-id",1);
-	list.insert("librevenge:level",1);
 	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
 	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
-	list.insert("style:num-format", "1");
-	generator.defineOrderedListLevel(list);
-	list.insert("librevenge:level",2);
-	list.insert("style:num-format", "I");
-	generator.defineOrderedListLevel(list);
-
-	list.clear();
-	list.insert("librevenge:list-id",1);
+	list.insert("style:num-format", "i");
 	generator.openOrderedListLevel(list);
 
+	list.clear();
 	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
-	generator.insertText("level 1");  // 1 level 1
+	generator.insertText("level 1(direct)"); // i level 1(direct)
+	generator.closeSpan();
+	generator.closeListElement();
+
+	list.clear();
+	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
+	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
+	list.insert("style:num-format", "1");
+	generator.openOrderedListLevel(list);
+	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
+	generator.openListElement(list);
+	generator.openSpan(span);
+	generator.insertText("level 2(direct)");  // 1 level 2(direct)
+	generator.closeSpan();
+	generator.closeListElement();
+	generator.closeOrderedListLevel();
+
+	list.clear();
+	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
+	generator.openListElement(list);
+	generator.openSpan(span);
+	generator.insertText("level 1(direct)"); // ii level 1(direct)
+	generator.closeSpan();
+	generator.closeListElement();
+
+	generator.closeOrderedListLevel();
+
+	list.clear();
+	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
+	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
+	list.insert("style:num-format", "A");
+	list.insert("style:display-name", "MyList2");
+	generator.openOrderedListLevel(list);
+
+	list.clear();
+	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
+	generator.openListElement(list);
+	generator.openSpan(span);
+	generator.insertText("level 1(direct + automatic reset)"); // A level 1(...)
 	generator.closeSpan();
 	generator.closeListElement();
 

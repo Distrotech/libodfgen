@@ -649,8 +649,6 @@ void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList,
 	int id = -1;
 	if (propList["librevenge:list-id"])
 		id = propList["librevenge:list-id"]->getInt();
-	else if (propList["librevenge:list-id"]) // REMOVEME
-		id = propList["librevenge:list-id"]->getInt();
 	updateListStorage(propList, id, ordered);
 
 	ListStyle *pListStyle = 0;
@@ -675,9 +673,9 @@ void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList,
 		if (propList["style:display-name"])
 			displayName=propList["style:display-name"]->getStr();
 		else if (pListStyle)
-			displayName=pListStyle->getDisplayName()
+			displayName=pListStyle->getDisplayName();
 
-			            ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
+		ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
 		librevenge::RVNGString sName;
 		if (ordered)
 			sName.sprintf("OL%i", miNumListStyles);
@@ -724,8 +722,6 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 
 	int id=-1;
 	if (propList["librevenge:list-id"])
-		id = propList["librevenge:list-id"]->getInt();
-	else if (propList["librevenge:list-id"]) // REMOVEME
 		id = propList["librevenge:list-id"]->getInt();
 
 	if (id==-1)

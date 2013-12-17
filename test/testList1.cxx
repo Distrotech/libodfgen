@@ -57,6 +57,7 @@ static void sendText(Generator &generator)
 	generator.closeParagraph();
 
 	librevenge::RVNGPropertyList list;
+#if 0
 	// first test list using librevenge:list-id
 	list.clear();
 	list.insert("librevenge:list-id",1);
@@ -130,7 +131,7 @@ static void sendText(Generator &generator)
 	generator.closeListElement();
 
 	generator.closeOrderedListLevel();
-
+#endif
 	// paragraph
 	para.insert("librevenge:paragraph-id",1);
 	generator.openParagraph(para);
