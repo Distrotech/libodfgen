@@ -262,31 +262,6 @@ protected:
 	/** retrieves the list style corresponding to a given id. */
 	void retrieveListStyle(int id);
 
-	//! list basic storage
-	struct ListStorage
-	{
-	public:
-		//! constructor
-		ListStorage() : mLevelMap() { }
-		//! a level
-		struct Level
-		{
-			//! constructor
-			Level(librevenge::RVNGPropertyList const &lvl=librevenge::RVNGPropertyList(), bool ordered=true) : mLevel(lvl), mbOrdered(ordered) { }
-			//! the property list
-			librevenge::RVNGPropertyList mLevel;
-			//! true if this is an ordered list
-			bool mbOrdered;
-		};
-		//! the level list
-		std::map<int, Level> mLevelMap;
-	};
-
-	//! returns the list corresponding to an id
-	ListStorage &getListStorage(int id);
-	//! store a level
-	void updateListStorage(const librevenge::RVNGPropertyList &level, int id, bool ordered);
-
 protected:
 	//! returns the current graphic style name ( MODIFYME)
 	librevenge::RVNGString getCurrentGraphicStyleName();
@@ -332,8 +307,6 @@ protected:
 	std::stack<ListState> mListStates;
 	// a map id -> last list style defined with id
 	std::map<int, ListStyle *> mIdListStyleMap;
-	// the list of seen list
-	std::map<int, ListStorage> mIdListStorageMap;
 
 	// the number of created frame
 	unsigned miFrameNumber;
