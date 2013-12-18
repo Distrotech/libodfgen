@@ -59,7 +59,7 @@ OdfGenerator::OdfGenerator() :
 	mFontManager(), mGraphicManager(), mSpanManager(), mParagraphManager(), mTableManager(),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
-	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(), mIdListStorageMap(),
+	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(),
 	miFrameNumber(0),  mFrameNameIdMap(),
 	mGraphicStyle(),
 	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
@@ -131,7 +131,6 @@ void OdfGenerator::initStateWith(OdfGenerator const &orig)
 	mObjectHandlers=orig.mObjectHandlers;
 	mIdSpanMap=orig.mIdSpanMap;
 	mIdParagraphMap=orig.mIdParagraphMap;
-	mIdListStorageMap=orig.mIdListStorageMap;
 }
 
 ////////////////////////////////////////////////////////////
@@ -574,9 +573,6 @@ void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList,
 	int id = -1;
 	if (propList["librevenge:list-id"])
 		id = propList["librevenge:list-id"]->getInt();
-	else if (propList["librevenge:id"]) // REMOVEME
-		id = propList["librevenge:id"]->getInt();
-	updateListStorage(propList, id, ordered);
 
 	ListStyle *pListStyle = 0;
 	ListState &state=getListState();
@@ -600,9 +596,9 @@ void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList,
 		if (propList["style:display-name"])
 			displayName=propList["style:display-name"]->getStr();
 		else if (pListStyle)
-			displayName=pListStyle->getDisplayName()
+			displayName=pListStyle->getDisplayName();
 
-			            ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
+		ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
 		librevenge::RVNGString sName;
 		if (ordered)
 			sName.sprintf("OL%i", miNumListStyles);
@@ -646,29 +642,7 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 	librevenge::RVNGPropertyList pList(propList);
 	if (!pList["librevenge:level"])
 		pList.insert("librevenge:level", int(state.mbListElementOpened.size())+1);
-
-	int id=-1;
-	if (propList["librevenge:list-id"])
-		id = propList["librevenge:list-id"]->getInt();
-	else if (propList["librevenge:id"]) // REMOVEME
-		id = propList["librevenge:id"]->getInt();
-
-	if (id==-1)
-		defineListLevel(pList, ordered);
-	else if (state.mbListElementOpened.empty())
-	{
-		// first item of a list, be sure to use the list with given id
-		retrieveListStyle(id);
-	}
-	// check if the list level is defined
-	if (state.mpCurrentListStyle &&
-	        !state.mpCurrentListStyle->isListLevelDefined(pList["librevenge:level"]->getInt()-1))
-	{
-		int level=pList["librevenge:level"]->getInt();
-		ListStorage &list=getListStorage(id);
-		if (list.mLevelMap.find(level) != list.mLevelMap.end())
-			defineListLevel(list.mLevelMap.find(level)->second.mLevel, ordered);
-	}
+	defineListLevel(pList, ordered);
 
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	if (!state.mbListElementOpened.empty() && !state.mbListElementOpened.top())
@@ -781,21 +755,6 @@ void OdfGenerator::retrieveListStyle(int id)
 	}
 
 	ODFGEN_DEBUG_MSG(("OdfGenerator: impossible to find a list with id=%d\n",id));
-}
-
-OdfGenerator::ListStorage &OdfGenerator::getListStorage(int id)
-{
-	if (mIdListStorageMap.find(id)!=mIdListStorageMap.end())
-		return mIdListStorageMap.find(id)->second;
-	mIdListStorageMap[id]=ListStorage();
-	return  mIdListStorageMap.find(id)->second;
-}
-
-void OdfGenerator::updateListStorage(const librevenge::RVNGPropertyList &level, int id, bool ordered)
-{
-	if (!level["librevenge:level"]) return;
-	ListStorage &list=getListStorage(id);
-	list.mLevelMap[level["librevenge:level"]->getInt()]=ListStorage::Level(level, ordered);
 }
 
 ////////////////////////////////////////////////////////////

@@ -56,24 +56,18 @@ static void sendText(Generator &generator)
 	generator.closeSpan();
 	generator.closeParagraph();
 
-	librevenge::RVNGPropertyList list;
+	librevenge::RVNGPropertyList level1, list;
 	// first test list using librevenge:list-id
-	list.clear();
-	list.insert("librevenge:list-id",1);
-	list.insert("style:display-name","MyList");
-	list.insert("librevenge:level",1);
-	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
-	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
-	list.insert("style:num-format", "1");
-	generator.defineOrderedListLevel(list);
-	list.insert("librevenge:level",2);
-	list.insert("style:num-format", "I");
-	generator.defineOrderedListLevel(list);
+	level1.clear();
+	level1.insert("librevenge:list-id",1);
+	level1.insert("style:display-name","MyList");
+	level1.insert("librevenge:level",1);
+	level1.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
+	level1.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
+	level1.insert("style:num-format", "1");
+	generator.openOrderedListLevel(level1);
 
 	list.clear();
-	list.insert("librevenge:list-id",1);
-	generator.openOrderedListLevel(list);
-
 	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
@@ -81,9 +75,10 @@ static void sendText(Generator &generator)
 	generator.closeSpan();
 	generator.closeListElement();
 
-	list.clear();
-	list.insert("librevenge:list-id",2);
-	generator.openOrderedListLevel(list);
+	librevenge::RVNGPropertyList level2(level1);
+	level2.insert("librevenge:level",2);
+	level2.insert("style:num-format", "I");
+	generator.openOrderedListLevel(level2);
 	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
@@ -91,24 +86,22 @@ static void sendText(Generator &generator)
 	generator.closeSpan();
 	generator.closeListElement();
 	generator.closeOrderedListLevel();
+
 	generator.closeOrderedListLevel();
 
 	// now redefine level 2 and try again
-	list.clear();
-	list.insert("librevenge:list-id",2);
-	list.insert("librevenge:level",1);
-	list.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
-	list.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
-	list.insert("style:num-format", "1");
-	generator.defineOrderedListLevel(list);
-	list.insert("librevenge:level",2);
-	list.insert("style:num-format", "A");
-	generator.defineOrderedListLevel(list);
+	librevenge::RVNGPropertyList level;
+	level.insert("librevenge:list-id",2);
+	level.insert("librevenge:list-definition",true);
+	level.insert("librevenge:level",1);
+	level.insert("text:min-label-width", 0.2, librevenge::RVNG_INCH);
+	level.insert("text:space-before", 0.1, librevenge::RVNG_INCH);
+	level.insert("style:num-format", "1");
+	generator.openOrderedListLevel(level);
 
-	list.clear();
-	list.insert("librevenge:list-id",2);
-	generator.openOrderedListLevel(list);
-	generator.openOrderedListLevel(list);
+	level.insert("librevenge:level",2);
+	level.insert("style:num-format", "A");
+	generator.openOrderedListLevel(level);
 	list.insert("fo:margin-left",0.5,librevenge::RVNG_INCH);
 	generator.openListElement(list);
 	generator.openSpan(span);
@@ -118,9 +111,8 @@ static void sendText(Generator &generator)
 	generator.closeOrderedListLevel();
 	generator.closeOrderedListLevel();
 
+	generator.openOrderedListLevel(level1);
 	list.clear();
-	list.insert("librevenge:list-id",1);
-	generator.openOrderedListLevel(list);
 	list.insert("fo:margin-left",0.2,librevenge::RVNG_INCH);
 	list.insert("text:start-value", 2);
 	generator.openListElement(list);
