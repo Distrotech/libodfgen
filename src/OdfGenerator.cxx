@@ -266,10 +266,12 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 		style.insert("style:vertical-rel", "page-content");
 	librevenge::RVNGString frameStyleName=mGraphicManager.findOrAdd(style, false);
 
-	librevenge::RVNGPropertyList graphic(propList);
+	librevenge::RVNGPropertyList graphic;
+	mGraphicManager.addGraphicProperties(propList, graphic);
+	mGraphicManager.addFrameProperties(propList, graphic);
 	graphic.insert("style:parent-style-name", frameStyleName);
 	graphic.insert("draw:ole-draw-aspect", "1");
-	librevenge::RVNGString frameAutomaticStyleName=mGraphicManager.findOrAdd(graphic, false);
+	librevenge::RVNGString frameAutomaticStyleName=mGraphicManager.findOrAdd(graphic);
 
 	// And write the frame itself
 	unsigned objectId = 0;
