@@ -393,7 +393,6 @@ void OdsGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStr
 void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
-	sendStorage(&mFrameAutomaticStyles, pHandler);
 
 	mFontManager.write(pHandler); // do nothing
 	mSpanManager.write(pHandler);
@@ -523,7 +522,6 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:style");
 	}
 
-	sendStorage(&mFrameStyles, pHandler);
 	mGraphicManager.writeStyles(pHandler);
 	pHandler->endElement("office:styles");
 }
@@ -1495,7 +1493,7 @@ void OdsGenerator::openGroup(const ::librevenge::RVNGPropertyList &propList)
 	OdsGeneratorPrivate::State state=mpImpl->getState();
 	state.mbInGroup=true;
 	mpImpl->pushState(state);
-	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:g"));
+	mpImpl->openGroup(propList);
 }
 
 void OdsGenerator::closeGroup()
@@ -1507,7 +1505,7 @@ void OdsGenerator::closeGroup()
 	if (!mpImpl->getState().mbInGroup)
 		return;
 	mpImpl->popState();
-	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
+	mpImpl->closeGroup();
 }
 
 void OdsGenerator::defineGraphicStyle(const ::librevenge::RVNGPropertyList &propList)
@@ -1542,9 +1540,7 @@ void OdsGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 		return mpImpl->mAuxiliarOdtState->get().drawPolygon(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
-	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
-	if (vertices && vertices->count())
-		mpImpl->drawPolySomething(*vertices, true);
+	mpImpl->drawPolySomething(propList, true);
 }
 
 
@@ -1554,9 +1550,7 @@ void OdsGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 		return mpImpl->mAuxiliarOdtState->get().drawPolyline(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
-	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
-	if (vertices && vertices->count())
-		mpImpl->drawPolySomething(*vertices, false);
+	mpImpl->drawPolySomething(propList, false);
 }
 
 
@@ -1566,9 +1560,7 @@ void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 		return mpImpl->mAuxiliarOdtState->get().drawPath(propList);
 	if (!mpImpl->canAddNewShape())
 		return;
-	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
-	if (path && path->count())
-		mpImpl->drawPath(*path);
+	mpImpl->drawPath(propList);
 }
 
 void OdsGenerator::initStateWith(OdfGenerator const &orig)

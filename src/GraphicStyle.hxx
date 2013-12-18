@@ -38,8 +38,8 @@ class GraphicStyleManager : public StyleManager
 {
 public:
 	GraphicStyleManager() : mAutomaticStyles(), mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mOpacityStyles(),
-		mStrokeDashStyles(), mAutomaticNameMap(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(),
-		mOpacityNameMap(), mStrokeDashNameMap() {}
+		mStrokeDashStyles(), mStyles(), mAutomaticNameMap(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(),
+		mOpacityNameMap(), mStrokeDashNameMap(), mStyleNameMap() {}
 	virtual ~GraphicStyleManager()
 	{
 		clean();
@@ -52,7 +52,7 @@ public:
 	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const;
 
 	/** */
-	librevenge::RVNGString findOrAdd(librevenge::RVNGPropertyList const &propList);
+	librevenge::RVNGString findOrAdd(librevenge::RVNGPropertyList const &propList, bool automatic=true);
 
 	/** append the graphic in the element, ie. the stroke, pattern, bitmap, marker properties */
 	void addGraphicProperties(librevenge::RVNGPropertyList const &style, librevenge::RVNGPropertyList &element);
@@ -74,6 +74,7 @@ protected:
 	std::vector<DocumentElement *> mMarkerStyles;
 	std::vector<DocumentElement *> mOpacityStyles;
 	std::vector<DocumentElement *> mStrokeDashStyles;
+	std::vector<DocumentElement *> mStyles;
 
 	// automatic hash -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mAutomaticNameMap;
@@ -87,6 +88,8 @@ protected:
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mOpacityNameMap;
 	// stroke dash hash -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mStrokeDashNameMap;
+	// style hash -> style name
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mStyleNameMap;
 };
 
 

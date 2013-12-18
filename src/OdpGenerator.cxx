@@ -350,7 +350,6 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	// CHECKME: previously, this part was not done in STYLES
 
 	// writing out the graphics automatic styles
-	sendStorage(&mFrameAutomaticStyles, pHandler);
 	mGraphicManager.writeAutomaticStyles(pHandler);
 
 	mParagraphManager.write(pHandler);
@@ -636,23 +635,17 @@ void OdpGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 
 void OdpGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 {
-	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
-	if (vertices && vertices->count())
-		mpImpl->drawPolySomething(*vertices, false);
+	mpImpl->drawPolySomething(propList, false);
 }
 
 void OdpGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 {
-	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
-	if (vertices && vertices->count())
-		mpImpl->drawPolySomething(*vertices, true);
+	mpImpl->drawPolySomething(propList, true);
 }
 
 void OdpGenerator::drawPath(const librevenge::RVNGPropertyList &propList)
 {
-	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
-	if (path && path->count())
-		mpImpl->drawPath(*path);
+	mpImpl->drawPath(propList);
 }
 
 void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propList)
@@ -760,14 +753,14 @@ void OdpGenerator::endEmbeddedGraphics()
 {
 }
 
-void OdpGenerator::startGroup(const ::librevenge::RVNGPropertyList &/*propList*/)
+void OdpGenerator::startGroup(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:g"));
+	mpImpl->openGroup(propList);
 }
 
 void OdpGenerator::endGroup()
 {
-	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
+	mpImpl->closeGroup();
 }
 
 void OdpGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)

@@ -60,7 +60,7 @@ OdfGenerator::OdfGenerator() :
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
 	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(), mIdListStorageMap(),
-	miFrameNumber(0),  mFrameStyles(), mFrameAutomaticStyles(), mFrameNameIdMap(),
+	miFrameNumber(0),  mFrameNameIdMap(),
 	mGraphicStyle(),
 	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
 {
@@ -79,8 +79,6 @@ OdfGenerator::~OdfGenerator()
 	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
 	        iterListStyles != mListStyles.end(); ++iterListStyles)
 		delete(*iterListStyles);
-	emptyStorage(&mFrameAutomaticStyles);
-	emptyStorage(&mFrameStyles);
 }
 
 std::string OdfGenerator::getDocumentType(OdfStreamType streamType)
@@ -241,171 +239,86 @@ void OdfGenerator::registerEmbeddedImageHandler(const librevenge::RVNGString &mi
 }
 
 ////////////////////////////////////////////////////////////
-// frame
+// frame/group
 ////////////////////////////////////////////////////////////
 void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 {
-	// First, let's create a Frame Style for this box
-	TagOpenElement *frameStyleOpenElement = new TagOpenElement("style:style");
-	librevenge::RVNGString frameStyleName;
+	// First, let's create a basic Style for this box
+	librevenge::RVNGPropertyList style;
+	if (propList["style:wrap"])
+		style.insert("style:wrap", propList["style:wrap"]->getStr());
+	if (propList["style:run-through"])
+		style.insert("style:run-through", propList["style:run-through"]->getStr());
+	if (propList["style:horizontal-pos"])
+		style.insert("style:horizontal-pos", propList["style:horizontal-pos"]->getStr());
+	else
+		style.insert("style:horizontal-rel", "left");
+	if (propList["style:horizontal-rel"])
+		style.insert("style:horizontal-rel", propList["style:horizontal-rel"]->getStr());
+	else
+		style.insert("style:horizontal-rel", "paragraph");
+	if (propList["style:vertical-pos"])
+		style.insert("style:vertical-pos", propList["style:vertical-pos"]->getStr());
+	else
+		style.insert("style:vertical-rel", "top");
+	if (propList["style:vertical-rel"])
+		style.insert("style:vertical-rel", propList["style:vertical-rel"]->getStr());
+	else
+		style.insert("style:vertical-rel", "page-content");
+	librevenge::RVNGString frameStyleName=mGraphicManager.findOrAdd(style, false);
+
+	librevenge::RVNGPropertyList graphic(propList);
+	graphic.insert("style:parent-style-name", frameStyleName);
+	graphic.insert("draw:ole-draw-aspect", "1");
+	librevenge::RVNGString frameAutomaticStyleName=mGraphicManager.findOrAdd(graphic, false);
+
+	// And write the frame itself
 	unsigned objectId = 0;
 	if (propList["librevenge:frame-name"])
 		objectId= getFrameId(propList["librevenge:frame-name"]->getStr());
 	else
 		objectId= getFrameId("");
-	frameStyleName.sprintf("GraphicFrame_%i", objectId);
-	frameStyleOpenElement->addAttribute("style:name", frameStyleName);
-	frameStyleOpenElement->addAttribute("style:family", "graphic");
-
-	mFrameStyles.push_back(frameStyleOpenElement);
-
-	TagOpenElement *frameStylePropertiesOpenElement = new TagOpenElement("style:graphic-properties");
-
-	if (propList["text:anchor-type"])
-		frameStylePropertiesOpenElement->addAttribute("text:anchor-type", propList["text:anchor-type"]->getStr());
-	if (propList["text:anchor-page-number"])
-		frameStylePropertiesOpenElement->addAttribute("text:anchor-page-number", propList["text:anchor-page-number"]->getStr());
-
-	if (propList["svg:x"])
-		frameStylePropertiesOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
-
-	if (propList["svg:y"])
-		frameStylePropertiesOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
-
-	if (propList["svg:width"])
-		frameStylePropertiesOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-	else if (propList["fo:min-width"])
-		frameStylePropertiesOpenElement->addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
-
-	if (propList["svg:height"])
-		frameStylePropertiesOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
-	else if (propList["fo:min-height"])
-		frameStylePropertiesOpenElement->addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
-
-	if (propList["style:rel-width"])
-		frameStylePropertiesOpenElement->addAttribute("style:rel-width", propList["style:rel-width"]->getStr());
-
-	if (propList["style:rel-height"])
-		frameStylePropertiesOpenElement->addAttribute("style:rel-height", propList["style:rel-height"]->getStr());
-
-	if (propList["fo:max-width"])
-		frameStylePropertiesOpenElement->addAttribute("fo:max-width", propList["fo:max-width"]->getStr());
-
-	if (propList["fo:max-height"])
-		frameStylePropertiesOpenElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
-
-	if (propList["style:wrap"])
-		frameStylePropertiesOpenElement->addAttribute("style:wrap", propList["style:wrap"]->getStr());
-
-	if (propList["style:run-through"])
-		frameStylePropertiesOpenElement->addAttribute("style:run-through", propList["style:run-through"]->getStr());
-
-	mFrameStyles.push_back(frameStylePropertiesOpenElement);
-
-	mFrameStyles.push_back(new TagCloseElement("style:graphic-properties"));
-
-	mFrameStyles.push_back(new TagCloseElement("style:style"));
-
-	// Now, let's create an automatic style for this frame
-	TagOpenElement *frameAutomaticStyleElement = new TagOpenElement("style:style");
-	librevenge::RVNGString frameAutomaticStyleName;
-	frameAutomaticStyleName.sprintf("fr%i", objectId);
-	frameAutomaticStyleElement->addAttribute("style:name", frameAutomaticStyleName);
-	frameAutomaticStyleElement->addAttribute("style:family", "graphic");
-	frameAutomaticStyleElement->addAttribute("style:parent-style-name", frameStyleName);
-
-	mFrameAutomaticStyles.push_back(frameAutomaticStyleElement);
-
-	TagOpenElement *frameAutomaticStylePropertiesElement = new TagOpenElement("style:graphic-properties");
-	if (propList["style:horizontal-pos"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", propList["style:horizontal-pos"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-pos", "left");
-
-	if (propList["style:horizontal-rel"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", propList["style:horizontal-rel"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:horizontal-rel", "paragraph");
-
-	if (propList["style:vertical-pos"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-pos", propList["style:vertical-pos"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-pos", "top");
-
-	if (propList["style:vertical-rel"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-rel", propList["style:vertical-rel"]->getStr());
-	else
-		frameAutomaticStylePropertiesElement->addAttribute("style:vertical-rel", "page-content");
-
-	if (propList["fo:max-width"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:max-width", propList["fo:max-width"]->getStr());
-
-	if (propList["fo:max-height"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:max-height", propList["fo:max-height"]->getStr());
-
-	// check if the frame has border, shadow, background attributes
-	static char const *(bordersString[])=
-	{
-		"fo:border","fo:border-top","fo:border-left","fo:border-bottom","fo:border-right",
-		"style:border-line-width","style:border-line-width-top","style:border-line-width-left",
-		"style:border-line-width-bottom","style:border-line-width-right",
-		"style:shadow"
-	};
-	for (int b = 0; b < 11; b++)
-	{
-		if (propList[bordersString[b]])
-			frameAutomaticStylePropertiesElement->addAttribute(bordersString[b], propList[bordersString[b]]->getStr());
-	}
-	if (propList["fo:background-color"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:background-color", propList["fo:background-color"]->getStr());
-	if (propList["style:background-transparency"])
-		frameAutomaticStylePropertiesElement->addAttribute("style:background-transparency", propList["style:background-transparency"]->getStr());
-
-	if (propList["fo:clip"])
-		frameAutomaticStylePropertiesElement->addAttribute("fo:clip", propList["fo:clip"]->getStr());
-
-	frameAutomaticStylePropertiesElement->addAttribute("draw:ole-draw-aspect", "1");
-
-	mFrameAutomaticStyles.push_back(frameAutomaticStylePropertiesElement);
-
-	mFrameAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
-
-	mFrameAutomaticStyles.push_back(new TagCloseElement("style:style"));
-
-	// And write the frame itself
 	TagOpenElement *drawFrameOpenElement = new TagOpenElement("draw:frame");
-
 	drawFrameOpenElement->addAttribute("draw:style-name", frameAutomaticStyleName);
 	librevenge::RVNGString objectName;
 	objectName.sprintf("Object%i", objectId);
 	drawFrameOpenElement->addAttribute("draw:name", objectName);
-
-	static char const *(frameAttrib[])=
-	{
-		"draw:z-index", "svg:x", "svg:y", "style:rel-width", "style:rel-height",
-		"text:anchor-type", "text:anchor-page-number"
-	};
-	for (int i=0; i<7; ++i)
-	{
-		if (propList[frameAttrib[i]])
-			drawFrameOpenElement->addAttribute(frameAttrib[i], propList[frameAttrib[i]]->getStr());
-	}
-
-	if (propList["svg:width"])
-		drawFrameOpenElement->addAttribute("svg:width", propList["svg:width"]->getStr());
-	else if (propList["fo:min-width"])
-		drawFrameOpenElement->addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
-	if (propList["svg:height"])
-		drawFrameOpenElement->addAttribute("svg:height", propList["svg:height"]->getStr());
-	else if (propList["fo:min-height"])
-		drawFrameOpenElement->addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
-
+	if (propList["svg:x"])
+		drawFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
+	if (propList["svg:y"])
+		drawFrameOpenElement->addAttribute("svg:y", propList["svg:y"]->getStr());
+	addFrameProperties(propList, *drawFrameOpenElement);
 	mpCurrentStorage->push_back(drawFrameOpenElement);
 }
 
 void OdfGenerator::closeFrame()
 {
 	mpCurrentStorage->push_back(new TagCloseElement("draw:frame"));
+}
+
+void OdfGenerator::addFrameProperties(const librevenge::RVNGPropertyList &propList, TagOpenElement &element) const
+{
+	static char const *(frameAttrib[])=
+	{
+		"draw:z-index",
+		"fo:max-width", "fo:max-height",
+		"style:rel-width", "style:rel-height", // checkme
+		"text:anchor-page-number", "text:anchor-type"
+	};
+	for (int i=0; i<7; ++i)
+	{
+		if (propList[frameAttrib[i]])
+			element.addAttribute(frameAttrib[i], propList[frameAttrib[i]]->getStr());
+	}
+
+	if (propList["svg:width"])
+		element.addAttribute("svg:width", propList["svg:width"]->getStr());
+	else if (propList["fo:min-width"]) // fixme: must be an attribute of draw:text-box
+		element.addAttribute("fo:min-width", propList["fo:min-width"]->getStr());
+	if (propList["svg:height"])
+		element.addAttribute("svg:height", propList["svg:height"]->getStr());
+	else if (propList["fo:min-height"]) // fixme: must be an attribute of draw:text-box
+		element.addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
 }
 
 unsigned OdfGenerator::getFrameId(librevenge::RVNGString val)
@@ -417,6 +330,18 @@ unsigned OdfGenerator::getFrameId(librevenge::RVNGString val)
 	if (hasLabel)
 		mFrameNameIdMap[val]=id;
 	return id;
+}
+
+void OdfGenerator::openGroup(const librevenge::RVNGPropertyList &propList)
+{
+	TagOpenElement *groupElement=new TagOpenElement("draw:g");
+	addFrameProperties(propList, *groupElement);
+	mpCurrentStorage->push_back(groupElement);
+}
+
+void OdfGenerator::closeGroup()
+{
+	mpCurrentStorage->push_back(new TagCloseElement("draw:g"));
 }
 
 ////////////////////////////////////////////////////////////
@@ -1083,7 +1008,7 @@ librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName()
 	return mGraphicManager.findOrAdd(styleList);
 }
 
-void OdfGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
+void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)
 {
 	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
 	{
@@ -1093,6 +1018,7 @@ void OdfGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
+	addFrameProperties(propList, *pDrawEllipseElement);
 	sValue = doubleToString(2 * propList["svg:rx"]->getDouble());
 	sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
@@ -1136,7 +1062,14 @@ void OdfGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 	mpCurrentStorage->push_back(new TagCloseElement("draw:ellipse"));
 }
 
-void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path)
+void OdfGenerator::drawPath(const librevenge::RVNGPropertyList &propList)
+{
+	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
+	if (!path) return;
+	drawPath(*path, propList);
+}
+
+void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path, const librevenge::RVNGPropertyList &propList)
 {
 	if (!path.count())
 		return;
@@ -1148,6 +1081,7 @@ void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path)
 	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
 	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
 	pDrawPathElement->addAttribute("draw:style-name", sValue);
+	addFrameProperties(propList, *pDrawPathElement);
 	pDrawPathElement->addAttribute("draw:layer", "layout");
 	sValue = doubleToString(px);
 	sValue.append("in");
@@ -1169,37 +1103,39 @@ void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path)
 	mpCurrentStorage->push_back(new TagCloseElement("draw:path"));
 }
 
-void OdfGenerator::drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed)
+void OdfGenerator::drawPolySomething(const librevenge::RVNGPropertyList &propList, bool isClosed)
 {
-	if (vertices.count() < 2)
+	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
+	if (!vertices || vertices->count() < 2)
 		return;
 
-	if (vertices.count() == 2)
+	if (vertices->count() == 2)
 	{
-		if (!vertices[0]["svg:x"]||!vertices[0]["svg:y"]||!vertices[1]["svg:x"]||!vertices[1]["svg:y"])
+		if (!(*vertices)[0]["svg:x"]||!(*vertices)[0]["svg:y"]||!(*vertices)[1]["svg:x"]||!(*vertices)[1]["svg:y"])
 		{
 			ODFGEN_DEBUG_MSG(("OdfGenerator::drawPolySomething: some vertices are not defined\n"));
 			return;
 		}
 		librevenge::RVNGString sValue=getCurrentGraphicStyleName();
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
+		addFrameProperties(propList, *pDrawLineElement);
 		pDrawLineElement->addAttribute("draw:style-name", sValue);
 		pDrawLineElement->addAttribute("draw:layer", "layout");
-		pDrawLineElement->addAttribute("svg:x1", vertices[0]["svg:x"]->getStr());
-		pDrawLineElement->addAttribute("svg:y1", vertices[0]["svg:y"]->getStr());
-		pDrawLineElement->addAttribute("svg:x2", vertices[1]["svg:x"]->getStr());
-		pDrawLineElement->addAttribute("svg:y2", vertices[1]["svg:y"]->getStr());
+		pDrawLineElement->addAttribute("svg:x1", (*vertices)[0]["svg:x"]->getStr());
+		pDrawLineElement->addAttribute("svg:y1", (*vertices)[0]["svg:y"]->getStr());
+		pDrawLineElement->addAttribute("svg:x2", (*vertices)[1]["svg:x"]->getStr());
+		pDrawLineElement->addAttribute("svg:y2", (*vertices)[1]["svg:y"]->getStr());
 		mpCurrentStorage->push_back(pDrawLineElement);
 		mpCurrentStorage->push_back(new TagCloseElement("draw:line"));
 	}
 	else
 	{
-		::librevenge::RVNGPropertyListVector path;
-		::librevenge::RVNGPropertyList element;
+		librevenge::RVNGPropertyListVector path;
+		librevenge::RVNGPropertyList element;
 
-		for (unsigned long ii = 0; ii < vertices.count(); ++ii)
+		for (unsigned long ii = 0; ii < vertices->count(); ++ii)
 		{
-			element = vertices[ii];
+			element = (*vertices)[ii];
 			if (ii == 0)
 				element.insert("librevenge:path-action", "M");
 			else
@@ -1212,11 +1148,11 @@ void OdfGenerator::drawPolySomething(const ::librevenge::RVNGPropertyListVector 
 			element.insert("librevenge:path-action", "Z");
 			path.append(element);
 		}
-		drawPath(path);
+		drawPath(path,propList);
 	}
 }
 
-void OdfGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
+void OdfGenerator::drawRectangle(const librevenge::RVNGPropertyList &propList)
 {
 	if (!propList["svg:x"] || !propList["svg:y"] ||
 	        !propList["svg:width"] || !propList["svg:height"])
@@ -1225,7 +1161,11 @@ void OdfGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 		return;
 	}
 	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+	librevenge::RVNGPropertyList frame(propList);
+	frame.remove("svg:height");
+	frame.remove("svg:width");
 	TagOpenElement *pDrawRectElement = new TagOpenElement("draw:rect");
+	addFrameProperties(frame, *pDrawRectElement);
 	pDrawRectElement->addAttribute("draw:style-name", sValue);
 	pDrawRectElement->addAttribute("svg:x", propList["svg:x"]->getStr());
 	pDrawRectElement->addAttribute("svg:y", propList["svg:y"]->getStr());

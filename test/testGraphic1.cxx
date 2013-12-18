@@ -33,7 +33,7 @@
 #include "StringDocumentHandler.hxx"
 
 template <class Generator>
-static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const librevenge::RVNGPropertyList &))
+static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const librevenge::RVNGPropertyList &), double xDiff=0, double yDiff=0)
 {
 	librevenge::RVNGPropertyList style1;
 	style1.insert("draw:stroke", "solid");
@@ -44,11 +44,11 @@ static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const 
 
 	librevenge::RVNGPropertyList shape, point;
 	librevenge::RVNGPropertyListVector vertices;
-	point.insert("svg:x", 20, librevenge::RVNG_POINT);
-	point.insert("svg:y", 40, librevenge::RVNG_POINT);
+	point.insert("svg:x", 20+xDiff, librevenge::RVNG_POINT);
+	point.insert("svg:y", 40+yDiff, librevenge::RVNG_POINT);
 	vertices.append(point);
-	point.insert("svg:x", 200, librevenge::RVNG_POINT);
-	point.insert("svg:y", 40, librevenge::RVNG_POINT);
+	point.insert("svg:x", 200+xDiff, librevenge::RVNG_POINT);
+	point.insert("svg:y", 40+yDiff, librevenge::RVNG_POINT);
 	vertices.append(point);
 	shape.insert("svg:points", vertices);
 	generator.drawPolyline(shape);
@@ -65,8 +65,8 @@ static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const 
 	(generator.*SetStyle)(style2);
 
 	shape.clear();
-	shape.insert("svg:x", 70, librevenge::RVNG_POINT);
-	shape.insert("svg:y", 80, librevenge::RVNG_POINT);
+	shape.insert("svg:x", 70+xDiff, librevenge::RVNG_POINT);
+	shape.insert("svg:y", 80+yDiff, librevenge::RVNG_POINT);
 	shape.insert("svg:width", 100, librevenge::RVNG_POINT);
 	shape.insert("svg:height", 30, librevenge::RVNG_POINT);
 	generator.drawRectangle(shape);
@@ -74,11 +74,11 @@ static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const 
 	(generator.*SetStyle)(style1);
 	shape.clear();
 	vertices.clear();
-	point.insert("svg:x", 20, librevenge::RVNG_POINT);
-	point.insert("svg:y", 100, librevenge::RVNG_POINT);
+	point.insert("svg:x", 20+xDiff, librevenge::RVNG_POINT);
+	point.insert("svg:y", 100+yDiff, librevenge::RVNG_POINT);
 	vertices.append(point);
-	point.insert("svg:x", 200, librevenge::RVNG_POINT);
-	point.insert("svg:y", 100, librevenge::RVNG_POINT);
+	point.insert("svg:x", 200+xDiff, librevenge::RVNG_POINT);
+	point.insert("svg:y", 100+yDiff, librevenge::RVNG_POINT);
 	vertices.append(point);
 	shape.insert("svg:points", vertices);
 	generator.drawPolyline(shape);
@@ -92,11 +92,11 @@ static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const 
 
 	shape.clear();
 	vertices.clear();
-	point.insert("svg:x", 20, librevenge::RVNG_POINT);
-	point.insert("svg:y", 200, librevenge::RVNG_POINT);
+	point.insert("svg:x", 20+xDiff, librevenge::RVNG_POINT);
+	point.insert("svg:y", 200+yDiff, librevenge::RVNG_POINT);
 	vertices.append(point);
-	point.insert("svg:x", 200, librevenge::RVNG_POINT);
-	point.insert("svg:y", 200, librevenge::RVNG_POINT);
+	point.insert("svg:x", 200+xDiff, librevenge::RVNG_POINT);
+	point.insert("svg:y", 200+yDiff, librevenge::RVNG_POINT);
 	vertices.append(point);
 	shape.insert("svg:points", vertices);
 	generator.drawPolyline(shape);
@@ -112,10 +112,10 @@ static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const 
 
 	// point does not works for ellipse so inch
 	shape.clear();
-	shape.insert("svg:cx", 3, librevenge::RVNG_POINT);
-	shape.insert("svg:cy", 1.2, librevenge::RVNG_POINT);
-	shape.insert("svg:rx", 0.8, librevenge::RVNG_POINT);
-	shape.insert("svg:ry", 0.4, librevenge::RVNG_POINT);
+	shape.insert("svg:cx", 3+xDiff/72., librevenge::RVNG_INCH);
+	shape.insert("svg:cy", 1.2+yDiff/72., librevenge::RVNG_INCH);
+	shape.insert("svg:rx", 0.8, librevenge::RVNG_INCH);
+	shape.insert("svg:ry", 0.4, librevenge::RVNG_INCH);
 	generator.drawEllipse(shape);
 
 	style.insert("draw:stroke", "solid");
@@ -126,7 +126,7 @@ static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const 
 	style.insert("draw:shadow-offset-y", "30");
 	style.insert("draw:angle", 30);
 	(generator.*SetStyle)(style);
-	shape.insert("svg:cy", 1.8, librevenge::RVNG_POINT);
+	shape.insert("svg:cy", 1.8+yDiff/72., librevenge::RVNG_INCH);
 	shape.insert("librevenge:rotate", 30);
 	generator.drawEllipse(shape);
 }
@@ -237,9 +237,39 @@ static void createOdt()
 	page.insert("fo:margin-top", 0.1, librevenge::RVNG_INCH);
 	page.insert("fo:margin-bottom", 0.1, librevenge::RVNG_INCH);
 	generator.openPageSpan(page);
-	generator.openGroup(librevenge::RVNGPropertyList());
-	sendGraphic(generator, &OdtGenerator::defineGraphicStyle);
-	generator.closeGroup();
+
+	{
+		// anchor on page
+		librevenge::RVNGPropertyList group;
+		group.insert("text:anchor-type", "page");
+		group.insert("text:anchor-page-number", "1");
+		group.insert("style:vertical-rel", "page");
+		group.insert("style:horizontal-rel", "page");
+		group.insert("style:horizontal-pos", "from-left");
+		group.insert("style:vertical-pos", "from-top");
+		group.insert("style:wrap", "run-through");
+		group.insert("style:run-through", "background");
+		generator.openGroup(group);
+		sendGraphic(generator, &OdtGenerator::defineGraphicStyle, 100, 200);
+		generator.closeGroup();
+	}
+	librevenge::RVNGPropertyList para, span;
+	generator.openParagraph(para);
+	generator.openSpan(span);
+	{
+		// a basic char
+		librevenge::RVNGPropertyList group;
+		group.insert("svg:width",400, librevenge::RVNG_POINT);
+		group.insert("fo:min-height",300, librevenge::RVNG_POINT);
+		group.insert("text:anchor-type", "char");
+		group.insert("style:vertical-rel", "char");
+		group.insert("style:horizontal-rel", "char");
+		generator.openGroup(group);
+		sendGraphic(generator, &OdtGenerator::defineGraphicStyle);
+		generator.closeGroup();
+	}
+	generator.closeSpan();
+	generator.closeParagraph();
 
 	generator.closePageSpan();
 	generator.endDocument();

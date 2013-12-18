@@ -40,12 +40,15 @@ void GraphicStyleManager::clean()
 		delete mOpacityStyles[i];
 	for (size_t i=0; i < mStrokeDashStyles.size(); ++i)
 		delete mStrokeDashStyles[i];
+	for (size_t i=0; i < mStyles.size(); ++i)
+		delete mStyles[i];
 	mAutomaticStyles.resize(0);
 	mBitmapStyles.resize(0);
 	mGradientStyles.resize(0);
 	mMarkerStyles.resize(0);
 	mOpacityStyles.resize(0);
 	mStrokeDashStyles.resize(0);
+	mStyles.resize(0);
 
 	mAutomaticNameMap.clear();
 	mBitmapNameMap.clear();
@@ -53,6 +56,7 @@ void GraphicStyleManager::clean()
 	mMarkerNameMap.clear();
 	mOpacityNameMap.clear();
 	mStrokeDashNameMap.clear();
+	mStyleNameMap.clear();
 }
 
 void GraphicStyleManager::writeStyles(OdfDocumentHandler *pHandler) const
@@ -67,6 +71,8 @@ void GraphicStyleManager::writeStyles(OdfDocumentHandler *pHandler) const
 		mOpacityStyles[i]->write(pHandler);
 	for (size_t i=0; i<mStrokeDashStyles.size(); ++i)
 		mStrokeDashStyles[i]->write(pHandler);
+	for (size_t i=0; i<mStyles.size(); ++i)
+		mStyles[i]->write(pHandler);
 }
 
 void GraphicStyleManager::writeAutomaticStyles(OdfDocumentHandler *pHandler) const
@@ -75,32 +81,45 @@ void GraphicStyleManager::writeAutomaticStyles(OdfDocumentHandler *pHandler) con
 		mAutomaticStyles[i]->write(pHandler);
 }
 
-librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyList const &propList)
+librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyList const &propList, bool automatic)
 {
 	librevenge::RVNGString hashKey = propList.getPropString();
-	if (mAutomaticNameMap.find(hashKey) != mAutomaticNameMap.end())
-		return mAutomaticNameMap.find(hashKey)->second;
+	std::vector<DocumentElement *> &styles= automatic ? mAutomaticStyles : mStyles;
+	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> &nameMap=
+	    automatic ? mAutomaticNameMap : mStyleNameMap;
 
+	if (nameMap.find(hashKey) != nameMap.end())
+		return nameMap.find(hashKey)->second;
 
 	librevenge::RVNGString name;
-	name.sprintf("gr_%i", (int) mAutomaticNameMap.size());
-	mAutomaticNameMap[hashKey]=name;
+	if (automatic)
+		name.sprintf("gr_%i", (int) nameMap.size());
+	else
+		name.sprintf("GraphicStyle_%i", (int) nameMap.size());
+	nameMap[hashKey]=name;
 
 	TagOpenElement *openElement = new TagOpenElement("style:style");
 	openElement->addAttribute("style:name", name);
 	openElement->addAttribute("style:family", "graphic");
-	openElement->addAttribute("style:parent-style-name", "standard");
-	mAutomaticStyles.push_back(openElement);
+	if (propList["style:parent-style-name"])
+		openElement->addAttribute("style:parent-style-name", propList["style:parent-style-name"]->getStr());
+	else
+		openElement->addAttribute("style:parent-style-name", "standard");
+	if (!automatic && propList["style:display-name"])
+		openElement->addAttribute("style:display-name", propList["style:display-name"]->getStr());
+	styles.push_back(openElement);
 
 	openElement = new TagOpenElement("style:graphic-properties");
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
-		openElement->addAttribute(i.key(),i()->getStr());
+	{
+		if (strcmp(i.key(), "style:display-name") && strcmp(i.key(), "style:parent-style-name"))
+			openElement->addAttribute(i.key(),i()->getStr());
+	}
+	styles.push_back(openElement);
+	styles.push_back(new TagCloseElement("style:graphic-properties"));
 
-	mAutomaticStyles.push_back(openElement);
-	mAutomaticStyles.push_back(new TagCloseElement("style:graphic-properties"));
-
-	mAutomaticStyles.push_back(new TagCloseElement("style:style"));
+	styles.push_back(new TagCloseElement("style:style"));
 
 	return name;
 }
@@ -532,8 +551,22 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 		}
 	}
 	// other
-	if (style["style:mirror"])
-		element.insert("style:mirror", style["style:mirror"]->getStr());
+	static char const *(others[])=
+	{
+		"draw:ole-draw-aspect",
+		"fo:background-color",
+		"fo:border","fo:border-top","fo:border-left","fo:border-bottom","fo:border-right",
+		"fo:clip",
+		"style:background-transparency",
+		"style:border-line-width","style:border-line-width-top","style:border-line-width-left",
+		"style:border-line-width-bottom","style:border-line-width-right",
+		"style:mirror", "style:parent-style-name"
+	};
+	for (int b = 0; b < 16; b++)
+	{
+		if (style[others[b]])
+			element.insert(others[b], style[others[b]]->getStr());
+	}
 }
 
 void GraphicStyleManager::addFrameProperties(librevenge::RVNGPropertyList const &propList, librevenge::RVNGPropertyList &element)
@@ -543,6 +576,10 @@ void GraphicStyleManager::addFrameProperties(librevenge::RVNGPropertyList const 
 	{
 		"fo:min-width", "fo:min-height", "fo:max-width", "fo:max-height", "fo:padding-top", "fo:padding-bottom",
 		"fo:padding-left", "fo:padding-right", "draw:textarea-vertical-align"
+		// checkme
+		// "draw:z-index",
+		// "svg:x", "svg:y", "svg:width", "svg:height", "style:wrap", "style:run-through",
+		// "text:anchor-type", "text:anchor-page-number"
 	};
 	for (int i=0; i<9; ++i)
 	{

@@ -195,7 +195,7 @@ public:
 	void insertCoveredTableCell(const librevenge::RVNGPropertyList &propList);
 
 	//
-	// frame
+	// frame/group
 	//
 
 	/// call to open a frame
@@ -204,6 +204,10 @@ public:
 	void closeFrame();
 	//! return a frame id corresponding to a name ( or a new frame id)
 	unsigned getFrameId(librevenge::RVNGString name="");
+	/// call to open a group
+	void openGroup(const librevenge::RVNGPropertyList &propList);
+	/// call to close a group
+	void closeGroup();
 
 	//
 	// image
@@ -225,15 +229,20 @@ public:
 	}
 
 	//! call to draw an ellipse
-	void drawEllipse(const ::librevenge::RVNGPropertyList &propList);
+	void drawEllipse(const librevenge::RVNGPropertyList &propList);
 	//! call to draw a path
-	void drawPath(const librevenge::RVNGPropertyListVector &path);
+	void drawPath(const librevenge::RVNGPropertyList &propList);
 	//! call to draw a polygon or a polyline
-	void drawPolySomething(const ::librevenge::RVNGPropertyListVector &vertices, bool isClosed);
+	void drawPolySomething(const librevenge::RVNGPropertyList &vertices, bool isClosed);
 	//! call to draw a rectangle
-	void drawRectangle(const ::librevenge::RVNGPropertyList &propList);
+	void drawRectangle(const librevenge::RVNGPropertyList &propList);
 
 protected:
+
+	//
+	// list
+	//
+
 	// list state
 	struct ListState
 	{
@@ -287,9 +296,17 @@ protected:
 	//! store a level
 	void updateListStorage(const librevenge::RVNGPropertyList &level, int id, bool ordered);
 
-protected:
+	//
+	// frame/graphic
+	//
+
+	//! returns the list of properties which must be add to a frame, shape, ...
+	void addFrameProperties(const librevenge::RVNGPropertyList &propList, TagOpenElement &element) const;
+	//! call to draw a path
+	void drawPath(const librevenge::RVNGPropertyListVector &path, const librevenge::RVNGPropertyList &propList);
 	//! returns the current graphic style name ( MODIFYME)
 	librevenge::RVNGString getCurrentGraphicStyleName();
+
 	// the current set of elements that we're writing to
 	Storage *mpCurrentStorage;
 	// the stack of all storage
@@ -337,10 +354,6 @@ protected:
 
 	// the number of created frame
 	unsigned miFrameNumber;
-	// frame styles
-	std::vector<DocumentElement *> mFrameStyles;
-	// automatic frame styles
-	std::vector<DocumentElement *> mFrameAutomaticStyles;
 	// the list of frame seens
 	std::map<librevenge::RVNGString, unsigned, ltstr > mFrameNameIdMap;
 

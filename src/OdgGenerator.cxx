@@ -450,23 +450,17 @@ void OdgGenerator::drawEllipse(const ::librevenge::RVNGPropertyList &propList)
 
 void OdgGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 {
-	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
-	if (vertices && vertices->count())
-		mpImpl->drawPolySomething(*vertices, false);
+	mpImpl->drawPolySomething(propList, false);
 }
 
 void OdgGenerator::drawPolygon(const ::librevenge::RVNGPropertyList &propList)
 {
-	const ::librevenge::RVNGPropertyListVector *vertices = propList.child("svg:points");
-	if (vertices && vertices->count())
-		mpImpl->drawPolySomething(*vertices, true);
+	mpImpl->drawPolySomething(propList, true);
 }
 
 void OdgGenerator::drawPath(const librevenge::RVNGPropertyList &propList)
 {
-	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
-	if (path && path->count())
-		mpImpl->drawPath(*path);
+	mpImpl->drawPath(propList);
 }
 
 void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propList)
