@@ -51,6 +51,35 @@ static librevenge::RVNGString doubleToString(const double value)
 	return prop->getStr();
 }
 
+static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
+{
+	value=prop.getDouble();
+	switch (prop.getUnit())
+	{
+	case librevenge::RVNG_INCH:
+	case librevenge::RVNG_GENERIC: // assume inch
+		return true;
+	case librevenge::RVNG_POINT:
+		value /= 72.;
+		return true;
+	case librevenge::RVNG_TWIP:
+		value /= 1440.;
+		return true;
+	case librevenge::RVNG_PERCENT:
+	case librevenge::RVNG_UNIT_ERROR:
+	default:
+	{
+		static bool first=true;
+		if (first)
+		{
+			ODFGEN_DEBUG_MSG(("OdfGenerator::getInchValue: call with no double value\n"));
+			first=false;
+		}
+		break;
+	}
+	}
+	return false;
+}
 } // anonymous namespace
 
 
@@ -976,14 +1005,21 @@ void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdfGenerator::drawEllipse: position undefined\n"));
 		return;
 	}
+	double rx=0, ry=0, cx=0, cy=0;
+	if (!getInchValue(*propList["svg:rx"], rx) || !getInchValue(*propList["svg:ry"], ry) ||
+	        !getInchValue(*propList["svg:cx"], cx) || !getInchValue(*propList["svg:cy"], cy))
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::drawEllipse: can not read position\n"));
+		return;
+	}
 	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
 	addFrameProperties(propList, *pDrawEllipseElement);
-	sValue = doubleToString(2 * propList["svg:rx"]->getDouble());
+	sValue = doubleToString(2 * rx);
 	sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:width", sValue);
-	sValue = doubleToString(2 * propList["svg:ry"]->getDouble());
+	sValue = doubleToString(2 * ry);
 	sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
 	if (propList["librevenge:rotate"] && propList["librevenge:rotate"]->getDouble() != 0.0)
@@ -994,28 +1030,24 @@ void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)
 		while (rotation > 180)
 			rotation -= 360;
 		double radrotation = rotation*M_PI/180.0;
-		double deltax = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
-		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*cos(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                                                                      - radrotation) - propList["svg:rx"]->getDouble();
-		double deltay = sqrt(pow(propList["svg:rx"]->getDouble(), 2.0)
-		                     + pow(propList["svg:ry"]->getDouble(), 2.0))*sin(atan(propList["svg:ry"]->getDouble()/propList["svg:rx"]->getDouble())
-		                                                                      - radrotation) - propList["svg:ry"]->getDouble();
+		double deltax = sqrt(pow(rx, 2.0) + pow(ry, 2.0))*cos(atan(ry/rx)-radrotation) - rx;
+		double deltay = sqrt(pow(rx, 2.0) + pow(ry, 2.0))*sin(atan(ry/rx)- radrotation) - ry;
 		sValue = "rotate(";
 		sValue.append(doubleToString(radrotation));
 		sValue.append(") ");
 		sValue.append("translate(");
-		sValue.append(doubleToString(propList["svg:cx"]->getDouble() - propList["svg:rx"]->getDouble() - deltax));
+		sValue.append(doubleToString(cx - rx - deltax));
 		sValue.append("in, ");
-		sValue.append(doubleToString(propList["svg:cy"]->getDouble() - propList["svg:ry"]->getDouble() - deltay));
+		sValue.append(doubleToString(cy - ry - deltay));
 		sValue.append("in)");
 		pDrawEllipseElement->addAttribute("draw:transform", sValue);
 	}
 	else
 	{
-		sValue = doubleToString(propList["svg:cx"]->getDouble()-propList["svg:rx"]->getDouble());
+		sValue = doubleToString(cx-rx);
 		sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:x", sValue);
-		sValue = doubleToString(propList["svg:cy"]->getDouble()-propList["svg:ry"]->getDouble());
+		sValue = doubleToString(cy-ry);
 		sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:y", sValue);
 	}

@@ -286,6 +286,33 @@ void getCubicBezierBBox(double x0, double y0, double x1, double y1, double x2, d
 	}
 }
 
+static double getInchValue(librevenge::RVNGProperty const *prop)
+{
+	double value=prop->getDouble();
+	switch (prop->getUnit())
+	{
+	case librevenge::RVNG_INCH:
+	case librevenge::RVNG_GENERIC: // assume inch
+		return value;
+	case librevenge::RVNG_POINT:
+		return value/72.;
+	case librevenge::RVNG_TWIP:
+		return value/1440.;
+	case librevenge::RVNG_PERCENT:
+	case librevenge::RVNG_UNIT_ERROR:
+	default:
+	{
+		static bool first=true;
+		if (first)
+		{
+			ODFGEN_DEBUG_MSG(("GraphicFunctions::getInchValue: call with no double value\n"));
+			first=false;
+		}
+		break;
+	}
+	}
+	return value;
+}
 bool getPathBBox(const librevenge::RVNGPropertyListVector &path, double &px, double &py, double &qx, double &qy)
 {
 	// This must be a mistake and we do not want to crash lower
@@ -324,16 +351,16 @@ bool getPathBBox(const librevenge::RVNGPropertyListVector &path, double &px, dou
 				ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::_drawPath: the first point has no coordinate\n"));
 				continue;
 			}
-			qx = px = x = path[k]["svg:x"]->getDouble();
-			qy = py = y = path[k]["svg:y"]->getDouble();
+			qx = px = x = getInchValue(path[k]["svg:x"]);
+			qy = py = y = getInchValue(path[k]["svg:y"]);
 			lastPrevX = lastX = px;
 			lastPrevY = lastY = py;
 			isFirstPoint = false;
 		}
 		else
 		{
-			if (path[k]["svg:x"]) x=path[k]["svg:x"]->getDouble();
-			if (path[k]["svg:y"]) y=path[k]["svg:y"]->getDouble();
+			if (path[k]["svg:x"]) x=getInchValue(path[k]["svg:x"]);
+			if (path[k]["svg:y"]) y=getInchValue(path[k]["svg:y"]);
 			px = (px > x) ? x : px;
 			py = (py > y) ? y : py;
 			qx = (qx < x) ? x : qx;
@@ -345,29 +372,29 @@ bool getPathBBox(const librevenge::RVNGPropertyListVector &path, double &px, dou
 
 		if (action[0] == 'C' && coord2Ok)
 		{
-			getCubicBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
-			                   path[k]["svg:x2"]->getDouble(), path[k]["svg:y2"]->getDouble(),
+			getCubicBezierBBox(lastX, lastY, getInchValue(path[k]["svg:x1"]), getInchValue(path[k]["svg:y1"]),
+			                   getInchValue(path[k]["svg:x2"]), getInchValue(path[k]["svg:y2"]),
 			                   x, y, xmin, ymin, xmax, ymax);
 			lastPrevSet=true;
-			lastPrevX=2*x-path[k]["svg:x2"]->getDouble();
-			lastPrevY=2*y-path[k]["svg:y2"]->getDouble();
+			lastPrevX=2*x-getInchValue(path[k]["svg:x2"]);
+			lastPrevY=2*y-getInchValue(path[k]["svg:y2"]);
 		}
 		else if (action[0] == 'S' && coord1Ok)
 		{
 			getCubicBezierBBox(lastX, lastY, lastPrevX, lastPrevY,
-			                   path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
+			                   getInchValue(path[k]["svg:x1"]), getInchValue(path[k]["svg:y1"]),
 			                   x, y, xmin, ymin, xmax, ymax);
 			lastPrevSet=true;
-			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
-			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
+			lastPrevX=2*x-getInchValue(path[k]["svg:x1"]);
+			lastPrevY=2*y-getInchValue(path[k]["svg:y1"]);
 		}
 		else if (action[0] == 'Q' && coord1Ok)
 		{
-			getQuadraticBezierBBox(lastX, lastY, path[k]["svg:x1"]->getDouble(), path[k]["svg:y1"]->getDouble(),
+			getQuadraticBezierBBox(lastX, lastY, getInchValue(path[k]["svg:x1"]), getInchValue(path[k]["svg:y1"]),
 			                       x, y, xmin, ymin, xmax, ymax);
 			lastPrevSet=true;
-			lastPrevX=2*x-path[k]["svg:x1"]->getDouble();
-			lastPrevY=2*y-path[k]["svg:y1"]->getDouble();
+			lastPrevX=2*x-getInchValue(path[k]["svg:x1"]);
+			lastPrevY=2*y-getInchValue(path[k]["svg:y1"]);
 		}
 		else if (action[0] == 'T' && coordOk)
 		{
@@ -379,7 +406,7 @@ bool getPathBBox(const librevenge::RVNGPropertyListVector &path, double &px, dou
 		}
 		else if (action[0] == 'A' && coordOk && path[k]["svg:rx"] && path[k]["svg:ry"])
 		{
-			getEllipticalArcBBox(lastX, lastY, path[k]["svg:rx"]->getDouble(), path[k]["svg:ry"]->getDouble(),
+			getEllipticalArcBBox(lastX, lastY, getInchValue(path[k]["svg:rx"]), getInchValue(path[k]["svg:ry"]),
 			                     path[k]["librevenge:rotate"] ? path[k]["librevenge:rotate"]->getDouble() : 0.0,
 			                     path[k]["librevenge:large-arc"] ? path[k]["librevenge:large-arc"]->getInt() : 1,
 			                     path[k]["librevenge:sweep"] ? path[k]["librevenge:sweep"]->getInt() : 1,
@@ -420,42 +447,42 @@ librevenge::RVNGString convertPath(const librevenge::RVNGPropertyListVector &pat
 		// 2540 is 2.54*1000, 2.54 in = 1 inch
 		if (path[i]["svg:x"] && action[0] == 'H')
 		{
-			sElement.sprintf("H%i", (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540));
+			sElement.sprintf("H%i", (unsigned)((getInchValue(path[i]["svg:x"])-px)*2540));
 			sValue.append(sElement);
 		}
 		else if (path[i]["svg:y"] && action[0] == 'V')
 		{
-			sElement.sprintf("V%i", (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sElement.sprintf("V%i", (unsigned)((getInchValue(path[i]["svg:y"])-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (coordOk && (action[0] == 'M' || action[0] == 'L' || action[0] == 'T'))
 		{
-			sElement.sprintf("%c%i %i", action[0], (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sElement.sprintf("%c%i %i", action[0], (unsigned)((getInchValue(path[i]["svg:x"])-px)*2540),
+			                 (unsigned)((getInchValue(path[i]["svg:y"])-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (coord1Ok && (action[0] == 'Q' || action[0] == 'S'))
 		{
-			sElement.sprintf("%c%i %i %i %i", action[0], (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sElement.sprintf("%c%i %i %i %i", action[0], (unsigned)((getInchValue(path[i]["svg:x1"])-px)*2540),
+			                 (unsigned)((getInchValue(path[i]["svg:y1"])-py)*2540), (unsigned)((getInchValue(path[i]["svg:x"])-px)*2540),
+			                 (unsigned)((getInchValue(path[i]["svg:y"])-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (coord2Ok && action[0] == 'C')
 		{
-			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((path[i]["svg:x1"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y1"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x2"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y2"]->getDouble()-py)*2540), (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540),
-			                 (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			sElement.sprintf("C%i %i %i %i %i %i", (unsigned)((getInchValue(path[i]["svg:x1"])-px)*2540),
+			                 (unsigned)((getInchValue(path[i]["svg:y1"])-py)*2540), (unsigned)((getInchValue(path[i]["svg:x2"])-px)*2540),
+			                 (unsigned)((getInchValue(path[i]["svg:y2"])-py)*2540), (unsigned)((getInchValue(path[i]["svg:x"])-px)*2540),
+			                 (unsigned)((getInchValue(path[i]["svg:y"])-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (coordOk && path[i]["svg:rx"] && path[i]["svg:ry"] && action[0] == 'A')
 		{
-			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((path[i]["svg:rx"]->getDouble())*2540),
-			                 (unsigned)((path[i]["svg:ry"]->getDouble())*2540), (path[i]["librevenge:rotate"] ? path[i]["librevenge:rotate"]->getInt() : 0),
+			sElement.sprintf("A%i %i %i %i %i %i %i", (unsigned)((getInchValue(path[i]["svg:rx"]))*2540),
+			                 (unsigned)((getInchValue(path[i]["svg:ry"]))*2540), (path[i]["librevenge:rotate"] ? path[i]["librevenge:rotate"]->getInt() : 0),
 			                 (path[i]["librevenge:large-arc"] ? path[i]["librevenge:large-arc"]->getInt() : 1),
 			                 (path[i]["librevenge:sweep"] ? path[i]["librevenge:sweep"]->getInt() : 1),
-			                 (unsigned)((path[i]["svg:x"]->getDouble()-px)*2540), (unsigned)((path[i]["svg:y"]->getDouble()-py)*2540));
+			                 (unsigned)((getInchValue(path[i]["svg:x"])-px)*2540), (unsigned)((getInchValue(path[i]["svg:y"])-py)*2540));
 			sValue.append(sElement);
 		}
 		else if (action[0] == 'Z')
