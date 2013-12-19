@@ -48,6 +48,12 @@ using std::shared_ptr;
 using boost::shared_ptr;
 #endif
 
+namespace libodfgen
+{
+
+librevenge::RVNGString doubleToString(const double value);
+
+} // namespace libodfgen
 
 #endif
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

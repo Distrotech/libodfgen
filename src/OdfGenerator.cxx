@@ -42,14 +42,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+using namespace libodfgen;
+
 namespace
 {
-
-static librevenge::RVNGString doubleToString(const double value)
-{
-	shared_ptr<librevenge::RVNGProperty> prop(librevenge::RVNGPropertyFactory::newDoubleProp(value));
-	return prop->getStr();
-}
 
 static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
 {
