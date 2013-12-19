@@ -560,9 +560,10 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 		"style:background-transparency",
 		"style:border-line-width","style:border-line-width-top","style:border-line-width-left",
 		"style:border-line-width-bottom","style:border-line-width-right",
-		"style:mirror", "style:parent-style-name"
+		"style:mirror", "style:parent-style-name",
+		"style:run-through", "style:wrap"
 	};
-	for (int b = 0; b < 16; b++)
+	for (int b = 0; b < 18; b++)
 	{
 		if (style[others[b]])
 			element.insert(others[b], style[others[b]]->getStr());

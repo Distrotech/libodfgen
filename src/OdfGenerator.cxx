@@ -273,10 +273,6 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 {
 	// First, let's create a basic Style for this box
 	librevenge::RVNGPropertyList style;
-	if (propList["style:wrap"])
-		style.insert("style:wrap", propList["style:wrap"]->getStr());
-	if (propList["style:run-through"])
-		style.insert("style:run-through", propList["style:run-through"]->getStr());
 	if (propList["style:horizontal-pos"])
 		style.insert("style:horizontal-pos", propList["style:horizontal-pos"]->getStr());
 	else
@@ -297,6 +293,8 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 
 	librevenge::RVNGPropertyList graphic;
 	mGraphicManager.addGraphicProperties(propList, graphic);
+	if (!propList["draw:stroke"])
+		graphic.remove("draw:stroke");
 	mGraphicManager.addFrameProperties(propList, graphic);
 	graphic.insert("style:parent-style-name", frameStyleName);
 	graphic.insert("draw:ole-draw-aspect", "1");
@@ -998,6 +996,14 @@ librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName()
 	return mGraphicManager.findOrAdd(styleList);
 }
 
+librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName(const librevenge::RVNGPropertyList &shapeList)
+{
+	librevenge::RVNGPropertyList styleList;
+	mGraphicManager.addGraphicProperties(shapeList,styleList);
+	mGraphicManager.addGraphicProperties(mGraphicStyle,styleList);
+	return mGraphicManager.findOrAdd(styleList);
+}
+
 void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)
 {
 	if (!propList["svg:rx"] || !propList["svg:ry"] || !propList["svg:cx"] || !propList["svg:cy"])
@@ -1012,7 +1018,7 @@ void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdfGenerator::drawEllipse: can not read position\n"));
 		return;
 	}
-	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+	librevenge::RVNGString sValue=getCurrentGraphicStyleName(propList);
 	TagOpenElement *pDrawEllipseElement = new TagOpenElement("draw:ellipse");
 	pDrawEllipseElement->addAttribute("draw:style-name", sValue);
 	addFrameProperties(propList, *pDrawEllipseElement);
@@ -1071,7 +1077,7 @@ void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path, cons
 	if (!libodfgen::getPathBBox(path, px, py, qx, qy))
 		return;
 
-	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+	librevenge::RVNGString sValue=getCurrentGraphicStyleName(propList);
 	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
 	pDrawPathElement->addAttribute("draw:style-name", sValue);
 	addFrameProperties(propList, *pDrawPathElement);
@@ -1109,7 +1115,7 @@ void OdfGenerator::drawPolySomething(const librevenge::RVNGPropertyList &propLis
 			ODFGEN_DEBUG_MSG(("OdfGenerator::drawPolySomething: some vertices are not defined\n"));
 			return;
 		}
-		librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+		librevenge::RVNGString sValue=getCurrentGraphicStyleName(propList);
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
 		addFrameProperties(propList, *pDrawLineElement);
 		pDrawLineElement->addAttribute("draw:style-name", sValue);
@@ -1153,7 +1159,7 @@ void OdfGenerator::drawRectangle(const librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdfGenerator::drawRectangle: position undefined\n"));
 		return;
 	}
-	librevenge::RVNGString sValue=getCurrentGraphicStyleName();
+	librevenge::RVNGString sValue=getCurrentGraphicStyleName(propList);
 	librevenge::RVNGPropertyList frame(propList);
 	frame.remove("svg:height");
 	frame.remove("svg:width");

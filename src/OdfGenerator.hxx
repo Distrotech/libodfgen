@@ -280,6 +280,8 @@ protected:
 	//! call to draw a path
 	void drawPath(const librevenge::RVNGPropertyListVector &path, const librevenge::RVNGPropertyList &propList);
 	//! returns the current graphic style name ( MODIFYME)
+	librevenge::RVNGString getCurrentGraphicStyleName(const librevenge::RVNGPropertyList &shapeList);
+	//! returns the current graphic style name ( MODIFYME)
 	librevenge::RVNGString getCurrentGraphicStyleName();
 
 	// the current set of elements that we're writing to
