@@ -94,15 +94,15 @@ private:
 	librevenge::RVNGPropertyListVector const *mColumns;
 
 	// hash key -> row style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mRowNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mRowNameHash;
 	// style name -> SheetRowStyle
-	std::map<librevenge::RVNGString, shared_ptr<SheetRowStyle>, ltstr> mRowStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<SheetRowStyle> > mRowStyleHash;
 	// hash key -> cell style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mCellNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mCellNameHash;
 	// style name -> SheetCellStyle
-	std::map<librevenge::RVNGString, shared_ptr<SheetCellStyle>, ltstr> mCellStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<SheetCellStyle> > mCellStyleHash;
 	// style name -> NumberingStyle
-	std::map<librevenge::RVNGString, shared_ptr<SheetNumberingStyle>, ltstr> mNumberingHash;
+	std::map<librevenge::RVNGString, shared_ptr<SheetNumberingStyle> > mNumberingHash;
 
 	// Disable copying
 	SheetStyle(const SheetStyle &);

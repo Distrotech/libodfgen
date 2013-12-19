@@ -48,15 +48,12 @@ using std::shared_ptr;
 using boost::shared_ptr;
 #endif
 
-
-struct ltstr
+namespace libodfgen
 {
-	bool operator()(const librevenge::RVNGString &s1, const librevenge::RVNGString &s2) const
-	{
-		return strcmp(s1.cstr(), s2.cstr()) < 0;
-	}
-};
+
+librevenge::RVNGString doubleToString(const double value);
+
+} // namespace libodfgen
 
 #endif
-
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

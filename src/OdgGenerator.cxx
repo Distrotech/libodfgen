@@ -48,18 +48,7 @@
 // remove this
 #define MULTIPAGE_WORKAROUND 1
 
-namespace
-{
-
-static librevenge::RVNGString doubleToString(const double value)
-{
-	librevenge::RVNGProperty *prop = librevenge::RVNGPropertyFactory::newDoubleProp(value);
-	librevenge::RVNGString retVal = prop->getStr();
-	delete prop;
-	return retVal;
-}
-
-} // anonymous namespace
+using namespace libodfgen;
 
 class OdgGeneratorPrivate : public OdfGenerator
 {

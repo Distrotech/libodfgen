@@ -42,14 +42,10 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+using namespace libodfgen;
+
 namespace
 {
-
-static librevenge::RVNGString doubleToString(const double value)
-{
-	shared_ptr<librevenge::RVNGProperty> prop(librevenge::RVNGPropertyFactory::newDoubleProp(value));
-	return prop->getStr();
-}
 
 static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
 {
@@ -240,7 +236,7 @@ void  OdfGenerator::writeTargetDocuments()
 ////////////////////////////////////////////////////////////
 OdfEmbeddedObject OdfGenerator::findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType) const
 {
-	std::map<librevenge::RVNGString, OdfEmbeddedObject, ltstr>::const_iterator i = mObjectHandlers.find(mimeType);
+	std::map<librevenge::RVNGString, OdfEmbeddedObject>::const_iterator i = mObjectHandlers.find(mimeType);
 	if (i != mObjectHandlers.end())
 		return i->second;
 
@@ -249,7 +245,7 @@ OdfEmbeddedObject OdfGenerator::findEmbeddedObjectHandler(const librevenge::RVNG
 
 OdfEmbeddedImage OdfGenerator::findEmbeddedImageHandler(const librevenge::RVNGString &mimeType) const
 {
-	std::map<librevenge::RVNGString, OdfEmbeddedImage, ltstr>::const_iterator i = mImageHandlers.find(mimeType);
+	std::map<librevenge::RVNGString, OdfEmbeddedImage>::const_iterator i = mImageHandlers.find(mimeType);
 	if (i != mImageHandlers.end())
 		return i->second;
 

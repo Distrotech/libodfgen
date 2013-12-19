@@ -24,10 +24,10 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_DEPENDENCIES = 
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_LDFLAGS = $(version_info) -export-dynamic -no-undefined
 
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
-	FilterInternal.hxx \
-	Style.hxx \
 	DocumentElement.cxx \
 	DocumentElement.hxx \
+	FilterInternal.cxx \
+	FilterInternal.hxx \
 	FontStyle.cxx \
 	FontStyle.hxx \
 	GraphicFunctions.cxx \
@@ -53,7 +53,8 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
 	OdgGenerator.cxx \
 	OdpGenerator.cxx \
 	OdsGenerator.cxx \
-	OdtGenerator.cxx
+	OdtGenerator.cxx \
+	Style.hxx
 
 if OS_WIN32
 

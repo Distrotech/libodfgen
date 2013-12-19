@@ -106,11 +106,11 @@ protected:
 	// write automatic/named style
 	void write(OdfDocumentHandler *, bool automaticStyle) const;
 	// hash key -> name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mHashNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mHashNameMap;
 	// style name -> paragraph style
-	std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr> mStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle> > mStyleHash;
 	// display name -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mDisplayNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mDisplayNameMap;
 };
 
 class SpanStyleManager : public StyleManager
@@ -153,11 +153,11 @@ protected:
 	// write automatic/named style
 	void write(OdfDocumentHandler *, bool automaticStyle) const;
 	// hash key -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mHashNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mHashNameMap;
 	// style name -> SpanStyle
-	std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr> mStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<SpanStyle> > mStyleHash;
 	// display name -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mDisplayNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mDisplayNameMap;
 };
 #endif
 
