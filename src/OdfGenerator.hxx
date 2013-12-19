@@ -328,7 +328,7 @@ protected:
 	// the number of created frame
 	unsigned miFrameNumber;
 	// the list of frame seens
-	std::map<librevenge::RVNGString, unsigned, ltstr > mFrameNameIdMap;
+	std::map<librevenge::RVNGString, unsigned > mFrameNameIdMap;
 
 	// the last graphic style
 	librevenge::RVNGPropertyList mGraphicStyle;
@@ -337,9 +337,9 @@ protected:
 	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
 
 	// embedded image handlers
-	std::map<librevenge::RVNGString, OdfEmbeddedImage, ltstr > mImageHandlers;
+	std::map<librevenge::RVNGString, OdfEmbeddedImage > mImageHandlers;
 	// embedded object handlers
-	std::map<librevenge::RVNGString, OdfEmbeddedObject, ltstr > mObjectHandlers;
+	std::map<librevenge::RVNGString, OdfEmbeddedObject > mObjectHandlers;
 
 private:
 	// copy constructor (unimplemented)

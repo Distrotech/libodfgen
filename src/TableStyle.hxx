@@ -86,13 +86,13 @@ private:
 	bool mbRowOpened, mbRowHeaderOpened, mbCellOpened;
 
 	// hash key -> row style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mRowNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mRowNameHash;
 	// style name -> TableRowStyle
-	std::map<librevenge::RVNGString, shared_ptr<TableRowStyle>, ltstr> mRowStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<TableRowStyle> > mRowStyleHash;
 	// hash key -> cell style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mCellNameHash;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mCellNameHash;
 	// style name -> TableCellStyle
-	std::map<librevenge::RVNGString, shared_ptr<TableCellStyle>, ltstr> mCellStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<TableCellStyle> > mCellStyleHash;
 
 	// disable copying
 	Table(const Table &);

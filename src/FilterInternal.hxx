@@ -49,14 +49,5 @@ using boost::shared_ptr;
 #endif
 
 
-struct ltstr
-{
-	bool operator()(const librevenge::RVNGString &s1, const librevenge::RVNGString &s2) const
-	{
-		return strcmp(s1.cstr(), s2.cstr()) < 0;
-	}
-};
-
 #endif
-
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

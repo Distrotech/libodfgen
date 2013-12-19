@@ -209,7 +209,7 @@ void ParagraphStyleManager::clean()
 
 void ParagraphStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) const
 {
-	for (std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
+	for (std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle> >::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
 		if (iter->second && iter->second->hasDisplayName()!=automatic)
@@ -220,7 +220,7 @@ void ParagraphStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) 
 librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGString hashKey = propList.getPropString();
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
 	    mHashNameMap.find(hashKey);
 	if (iter!=mHashNameMap.end()) return iter->second;
 
@@ -253,7 +253,7 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 
 shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const librevenge::RVNGString &name) const
 {
-	std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle>, ltstr>::const_iterator iter
+	std::map<librevenge::RVNGString, shared_ptr<ParagraphStyle> >::const_iterator iter
 	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<ParagraphStyle>();
 	return iter->second;
@@ -268,7 +268,7 @@ void SpanStyleManager::clean()
 
 void SpanStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) const
 {
-	for (std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter = mStyleHash.begin();
+	for (std::map<librevenge::RVNGString, shared_ptr<SpanStyle> >::const_iterator iter = mStyleHash.begin();
 	        iter != mStyleHash.end(); ++iter)
 	{
 		if (iter->second && iter->second->hasDisplayName()!=automatic)
@@ -279,7 +279,7 @@ void SpanStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) const
 librevenge::RVNGString SpanStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGString hashKey = propList.getPropString();
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
 	    mHashNameMap.find(hashKey);
 	if (iter!=mHashNameMap.end()) return iter->second;
 
@@ -306,7 +306,7 @@ librevenge::RVNGString SpanStyleManager::getFinalDisplayName(const librevenge::R
 
 shared_ptr<SpanStyle> const SpanStyleManager::get(const librevenge::RVNGString &name) const
 {
-	std::map<librevenge::RVNGString, shared_ptr<SpanStyle>, ltstr>::const_iterator iter
+	std::map<librevenge::RVNGString, shared_ptr<SpanStyle> >::const_iterator iter
 	    = mStyleHash.find(name);
 	if (iter == mStyleHash.end()) return shared_ptr<SpanStyle>();
 	return iter->second;

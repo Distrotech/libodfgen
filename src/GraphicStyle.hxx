@@ -77,19 +77,19 @@ protected:
 	std::vector<DocumentElement *> mStyles;
 
 	// automatic hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mAutomaticNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mAutomaticNameMap;
 	// bitmap content -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mBitmapNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mBitmapNameMap;
 	// gradient hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mGradientNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mGradientNameMap;
 	// marker hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mMarkerNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mMarkerNameMap;
 	// opacity hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mOpacityNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mOpacityNameMap;
 	// stroke dash hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mStrokeDashNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mStrokeDashNameMap;
 	// style hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> mStyleNameMap;
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mStyleNameMap;
 };
 
 

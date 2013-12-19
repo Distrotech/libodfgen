@@ -168,7 +168,7 @@ librevenge::RVNGString Table::openRow(const librevenge::RVNGPropertyList &propLi
 		pList.insert(i.key(),i()->clone());
 	}
 	librevenge::RVNGString hashKey = pList.getPropString();
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
 	    mRowNameHash.find(hashKey);
 	if (iter!=mRowNameHash.end()) return iter->second;
 
@@ -211,7 +211,7 @@ librevenge::RVNGString Table::openCell(const librevenge::RVNGPropertyList &propL
 		pList.insert(i.key(),i()->clone());
 	}
 	librevenge::RVNGString hashKey = pList.getPropString();
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
 	    mCellNameHash.find(hashKey);
 	if (iter!=mCellNameHash.end()) return iter->second;
 
@@ -293,14 +293,14 @@ void Table::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
 		}
 	}
 
-	std::map<librevenge::RVNGString, shared_ptr<TableRowStyle>, ltstr>::const_iterator rIt;
+	std::map<librevenge::RVNGString, shared_ptr<TableRowStyle> >::const_iterator rIt;
 	for (rIt=mRowStyleHash.begin(); rIt!=mRowStyleHash.end(); ++rIt)
 	{
 		if (!rIt->second) continue;
 		rIt->second->write(pHandler);
 	}
 
-	std::map<librevenge::RVNGString, shared_ptr<TableCellStyle>, ltstr>::const_iterator cIt;
+	std::map<librevenge::RVNGString, shared_ptr<TableCellStyle> >::const_iterator cIt;
 	for (cIt=mCellStyleHash.begin(); cIt!=mCellStyleHash.end(); ++cIt)
 	{
 		if (!cIt->second) continue;

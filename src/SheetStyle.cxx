@@ -389,21 +389,21 @@ void SheetStyle::write(OdfDocumentHandler *pHandler) const
 		}
 	}
 
-	std::map<librevenge::RVNGString, shared_ptr<SheetRowStyle>, ltstr>::const_iterator rIt;
+	std::map<librevenge::RVNGString, shared_ptr<SheetRowStyle> >::const_iterator rIt;
 	for (rIt=mRowStyleHash.begin(); rIt!=mRowStyleHash.end(); ++rIt)
 	{
 		if (!rIt->second) continue;
 		rIt->second->write(pHandler);
 	}
 
-	std::map<librevenge::RVNGString, shared_ptr<SheetNumberingStyle>, ltstr>::const_iterator nIt;
+	std::map<librevenge::RVNGString, shared_ptr<SheetNumberingStyle> >::const_iterator nIt;
 	for (nIt=mNumberingHash.begin(); nIt!=mNumberingHash.end(); ++nIt)
 	{
 		if (!nIt->second) continue;
 		nIt->second->writeStyle(pHandler, *this);
 	}
 
-	std::map<librevenge::RVNGString, shared_ptr<SheetCellStyle>, ltstr>::const_iterator cIt;
+	std::map<librevenge::RVNGString, shared_ptr<SheetCellStyle> >::const_iterator cIt;
 	for (cIt=mCellStyleHash.begin(); cIt!=mCellStyleHash.end(); ++cIt)
 	{
 		if (!cIt->second) continue;
@@ -413,7 +413,7 @@ void SheetStyle::write(OdfDocumentHandler *pHandler) const
 
 librevenge::RVNGString SheetStyle::getNumberingStyleName(librevenge::RVNGString const &localName) const
 {
-	std::map<librevenge::RVNGString, shared_ptr<SheetNumberingStyle>, ltstr>::const_iterator it=
+	std::map<librevenge::RVNGString, shared_ptr<SheetNumberingStyle> >::const_iterator it=
 	    mNumberingHash.find(localName);
 	if (it==mNumberingHash.end() || !it->second)
 	{
@@ -455,7 +455,7 @@ librevenge::RVNGString SheetStyle::addRow(const librevenge::RVNGPropertyList &pr
 		pList.insert(i.key(),i()->clone());
 	}
 	librevenge::RVNGString hashKey = pList.getPropString();
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
 	    mRowNameHash.find(hashKey);
 	if (iter!=mRowNameHash.end()) return iter->second;
 
@@ -481,7 +481,7 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 		pList.insert(i.key(),i()->clone());
 	}
 	librevenge::RVNGString hashKey = pList.getPropString();
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr>::const_iterator iter =
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
 	    mCellNameHash.find(hashKey);
 	if (iter!=mCellNameHash.end()) return iter->second;
 

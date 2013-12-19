@@ -85,7 +85,7 @@ librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyLi
 {
 	librevenge::RVNGString hashKey = propList.getPropString();
 	std::vector<DocumentElement *> &styles= automatic ? mAutomaticStyles : mStyles;
-	std::map<librevenge::RVNGString, librevenge::RVNGString, ltstr> &nameMap=
+	std::map<librevenge::RVNGString, librevenge::RVNGString> &nameMap=
 	    automatic ? mAutomaticNameMap : mStyleNameMap;
 
 	if (nameMap.find(hashKey) != nameMap.end())

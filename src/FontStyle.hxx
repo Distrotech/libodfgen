@@ -69,7 +69,7 @@ public:
 
 protected:
 	// style name -> SpanStyle
-	std::map<librevenge::RVNGString, shared_ptr<FontStyle>, ltstr> mStyleHash;
+	std::map<librevenge::RVNGString, shared_ptr<FontStyle> > mStyleHash;
 };
 
 #endif
