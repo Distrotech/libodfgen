@@ -289,6 +289,7 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 
 	librevenge::RVNGPropertyList graphic;
 	mGraphicManager.addGraphicProperties(propList, graphic);
+	// we do not want to add the default solid stroke if there are some double/... borders
 	if (!propList["draw:stroke"])
 		graphic.remove("draw:stroke");
 	mGraphicManager.addFrameProperties(propList, graphic);

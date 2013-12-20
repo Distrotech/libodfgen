@@ -152,6 +152,12 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 
 	// style:default-style
 
+	// graphic
+	TagOpenElement defaultGraphicStyleOpenElement("style:default-style");
+	defaultGraphicStyleOpenElement.addAttribute("style:family", "graphic");
+	defaultGraphicStyleOpenElement.write(pHandler);
+	pHandler->endElement("style:default-style");
+
 	// paragraph
 	TagOpenElement defaultParagraphStyleOpenElement("style:default-style");
 	defaultParagraphStyleOpenElement.addAttribute("style:family", "paragraph");
@@ -869,6 +875,9 @@ void OdtGenerator::drawPolyline(const ::librevenge::RVNGPropertyList &propList)
 
 void OdtGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 {
+	/** CHECKME: actually, the drawing is often bad, ie. some
+	 unexpected scaling be applied, can we automatically replace the
+	 shape by an embedded objet ? */
 	mpImpl->drawPath(propList);
 }
 
