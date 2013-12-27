@@ -44,7 +44,8 @@
 class OdsGeneratorPrivate : public OdfGenerator
 {
 public:
-	enum Command { C_Document=0, C_PageSpan, C_Header, C_Footer, C_Sheet, C_SheetRow, C_SheetCell, C_Chart,
+	enum Command { C_Document=0, C_PageSpan, C_Header, C_Footer, C_Sheet, C_SheetRow, C_SheetCell,
+	               C_Chart, C_ChartTextZone, C_ChartPlotArea,
 	               C_Span, C_Paragraph, C_Section, C_OrderedList, C_UnorderedList, C_ListElement,
 	               C_Footnote, C_Comment, C_TextBox, C_Frame, C_Table, C_TableRow, C_TableCell,
 	               C_Group
@@ -297,7 +298,8 @@ bool OdsGeneratorPrivate::close(Command command)
 #ifdef DEBUG
 		static char const *(wh[]) =
 		{
-			"Document", "PageSpan", "Header", "Footer", "Sheet", "SheetRow", "SheetCell", "Chart",
+			"Document", "PageSpan", "Header", "Footer", "Sheet", "SheetRow", "SheetCell",
+			"Chart", "ChartPlotArea", "ChartTextZone",
 			"Span", "Paragraph", "Section", "OrderedListLevel", "UnorderedListLevel", "ListElement",
 			"Comment", "TextBox", "Frame", "Table", "TableRow", "TableCell",
 			"Group"
@@ -915,6 +917,66 @@ void OdsGenerator::closeChart()
 	if (mpImpl->mAuxiliarOdtState || !state.mbInChart) return;
 	// TODO
 	ODFGEN_DEBUG_MSG(("OdsGenerator::closeChart not implemented\n"));
+}
+
+void OdsGenerator::openChartPlotArea(const librevenge::RVNGPropertyList &/*propList*/)
+{
+	mpImpl->open(OdsGeneratorPrivate::C_ChartPlotArea);
+	OdsGeneratorPrivate::State state=mpImpl->getState();
+	mpImpl->pushState(state);
+	if (mpImpl->mAuxiliarOdtState)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator::openChartPlotArea call in OLE!!!\n"));
+		return;
+	}
+	// TODO
+	ODFGEN_DEBUG_MSG(("OdsGenerator::openChartPlotArea not implemented\n"));
+}
+
+void OdsGenerator::closeChartPlotArea()
+{
+	if (!mpImpl->close(OdsGeneratorPrivate::C_ChartPlotArea)) return;
+	OdsGeneratorPrivate::State state=mpImpl->getState();
+	mpImpl->popState();
+	if (mpImpl->mAuxiliarOdtState || !state.mbInChart) return;
+	// TODO
+	ODFGEN_DEBUG_MSG(("OdsGenerator::closeChartPlotArea not implemented\n"));
+}
+
+void OdsGenerator::openChartTextZone(const librevenge::RVNGPropertyList &/*propList*/)
+{
+	mpImpl->open(OdsGeneratorPrivate::C_ChartTextZone);
+	OdsGeneratorPrivate::State state=mpImpl->getState();
+	mpImpl->pushState(state);
+	if (mpImpl->mAuxiliarOdtState)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator::openChartTextZone call in OLE!!!\n"));
+		return;
+	}
+	// TODO
+	ODFGEN_DEBUG_MSG(("OdsGenerator::openChartTextZone not implemented\n"));
+}
+
+void OdsGenerator::closeChartTextZone()
+{
+	if (!mpImpl->close(OdsGeneratorPrivate::C_ChartTextZone)) return;
+	OdsGeneratorPrivate::State state=mpImpl->getState();
+	mpImpl->popState();
+	if (mpImpl->mAuxiliarOdtState || !state.mbInChart) return;
+	// TODO
+	ODFGEN_DEBUG_MSG(("OdsGenerator::closeChartTextZone not implemented\n"));
+}
+
+void OdsGenerator::insertChartAxis(const librevenge::RVNGPropertyList &/*commands*/)
+{
+	if (mpImpl->mAuxiliarOdtState) return;
+	if (!mpImpl->getState().mbInChart)
+	{
+		ODFGEN_DEBUG_MSG(("OdsGenerator::insertChartAxis call outside chart\n"));
+		return;
+	}
+	// TODO
+	ODFGEN_DEBUG_MSG(("OdsGenerator::insertChartAxis not implemented\n"));
 }
 
 void OdsGenerator::insertChartSerie(const librevenge::RVNGPropertyList &/*commands*/)

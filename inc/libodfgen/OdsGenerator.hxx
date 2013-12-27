@@ -73,6 +73,11 @@ public:
 
 	void openChart(const librevenge::RVNGPropertyList &propList);
 	void closeChart();
+	void openChartTextZone(const librevenge::RVNGPropertyList &propList);
+	void closeChartTextZone();
+	void openChartPlotArea(const librevenge::RVNGPropertyList &propList);
+	void closeChartPlotArea();
+	void insertChartAxis(const librevenge::RVNGPropertyList &axis);
 	void insertChartSerie(const librevenge::RVNGPropertyList &propList);
 
 	void defineParagraphStyle(const librevenge::RVNGPropertyList &propList);
