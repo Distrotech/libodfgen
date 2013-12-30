@@ -87,6 +87,7 @@ OdfGenerator::OdfGenerator() :
 	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(),
 	miFrameNumber(0),  mFrameNameIdMap(),
 	mGraphicStyle(),
+	mIdChartMap(), mIdChartNameMap(),
 	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
 {
 	mListStates.push(ListState());
@@ -156,6 +157,7 @@ void OdfGenerator::initStateWith(OdfGenerator const &orig)
 	mObjectHandlers=orig.mObjectHandlers;
 	mIdSpanMap=orig.mIdSpanMap;
 	mIdParagraphMap=orig.mIdParagraphMap;
+	mIdChartMap=orig.mIdChartMap;
 }
 
 ////////////////////////////////////////////////////////////
@@ -729,7 +731,7 @@ void OdfGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 		finalPropList.insert("style:list-style-name", state.mpCurrentListStyle->getName());
 #endif
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName = getParagraphName(finalPropList);
+	librevenge::RVNGString paragName =mParagraphManager.findOrAdd(finalPropList);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
@@ -1174,6 +1176,22 @@ void OdfGenerator::drawRectangle(const librevenge::RVNGPropertyList &propList)
 		pDrawRectElement->addAttribute("draw:corner-radius", "0.0000in");
 	mpCurrentStorage->push_back(pDrawRectElement);
 	mpCurrentStorage->push_back(new TagCloseElement("draw:rect"));
+}
+
+////////////////////////////////////////////////////////////
+// chart
+////////////////////////////////////////////////////////////
+void OdfGenerator::defineChartStyle(const librevenge::RVNGPropertyList &propList)
+{
+	int chartId=-1;
+	if (propList["librevenge:chart-id"])
+		chartId=propList["librevenge:chart-id"]->getInt();
+	else
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::defineChartStyle: called without id\n"));
+	}
+	mIdChartMap[chartId]=propList;
+	mIdChartNameMap.erase(chartId);
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

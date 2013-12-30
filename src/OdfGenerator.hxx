@@ -144,11 +144,6 @@ public:
 
 	//! define a paragraph style
 	void defineParagraphStyle(const librevenge::RVNGPropertyList &propList);
-	//! returns a paragraph name corresponding to proplist
-	librevenge::RVNGString getParagraphName(const librevenge::RVNGPropertyList &propList)
-	{
-		return mParagraphManager.findOrAdd(propList);
-	}
 	//! open a paragraph
 	void openParagraph(const librevenge::RVNGPropertyList &propList);
 	//! close a paragraph
@@ -237,6 +232,13 @@ public:
 	//! call to draw a rectangle
 	void drawRectangle(const librevenge::RVNGPropertyList &propList);
 
+	//
+	// chart
+	//
+
+	//! define a chart style
+	void defineChartStyle(const librevenge::RVNGPropertyList &propList);
+
 protected:
 
 	//
@@ -315,7 +317,7 @@ protected:
 	std::map<int, librevenge::RVNGPropertyList> mIdParagraphMap;
 	// id to paragraph name map
 	std::map<int, librevenge::RVNGString> mIdParagraphNameMap;
-	// the last span name
+	// the last paragraph name
 	librevenge::RVNGString mLastParagraphName;
 
 	// list styles
@@ -334,6 +336,11 @@ protected:
 
 	// the last graphic style
 	librevenge::RVNGPropertyList mGraphicStyle;
+
+	// id to chart map
+	std::map<int, librevenge::RVNGPropertyList> mIdChartMap;
+	// id to chart name map
+	std::map<int, librevenge::RVNGString> mIdChartNameMap;
 
 	// the document handlers
 	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;

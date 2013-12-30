@@ -195,21 +195,21 @@ static void createOds()
 	list.insert("librevenge:columns", columns);
 	generator.openSheet(list);
 
-	librevenge::RVNGPropertyList textbox;
-	textbox.insert("svg:x",0.2, librevenge::RVNG_INCH);
-	textbox.insert("svg:y",0.2, librevenge::RVNG_INCH);
-	textbox.insert("svg:width",200, librevenge::RVNG_POINT);
-	textbox.insert("svg:height",100, librevenge::RVNG_POINT);
-	textbox.insert("text:anchor-type", "page");
-	textbox.insert("text:anchor-page-number", 1);
-	textbox.insert("style:vertical-rel", "page");
-	textbox.insert("style:horizontal-rel", "page");
-	textbox.insert("style:horizontal-pos", "from-left");
-	textbox.insert("style:vertical-pos", "from-top");
+	librevenge::RVNGPropertyList frame;
+	frame.insert("svg:x",0.2, librevenge::RVNG_INCH);
+	frame.insert("svg:y",0.2, librevenge::RVNG_INCH);
+	frame.insert("svg:width",200, librevenge::RVNG_POINT);
+	frame.insert("svg:height",100, librevenge::RVNG_POINT);
+	frame.insert("text:anchor-type", "page");
+	frame.insert("text:anchor-page-number", 1);
+	frame.insert("style:vertical-rel", "page");
+	frame.insert("style:horizontal-rel", "page");
+	frame.insert("style:horizontal-pos", "from-left");
+	frame.insert("style:vertical-pos", "from-top");
 
-	textbox.insert("draw:stroke", "none");
-	textbox.insert("draw:fill", "none");
-	generator.openFrame(textbox);
+	frame.insert("draw:stroke", "none");
+	frame.insert("draw:fill", "none");
+	generator.openFrame(frame);
 	generator.openTextBox(librevenge::RVNGPropertyList());
 	sendText(generator);
 	generator.closeTextBox();

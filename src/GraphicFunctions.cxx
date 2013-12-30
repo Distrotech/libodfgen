@@ -70,7 +70,8 @@ void getEllipticalArcBBox(double x0, double y0,
 	if (ry < 0.0)
 		ry *= -1.0;
 
-	if (rx == 0.0 || ry == 0.0)
+	double const absError=1e-5;
+	if ((rx>-absError && rx<absError) || (ry>-absError && ry<absError))
 	{
 		xmin = (x0 < x ? x0 : x);
 		xmax = (x0 > x ? x0 : x);
@@ -137,7 +138,6 @@ void getEllipticalArcBBox(double x0, double y0,
 	double txmin, txmax, tymin, tymax;
 
 	// First handle special cases
-	double const absError=1e-5;
 	if ((phi > -absError&&phi < absError) || (phi > M_PI-absError && phi < M_PI+absError))
 	{
 		xmin = cx - rx;
@@ -149,7 +149,7 @@ void getEllipticalArcBBox(double x0, double y0,
 		ymax = cy + ry;
 		tymax = getAngle(0, ry);
 	}
-	else if ((phi > M_PI / 2.0-absError && phi < M_PI / 2.0-absError) ||
+	else if ((phi > M_PI / 2.0-absError && phi < M_PI / 2.0+absError) ||
 	         (phi > 3.0*M_PI/2.0-absError && phi < 3.0*M_PI/2.0+absError))
 	{
 		xmin = cx - ry;
@@ -232,7 +232,7 @@ double quadraticExtreme(double t, double a, double b, double c)
 double quadraticDerivative(double a, double b, double c)
 {
 	double denominator = a - 2.0*b + c;
-	if (fabs(denominator) != 0.0)
+	if (fabs(denominator)>1e-10*(a-b))
 		return (a - b)/denominator;
 	return -1.0;
 }

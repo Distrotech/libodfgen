@@ -109,14 +109,14 @@ librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyLi
 		openElement->addAttribute("style:display-name", propList["style:display-name"]->getStr());
 	styles.push_back(openElement);
 
-	openElement = new TagOpenElement("style:graphic-properties");
+	TagOpenElement *graphicElement = new TagOpenElement("style:graphic-properties");
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
 	{
 		if (strcmp(i.key(), "style:display-name") && strcmp(i.key(), "style:parent-style-name"))
-			openElement->addAttribute(i.key(),i()->getStr());
+			graphicElement->addAttribute(i.key(),i()->getStr());
 	}
-	styles.push_back(openElement);
+	styles.push_back(graphicElement);
 	styles.push_back(new TagCloseElement("style:graphic-properties"));
 
 	styles.push_back(new TagCloseElement("style:style"));

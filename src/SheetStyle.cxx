@@ -554,11 +554,11 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			}
 			std::string oper(list["librevenge:operator"]->getStr().cstr());
 			bool find=false;
-			for (int w=0; w<13; ++w)
+			for (int w=0; w<14; ++w)
 			{
-				static char const *(s_operators[13])=
+				static char const *(s_operators[14])=
 				{
-					"(", ")", "+", "-", "*", "/", "=", ";", "<", ">", "<=", ">=", "^"
+					"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^"
 				};
 				if (oper!=s_operators[w]) continue;
 				s << oper;
@@ -601,63 +601,15 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 		}
 		else if (type=="librevenge-cell")
 		{
-			if (!list["librevenge:row"]||!list["librevenge:column"])
-			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find formula[%d] cordinate!!!\n", int(s)));
-				return res;
-			}
-			int column=list["librevenge:column"]->getInt();
-			int row=list["librevenge:row"]->getInt();
-			if (column<0 || row<0)
-			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula: find bad coordinate for formula[%d]!!!\n", int(s)));
-				return res;
-			}
-			s << "[";
-			if (list["librevenge:sheet"]) s << list["librevenge:sheet"]->getStr().cstr();
-			s << ".";
-			if (list["librevenge:column-absolute"] && list["librevenge:column-absolute"]->getInt()) s << "$";
-			if (column>=26) s << char('A'+(column/26-1));
-			s << char('A'+(column%26));
-			if (list["librevenge:row-absolute"] && list["librevenge:row-absolute"]->getInt()) s << "$";
-			s << row+1 << "]";
+			librevenge::RVNGString range=convertCellRange(list);
+			if (range.empty()) return res;
+			s << "[" << range.cstr() << "]";
 		}
 		else if (type=="librevenge-cells")
 		{
-			if (!list["librevenge:start-row"]||!list["librevenge:start-column"])
-			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find formula[%d] cordinate!!!\n", int(s)));
-				return res;
-			}
-			int column=list["librevenge:start-column"]->getInt();
-			int row=list["librevenge:start-row"]->getInt();
-			if (column<0 || row<0)
-			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula: find bad coordinate1 for formula[%d]!!!\n", int(s)));
-				return res;
-			}
-			s << "[";
-			if (list["librevenge:sheet-name"]) s << list["librevenge:sheet-name"]->getStr().cstr();
-			s << ".";
-			if (list["librevenge:start-column-absolute"] && list["librevenge:start-column-absolute"]->getInt()) s << "$";
-			if (column>=26) s << char('A'+(column/26-1));
-			s << char('A'+(column%26));
-			if (list["librevenge:start-row-absolute"] && list["librevenge:start-row-absolute"]->getInt()) s << "$";
-			s << row+1 << ":";
-			if (list["librevenge:end-column"])
-				column=list["librevenge:end-column"]->getInt();
-			if (list["librevenge:end-row"])
-				row=list["librevenge:end-row"]->getInt();
-			if (column<0 || row<0)
-			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula: find bad coordinate2 for formula[%d]!!!\n", int(s)));
-				return res;
-			}
-			if (list["librevenge:end-column-absolute"] && list["librevenge:end-column-absolute"]->getInt()) s << "$";
-			if (column>=26) s << char('A'+(column/26-1));
-			s << char('A'+(column%26));
-			if (list["librevenge:end-row-absolute"] && list["librevenge:end-row-absolute"]->getInt()) s << "$";
-			s << row+1 << "]";
+			librevenge::RVNGString ranges=convertCellsRange(list);
+			if (ranges.empty()) return res;
+			s << "[" << ranges.cstr() << "]";
 		}
 		else
 		{
@@ -666,6 +618,72 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 		}
 	}
 	return librevenge::RVNGString(s.str().c_str(), true);
+}
+
+librevenge::RVNGString SheetManager::convertCellRange(const librevenge::RVNGPropertyList &list)
+{
+	std::stringstream s;
+	librevenge::RVNGString res("");
+	if (!list["librevenge:row"]||!list["librevenge:column"])
+	{
+		ODFGEN_DEBUG_MSG(("SheetManager::convertCellRange can not find cordinate!!!\n"));
+		return res;
+	}
+	int column=list["librevenge:column"]->getInt();
+	int row=list["librevenge:row"]->getInt();
+	if (column<0 || row<0)
+	{
+		ODFGEN_DEBUG_MSG(("SheetManager::convertCellRange: find bad coordinate!!!\n"));
+		return res;
+	}
+	if (list["librevenge:sheet"]) s << list["librevenge:sheet"]->getStr().cstr();
+	s << ".";
+	if (list["librevenge:column-absolute"] && list["librevenge:column-absolute"]->getInt()) s << "$";
+	if (column>=26) s << char('A'+(column/26-1));
+	s << char('A'+(column%26));
+	if (list["librevenge:row-absolute"] && list["librevenge:row-absolute"]->getInt()) s << "$";
+	s << row+1;
+	return s.str().c_str();
+}
+
+librevenge::RVNGString SheetManager::convertCellsRange(const librevenge::RVNGPropertyList &list)
+{
+	std::stringstream s;
+	librevenge::RVNGString res("");
+	if (!list["librevenge:start-row"]||!list["librevenge:start-column"])
+	{
+		ODFGEN_DEBUG_MSG(("SheetManager::convertCellsRange can not find cordinate!!!\n"));
+		return res;
+	}
+	int column=list["librevenge:start-column"]->getInt();
+	int row=list["librevenge:start-row"]->getInt();
+	if (column<0 || row<0)
+	{
+		ODFGEN_DEBUG_MSG(("SheetManager::convertCellsRange: find bad coordinate1!!!\n"));
+		return res;
+	}
+	if (list["librevenge:sheet-name"]) s << list["librevenge:sheet-name"]->getStr().cstr();
+	s << ".";
+	if (list["librevenge:start-column-absolute"] && list["librevenge:start-column-absolute"]->getInt()) s << "$";
+	if (column>=26) s << char('A'+(column/26-1));
+	s << char('A'+(column%26));
+	if (list["librevenge:start-row-absolute"] && list["librevenge:start-row-absolute"]->getInt()) s << "$";
+	s << row+1 << ":";
+	if (list["librevenge:end-column"])
+		column=list["librevenge:end-column"]->getInt();
+	if (list["librevenge:end-row"])
+		row=list["librevenge:end-row"]->getInt();
+	if (column<0 || row<0)
+	{
+		ODFGEN_DEBUG_MSG(("SheetManager::convertCellsRange: find bad coordinate2!!!\n"));
+		return res;
+	}
+	if (list["librevenge:end-column-absolute"] && list["librevenge:end-column-absolute"]->getInt()) s << "$";
+	if (column>=26) s << char('A'+(column/26-1));
+	s << char('A'+(column%26));
+	if (list["librevenge:end-row-absolute"] && list["librevenge:end-row-absolute"]->getInt()) s << "$";
+	s << row+1;
+	return s.str().c_str();
 }
 
 void SheetManager::write(OdfDocumentHandler *pHandler) const

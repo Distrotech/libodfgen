@@ -152,50 +152,17 @@ bool SpanStyle::hasDisplayName() const
 
 void SpanStyle::write(OdfDocumentHandler *pHandler) const
 {
-	librevenge::RVNGPropertyList propList(mPropList);
-
 	ODFGEN_DEBUG_MSG(("SpanStyle: Writing a span style..\n"));
 	librevenge::RVNGPropertyList styleOpenList;
 	styleOpenList.insert("style:name", getName());
 	if (mPropList["style:display-name"])
-	{
 		styleOpenList.insert("style:display-name", mPropList["style:display-name"]->clone());
-		propList.remove("style:display-name");
-	}
 	styleOpenList.insert("style:family", "text");
 	pHandler->startElement("style:style", styleOpenList);
 
-
-	if (mPropList["style:font-name"])
-	{
-		propList.insert("style:font-name-asian", mPropList["style:font-name"]->clone());
-		propList.insert("style:font-name-complex", mPropList["style:font-name"]->clone());
-	}
-
-	if (mPropList["fo:font-size"])
-	{
-		if (mPropList["fo:font-size"]->getDouble() > 0.0)
-		{
-			propList.insert("style:font-size-asian", mPropList["fo:font-size"]->clone());
-			propList.insert("style:font-size-complex", mPropList["fo:font-size"]->clone());
-		}
-		else
-			propList.remove("fo:font-size");
-	}
-
-	if (mPropList["fo:font-weight"])
-	{
-		propList.insert("style:font-weight-asian", mPropList["fo:font-weight"]->clone());
-		propList.insert("style:font-weight-complex", mPropList["fo:font-weight"]->clone());
-	}
-
-	if (mPropList["fo:font-style"])
-	{
-		propList.insert("style:font-style-asian", mPropList["fo:font-style"]->clone());
-		propList.insert("style:font-style-complex", mPropList["fo:font-style"]->clone());
-	}
-	pHandler->startElement("style:text-properties", propList);
-
+	librevenge::RVNGPropertyList style;
+	SpanStyleManager::addSpanProperties(mPropList, style);
+	pHandler->startElement("style:text-properties", style);
 	pHandler->endElement("style:text-properties");
 	pHandler->endElement("style:style");
 }
@@ -259,11 +226,78 @@ shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const librevenge::RV
 	return iter->second;
 }
 
+////////////////////////////////////////////////////////////
+// span manager
+////////////////////////////////////////////////////////////
 void SpanStyleManager::clean()
 {
 	mHashNameMap.clear();
 	mStyleHash.clear();
 	mDisplayNameMap.clear();
+}
+
+void SpanStyleManager::addSpanProperties(librevenge::RVNGPropertyList const &style, librevenge::RVNGPropertyList &element)
+{
+	librevenge::RVNGPropertyList::Iter i(style);
+	for (i.rewind(); i.next();)
+	{
+		if (i.child()) continue;
+		switch (i.key()[0])
+		{
+		case 'f':
+			if (!strcmp(i.key(), "fo:font-size"))
+			{
+				if (style["fo:font-size"]->getDouble() > 0.0)
+				{
+					element.insert("fo:font-size", style["fo:font-size"]->clone());
+					element.insert("style:font-size-asian", style["fo:font-size"]->clone());
+					element.insert("style:font-size-complex", style["fo:font-size"]->clone());
+				}
+				break;
+			}
+			if (!strcmp(i.key(), "fo:font-weight"))
+			{
+				element.insert("fo:font-weight", style["fo:font-weight"]->clone());
+				element.insert("style:font-weight-asian", style["fo:font-weight"]->clone());
+				element.insert("style:font-weight-complex", style["fo:font-weight"]->clone());
+				break;
+			}
+			if (!strcmp(i.key(), "fo:font-style"))
+			{
+				element.insert("fo:font-style", style["fo:font-style"]->clone());
+				element.insert("style:font-style-asian", style["fo:font-style"]->clone());
+				element.insert("style:font-style-complex", style["fo:font-style"]->clone());
+				break;
+			}
+			if (!strcmp(i.key(), "fo:background-color") || !strcmp(i.key(), "fo:color") ||
+			        !strcmp(i.key(), "fo:country") || !strncmp(i.key(), "fo:font", 7) ||
+			        !strncmp(i.key(), "fo:hyphen", 9) || !strncmp(i.key(), "fo:text", 7) ||
+			        !strcmp(i.key(), "fo:language") || !strcmp(i.key(), "fo:letter-spacing") ||
+			        !strcmp(i.key(), "fo:script"))
+				element.insert(i.key(),i()->clone());
+			break;
+		case 's':
+			if (!strcmp(i.key(), "style:font-name"))
+			{
+				element.insert("style:font-name", style["style:font-name"]->clone());
+				element.insert("style:font-name-asian", style["style:font-name"]->clone());
+				element.insert("style:font-name-complex", style["style:font-name"]->clone());
+				break;
+			}
+			if (!strncmp(i.key(), "style:country", 13) || !strncmp(i.key(), "style:font", 10) ||
+			        !strncmp(i.key(), "style:language", 14) || !strncmp(i.key(), "style:letter", 12) ||
+			        !strncmp(i.key(), "style:rfc-", 10) || !strncmp(i.key(), "style:script", 12) ||
+			        !strncmp(i.key(), "style:text", 10))
+				element.insert(i.key(),i()->clone());
+			break;
+		case 't':
+			if (!strcmp(i.key(), "text:display"))
+				element.insert(i.key(),i()->clone());
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void SpanStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) const

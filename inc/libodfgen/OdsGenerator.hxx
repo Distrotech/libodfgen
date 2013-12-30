@@ -71,14 +71,16 @@ public:
 	void openSheetCell(const librevenge::RVNGPropertyList &propList);
 	void closeSheetCell();
 
+	void defineChartStyle(const librevenge::RVNGPropertyList &propList);
 	void openChart(const librevenge::RVNGPropertyList &propList);
 	void closeChart();
-	void openChartTextZone(const librevenge::RVNGPropertyList &propList);
-	void closeChartTextZone();
+	void openChartTextObject(const librevenge::RVNGPropertyList &propList);
+	void closeChartTextObject();
 	void openChartPlotArea(const librevenge::RVNGPropertyList &propList);
 	void closeChartPlotArea();
 	void insertChartAxis(const librevenge::RVNGPropertyList &axis);
-	void insertChartSerie(const librevenge::RVNGPropertyList &propList);
+	void openChartSerie(const librevenge::RVNGPropertyList &series);
+	void closeChartSerie();
 
 	void defineParagraphStyle(const librevenge::RVNGPropertyList &propList);
 	void openParagraph(const librevenge::RVNGPropertyList &propList);

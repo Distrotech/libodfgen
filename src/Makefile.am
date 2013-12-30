@@ -48,6 +48,8 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
 	TableStyle.hxx \
 	TextRunStyle.cxx \
 	TextRunStyle.hxx \
+	OdcGenerator.cxx \
+	OdcGenerator.hxx \
 	OdfGenerator.cxx \
 	OdfGenerator.hxx \
 	OdgGenerator.cxx \

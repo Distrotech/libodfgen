@@ -51,7 +51,7 @@ public:
 	// write automatic styles
 	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const;
 
-	/** */
+	/** find a style ( or add it to the stored styles) and returns the style name */
 	librevenge::RVNGString findOrAdd(librevenge::RVNGPropertyList const &propList, bool automatic=true);
 
 	/** append the graphic in the element, ie. the stroke, pattern, bitmap, marker properties */

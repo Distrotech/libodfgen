@@ -128,6 +128,8 @@ public:
 	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList);
 	/* returns the style corresponding to a given name ( if it exists ) */
 	shared_ptr<SpanStyle> const get(const librevenge::RVNGString &name) const;
+	/** append the span in the element, ie. the stroke, pattern, bitmap, marker properties */
+	static void addSpanProperties(librevenge::RVNGPropertyList const &style, librevenge::RVNGPropertyList &element);
 	//! return the file name corresponding to a display name
 	librevenge::RVNGString getFinalDisplayName(const librevenge::RVNGString &displayName);
 
