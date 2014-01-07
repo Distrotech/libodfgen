@@ -39,6 +39,7 @@
 #include "FilterInternal.hxx"
 #include "FontStyle.hxx"
 #include "GraphicStyle.hxx"
+#include "InternalHandler.hxx"
 #include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 
@@ -72,10 +73,43 @@ public:
 	// document handler
 	//
 
+	//! basic container used to store objects of not flat odf files
+	struct ObjectContainer
+	{
+		//! constructor
+		ObjectContainer(librevenge::RVNGString const &type, bool isDir)
+			: mType(type), mIsDir(isDir), mStorage(), mInternalHandler(&mStorage)
+		{
+		}
+		//! destructor
+		~ObjectContainer();
+		//! the file type
+		librevenge::RVNGString mType;
+		//! true if the file is not a plain file
+		bool mIsDir;
+		//! the contain storage
+		Storage mStorage;
+		//! the handler
+		InternalHandler mInternalHandler;
+	private:
+		ObjectContainer(ObjectContainer const &orig);
+		ObjectContainer &operator=(ObjectContainer const &orig);
+	};
+	/** creates a new object */
+	ObjectContainer &createObjectFile(librevenge::RVNGString const &objectName,
+	                                  librevenge::RVNGString const &objectType,
+	                                  bool isDir=false);
+	/** returns the list created embedded object (needed to create chart) */
+	librevenge::RVNGStringVector getObjectNames() const;
+	/** retrieve an embedded object content via a document handler */
+	bool getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler);
+
 	//! add a document handler
 	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
 	//! calls writeTargetDocument on each document handler
 	void writeTargetDocuments();
+	//! appends local files in the manifest
+	void appendFilesInManifest(OdfDocumentHandler *pHandler);
 	//! a virtual function used to write final data
 	virtual bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType) = 0;
 
@@ -344,6 +378,11 @@ protected:
 
 	// the document handlers
 	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;
+
+	// the number of created object
+	int miObjectNumber;
+	// name to object map
+	std::map<librevenge::RVNGString, ObjectContainer *> mNameObjectMap;
 
 	// embedded image handlers
 	std::map<librevenge::RVNGString, OdfEmbeddedImage > mImageHandlers;

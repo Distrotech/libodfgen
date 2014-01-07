@@ -44,8 +44,6 @@ static void sendChart(Generator &generator)
 	librevenge::RVNGPropertyList chart;
 	chart.insert("svg:width", 400, librevenge::RVNG_POINT);
 	chart.insert("svg:height", 300, librevenge::RVNG_POINT);
-	chart.insert("xlink:href", "..");
-	chart.insert("xlink:type", "simple");
 	chart.insert("chart:class", "bar");
 	chart.insert("librevenge:chart-id", 1);
 	generator.openChart(chart);
@@ -144,7 +142,7 @@ static void sendChart(Generator &generator)
 	generator.defineChartStyle(style);
 
 	librevenge::RVNGPropertyList serie, range, datapoint;
-	range.insert("librevenge:sheet-name", "Sheet0");
+	range.insert("librevenge:sheet-name", "MySheet");
 	range.insert("librevenge:start-row", 1);
 	range.insert("librevenge:start-column", 0);
 	range.insert("librevenge:end-row", 1);
@@ -166,7 +164,7 @@ static void sendChart(Generator &generator)
 	style.insert("draw:fill-color", "#ff420e");
 	generator.defineChartStyle(style);
 
-	range.insert("librevenge:sheet-name", "Sheet0");
+	range.insert("librevenge:sheet-name", "MySheet");
 	range.insert("librevenge:start-row", 2);
 	range.insert("librevenge:start-column", 0);
 	range.insert("librevenge:end-row", 2);
@@ -210,6 +208,7 @@ static void createOds()
 		columns.append(column);
 	}
 	list.insert("librevenge:columns", columns);
+	list.insert("librevenge:sheet-name", "MySheet");
 	generator.openSheet(list);
 
 	librevenge::RVNGPropertyList frame;

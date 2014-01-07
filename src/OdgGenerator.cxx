@@ -155,7 +155,6 @@ void OdgGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
 void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
-
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
 		mGraphicManager.writeAutomaticStyles(pHandler);
@@ -233,6 +232,22 @@ void OdgGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 
 bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
+	if (streamType == ODF_MANIFEST_XML)
+	{
+		TagOpenElement manifestElement("manifest:manifest");
+		manifestElement.addAttribute("xmlns:manifest", "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0");
+		manifestElement.write(pHandler);
+		TagOpenElement mainFile("manifest:file-entry");
+		mainFile.addAttribute("manifest:media-type", "application/vnd.oasis.opendocument.graphics");
+		mainFile.addAttribute("manifest:version", "1.0", true);
+		mainFile.addAttribute("manifest:full-path", "/");
+		mainFile.write(pHandler);
+		TagCloseElement("manifest:file-entry").write(pHandler);
+		appendFilesInManifest(pHandler);
+		TagCloseElement("manifest:manifest").write(pHandler);
+		return true;
+	}
+
 	pHandler->startDocument();
 
 	std::string const documentType=getDocumentType(streamType);

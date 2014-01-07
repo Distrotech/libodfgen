@@ -90,8 +90,9 @@ public:
 	// the odc state
 	struct OdcGeneratorState
 	{
-		OdcGeneratorState() : mContentElements(), mInternalHandler(&mContentElements), mGenerator()
+		OdcGeneratorState(librevenge::RVNGString const &dir) : mDir(dir), mContentElements(), mInternalHandler(&mContentElements), mGenerator()
 		{
+			if (!mDir.empty()) return;
 			mGenerator.addDocumentHandler(&mInternalHandler,ODF_FLAT_XML);
 		}
 		~OdcGeneratorState()
@@ -105,6 +106,7 @@ public:
 		{
 			return mGenerator;
 		}
+		librevenge::RVNGString mDir;
 		std::vector<DocumentElement *> mContentElements;
 		InternalHandler mInternalHandler;
 		OdcGenerator mGenerator;
@@ -227,7 +229,27 @@ public:
 			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::createAuxiliarOdcGenerator: already created\n"));
 			return false;
 		}
-		mAuxiliarOdcState.reset(new OdcGeneratorState);
+		bool isFlat = mDocumentStreamHandlers.find(ODF_FLAT_XML)!=mDocumentStreamHandlers.end();
+		librevenge::RVNGString dir("");
+		if (!isFlat)
+			dir.sprintf("Object %i/", miObjectNumber++);
+		mAuxiliarOdcState.reset(new OdcGeneratorState(dir));
+		if (!isFlat)
+		{
+			createObjectFile(dir, "application/vnd.oasis.opendocument.chart", true);
+			librevenge::RVNGString file(dir);
+			file.append("content.xml");
+			mAuxiliarOdcState->mGenerator.addDocumentHandler
+			(&createObjectFile(file, "text/xml").mInternalHandler, ODF_CONTENT_XML);
+			file=dir;
+			file.append("meta.xml");
+			mAuxiliarOdcState->mGenerator.addDocumentHandler
+			(&createObjectFile(file, "text/xml").mInternalHandler, ODF_META_XML);
+			file=dir;
+			file.append("styles.xml");
+			mAuxiliarOdcState->mGenerator.addDocumentHandler
+			(&createObjectFile(file, "text/xml").mInternalHandler, ODF_STYLES_XML);
+		}
 		mAuxiliarOdcState->mGenerator.initStateWith(*this);
 		mAuxiliarOdcState->mGenerator.startDocument(librevenge::RVNGPropertyList());
 
@@ -241,12 +263,20 @@ public:
 			return false;
 		}
 		mAuxiliarOdcState->mGenerator.endDocument();
-		if (mAuxiliarOdcState->mContentElements.empty())
+		if (mAuxiliarOdcState->mDir.empty() && mAuxiliarOdcState->mContentElements.empty())
 		{
 			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::sendAuxiliarOdcGenerator: data seems bad\n"));
 			return false;
 		}
-		getCurrentStorage()->push_back(new TagOpenElement("draw:object"));
+		TagOpenElement *object=new TagOpenElement("draw:object");
+		if (!mAuxiliarOdcState->mDir.empty())
+		{
+			object->addAttribute("xlink:href",mAuxiliarOdcState->mDir.cstr());
+			object->addAttribute("xlink:type","simple");
+			object->addAttribute("xlink:show","embed");
+			object->addAttribute("xlink:actuate","onLoad");
+		}
+		getCurrentStorage()->push_back(object);
 		for (std::vector<DocumentElement *>::const_iterator iter = mAuxiliarOdcState->mContentElements.begin(); iter != mAuxiliarOdcState->mContentElements.end(); ++iter)
 			getCurrentStorage()->push_back(*iter);
 		mAuxiliarOdcState->mContentElements.resize(0);
@@ -339,6 +369,7 @@ public:
 	PageSpan *mpCurrentPageSpan;
 	int miNumPageStyles;
 
+	//
 private:
 	OdsGeneratorPrivate(const OdsGeneratorPrivate &);
 	OdsGeneratorPrivate &operator=(const OdsGeneratorPrivate &);
@@ -469,6 +500,20 @@ void OdsGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStr
 		mpImpl->addDocumentHandler(pHandler, streamType);
 }
 
+librevenge::RVNGStringVector OdsGenerator::getObjectNames() const
+{
+	if (mpImpl)
+		return mpImpl->getObjectNames();
+	return librevenge::RVNGStringVector();
+}
+
+bool OdsGenerator::getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler)
+{
+	if (!mpImpl)
+		return false;
+	return mpImpl->getObjectContent(objectName, pHandler);
+}
+
 void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
@@ -514,7 +559,7 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:fill","solid");
 	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:fill-color","#ffffff");
 	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:stroke","none");
-	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:shadow","none");
+	defaultGraphicStylePropertiesOpenElement.addAttribute("draw:shadow","hidden");
 	defaultGraphicStylePropertiesOpenElement.write(pHandler);
 	pHandler->endElement("style:graphic-properties");
 	pHandler->endElement("style:default-style");
@@ -607,6 +652,26 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 
 bool OdsGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
+	if (streamType == ODF_MANIFEST_XML)
+	{
+		pHandler->startDocument();
+		TagOpenElement manifestElement("manifest:manifest");
+		manifestElement.addAttribute("xmlns:manifest", "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0");
+		manifestElement.addAttribute("manifest:version", "1.2", true);
+		manifestElement.write(pHandler);
+
+		TagOpenElement mainFile("manifest:file-entry");
+		mainFile.addAttribute("manifest:media-type", "application/vnd.oasis.opendocument.spreadsheet");
+		mainFile.addAttribute("manifest:full-path", "/");
+		mainFile.write(pHandler);
+		TagCloseElement("manifest:file-entry").write(pHandler);
+		appendFilesInManifest(pHandler);
+
+		TagCloseElement("manifest:manifest").write(pHandler);
+		pHandler->endDocument();
+		return true;
+	}
+
 	pHandler->startDocument();
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
@@ -738,9 +803,11 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 	SheetStyle *style=mpImpl->mSheetManager.actualSheet();
 	if (!style) return;
 	librevenge::RVNGString sTableName(style->getName());
-
 	TagOpenElement *pTableOpenElement = new TagOpenElement("table:table");
-	pTableOpenElement->addAttribute("table:name", sTableName.cstr());
+	if (propList["librevenge:sheet-name"])
+		pTableOpenElement->addAttribute("table:name", propList["librevenge:sheet-name"]->getStr());
+	else
+		pTableOpenElement->addAttribute("table:name", sTableName.cstr());
 	pTableOpenElement->addAttribute("table:style-name", sTableName.cstr());
 	mpImpl->getCurrentStorage()->push_back(pTableOpenElement);
 

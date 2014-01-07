@@ -45,7 +45,13 @@ public:
 	OdsGenerator();
 	~OdsGenerator();
 
+	/** register an handler for a basic type of document */
 	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
+	/** returns the list created embedded object (needed to create chart) */
+	librevenge::RVNGStringVector getObjectNames() const;
+	/** retrieve an embedded object content via a document handler */
+	bool getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler);
+
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
 	void startDocument(const librevenge::RVNGPropertyList &);
 	void endDocument();

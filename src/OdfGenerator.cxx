@@ -88,7 +88,9 @@ OdfGenerator::OdfGenerator() :
 	miFrameNumber(0),  mFrameNameIdMap(),
 	mGraphicStyle(),
 	mIdChartMap(), mIdChartNameMap(),
-	mDocumentStreamHandlers(), mImageHandlers(), mObjectHandlers()
+	mDocumentStreamHandlers(),
+	miObjectNumber(1), mNameObjectMap(),
+	mImageHandlers(), mObjectHandlers()
 {
 	mListStates.push(ListState());
 }
@@ -105,6 +107,12 @@ OdfGenerator::~OdfGenerator()
 	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
 	        iterListStyles != mListStyles.end(); ++iterListStyles)
 		delete(*iterListStyles);
+	std::map<librevenge::RVNGString, ObjectContainer *>::iterator it;
+	for (it=mNameObjectMap.begin(); it!=mNameObjectMap.end(); ++it)
+	{
+		if (it->second)
+			delete it->second;
+	}
 }
 
 std::string OdfGenerator::getDocumentType(OdfStreamType streamType)
@@ -121,6 +129,7 @@ std::string OdfGenerator::getDocumentType(OdfStreamType streamType)
 		return "office:document-settings";
 	case ODF_META_XML:
 		return "office:document-meta";
+	case ODF_MANIFEST_XML:
 	default:
 		return "office:document";
 	}
@@ -150,6 +159,53 @@ void OdfGenerator::writeDocumentMetaData(OdfDocumentHandler *pHandler)
 	pHandler->endElement("office:meta");
 }
 
+void OdfGenerator::appendFilesInManifest(OdfDocumentHandler *pHandler)
+{
+	std::map<OdfStreamType, OdfDocumentHandler *>::const_iterator iter = mDocumentStreamHandlers.begin();
+	for (; iter != mDocumentStreamHandlers.end(); ++iter)
+	{
+		std::string name("");
+		switch (iter->first)
+		{
+		case ODF_CONTENT_XML:
+			name="content.xml";
+			break;
+		case ODF_META_XML:
+			name="meta.xml";
+			break;
+		case ODF_STYLES_XML:
+			name="styles.xml";
+			break;
+		case ODF_SETTINGS_XML:
+			name="settings.xml";
+			break;
+		case ODF_FLAT_XML:
+		case ODF_MANIFEST_XML:
+		default:
+			break;
+		}
+		if (name.empty())
+			continue;
+
+		TagOpenElement file("manifest:file-entry");
+		file.addAttribute("manifest:media-type","text/xml");
+		file.addAttribute("manifest:full-path", name.c_str());
+		file.write(pHandler);
+		TagCloseElement("manifest:file-entry").write(pHandler);
+	}
+	std::map<librevenge::RVNGString, ObjectContainer *>::const_iterator oIt;
+	for (oIt=mNameObjectMap.begin(); oIt!=mNameObjectMap.end(); ++oIt)
+	{
+		if (!oIt->second) continue;
+
+		TagOpenElement file("manifest:file-entry");
+		file.addAttribute("manifest:media-type",oIt->second->mType);
+		file.addAttribute("manifest:full-path", oIt->first);
+		file.write(pHandler);
+		TagCloseElement("manifest:file-entry").write(pHandler);
+	}
+
+}
 
 void OdfGenerator::initStateWith(OdfGenerator const &orig)
 {
@@ -158,6 +214,58 @@ void OdfGenerator::initStateWith(OdfGenerator const &orig)
 	mIdSpanMap=orig.mIdSpanMap;
 	mIdParagraphMap=orig.mIdParagraphMap;
 	mIdChartMap=orig.mIdChartMap;
+}
+
+////////////////////////////////////////////////////////////
+// object
+////////////////////////////////////////////////////////////
+OdfGenerator::ObjectContainer::~ObjectContainer()
+{
+	for (size_t i=0; i<mStorage.size(); ++i)
+	{
+		if (mStorage[i])
+			delete mStorage[i];
+	}
+}
+
+OdfGenerator::ObjectContainer &OdfGenerator::createObjectFile
+(librevenge::RVNGString const &objectName, librevenge::RVNGString const &objectType, bool isDir)
+{
+	ObjectContainer *res=new ObjectContainer(objectType, isDir);
+	mNameObjectMap[objectName]=res;
+	return *res;
+}
+
+librevenge::RVNGStringVector OdfGenerator::getObjectNames() const
+{
+	librevenge::RVNGStringVector res;
+	std::map<librevenge::RVNGString, ObjectContainer *>::const_iterator it;
+	for (it=mNameObjectMap.begin(); it!=mNameObjectMap.end(); ++it)
+	{
+		if (!it->second || it->second->mIsDir) continue;
+		res.append(it->first);
+	}
+	return res;
+}
+
+bool OdfGenerator::getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler)
+{
+	if (!pHandler) return false;
+	std::map<librevenge::RVNGString, ObjectContainer *>::iterator it=mNameObjectMap.find(objectName);
+	if (it==mNameObjectMap.end() || !it->second)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::getObjectContent: can not find object %s\n", objectName.cstr()));
+		return false;
+	}
+	pHandler->startDocument();
+	ObjectContainer &object=*(it->second);
+	for (size_t i=0; i<object.mStorage.size(); ++i)
+	{
+		if (!object.mStorage[i]) continue;
+		object.mStorage[i]->write(pHandler);
+	}
+	pHandler->endDocument();
+	return true;
 }
 
 ////////////////////////////////////////////////////////////

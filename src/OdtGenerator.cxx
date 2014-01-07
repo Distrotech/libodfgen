@@ -362,6 +362,25 @@ void OdtGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 
 bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
+	if (streamType == ODF_MANIFEST_XML)
+	{
+		pHandler->startDocument();
+		TagOpenElement manifestElement("manifest:manifest");
+		manifestElement.addAttribute("xmlns:manifest", "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0");
+		manifestElement.write(pHandler);
+
+		TagOpenElement mainFile("manifest:file-entry");
+		mainFile.addAttribute("manifest:media-type", "application/vnd.oasis.opendocument.text");
+		mainFile.addAttribute("manifest:full-path", "/");
+		mainFile.write(pHandler);
+		TagCloseElement("manifest:file-entry").write(pHandler);
+		appendFilesInManifest(pHandler);
+
+		TagCloseElement("manifest:manifest").write(pHandler);
+		pHandler->endDocument();
+		return true;
+	}
+
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Printing out the header stuff..\n"));
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Start Document\n"));

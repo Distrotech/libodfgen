@@ -74,8 +74,6 @@ public:
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeStyles(OdfDocumentHandler *pHandler);
 	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
-	void _writeMasterPages(OdfDocumentHandler *pHandler);
-	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
 	bool canWriteText() const
 	{
@@ -216,7 +214,6 @@ void OdcGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	mParagraphManager.writeAutomaticStyles(pHandler);
 	mGraphicManager.writeAutomaticStyles(pHandler);
 
-	_writePageLayouts(pHandler);
 	// writing out the lists styles
 	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
 	{
@@ -294,20 +291,14 @@ void OdcGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	standardStyleOpenElement.write(pHandler);
 	pHandler->endElement("style:style");
 
-	static char const *(s_paraStyle[4*10]) =
+	static char const *(s_paraStyle[4*4]) =
 	{
 		"Text_Body", "Text Body", "Standard", "text",
 		"Table_Contents", "Table Contents", "Text_Body", "extra",
 		"Table_Heading", "Table Heading", "Table_Contents", "extra",
-		"List", "List", "Text_Body", "list",
-		"Header", "Header", "Standard", "extra",
-		"Footer", "Footer", "Standard", "extra",
-		"Caption", "Caption", "Standard", "extra",
-		"Footnote", "Footnote", "Standard", "extra",
-		"Endnote", "Endnote", "Standard", "extra",
-		"Index", "Index", "Standard", "extra"
+		"List", "List", "Text_Body", "list"
 	};
-	for (int i=0; i<10; ++i)
+	for (int i=0; i<4; ++i)
 	{
 		TagOpenElement paraOpenElement("style:style");
 		paraOpenElement.addAttribute("style:name", s_paraStyle[4*i]);
@@ -328,55 +319,6 @@ void OdcGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	}
 	mGraphicManager.writeStyles(pHandler);
 	pHandler->endElement("office:styles");
-}
-
-void OdcGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
-{
-	TagOpenElement("office:master-styles").write(pHandler);
-
-	TagOpenElement pageOpenElement("style:master-page");
-	pageOpenElement.addAttribute("style:name", "Standart");
-	pageOpenElement.addAttribute("style:page-layout-name", "PM0");
-	pageOpenElement.write(pHandler);
-	pHandler->endElement("style:master-page");
-
-	pHandler->endElement("office:master-styles");
-}
-
-void OdcGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
-{
-	for (int i=0; i < 2; ++i)
-	{
-		TagOpenElement layout("style:page-layout");
-		layout.addAttribute("style:name", i==0 ? "PM0" : "PM1");
-		layout.write(pHandler);
-
-		TagOpenElement layoutProperties("style:page-layout-properties");
-		layoutProperties.addAttribute("fo:margin-bottom", "1in");
-		layoutProperties.addAttribute("fo:margin-left", "1in");
-		layoutProperties.addAttribute("fo:margin-right", "1in");
-		layoutProperties.addAttribute("fo:margin-top", "1in");
-		layoutProperties.addAttribute("fo:page-height", "11in");
-		layoutProperties.addAttribute("fo:page-width", "8.5in");
-		layoutProperties.addAttribute("style:print-orientation", "portrait");
-		layoutProperties.write(pHandler);
-
-		TagOpenElement footnoteSep("style:footnote-sep");
-		footnoteSep.addAttribute("style:adjustment","left");
-		footnoteSep.addAttribute("style:color","#000000");
-		footnoteSep.addAttribute("style:rel-width","25%");
-		if (i==0)
-		{
-			footnoteSep.addAttribute("style:distance-after-sep","0.0398in");
-			footnoteSep.addAttribute("style:distance-before-sep","0.0398in");
-			footnoteSep.addAttribute("style:width","0.0071in");
-		}
-		footnoteSep.write(pHandler);
-		TagCloseElement("style:footnote-sep").write(pHandler);
-		TagCloseElement("style:page-layout-properties").write(pHandler);
-
-		TagCloseElement("style:page-layout").write(pHandler);
-	}
 }
 
 bool OdcGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
@@ -427,9 +369,6 @@ bool OdcGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
 		_writeAutomaticStyles(pHandler);
-
-	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
-		_writeMasterPages(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
 	{
@@ -497,13 +436,13 @@ void OdcGenerator::defineCharacterStyle(librevenge::RVNGPropertyList const &prop
 
 void OdcGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->canWriteText()) return;
+	if (!mpImpl->canWriteText() || mpImpl->mChartDocumentStates.top().mbChartTextObjectOpened) return;
 	mpImpl->openSpan(propList);
 }
 
 void OdcGenerator::closeSpan()
 {
-	if (!mpImpl->canWriteText()) return;
+	if (!mpImpl->canWriteText() || mpImpl->mChartDocumentStates.top().mbChartTextObjectOpened) return;
 	mpImpl->closeSpan();
 }
 
@@ -588,6 +527,12 @@ void OdcGenerator::openChart(const librevenge::RVNGPropertyList &propList)
 		if (propList[wh[i]])
 			openElement->addAttribute(wh[i], propList[wh[i]]->getStr());
 	}
+	if (!propList["xlink:href"])
+	{
+		openElement->addAttribute("xlink:href","..");
+		openElement->addAttribute("xlink:type", "simple");
+	}
+
 	if (propList["librevenge:chart-id"])
 		openElement->addAttribute("chart:style-name",mpImpl->getChartStyleName(propList["librevenge:chart-id"]->getInt()));
 	mpImpl->getCurrentStorage()->push_back(openElement);
@@ -684,20 +629,26 @@ void OdcGenerator::openChartPlotArea(const librevenge::RVNGPropertyList &propLis
 	mpImpl->mChartDocumentStates.push(state);
 
 	TagOpenElement *openElement = new TagOpenElement("chart:plot-area");
-	for (int i=0; i<18; ++i)
+	for (int i=0; i<17; ++i)
 	{
-		static char const *(wh[18]) =
+		static char const *(wh[17]) =
 		{
 			"chart:data-source-has-labels",
 			"dr3d:ambient-color", "dr3d:distance", "dr3d:focal-length", "dr3d:lighting-mode",
 			"dr3d:projection", "dr3d:shade-mode", "dr3d:shadow-slant", "dr3d:transform",
 			"dr3d:vpn", "dr3d:vrp",
 			"dr3d:vup", "svg:height", "svg:width", "svg:x", "svg:y",
-			"table:cell-range-address",
 			"xml:id"
 		};
 		if (propList[wh[i]])
 			openElement->addAttribute(wh[i], propList[wh[i]]->getStr());
+	}
+	if (propList.child("table:cell-range-address"))
+	{
+		librevenge::RVNGString range=
+		    mpImpl->getAddressString(propList.child("table:cell-range-address"));
+		if (!range.empty())
+			openElement->addAttribute("table:cell-range-address", range);
 	}
 	if (propList["librevenge:chart-id"])
 		openElement->addAttribute("chart:style-name",mpImpl->getChartStyleName(propList["librevenge:chart-id"]->getInt()));

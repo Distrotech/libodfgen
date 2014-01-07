@@ -30,7 +30,7 @@
   *
   * @sa OdgGenerator, OdpGenerator, OdtGenerator
   */
-enum OdfStreamType { ODF_FLAT_XML, ODF_CONTENT_XML, ODF_STYLES_XML, ODF_SETTINGS_XML, ODF_META_XML };
+enum OdfStreamType { ODF_FLAT_XML, ODF_CONTENT_XML, ODF_STYLES_XML, ODF_SETTINGS_XML, ODF_META_XML, ODF_MANIFEST_XML };
 
 class OdfDocumentHandler;
 
