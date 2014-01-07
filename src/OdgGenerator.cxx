@@ -239,7 +239,6 @@ bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		manifestElement.write(pHandler);
 		TagOpenElement mainFile("manifest:file-entry");
 		mainFile.addAttribute("manifest:media-type", "application/vnd.oasis.opendocument.graphics");
-		mainFile.addAttribute("manifest:version", "1.0", true);
 		mainFile.addAttribute("manifest:full-path", "/");
 		mainFile.write(pHandler);
 		TagCloseElement("manifest:file-entry").write(pHandler);

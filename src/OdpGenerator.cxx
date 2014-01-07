@@ -425,7 +425,6 @@ bool OdpGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 
 		TagOpenElement mainFile("manifest:file-entry");
 		mainFile.addAttribute("manifest:media-type", "application/vnd.oasis.opendocument.presentation");
-		mainFile.addAttribute("manifest:version", "1.0", true);
 		mainFile.addAttribute("manifest:full-path", "/");
 		mainFile.write(pHandler);
 		TagCloseElement("manifest:file-entry").write(pHandler);
