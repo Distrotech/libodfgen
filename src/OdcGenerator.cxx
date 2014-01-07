@@ -323,6 +323,26 @@ void OdcGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 
 bool OdcGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
+	if (streamType == ODF_MANIFEST_XML)
+	{
+		pHandler->startDocument();
+		TagOpenElement manifestElement("manifest:manifest");
+		manifestElement.addAttribute("xmlns:manifest", "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0");
+		manifestElement.addAttribute("manifest:version", "1.2", true);
+		manifestElement.write(pHandler);
+
+		TagOpenElement mainFile("manifest:file-entry");
+		mainFile.addAttribute("manifest:media-type", "application/vnd.oasis.opendocument.chart");
+		mainFile.addAttribute("manifest:full-path", "/");
+		mainFile.write(pHandler);
+		TagCloseElement("manifest:file-entry").write(pHandler);
+		appendFilesInManifest(pHandler);
+
+		TagCloseElement("manifest:manifest").write(pHandler);
+		pHandler->endDocument();
+		return true;
+	}
+
 	ODFGEN_DEBUG_MSG(("OdcGenerator: Document Body: Printing out the header stuff..\n"));
 
 	ODFGEN_DEBUG_MSG(("OdcGenerator: Document Body: Start Document\n"));
@@ -406,6 +426,19 @@ void OdcGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStr
 		mpImpl->addDocumentHandler(pHandler, streamType);
 }
 
+librevenge::RVNGStringVector OdcGenerator::getObjectNames() const
+{
+	if (mpImpl)
+		return mpImpl->getObjectNames();
+	return librevenge::RVNGStringVector();
+}
+
+bool OdcGenerator::getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler)
+{
+	if (!mpImpl)
+		return false;
+	return mpImpl->getObjectContent(objectName, pHandler);
+}
 
 void OdcGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propList)
 {

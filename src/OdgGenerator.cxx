@@ -316,6 +316,20 @@ void OdgGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStr
 		mpImpl->addDocumentHandler(pHandler, streamType);
 }
 
+librevenge::RVNGStringVector OdgGenerator::getObjectNames() const
+{
+	if (mpImpl)
+		return mpImpl->getObjectNames();
+	return librevenge::RVNGStringVector();
+}
+
+bool OdgGenerator::getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler)
+{
+	if (!mpImpl)
+		return false;
+	return mpImpl->getObjectContent(objectName, pHandler);
+}
+
 void OdgGenerator::startDocument(const librevenge::RVNGPropertyList &)
 {
 }

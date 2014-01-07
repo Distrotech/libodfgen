@@ -416,6 +416,26 @@ void OdpGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 
 bool OdpGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
+	if (streamType == ODF_MANIFEST_XML)
+	{
+		pHandler->startDocument();
+		TagOpenElement manifestElement("manifest:manifest");
+		manifestElement.addAttribute("xmlns:manifest", "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0");
+		manifestElement.write(pHandler);
+
+		TagOpenElement mainFile("manifest:file-entry");
+		mainFile.addAttribute("manifest:media-type", "application/vnd.oasis.opendocument.presentation");
+		mainFile.addAttribute("manifest:version", "1.0", true);
+		mainFile.addAttribute("manifest:full-path", "/");
+		mainFile.write(pHandler);
+		TagCloseElement("manifest:file-entry").write(pHandler);
+		appendFilesInManifest(pHandler);
+
+		TagCloseElement("manifest:manifest").write(pHandler);
+		pHandler->endDocument();
+		return true;
+	}
+
 	pHandler->startDocument();
 
 	std::string const documentType=getDocumentType(streamType);
@@ -485,6 +505,20 @@ void OdpGenerator::addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStr
 {
 	if (mpImpl)
 		mpImpl->addDocumentHandler(pHandler, streamType);
+}
+
+librevenge::RVNGStringVector OdpGenerator::getObjectNames() const
+{
+	if (mpImpl)
+		return mpImpl->getObjectNames();
+	return librevenge::RVNGStringVector();
+}
+
+bool OdpGenerator::getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler)
+{
+	if (!mpImpl)
+		return false;
+	return mpImpl->getObjectContent(objectName, pHandler);
 }
 
 void OdpGenerator::startDocument(const ::librevenge::RVNGPropertyList &/*propList*/)

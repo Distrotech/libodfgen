@@ -43,8 +43,10 @@ public:
 	OdcGenerator();
 	~OdcGenerator();
 	void addDocumentHandler(OdfDocumentHandler *pHandler, const OdfStreamType streamType);
-	void setDocumentMetaData(const librevenge::RVNGPropertyList &);
+	librevenge::RVNGStringVector getObjectNames() const;
+	bool getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler);
 
+	void setDocumentMetaData(const librevenge::RVNGPropertyList &);
 	void startDocument(const librevenge::RVNGPropertyList &);
 	void endDocument();
 
