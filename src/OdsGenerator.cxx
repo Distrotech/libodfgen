@@ -55,7 +55,7 @@ public:
 	struct State
 	{
 		State() : mbStarted(false),
-			mbInSheet(false), mbInSheetShapes(false), mbInSheetRow(false), mbInSheetCell(false), miLastSheetRow(0), miLastSheetColumn(0),
+			mbInSheet(false), mbInSheetShapes(false), mbInSheetRow(false), mbFirstInSheetRow(false), mbInSheetCell(false), miLastSheetRow(0), miLastSheetColumn(0),
 			mbInFootnote(false), mbInComment(false), mbInHeaderFooter(false), mbInFrame(false), mbFirstInFrame(false), mbInChart(false),
 			mbInGroup(false), mbInTable(false), mbInTextBox(false),
 			mbNewOdcGenerator(false), mbNewOdtGenerator(false)
@@ -71,6 +71,7 @@ public:
 		bool mbInSheet;
 		bool mbInSheetShapes;
 		bool mbInSheetRow;
+		bool mbFirstInSheetRow;
 		bool mbInSheetCell;
 		int miLastSheetRow;
 		int miLastSheetColumn;
@@ -883,7 +884,7 @@ void OdsGenerator::openSheetRow(const librevenge::RVNGPropertyList &propList)
 	mpImpl->getState().miLastSheetRow=row+1;
 
 	state.miLastSheetColumn=0;
-	state.mbInSheetRow=true;
+	state.mbInSheetRow=state.mbFirstInSheetRow=true;
 	mpImpl->pushState(state);
 
 	librevenge::RVNGString sSheetRowStyleName=style->addRow(propList);
@@ -895,8 +896,15 @@ void OdsGenerator::openSheetRow(const librevenge::RVNGPropertyList &propList)
 void OdsGenerator::closeSheetRow()
 {
 	if (!mpImpl->close(OdsGeneratorPrivate::C_SheetRow) || mpImpl->mAuxiliarOdcState || mpImpl->mAuxiliarOdtState) return;
-	if (!mpImpl->getState().mbInSheetRow) return;
-
+	OdsGeneratorPrivate::State state=mpImpl->getState();
+	if (!state.mbInSheetRow) return;
+	if (state.mbFirstInSheetRow)
+	{
+		TagOpenElement *pSheetCellOpenElement = new TagOpenElement("table:table-cell");
+		pSheetCellOpenElement->addAttribute("table:number-columns-repeated","1");
+		mpImpl->getCurrentStorage()->push_back(pSheetCellOpenElement);
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-cell"));
+	}
 	mpImpl->popState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("table:table-row"));
 }
@@ -913,6 +921,7 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 		ODFGEN_DEBUG_MSG(("OdsGenerator::openSheetCell can not be called!!!\n"));
 		return;
 	}
+	mpImpl->getState().mbFirstInSheetRow=false;
 	// check if we need to add empty column
 	int col = propList["librevenge:column"] ? propList["librevenge:column"]->getInt() : -1;
 	if (col > state.miLastSheetColumn)
@@ -1506,7 +1515,7 @@ void OdsGenerator::closeTable()
 void OdsGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_TableRow);
-	if (!mpImpl->mAuxiliarOdcState) return;
+	if (mpImpl->mAuxiliarOdcState) return;
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTableRow(propList);
 }
@@ -1514,7 +1523,7 @@ void OdsGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 void OdsGenerator::closeTableRow()
 {
 	if (!mpImpl->close(OdsGeneratorPrivate::C_TableRow)) return;
-	if (!mpImpl->mAuxiliarOdcState) return;
+	if (mpImpl->mAuxiliarOdcState) return;
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().closeTableRow();
 }
@@ -1522,7 +1531,7 @@ void OdsGenerator::closeTableRow()
 void OdsGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->open(OdsGeneratorPrivate::C_TableCell);
-	if (!mpImpl->mAuxiliarOdcState) return;
+	if (mpImpl->mAuxiliarOdcState) return;
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().openTableCell(propList);
 }
@@ -1530,14 +1539,14 @@ void OdsGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 void OdsGenerator::closeTableCell()
 {
 	if (!mpImpl->close(OdsGeneratorPrivate::C_TableCell)) return;
-	if (!mpImpl->mAuxiliarOdcState) return;
+	if (mpImpl->mAuxiliarOdcState) return;
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().closeTableCell();
 }
 
 void OdsGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->mAuxiliarOdcState) return;
+	if (mpImpl->mAuxiliarOdcState) return;
 	if (mpImpl->mAuxiliarOdtState)
 		return mpImpl->mAuxiliarOdtState->get().insertCoveredTableCell(propList);
 }
