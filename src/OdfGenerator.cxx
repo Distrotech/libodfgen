@@ -1033,38 +1033,45 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 
 	if (tmpObjectHandler || tmpImageHandler)
 	{
-		librevenge::RVNGBinaryData data(propList["office:binary-data"]->getStr());
-		if (tmpObjectHandler)
+		try
 		{
-			std::vector<DocumentElement *> tmpContentElements;
-			InternalHandler tmpHandler(&tmpContentElements);
-
-
-			if (tmpObjectHandler(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
+			librevenge::RVNGBinaryData data(propList["office:binary-data"]->getStr());
+			if (tmpObjectHandler)
 			{
-				mpCurrentStorage->push_back(new TagOpenElement("draw:object"));
-				for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); ++iter)
-					mpCurrentStorage->push_back(*iter);
-				mpCurrentStorage->push_back(new TagCloseElement("draw:object"));
+				std::vector<DocumentElement *> tmpContentElements;
+				InternalHandler tmpHandler(&tmpContentElements);
+
+
+				if (tmpObjectHandler(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
+				{
+					mpCurrentStorage->push_back(new TagOpenElement("draw:object"));
+					for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); ++iter)
+						mpCurrentStorage->push_back(*iter);
+					mpCurrentStorage->push_back(new TagCloseElement("draw:object"));
+				}
+			}
+			if (tmpImageHandler)
+			{
+				librevenge::RVNGBinaryData output;
+				if (tmpImageHandler(data, output))
+				{
+					mpCurrentStorage->push_back(new TagOpenElement("draw:image"));
+
+					mpCurrentStorage->push_back(new TagOpenElement("office:binary-data"));
+
+					librevenge::RVNGString binaryBase64Data = output.getBase64Data();
+
+					mpCurrentStorage->push_back(new CharDataElement(binaryBase64Data.cstr()));
+
+					mpCurrentStorage->push_back(new TagCloseElement("office:binary-data"));
+
+					mpCurrentStorage->push_back(new TagCloseElement("draw:image"));
+				}
 			}
 		}
-		if (tmpImageHandler)
+		catch (...)
 		{
-			librevenge::RVNGBinaryData output;
-			if (tmpImageHandler(data, output))
-			{
-				mpCurrentStorage->push_back(new TagOpenElement("draw:image"));
-
-				mpCurrentStorage->push_back(new TagOpenElement("office:binary-data"));
-
-				librevenge::RVNGString binaryBase64Data = output.getBase64Data();
-
-				mpCurrentStorage->push_back(new CharDataElement(binaryBase64Data.cstr()));
-
-				mpCurrentStorage->push_back(new TagCloseElement("office:binary-data"));
-
-				mpCurrentStorage->push_back(new TagCloseElement("draw:image"));
-			}
+			ODFGEN_DEBUG_MSG(("OdfGenerator::insertBinaryObject: ARGHH, catch an exception when decoding data!!!\n"));
 		}
 	}
 	else
@@ -1076,9 +1083,14 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 			mpCurrentStorage->push_back(new TagOpenElement("draw:image"));
 
 		mpCurrentStorage->push_back(new TagOpenElement("office:binary-data"));
-
-		mpCurrentStorage->push_back(new CharDataElement(propList["office:binary-data"]->getStr().cstr()));
-
+		try
+		{
+			mpCurrentStorage->push_back(new CharDataElement(propList["office:binary-data"]->getStr().cstr()));
+		}
+		catch (...)
+		{
+			ODFGEN_DEBUG_MSG(("OdfGenerator::insertBinaryObject: ARGHH, catch an exception when decoding picture!!!\n"));
+		}
 		mpCurrentStorage->push_back(new TagCloseElement("office:binary-data"));
 
 		if (propList["librevenge:mime-type"]->getStr() == "object/ole")
