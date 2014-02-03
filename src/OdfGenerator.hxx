@@ -169,6 +169,12 @@ public:
 	//! close a link
 	void closeLink();
 
+	//! return the font manager
+	FontStyleManager &getFontManager()
+	{
+		return mFontManager;
+	}
+
 	//! define a character style
 	void defineCharacterStyle(const librevenge::RVNGPropertyList &propList);
 	//! open a span

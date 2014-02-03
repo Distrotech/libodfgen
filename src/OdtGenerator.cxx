@@ -550,7 +550,10 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 		fSectionMarginRight = propList["fo:margin-right"]->getDouble();
 
 	const librevenge::RVNGPropertyListVector *columns = propList.child("style:columns");
-	if ((columns && columns->count() > 1) || fSectionMarginLeft != 0 || fSectionMarginRight != 0)
+	double const eps=1e-4;
+	if ((columns && columns->count() > 1) ||
+	        (fSectionMarginLeft<-eps || fSectionMarginLeft>eps) ||
+	        (fSectionMarginRight<-eps || fSectionMarginRight>eps))
 	{
 		librevenge::RVNGString sSectionName;
 		sSectionName.sprintf("Section%i", mpImpl->mSectionStyles.size());

@@ -29,9 +29,11 @@
 #include <sstream>
 #include <string>
 
-#include "FilterInternal.hxx"
-#include "SheetStyle.hxx"
 #include "DocumentElement.hxx"
+#include "FilterInternal.hxx"
+#include "TextRunStyle.hxx"
+
+#include "SheetStyle.hxx"
 
 SheetNumberingStyle::SheetNumberingStyle(const librevenge::RVNGPropertyList &xPropList, const librevenge::RVNGString &psName)
 	: Style(psName), mPropList(xPropList)
@@ -255,6 +257,13 @@ void SheetCellStyle::writeStyle(OdfDocumentHandler *pHandler, SheetStyle const &
 	}
 	styleOpen.write(pHandler);
 
+	librevenge::RVNGPropertyList textProp;
+	SpanStyleManager::addSpanProperties(mPropList, textProp);
+	if (!textProp.empty())
+	{
+		pHandler->startElement("style:text-properties", textProp);
+		pHandler->endElement("style:text-properties");
+	}
 	// WLACH_REFACTORING: Only temporary.. a much better solution is to
 	// generalize this sort of thing into the "Style" superclass
 	librevenge::RVNGPropertyList stylePropList;

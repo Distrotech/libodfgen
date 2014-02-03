@@ -176,6 +176,8 @@ void OdcGeneratorPrivate::writeChartStyle(librevenge::RVNGPropertyList const &st
 	SpanStyleManager::addSpanProperties(style, textProp);
 	if (!textProp.empty())
 	{
+		if (textProp["style:font-name"])
+			mFontManager.findOrAdd(textProp["style:font-name"]->getStr().cstr());
 		pHandler->startElement("style:text-properties", textProp);
 		pHandler->endElement("style:text-properties");
 	}

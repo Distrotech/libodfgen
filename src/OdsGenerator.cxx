@@ -940,6 +940,8 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 	state.mbInSheetCell=true;
 	mpImpl->pushState(state);
 
+	if (propList["style:font-name"])
+		mpImpl->getFontManager().findOrAdd(propList["style:font-name"]->getStr().cstr());
 	librevenge::RVNGString sSheetCellStyleName=style->addCell(propList);
 
 	TagOpenElement *pSheetCellOpenElement = new TagOpenElement("table:table-cell");
