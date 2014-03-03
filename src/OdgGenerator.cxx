@@ -48,6 +48,39 @@
 // remove this
 #define MULTIPAGE_WORKAROUND 1
 
+namespace
+{
+static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
+{
+	value=prop.getDouble();
+	switch (prop.getUnit())
+	{
+	case librevenge::RVNG_GENERIC: // assume inch
+	case librevenge::RVNG_INCH:
+		return true;
+	case librevenge::RVNG_POINT:
+		value /= 72.;
+		return true;
+	case librevenge::RVNG_TWIP:
+		value /= 1440.;
+		return true;
+	case librevenge::RVNG_PERCENT:
+	case librevenge::RVNG_UNIT_ERROR:
+	default:
+	{
+		static bool first=true;
+		if (first)
+		{
+			ODFGEN_DEBUG_MSG(("OdgGenerator::getInchValue: call with no double value\n"));
+			first=false;
+		}
+		break;
+	}
+	}
+	return false;
+}
+} // anonymous namespace
+
 using namespace libodfgen;
 
 class OdgGeneratorPrivate : public OdfGenerator
@@ -346,17 +379,11 @@ void OdgGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 
 void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (propList["svg:width"])
-	{
-		mpImpl->mfWidth = propList["svg:width"]->getDouble();
+	if (propList["svg:width"] && getInchValue(*propList["svg:width"], mpImpl->mfWidth))
 		mpImpl->mfMaxWidth = mpImpl->mfMaxWidth < mpImpl->mfWidth ? mpImpl->mfWidth : mpImpl->mfMaxWidth;
-	}
 
-	if (propList["svg:height"])
-	{
-		mpImpl->mfHeight = propList["svg:height"]->getDouble();
+	if (propList["svg:height"] && getInchValue(*propList["svg:height"], mpImpl->mfHeight))
 		mpImpl->mfMaxHeight = mpImpl->mfMaxHeight < mpImpl->mfHeight ? mpImpl->mfHeight : mpImpl->mfMaxHeight;
-	}
 
 	TagOpenElement *pStyleMasterPageOpenElement = new TagOpenElement("style:master-page");
 
@@ -512,10 +539,12 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	if (propList["draw:blue"])
 		style.insert("draw:blue", propList["draw:blue"]->getStr());
 
-	double x = propList["svg:x"]->getDouble();
-	double y = propList["svg:y"]->getDouble();
-	double height = propList["svg:height"]->getDouble();
-	double width = propList["svg:width"]->getDouble();
+	double x, y;
+	double height, width;
+	getInchValue(*propList["svg:x"], x);
+	getInchValue(*propList["svg:y"], y);
+	getInchValue(*propList["svg:height"], height);
+	getInchValue(*propList["svg:width"], width);
 
 	if (flipY)
 	{
@@ -621,9 +650,9 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	double x = 0.0;
 	double y = 0.0;
 	if (propList["svg:x"])
-		x = propList["svg:x"]->getDouble();
+		getInchValue(*propList["svg:x"],x);
 	if (propList["svg:y"])
-		y = propList["svg:y"]->getDouble();
+		getInchValue(*propList["svg:y"],y);
 	double angle(propList["librevenge:rotate"] ? - M_PI * propList["librevenge:rotate"]->getDouble() / 180.0 : 0.0);
 	if (angle != 0.0)
 	{
@@ -631,13 +660,19 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 		double width = 0.0;
 		double height = 0.0;
 		if (propList["librevenge:rotate-cx"])
-			width = 2.0*(propList["librevenge:rotate-cx"]->getDouble()-x);
+		{
+			getInchValue(*propList["librevenge:rotate-cx"],width);
+			width = 2.0*(width-x);
+		}
 		else if (propList["svg:width"])
-			width = propList["svg:width"]->getDouble();
+			getInchValue(*propList["svg:width"],width);
 		if (propList["librevenge:rotate-cy"])
-			height = 2.0*(propList["librevenge:rotate-cy"]->getDouble()-y);
+		{
+			getInchValue(*propList["librevenge:rotate-cy"],height);
+			height = 2.0*(height-y);
+		}
 		else if (propList["svg:height"])
-			height = propList["svg:height"]->getDouble();
+			getInchValue(*propList["svg:height"],height);
 		double deltax((width*cos(angle)+height*sin(angle)-width)/2.0);
 		double deltay((-width*sin(angle)+height*cos(angle)-height)/2.0);
 		x -= deltax;
