@@ -43,32 +43,6 @@
 #include "FilterInternal.hxx"
 #include "InternalHandler.hxx"
 
-// the state we use for writing the final document
-struct WriterDocumentState
-{
-	WriterDocumentState();
-
-	bool mbFirstElement;
-	bool mbFirstParagraphInPageSpan;
-	bool mbInFakeSection;
-	bool mbListElementOpenedAtCurrentLevel;
-	bool mbTableCellOpened;
-	bool mbInNote;
-	bool mbInTextBox;
-	bool mbInFrame;
-};
-
-WriterDocumentState::WriterDocumentState() :
-	mbFirstElement(true),
-	mbFirstParagraphInPageSpan(true),
-	mbInFakeSection(false),
-	mbListElementOpenedAtCurrentLevel(false),
-	mbTableCellOpened(false),
-	mbInNote(false),
-	mbInTextBox(false),
-	mbInFrame(false)
-{
-}
 
 class OdtGeneratorPrivate : public OdfGenerator
 {
@@ -83,7 +57,56 @@ public:
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
 
-	std::stack<WriterDocumentState> mWriterDocumentStates;
+	//
+	// state gestion
+	//
+
+	// the state we use for writing the final document
+	struct State
+	{
+		State() : mbFirstElement(true),	mbFirstParagraphInPageSpan(true),
+			mbInFakeSection(false), mbListElementOpenedAtCurrentLevel(false),
+			mbTableCellOpened(false),	mbInNote(false),
+			mbInTextBox(false), mbInFrame(false)
+		{
+		}
+
+		bool mbFirstElement;
+		bool mbFirstParagraphInPageSpan;
+		bool mbInFakeSection;
+		bool mbListElementOpenedAtCurrentLevel;
+		bool mbTableCellOpened;
+		bool mbInNote;
+		bool mbInTextBox;
+		bool mbInFrame;
+	};
+
+	// returns the actual state
+	State &getState()
+	{
+		if (mStateStack.empty())
+		{
+			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::getState: no state\n"));
+			mStateStack.push(State());
+		}
+		return mStateStack.top();
+	}
+	// push a state
+	void pushState()
+	{
+		mStateStack.push(State());
+	}
+	// pop a state
+	void popState()
+	{
+		if (!mStateStack.empty())
+			mStateStack.pop();
+		else
+		{
+			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::popState: no state\n"));
+		}
+	}
+	std::stack<State> mStateStack;
 
 	// section styles
 	std::vector<SectionStyle *> mSectionStyles;
@@ -100,13 +123,13 @@ private:
 };
 
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
-	mWriterDocumentStates(),
+	mStateStack(),
 	mSectionStyles(),
 	mPageSpans(),
 	mpCurrentPageSpan(0),
 	miNumPageStyles(0)
 {
-	mWriterDocumentStates.push(WriterDocumentState());
+	pushState();
 }
 
 OdtGeneratorPrivate::~OdtGeneratorPrivate()
@@ -493,7 +516,7 @@ void OdtGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 	mpImpl->mpCurrentPageSpan = pPageSpan;
 	mpImpl->miNumPageStyles++;
 
-	mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = true;
+	mpImpl->getState().mbFirstParagraphInPageSpan = true;
 }
 
 void OdtGenerator::openHeader(const librevenge::RVNGPropertyList &propList)
@@ -567,15 +590,15 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 		mpImpl->getCurrentStorage()->push_back(pSectionOpenElement);
 	}
 	else
-		mpImpl->mWriterDocumentStates.top().mbInFakeSection = true;
+		mpImpl->getState().mbInFakeSection = true;
 }
 
 void OdtGenerator::closeSection()
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInFakeSection)
+	if (!mpImpl->getState().mbInFakeSection)
 		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:section"));
 	else
-		mpImpl->mWriterDocumentStates.top().mbInFakeSection = false;
+		mpImpl->getState().mbInFakeSection = false;
 }
 
 void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
@@ -584,16 +607,16 @@ void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	// from "Table Contents"
 
 	librevenge::RVNGPropertyList finalPropList(propList);
-	if (mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
+	if (mpImpl->getState().mbFirstParagraphInPageSpan && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 	{
 		librevenge::RVNGString sPageStyleName;
 		sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
 		finalPropList.insert("style:master-page-name", sPageStyleName);
-		mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
-		mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;
+		mpImpl->getState().mbFirstElement = false;
+		mpImpl->getState().mbFirstParagraphInPageSpan = false;
 	}
 
-	if (mpImpl->mWriterDocumentStates.top().mbTableCellOpened)
+	if (mpImpl->getState().mbTableCellOpened)
 	{
 		bool inHeader=false;
 		if (mpImpl->isInTableRow(inHeader) && inHeader)
@@ -659,7 +682,7 @@ void OdtGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 	mpImpl->openListElement(propList);
 
 	if (mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
-		mpImpl->mWriterDocumentStates.top().mbFirstParagraphInPageSpan = false;
+		mpImpl->getState().mbFirstParagraphInPageSpan = false;
 }
 
 void OdtGenerator::closeListElement()
@@ -696,12 +719,12 @@ void OdtGenerator::openFootnote(const librevenge::RVNGPropertyList &propList)
 
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("text:note-body"));
 
-	mpImpl->mWriterDocumentStates.top().mbInNote = true;
+	mpImpl->getState().mbInNote = true;
 }
 
 void OdtGenerator::closeFootnote()
 {
-	mpImpl->mWriterDocumentStates.top().mbInNote = false;
+	mpImpl->getState().mbInNote = false;
 	mpImpl->popListState();
 
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-body"));
@@ -737,12 +760,12 @@ void OdtGenerator::openEndnote(const librevenge::RVNGPropertyList &propList)
 
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("text:note-body"));
 
-	mpImpl->mWriterDocumentStates.top().mbInNote = true;
+	mpImpl->getState().mbInNote = true;
 }
 
 void OdtGenerator::closeEndnote()
 {
-	mpImpl->mWriterDocumentStates.top().mbInNote = false;
+	mpImpl->getState().mbInNote = false;
 	mpImpl->popListState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note-body"));
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("text:note"));
@@ -753,70 +776,70 @@ void OdtGenerator::openComment(const librevenge::RVNGPropertyList &)
 	mpImpl->pushListState();
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("office:annotation"));
 
-	mpImpl->mWriterDocumentStates.top().mbInNote = true;
+	mpImpl->getState().mbInNote = true;
 }
 
 void OdtGenerator::closeComment()
 {
-	mpImpl->mWriterDocumentStates.top().mbInNote = false;
+	mpImpl->getState().mbInNote = false;
 	mpImpl->popListState();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("office:annotation"));
 }
 
 void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->getState().mbInNote)
 		return;
 
 	librevenge::RVNGPropertyList pList(propList);
-	if (mpImpl->mWriterDocumentStates.top().mbFirstElement && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
+	if (mpImpl->getState().mbFirstElement && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 	{
 		pList.insert("style:master-page-name", "Page_Style_1");
-		mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
+		mpImpl->getState().mbFirstElement = false;
 	}
 	mpImpl->openTable(pList);
 }
 
 void OdtGenerator::closeTable()
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->getState().mbInNote)
 		return;
 	mpImpl->closeTable();
 }
 
 void OdtGenerator::openTableRow(const librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->getState().mbInNote)
 		return;
 	mpImpl->openTableRow(propList);
 }
 
 void OdtGenerator::closeTableRow()
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->getState().mbInNote)
 		return;
 	mpImpl->closeTableRow();
 }
 
 void OdtGenerator::openTableCell(const librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->getState().mbInNote)
 		return;
 
-	mpImpl->mWriterDocumentStates.top().mbTableCellOpened = mpImpl->openTableCell(propList);
+	mpImpl->getState().mbTableCellOpened = mpImpl->openTableCell(propList);
 }
 
 void OdtGenerator::closeTableCell()
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->getState().mbInNote)
 		return;
 	mpImpl->closeTableCell();
-	mpImpl->mWriterDocumentStates.top().mbTableCellOpened = false;
+	mpImpl->getState().mbTableCellOpened = false;
 }
 
 void OdtGenerator::insertCoveredTableCell(const librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mWriterDocumentStates.top().mbInNote)
+	if (mpImpl->getState().mbInNote)
 		return;
 	mpImpl->insertCoveredTableCell(propList);
 }
@@ -853,19 +876,19 @@ void OdtGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	if (!propList["text:anchor-type"])
 		pList.insert("text:anchor-type","paragraph");
 	mpImpl->openFrame(pList);
-	mpImpl->mWriterDocumentStates.top().mbInFrame = true;
+	mpImpl->getState().mbInFrame = true;
 }
 
 void OdtGenerator::closeFrame()
 {
 	mpImpl->popListState();
 	mpImpl->closeFrame();
-	mpImpl->mWriterDocumentStates.top().mbInFrame = false;
+	mpImpl->getState().mbInFrame = false;
 }
 
 void OdtGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Embedded objects without a frame simply don't make sense for us
+	if (!mpImpl->getState().mbInFrame) // Embedded objects without a frame simply don't make sense for us
 		return;
 	mpImpl->insertBinaryObject(propList);
 }
@@ -918,10 +941,10 @@ void OdtGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 
 void OdtGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInFrame) // Text box without a frame simply doesn't make sense for us
+	if (!mpImpl->getState().mbInFrame) // Text box without a frame simply doesn't make sense for us
 		return;
 	mpImpl->pushListState();
-	mpImpl->mWriterDocumentStates.push(WriterDocumentState());
+	mpImpl->pushState();
 	TagOpenElement *textBoxOpenElement = new TagOpenElement("draw:text-box");
 	if (propList["librevenge:next-frame-name"])
 	{
@@ -931,17 +954,16 @@ void OdtGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 		textBoxOpenElement->addAttribute("draw:chain-next-name", frameName);
 	}
 	mpImpl->getCurrentStorage()->push_back(textBoxOpenElement);
-	mpImpl->mWriterDocumentStates.top().mbInTextBox = true;
-	mpImpl->mWriterDocumentStates.top().mbFirstElement = false;
+	mpImpl->getState().mbInTextBox = true;
+	mpImpl->getState().mbFirstElement = false;
 }
 
 void OdtGenerator::closeTextBox()
 {
-	if (!mpImpl->mWriterDocumentStates.top().mbInTextBox)
+	if (!mpImpl->getState().mbInTextBox)
 		return;
 	mpImpl->popListState();
-	if (mpImpl->mWriterDocumentStates.size() > 1)
-		mpImpl->mWriterDocumentStates.pop();
+	mpImpl->popState();
 
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 }
