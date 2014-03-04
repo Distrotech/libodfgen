@@ -71,7 +71,7 @@ static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
 		static bool first=true;
 		if (first)
 		{
-			ODFGEN_DEBUG_MSG(("OdgGenerator::getInchValue: call with no double value\n"));
+			ODFGEN_DEBUG_MSG(("::getInchValue[OdgGenerator.cxx]: call with no double value\n"));
 			first=false;
 		}
 		break;
@@ -102,6 +102,51 @@ public:
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
+	//
+	// state gestion
+	//
+
+	// the state we use for writing the final document
+	struct State
+	{
+		State() : mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false)
+		{
+		}
+		/** flag to know if a text box is opened */
+		bool mbIsTextBox;
+		/** number of intricated text box, in case a textbox is called inside a text box */
+		int miIntricatedTextBox;
+		/** flag to know if a table cell is opened */
+		bool mbInTableCell;
+	};
+
+	// returns the actual state
+	State &getState()
+	{
+		if (mStateStack.empty())
+		{
+			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::getState: no state\n"));
+			mStateStack.push(State());
+		}
+		return mStateStack.top();
+	}
+	// push a state
+	void pushState()
+	{
+		mStateStack.push(State());
+	}
+	// pop a state
+	void popState()
+	{
+		if (!mStateStack.empty())
+			mStateStack.pop();
+		else
+		{
+			ODFGEN_DEBUG_MSG(("OdgGeneratorPrivate::popState: no state\n"));
+		}
+	}
+	std::stack<State> mStateStack;
+
 	// page styles
 	std::vector<DocumentElement *> mPageAutomaticStyles;
 	std::vector<DocumentElement *> mPageMasterStyles;
@@ -110,11 +155,6 @@ public:
 	double mfWidth, mfMaxWidth;
 	double mfHeight, mfMaxHeight;
 
-	bool mbIsTextBox;
-	bool mbIsParagraph;
-	bool mbIsTextOnPath;
-
-	bool mbInTableCell;
 private:
 	OdgGeneratorPrivate(const OdgGeneratorPrivate &);
 	OdgGeneratorPrivate &operator=(const OdgGeneratorPrivate &);
@@ -122,18 +162,16 @@ private:
 };
 
 OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
+	mStateStack(),
 	mPageAutomaticStyles(),
 	mPageMasterStyles(),
 	miPageIndex(1),
 	mfWidth(0.0),
 	mfMaxWidth(0.0),
 	mfHeight(0.0),
-	mfMaxHeight(0.0),
-	mbIsTextBox(false),
-	mbIsParagraph(false),
-	mbIsTextOnPath(false),
-	mbInTableCell(false)
+	mfMaxHeight(0.0)
 {
+	pushState();
 }
 
 OdgGeneratorPrivate::~OdgGeneratorPrivate()
@@ -611,6 +649,13 @@ void OdgGenerator::endEmbeddedGraphics()
 
 void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 {
+	if (mpImpl->getState().mbIsTextBox)
+	{
+		// this seems to make LibreOffice crash, so ...
+		ODFGEN_DEBUG_MSG(("OdgGenerator::startTextObject: sending intricated text box is not implemented\n"));
+		++mpImpl->getState().miIntricatedTextBox;
+		return;
+	}
 	librevenge::RVNGPropertyList tmpList(propList), graphicStyle;
 	if (!propList["draw:stroke"])
 		tmpList.insert("draw:stroke", "none");
@@ -698,25 +743,33 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	}
 	mpImpl->getCurrentStorage()->push_back(pDrawFrameOpenElement);
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:text-box"));
-	mpImpl->mbIsTextBox = true;
 
+	// push the different states
+	mpImpl->pushState();
 	mpImpl->pushListState();
+	mpImpl->getState().mbIsTextBox = true;
 }
 
 void OdgGenerator::endTextObject()
 {
-	if (!mpImpl->mbIsTextBox) return;
+	OdgGeneratorPrivate::State &state=mpImpl->getState();
+	if (!state.mbIsTextBox) return;
+	if (state.miIntricatedTextBox)
+	{
+		// we did not open textbox when seeing intricated text box
+		--state.miIntricatedTextBox;
+		return;
+	}
+	// pop the different state
 	mpImpl->popListState();
+	mpImpl->popState();
 
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:text-box"));
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
-	mpImpl->mbIsTextBox = false;
 }
 
 void OdgGenerator::startTableObject(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->pushListState();
-
 	// table must be inside a frame
 	TagOpenElement *pFrameOpenElement = new TagOpenElement("draw:frame");
 
@@ -732,13 +785,18 @@ void OdgGenerator::startTableObject(const ::librevenge::RVNGPropertyList &propLi
 
 	mpImpl->getCurrentStorage()->push_back(pFrameOpenElement);
 	mpImpl->openTable(propList);
+
+	mpImpl->pushListState();
+	mpImpl->pushState();
 }
 
 void OdgGenerator::endTableObject()
 {
+	mpImpl->popState();
+	mpImpl->popListState();
+
 	mpImpl->closeTable();
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
-	mpImpl->popListState();
 }
 
 void OdgGenerator::openTableRow(const ::librevenge::RVNGPropertyList &propList)
@@ -753,9 +811,9 @@ void OdgGenerator::closeTableRow()
 
 void OdgGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (mpImpl->mbInTableCell)
+	if (mpImpl->getState().mbInTableCell)
 	{
-		ODFGEN_DEBUG_MSG(("a table cell in a table cell?!\n"));
+		ODFGEN_DEBUG_MSG(("OdgGenerator::openTableCell: a table cell in a table cell?!\n"));
 		return;
 	}
 	librevenge::RVNGPropertyList pList(propList);
@@ -766,19 +824,19 @@ void OdgGenerator::openTableCell(const ::librevenge::RVNGPropertyList &propList)
 	}
 	else if (!pList["draw:fill"])
 		pList.insert("draw:fill", "none");
-	mpImpl->mbInTableCell = mpImpl->openTableCell(pList);
+	mpImpl->getState().mbInTableCell = mpImpl->openTableCell(pList);
 }
 
 void OdgGenerator::closeTableCell()
 {
-	if (!mpImpl->mbInTableCell)
+	if (!mpImpl->getState().mbInTableCell)
 	{
-		ODFGEN_DEBUG_MSG(("no table cell is opened\n"));
+		ODFGEN_DEBUG_MSG(("OdgGenerator::closeTableCell: no table cell is opened\n"));
 		return;
 	}
 
 	mpImpl->closeTableCell();
-	mpImpl->mbInTableCell = false;
+	mpImpl->getState().mbInTableCell = false;
 }
 
 void OdgGenerator::insertCoveredTableCell(const ::librevenge::RVNGPropertyList &propList)

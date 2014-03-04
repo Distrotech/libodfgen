@@ -86,7 +86,7 @@ public:
 	{
 		if (mStateStack.empty())
 		{
-			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::getState: no state\n"));
+			ODFGEN_DEBUG_MSG(("OdtGeneratorPrivate::getState: no state\n"));
 			mStateStack.push(State());
 		}
 		return mStateStack.top();
@@ -103,7 +103,7 @@ public:
 			mStateStack.pop();
 		else
 		{
-			ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::popState: no state\n"));
+			ODFGEN_DEBUG_MSG(("OdtGeneratorPrivate::popState: no state\n"));
 		}
 	}
 	std::stack<State> mStateStack;
