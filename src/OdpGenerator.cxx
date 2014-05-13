@@ -775,12 +775,12 @@ void OdpGenerator::endEmbeddedGraphics()
 {
 }
 
-void OdpGenerator::startGroup(const ::librevenge::RVNGPropertyList &propList)
+void OdpGenerator::openGroup(const ::librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->openGroup(propList);
 }
 
-void OdpGenerator::endGroup()
+void OdpGenerator::closeGroup()
 {
 	mpImpl->closeGroup();
 }
