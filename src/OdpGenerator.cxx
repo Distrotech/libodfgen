@@ -1093,6 +1093,56 @@ void OdpGenerator::endNotes()
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("presentation:notes"));
 }
 
+void OdpGenerator::defineChartStyle(const ::librevenge::RVNGPropertyList &)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::openChart(const ::librevenge::RVNGPropertyList &)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::closeChart()
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::openChartTextObject(const ::librevenge::RVNGPropertyList &)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::closeChartTextObject()
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::openChartPlotArea(const ::librevenge::RVNGPropertyList &)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::closeChartPlotArea()
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::insertChartAxis(const ::librevenge::RVNGPropertyList &)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::openChartSeries(const ::librevenge::RVNGPropertyList &)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::closeChartSeries()
+{
+	// TODO: implement me
+}
+
 void OdpGenerator::initStateWith(OdfGenerator const &orig)
 {
 	mpImpl->initStateWith(orig);

@@ -107,6 +107,17 @@ public:
 	void startNotes(const ::librevenge::RVNGPropertyList &propList);
 	void endNotes();
 
+	void defineChartStyle(const ::librevenge::RVNGPropertyList &propList);
+	void openChart(const ::librevenge::RVNGPropertyList &propList);
+	void closeChart();
+	void openChartTextObject(const ::librevenge::RVNGPropertyList &propList);
+	void closeChartTextObject();
+	void openChartPlotArea(const ::librevenge::RVNGPropertyList &propList);
+	void closeChartPlotArea();
+	void insertChartAxis(const ::librevenge::RVNGPropertyList &propList);
+	void openChartSeries(const ::librevenge::RVNGPropertyList &propList);
+	void closeChartSeries();
+
 	/** Registers a handler for embedded images.
 	  *
 	  * @param[in] mimeType MIME type of the image
