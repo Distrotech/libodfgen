@@ -639,6 +639,11 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:frame"));
 }
 
+void OdgGenerator::drawConnector(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->drawConnector(propList);
+}
+
 void OdgGenerator::startEmbeddedGraphics(const librevenge::RVNGPropertyList &)
 {
 }

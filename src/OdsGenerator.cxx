@@ -1830,6 +1830,11 @@ void OdsGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->drawPath(propList);
 }
 
+void OdsGenerator::drawConnector(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->drawConnector(propList);
+}
+
 void OdsGenerator::initStateWith(OdfGenerator const &orig)
 {
 	mpImpl->initStateWith(orig);

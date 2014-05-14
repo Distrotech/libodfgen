@@ -939,6 +939,11 @@ void OdtGenerator::drawPath(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->drawPath(propList);
 }
 
+void OdtGenerator::drawConnector(const ::librevenge::RVNGPropertyList &propList)
+{
+	mpImpl->drawConnector(propList);
+}
+
 void OdtGenerator::openTextBox(const librevenge::RVNGPropertyList &propList)
 {
 	if (!mpImpl->getState().mbInFrame) // Text box without a frame simply doesn't make sense for us
