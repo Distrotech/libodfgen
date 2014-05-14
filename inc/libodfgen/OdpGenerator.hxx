@@ -51,6 +51,7 @@ public:
 	void setDocumentMetaData(const ::librevenge::RVNGPropertyList &propList);
 	void startSlide(const ::librevenge::RVNGPropertyList &propList);
 	void endSlide();
+	void setSlideTransition(const ::librevenge::RVNGPropertyList &propList);
 	void startLayer(const ::librevenge::RVNGPropertyList &propList);
 	void endLayer();
 	void startEmbeddedGraphics(const ::librevenge::RVNGPropertyList &propList);

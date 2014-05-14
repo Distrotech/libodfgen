@@ -637,6 +637,11 @@ void OdpGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->defineGraphicStyle(propList);
 }
 
+void OdpGenerator::setSlideTransition(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
 void OdpGenerator::startLayer(const ::librevenge::RVNGPropertyList & /* propList */)
 {
 }
