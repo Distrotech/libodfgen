@@ -1148,6 +1148,57 @@ void OdpGenerator::closeChartSeries()
 	// TODO: implement me
 }
 
+void OdpGenerator::openAnimationSequence(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::closeAnimationSequence()
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::openAnimationGroup(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::closeAnimationGroup()
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::openAnimationIteration(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::closeAnimationIteration()
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::insertMotionAnimation(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::insertColorAnimation(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::insertAnimation(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
+void OdpGenerator::insertEffect(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
+
 void OdpGenerator::initStateWith(OdfGenerator const &orig)
 {
 	mpImpl->initStateWith(orig);

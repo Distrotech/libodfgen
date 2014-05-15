@@ -119,6 +119,17 @@ public:
 	void openChartSeries(const ::librevenge::RVNGPropertyList &propList);
 	void closeChartSeries();
 
+	void openAnimationSequence(const ::librevenge::RVNGPropertyList &propList);
+	void closeAnimationSequence();
+	void openAnimationGroup(const ::librevenge::RVNGPropertyList &propList);
+	void closeAnimationGroup();
+	void openAnimationIteration(const ::librevenge::RVNGPropertyList &propList);
+	void closeAnimationIteration();
+	void insertMotionAnimation(const ::librevenge::RVNGPropertyList &propList);
+	void insertColorAnimation(const ::librevenge::RVNGPropertyList &propList);
+	void insertAnimation(const ::librevenge::RVNGPropertyList &propList);
+	void insertEffect(const ::librevenge::RVNGPropertyList &propList);
+
 	/** Registers a handler for embedded images.
 	  *
 	  * @param[in] mimeType MIME type of the image
