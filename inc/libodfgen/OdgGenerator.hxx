@@ -51,6 +51,8 @@ public:
 	void endPage();
 	void startLayer(const ::librevenge::RVNGPropertyList &propList);
 	void endLayer();
+	void openGroup(const ::librevenge::RVNGPropertyList &propList);
+	void closeGroup();
 	void startEmbeddedGraphics(const ::librevenge::RVNGPropertyList &propList);
 	void endEmbeddedGraphics();
 

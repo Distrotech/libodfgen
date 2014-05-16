@@ -1298,6 +1298,13 @@ void OdfGenerator::drawRectangle(const librevenge::RVNGPropertyList &propList)
 	mpCurrentStorage->push_back(new TagCloseElement("draw:rect"));
 }
 
+void OdfGenerator::drawConnector(const librevenge::RVNGPropertyList &propList)
+{
+	const librevenge::RVNGPropertyListVector *path = propList.child("svg:d");
+	if (!path) return;
+	drawPath(*path, propList);
+}
+
 ////////////////////////////////////////////////////////////
 // chart
 ////////////////////////////////////////////////////////////

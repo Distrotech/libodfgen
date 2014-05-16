@@ -520,6 +520,16 @@ void OdgGenerator::endLayer()
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
 }
 
+void OdgGenerator::openGroup(const ::librevenge::RVNGPropertyList & /* propList */)
+{
+	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:g"));
+}
+
+void OdgGenerator::closeGroup()
+{
+	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
+}
+
 void OdgGenerator::drawRectangle(const ::librevenge::RVNGPropertyList &propList)
 {
 	mpImpl->drawRectangle(propList);
