@@ -605,7 +605,8 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find text for formula[%d]!!!\n", int(s)));
 				return res;
 			}
-			librevenge::RVNGString escaped(list["librevenge:text"]->getStr(), true);
+			librevenge::RVNGString escaped;
+			escaped.appendEscapedXML(list["librevenge:text"]->getStr());
 			s << "\"" << escaped.cstr() << "\"";
 		}
 		else if (type=="librevenge-cell")
@@ -626,7 +627,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			return res;
 		}
 	}
-	return librevenge::RVNGString(s.str().c_str(), true);
+	return librevenge::RVNGString::escapeXML(s.str().c_str());
 }
 
 librevenge::RVNGString SheetManager::convertCellRange(const librevenge::RVNGPropertyList &list)

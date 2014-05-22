@@ -30,8 +30,9 @@
 #include "DocumentElement.hxx"
 
 FontStyle::FontStyle(const char *psName, const char *psFontFamily) : Style(psName),
-	msFontFamily(psFontFamily, true)
+	msFontFamily()
 {
+	msFontFamily.appendEscapedXML(psFontFamily);
 }
 
 FontStyle::~FontStyle()

@@ -41,12 +41,14 @@ void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) cons
 	listLevelStyleOpen.addAttribute("text:style-name", "Numbering_Symbols");
 	if (mPropList["style:num-prefix"])
 	{
-		librevenge::RVNGString sEscapedString(mPropList["style:num-prefix"]->getStr(), true);
+		librevenge::RVNGString sEscapedString;
+		sEscapedString.appendEscapedXML(mPropList["style:num-prefix"]->getStr());
 		listLevelStyleOpen.addAttribute("style:num-prefix", sEscapedString);
 	}
 	if (mPropList["style:num-suffix"])
 	{
-		librevenge::RVNGString sEscapedString(mPropList["style:num-suffix"]->getStr(), true);
+		librevenge::RVNGString sEscapedString;
+		sEscapedString.appendEscapedXML(mPropList["style:num-suffix"]->getStr());
 		listLevelStyleOpen.addAttribute("style:num-suffix", sEscapedString);
 	}
 	if (mPropList["style:num-format"])
@@ -95,9 +97,11 @@ void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) co
 		// The following is needed because the ODF format does not accept bullet chars longer than one character
 		librevenge::RVNGString::Iter i(mPropList["text:bullet-char"]->getStr());
 		i.rewind();
-		librevenge::RVNGString sEscapedString(".");
+		librevenge::RVNGString sEscapedString;
 		if (i.next())
-			sEscapedString = librevenge::RVNGString(i(), true);
+			sEscapedString.appendEscapedXML(i());
+		else
+			sEscapedString.append('.');
 		listLevelStyleOpen.addAttribute("text:bullet-char", sEscapedString);
 
 	}

@@ -706,7 +706,8 @@ void OdtGenerator::openFootnote(const librevenge::RVNGPropertyList &propList)
 	TagOpenElement *pOpenFootCitation = new TagOpenElement("text:note-citation");
 	if (propList["text:label"])
 	{
-		librevenge::RVNGString tmpString(propList["text:label"]->getStr(),true);
+		librevenge::RVNGString tmpString;
+		tmpString.appendEscapedXML(propList["text:label"]->getStr());
 		pOpenFootCitation->addAttribute("text:label", tmpString);
 	}
 	mpImpl->getCurrentStorage()->push_back(pOpenFootCitation);
@@ -747,7 +748,8 @@ void OdtGenerator::openEndnote(const librevenge::RVNGPropertyList &propList)
 	TagOpenElement *pOpenEndCitation = new TagOpenElement("text:note-citation");
 	if (propList["text:label"])
 	{
-		librevenge::RVNGString tmpString(propList["text:label"]->getStr(),true);
+		librevenge::RVNGString tmpString;
+		tmpString.appendEscapedXML(propList["text:label"]->getStr());
 		pOpenEndCitation->addAttribute("text:label", tmpString);
 	}
 	mpImpl->getCurrentStorage()->push_back(pOpenEndCitation);

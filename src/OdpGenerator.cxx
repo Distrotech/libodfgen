@@ -557,7 +557,7 @@ void OdpGenerator::startSlide(const ::librevenge::RVNGPropertyList &propList)
 
 	librevenge::RVNGString sValue;
 	if (propList["draw:name"])
-		sValue = librevenge::RVNGString(propList["draw:name"]->getStr(), true); // escape special xml characters
+		sValue.appendEscapedXML(propList["draw:name"]->getStr());
 	else
 		sValue.sprintf("page%i", mpImpl->miPageIndex);
 	pDrawPageOpenElement->addAttribute("draw:name", sValue);

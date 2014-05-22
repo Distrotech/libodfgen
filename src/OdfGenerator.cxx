@@ -144,7 +144,8 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 		if (strncmp(i.key(), "librevenge:", 11) && strncmp(i.key(), "dcterms:", 8))
 		{
 			mMetaDataStorage.push_back(new TagOpenElement(i.key()));
-			librevenge::RVNGString sStringValue(i()->getStr(), true);
+			librevenge::RVNGString sStringValue;
+			sStringValue.appendEscapedXML(i()->getStr());
 			mMetaDataStorage.push_back(new CharDataElement(sStringValue.cstr()));
 			mMetaDataStorage.push_back(new TagCloseElement(i.key()));
 		}
@@ -601,7 +602,7 @@ void OdfGenerator::openLink(const librevenge::RVNGPropertyList &propList)
 		if (!i.child()) // write out simple properties only
 			// The string we get here might be url decoded, so
 			// sscape characters that might mess up the resulting xml
-			pLinkOpenElement->addAttribute(i.key(), librevenge::RVNGString(i()->getStr(), true));
+			pLinkOpenElement->addAttribute(i.key(), librevenge::RVNGString::escapeXML(i()->getStr()));
 	}
 	mpCurrentStorage->push_back(pLinkOpenElement);
 }

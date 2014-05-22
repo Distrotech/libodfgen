@@ -86,7 +86,7 @@ private:
 class TextElement : public DocumentElement
 {
 public:
-	TextElement(const librevenge::RVNGString &sTextBuf) : DocumentElement(), msTextBuf(sTextBuf, false) {}
+	TextElement(const librevenge::RVNGString &sTextBuf) : DocumentElement(), msTextBuf(sTextBuf) {}
 	virtual ~TextElement() {}
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
