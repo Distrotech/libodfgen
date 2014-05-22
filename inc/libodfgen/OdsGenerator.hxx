@@ -56,6 +56,8 @@ public:
 	void startDocument(const librevenge::RVNGPropertyList &);
 	void endDocument();
 
+	void defineEmbeddedFont(const librevenge::RVNGPropertyList &propList);
+
 	void definePageStyle(const librevenge::RVNGPropertyList &) {}
 	void openPageSpan(const librevenge::RVNGPropertyList &propList);
 	void closePageSpan();

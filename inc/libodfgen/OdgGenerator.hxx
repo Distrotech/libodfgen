@@ -47,6 +47,8 @@ public:
 	bool getObjectContent(librevenge::RVNGString const &objectName, OdfDocumentHandler *pHandler);
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &);
 
+	void defineEmbeddedFont(const librevenge::RVNGPropertyList &propList);
+
 	void startPage(const librevenge::RVNGPropertyList &);
 	void endPage();
 	void startLayer(const ::librevenge::RVNGPropertyList &propList);

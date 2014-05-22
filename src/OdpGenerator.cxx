@@ -535,6 +535,11 @@ void OdpGenerator::setDocumentMetaData(const ::librevenge::RVNGPropertyList &pro
 	mpImpl->setDocumentMetaData(propList);
 }
 
+void OdpGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
 void OdpGenerator::startSlide(const ::librevenge::RVNGPropertyList &propList)
 {
 	if (propList["svg:width"])

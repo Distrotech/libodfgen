@@ -509,6 +509,11 @@ void OdtGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 	mpImpl->setDocumentMetaData(propList);
 }
 
+void OdtGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*propList*/)
+{
+	// TODO: implement me
+}
+
 void OdtGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 {
 	PageSpan *pPageSpan = new PageSpan(propList);
