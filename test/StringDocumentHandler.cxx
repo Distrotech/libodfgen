@@ -96,7 +96,7 @@ void StringDocumentHandler::characters(const librevenge::RVNGString &sCharacters
 		m_isTagOpened = false;
 	}
 	librevenge::RVNGString sEscapedCharacters;
-	sEscapedCharacters.appendEscapedXML(sCharacters)
+	sEscapedCharacters.appendEscapedXML(sCharacters);
 	if (sEscapedCharacters.len() > 0)
 		m_data.append(sEscapedCharacters.cstr());
 }
