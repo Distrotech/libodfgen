@@ -1,5 +1,12 @@
 libodfgen 0.1.0
 
+- rebase to librevenge
+- add spreadsheet generator
+- split common parts of all generators out to a base class
+- add tests for all generators
+- add chart generator
+- and many other improvements
+
 libodfgen 0.0.4
 
 - fix handling of presentation tables
