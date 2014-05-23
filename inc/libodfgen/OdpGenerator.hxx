@@ -52,6 +52,8 @@ public:
 	void defineEmbeddedFont(const librevenge::RVNGPropertyList &propList);
 	void startSlide(const ::librevenge::RVNGPropertyList &propList);
 	void endSlide();
+	void startMasterSlide(const ::librevenge::RVNGPropertyList &propList);
+	void endMasterSlide();
 	void setSlideTransition(const ::librevenge::RVNGPropertyList &propList);
 	void startLayer(const ::librevenge::RVNGPropertyList &propList);
 	void endLayer();

@@ -51,6 +51,8 @@ public:
 
 	void startPage(const librevenge::RVNGPropertyList &);
 	void endPage();
+	void startMasterPage(const librevenge::RVNGPropertyList &);
+	void endMasterPage();
 	void startLayer(const ::librevenge::RVNGPropertyList &propList);
 	void endLayer();
 	void openGroup(const ::librevenge::RVNGPropertyList &propList);

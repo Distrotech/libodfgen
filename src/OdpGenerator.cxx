@@ -113,6 +113,8 @@ public:
 	// generator state
 	GeneratorState mState;
 
+	Storage mDummyMasterSlideStorage;
+
 private:
 	OdpGeneratorPrivate(const OdpGeneratorPrivate &);
 	OdpGeneratorPrivate &operator=(const OdpGeneratorPrivate &);
@@ -127,7 +129,8 @@ OdpGeneratorPrivate::OdpGeneratorPrivate() :
 	mfMaxWidth(0.0),
 	mfHeight(0.0),
 	mfMaxHeight(0.0),
-	mState()
+	mState(),
+	mDummyMasterSlideStorage()
 {
 }
 
@@ -635,6 +638,17 @@ void OdpGenerator::endSlide()
 {
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:page"));
 	mpImpl->miPageIndex++;
+}
+
+void OdpGenerator::startMasterSlide(const ::librevenge::RVNGPropertyList &/*propList*/)
+{
+	mpImpl->pushStorage(&mpImpl->mDummyMasterSlideStorage);
+}
+
+void OdpGenerator::endMasterSlide()
+{
+	mpImpl->popStorage();
+	mpImpl->mDummyMasterSlideStorage.clear();
 }
 
 void OdpGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
