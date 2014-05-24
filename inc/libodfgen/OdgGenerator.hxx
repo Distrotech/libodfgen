@@ -27,6 +27,7 @@
 
 #include <librevenge/librevenge.h>
 
+#include "libodfgen-api.hxx"
 #include "OdfDocumentHandler.hxx"
 
 class OdfGenerator;
@@ -37,7 +38,7 @@ class OdgGeneratorPrivate;
   * See @c librevenge library for documentation of the
   * librevenge::WPGPaintInterface interface.
   */
-class OdgGenerator : public librevenge::RVNGDrawingInterface
+class ODFGENAPI OdgGenerator : public librevenge::RVNGDrawingInterface
 {
 public:
 	OdgGenerator();

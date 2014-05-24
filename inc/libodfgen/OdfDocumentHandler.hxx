@@ -26,6 +26,8 @@
 #define _ODFDOCUMENTHANDLER_HXX_
 #include <librevenge/librevenge.h>
 
+#include "libodfgen-api.hxx"
+
 /** Type of ODF content a generator should produce.
   *
   * @sa OdgGenerator, OdpGenerator, OdtGenerator
@@ -57,7 +59,7 @@ typedef bool (*OdfEmbeddedImage)(const librevenge::RVNGBinaryData &input, librev
   * saved to a file, printed to the standard output, saved to a file
   * inside a package, or whatever else.
   */
-class OdfDocumentHandler
+class ODFGENAPI OdfDocumentHandler
 {
 public:
 	virtual ~OdfDocumentHandler() {}

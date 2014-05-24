@@ -29,6 +29,7 @@
 
 #include <librevenge/librevenge.h>
 
+#include "libodfgen-api.hxx"
 #include "OdfDocumentHandler.hxx"
 
 class OdtGeneratorPrivate;
@@ -39,7 +40,7 @@ class OdfGenerator;
   * See @c librevenge library for documentation of the ::librevenge::RVNGTextInterface
   * interface.
   */
-class OdtGenerator : public librevenge::RVNGTextInterface
+class ODFGENAPI OdtGenerator : public librevenge::RVNGTextInterface
 {
 public:
 	OdtGenerator();

@@ -27,6 +27,7 @@
 
 #include <librevenge/librevenge.h>
 
+#include "libodfgen-api.hxx"
 #include "OdfDocumentHandler.hxx"
 
 class OdfGenerator;
@@ -37,7 +38,7 @@ class OdpGeneratorPrivate;
   * See @c librevenge library for documentation of the
   * librevenge::KEYPresentationInterface interface.
   */
-class OdpGenerator : public librevenge::RVNGPresentationInterface
+class ODFGENAPI OdpGenerator : public librevenge::RVNGPresentationInterface
 {
 public:
 	OdpGenerator();
