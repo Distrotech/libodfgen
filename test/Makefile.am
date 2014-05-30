@@ -42,7 +42,7 @@ testTextbox1_LDADD = $(EXTRA_LDD)
 testTextbox1_SOURCES = $(EXTRA_SRC) testTextbox1.cxx
 
 clean::
-	@rm test*.odg test*.odp test*.ods test*.odt
+	@rm -f test*.odg test*.odp test*.ods test*.odt
 
 launch_all:: $(targets)
 	./testGraphic1 && ./testLink1 && ./testList1 && ./testPara1 && ./testSpan1 && ./testTable1 && ./testTextbox1
