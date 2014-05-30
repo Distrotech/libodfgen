@@ -550,7 +550,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 		librevenge::RVNGPropertyList const &list=formula[i];
 		if (!list["librevenge:type"])
 		{
-			ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find %d formula type !!!\n", int(s)));
+			ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find %s formula type !!!\n", s.str().c_str()));
 			return res;
 		}
 		std::string type(list["librevenge:type"]->getStr().cstr());
@@ -558,7 +558,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 		{
 			if (!list["librevenge:operator"])
 			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find operator for formula[%d]!!!\n", int(s)));
+				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find operator for formula[%s]!!!\n", s.str().c_str()));
 				return res;
 			}
 			std::string oper(list["librevenge:operator"]->getStr().cstr());
@@ -576,7 +576,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			}
 			if (!find)
 			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula find unknown operator for formula[%d]!!!\n", int(s)));
+				ODFGEN_DEBUG_MSG(("SheetManager::addFormula find unknown operator for formula[%s]!!!\n", s.str().c_str()));
 				return res;
 			}
 		}
@@ -584,7 +584,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 		{
 			if (!list["librevenge:function"])
 			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find value for formula[%d]!!!\n", int(s)));
+				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find value for formula[%s]!!!\n", s.str().c_str()));
 				return res;
 			}
 			s << list["librevenge:function"]->getStr().cstr();
@@ -593,7 +593,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 		{
 			if (!list["librevenge:number"])
 			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find value for formula[%d]!!!\n", int(s)));
+				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find value for formula[%s]!!!\n", s.str().c_str()));
 				return res;
 			}
 			s << list["librevenge:number"]->getStr().cstr();
@@ -602,7 +602,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 		{
 			if (!list["librevenge:text"])
 			{
-				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find text for formula[%d]!!!\n", int(s)));
+				ODFGEN_DEBUG_MSG(("SheetManager::addFormula can not find text for formula[%s]!!!\n", s.str().c_str()));
 				return res;
 			}
 			librevenge::RVNGString escaped;
