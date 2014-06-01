@@ -410,7 +410,7 @@ bool OdsGeneratorPrivate::close(Command command)
 			"Document", "PageSpan", "Header", "Footer", "Sheet", "SheetRow", "SheetCell",
 			"Chart", "ChartDataLabel", "ChartPlotArea", "ChartSerie", "ChartTextObject",
 			"Span", "Paragraph", "Section", "OrderedListLevel", "UnorderedListLevel", "ListElement",
-			"Comment", "TextBox", "Frame", "Table", "TableRow", "TableCell",
+			"Footnote", "Comment", "TextBox", "Frame", "Table", "TableRow", "TableCell",
 			"Group"
 		};
 		ODFGEN_DEBUG_MSG(("OdsGeneratorPrivate::close: unexpected %s\n", wh[command]));
