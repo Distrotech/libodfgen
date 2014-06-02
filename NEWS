@@ -1,3 +1,8 @@
+libodfgen 0.1.1
+
+- Export API symbols on Windows.
+- Fix few minor problems with debug mode.
+
 libodfgen 0.1.0
 
 - rebase to librevenge
