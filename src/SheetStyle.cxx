@@ -563,11 +563,11 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			}
 			std::string oper(list["librevenge:operator"]->getStr().cstr());
 			bool find=false;
-			for (int w=0; w<14; ++w)
+			for (int w=0; w<15; ++w)
 			{
-				static char const *(s_operators[14])=
+				static char const *(s_operators[15])=
 				{
-					"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^"
+					"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^", "&"
 				};
 				if (oper!=s_operators[w]) continue;
 				s << oper;
