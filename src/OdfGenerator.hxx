@@ -397,6 +397,8 @@ protected:
 	// embedded object handlers
 	std::map<librevenge::RVNGString, OdfEmbeddedObject > mObjectHandlers;
 
+	bool mCurrentParaIsHeading;
+
 private:
 	// copy constructor (unimplemented)
 	OdfGenerator(OdfGenerator const &);
