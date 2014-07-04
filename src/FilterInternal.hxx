@@ -48,6 +48,8 @@ using std::shared_ptr;
 using boost::shared_ptr;
 #endif
 
+#define ODFGEN_N_ELEMENTS(m) sizeof(m)/sizeof(m[0])
+
 namespace libodfgen
 {
 
