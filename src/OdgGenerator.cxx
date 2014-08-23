@@ -109,7 +109,7 @@ public:
 	// the state we use for writing the final document
 	struct State
 	{
-		State() : mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false)
+		State() : mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false), mbInFalseLayerGroup(false)
 		{
 		}
 		/** flag to know if a text box is opened */
@@ -118,6 +118,8 @@ public:
 		int miIntricatedTextBox;
 		/** flag to know if a table cell is opened */
 		bool mbInTableCell;
+		/** flag to know if a group was used instead of a layer */
+		bool mbInFalseLayerGroup;
 	};
 
 	// returns the actual state
@@ -250,6 +252,7 @@ void OdgGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:master-styles").write(pHandler);
 	sendStorage(&mPageMasterStyles, pHandler);
+	appendLayersMasterStyles(pHandler);
 	pHandler->endElement("office:master-styles");
 }
 
@@ -529,14 +532,25 @@ void OdgGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->defineGraphicStyle(propList);
 }
 
-void OdgGenerator::startLayer(const ::librevenge::RVNGPropertyList & /* propList */)
+void OdgGenerator::startLayer(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:g"));
+	mpImpl->pushState();
+	if (propList["draw:layer"]&&!propList["draw:layer"]->getStr().empty())
+		mpImpl->openLayer(propList);
+	else
+	{
+		mpImpl->getState().mbInFalseLayerGroup=true;
+		mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:g"));
+	}
 }
 
 void OdgGenerator::endLayer()
 {
-	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
+	if (mpImpl->getState().mbInFalseLayerGroup)
+		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
+	else
+		mpImpl->closeLayer();
+	mpImpl->popState();
 }
 
 void OdgGenerator::openGroup(const ::librevenge::RVNGPropertyList & /* propList */)
@@ -642,6 +656,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	librevenge::RVNGPropertyList finalStyle;
 	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
 	pDrawFrameElement->addAttribute("draw:style-name", mpImpl->getGraphicManager().findOrAdd(finalStyle));
+	pDrawFrameElement->addAttribute("draw:layer", mpImpl->getLayerName());
 
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
 	pDrawFrameElement->addAttribute("svg:width", framePropList["svg:width"]->getStr());
@@ -701,7 +716,7 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);
-	pDrawFrameOpenElement->addAttribute("draw:layer", "layout");
+	pDrawFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName());
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{
@@ -808,6 +823,8 @@ void OdgGenerator::startTableObject(const ::librevenge::RVNGPropertyList &propLi
 	TagOpenElement *pFrameOpenElement = new TagOpenElement("draw:frame");
 
 	pFrameOpenElement->addAttribute("draw:style-name", "standard");
+	pFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName());
+
 	if (propList["svg:x"])
 		pFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());
 	if (propList["svg:y"])

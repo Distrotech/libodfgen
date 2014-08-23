@@ -28,6 +28,7 @@
 #define _ODFGENERATOR_HXX_
 
 #include <map>
+#include <set>
 #include <stack>
 #include <string>
 #include <vector>
@@ -125,6 +126,10 @@ public:
 	OdfEmbeddedObject findEmbeddedObjectHandler(const librevenge::RVNGString &mimeType) const;
 	//! returns a embedded image handler if it exists
 	OdfEmbeddedImage findEmbeddedImageHandler(const librevenge::RVNGString &mimeType) const;
+
+	//! append layer in master styles
+	void appendLayersMasterStyles(OdfDocumentHandler *pHandler);
+
 
 	//
 	// storage
@@ -230,7 +235,7 @@ public:
 	void insertCoveredTableCell(const librevenge::RVNGPropertyList &propList);
 
 	//
-	// frame/group
+	// frame/group/layer
 	//
 
 	/// call to open a frame
@@ -243,6 +248,12 @@ public:
 	void openGroup(const librevenge::RVNGPropertyList &propList);
 	/// call to close a group
 	void closeGroup();
+	/// call to open layer.
+	void openLayer(const librevenge::RVNGPropertyList &propList);
+	/// call to close a layer
+	void closeLayer();
+	/// return the actual layer name or "layout"
+	librevenge::RVNGString getLayerName() const;
 
 	//
 	// image
@@ -375,6 +386,11 @@ protected:
 	unsigned miFrameNumber;
 	// the list of frame seens
 	std::map<librevenge::RVNGString, unsigned > mFrameNameIdMap;
+
+	// the layer name stack
+	std::stack<librevenge::RVNGString> mLayerNameStack;
+	// the layer list of name
+	std::set<librevenge::RVNGString> mLayerNameSet;
 
 	// the last graphic style
 	librevenge::RVNGPropertyList mGraphicStyle;

@@ -85,7 +85,7 @@ OdfGenerator::OdfGenerator() :
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
 	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(),
-	miFrameNumber(0),  mFrameNameIdMap(),
+	miFrameNumber(0),  mFrameNameIdMap(), mLayerNameStack(), mLayerNameSet(),
 	mGraphicStyle(),
 	mIdChartMap(), mIdChartNameMap(),
 	mDocumentStreamHandlers(),
@@ -455,6 +455,7 @@ void OdfGenerator::addFrameProperties(const librevenge::RVNGPropertyList &propLi
 		element.addAttribute("svg:height", propList["svg:height"]->getStr());
 	else if (propList["fo:min-height"]) // fixme: must be an attribute of draw:text-box
 		element.addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
+	element.addAttribute("draw:layer", getLayerName());
 }
 
 unsigned OdfGenerator::getFrameId(librevenge::RVNGString val)
@@ -478,6 +479,64 @@ void OdfGenerator::openGroup(const librevenge::RVNGPropertyList &propList)
 void OdfGenerator::closeGroup()
 {
 	mpCurrentStorage->push_back(new TagCloseElement("draw:g"));
+}
+
+librevenge::RVNGString OdfGenerator::getLayerName() const
+{
+	if (mLayerNameStack.empty())
+		return "layout";
+	return mLayerNameStack.top();
+}
+
+void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
+{
+	if (!propList["draw:layer"] || propList["draw:layer"]->getStr().empty())
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not find the layer name\n"));
+		mLayerNameStack.push("layout");
+		return;
+	}
+	librevenge::RVNGString layer;
+	layer.appendEscapedXML(propList["draw:layer"]->getStr());
+	mLayerNameSet.insert(layer);
+	mLayerNameStack.push(layer);
+}
+
+void OdfGenerator::closeLayer()
+{
+	if (mLayerNameStack.empty())
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::closeLayer: open layer is not called\n"));
+		return;
+	}
+	mLayerNameStack.pop();
+}
+
+void OdfGenerator::appendLayersMasterStyles(OdfDocumentHandler *pHandler)
+{
+	if (mLayerNameSet.empty()) return;
+
+	TagOpenElement("draw:layer-set").write(pHandler);
+
+	TagOpenElement layer("draw:layer");
+
+	// add the default layers
+	for (int i=0; i<5; ++i)
+	{
+		static char const *(defaults[])= {"layout", "background", "backgroundobjects", "controls", "measurelines"};
+		if (mLayerNameSet.find(defaults[i])!=mLayerNameSet.end())
+			continue;
+		layer.addAttribute("draw:name", defaults[i]);
+		layer.write(pHandler);
+		TagCloseElement("draw:layer").write(pHandler);
+	}
+	for (std::set<librevenge::RVNGString>::const_iterator it=mLayerNameSet.begin(); it!=mLayerNameSet.end(); ++it)
+	{
+		layer.addAttribute("draw:name", *it);
+		layer.write(pHandler);
+		TagCloseElement("draw:layer").write(pHandler);
+	}
+	TagCloseElement("draw:layer-set").write(pHandler);
 }
 
 ////////////////////////////////////////////////////////////
@@ -1059,7 +1118,6 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 					mpCurrentStorage->push_back(new TagOpenElement("draw:image"));
 
 					mpCurrentStorage->push_back(new TagOpenElement("office:binary-data"));
-
 					librevenge::RVNGString binaryBase64Data = output.getBase64Data();
 
 					mpCurrentStorage->push_back(new CharDataElement(binaryBase64Data.cstr()));
@@ -1201,7 +1259,6 @@ void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path, cons
 	TagOpenElement *pDrawPathElement = new TagOpenElement("draw:path");
 	pDrawPathElement->addAttribute("draw:style-name", sValue);
 	addFrameProperties(propList, *pDrawPathElement);
-	pDrawPathElement->addAttribute("draw:layer", "layout");
 	sValue = doubleToString(px);
 	sValue.append("in");
 	pDrawPathElement->addAttribute("svg:x", sValue);
@@ -1239,7 +1296,6 @@ void OdfGenerator::drawPolySomething(const librevenge::RVNGPropertyList &propLis
 		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
 		addFrameProperties(propList, *pDrawLineElement);
 		pDrawLineElement->addAttribute("draw:style-name", sValue);
-		pDrawLineElement->addAttribute("draw:layer", "layout");
 		pDrawLineElement->addAttribute("svg:x1", (*vertices)[0]["svg:x"]->getStr());
 		pDrawLineElement->addAttribute("svg:y1", (*vertices)[0]["svg:y"]->getStr());
 		pDrawLineElement->addAttribute("svg:x2", (*vertices)[1]["svg:x"]->getStr());
