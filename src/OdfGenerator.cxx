@@ -90,7 +90,8 @@ OdfGenerator::OdfGenerator() :
 	mIdChartMap(), mIdChartNameMap(),
 	mDocumentStreamHandlers(),
 	miObjectNumber(1), mNameObjectMap(),
-	mImageHandlers(), mObjectHandlers()
+	mImageHandlers(), mObjectHandlers(),
+	mCurrentParaIsHeading(false)
 {
 	mListStates.push(ListState());
 }
@@ -709,7 +710,18 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	}
 
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
-	TagOpenElement *pParagraphOpenElement = new TagOpenElement("text:p");
+	TagOpenElement *pParagraphOpenElement = 0;
+
+	if (pList["text:outline-level"])
+	{
+		mCurrentParaIsHeading = true;
+		pParagraphOpenElement = new TagOpenElement("text:h");
+		pParagraphOpenElement->addAttribute("text:outline-level", pList["text:outline-level"]->getStr());
+	}
+	else
+	{
+		pParagraphOpenElement = new TagOpenElement("text:p");
+	}
 	pParagraphOpenElement->addAttribute("text:style-name", paragraphName);
 	mpCurrentStorage->push_back(pParagraphOpenElement);
 	mLastParagraphName=paragraphName;
@@ -717,7 +729,8 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 
 void OdfGenerator::closeParagraph()
 {
-	mpCurrentStorage->push_back(new TagCloseElement("text:p"));
+	mpCurrentStorage->push_back(mCurrentParaIsHeading ? new TagCloseElement("text:h") : new TagCloseElement("text:p"));
+	mCurrentParaIsHeading = false;
 }
 
 ////////////////////////////////////////////////////////////

@@ -576,13 +576,13 @@ void GraphicStyleManager::addFrameProperties(librevenge::RVNGPropertyList const 
 	static char const *attrib[]=
 	{
 		"fo:min-width", "fo:min-height", "fo:max-width", "fo:max-height", "fo:padding-top", "fo:padding-bottom",
-		"fo:padding-left", "fo:padding-right", "draw:textarea-vertical-align"
+		"fo:padding-left", "fo:padding-right", "draw:textarea-vertical-align", "draw:fill", "draw:fill-color"
 		// checkme
 		// "draw:z-index",
 		// "svg:x", "svg:y", "svg:width", "svg:height", "style:wrap", "style:run-through",
 		// "text:anchor-type", "text:anchor-page-number"
 	};
-	for (int i=0; i<9; ++i)
+	for (unsigned i=0; i<ODFGEN_N_ELEMENTS(attrib); ++i)
 	{
 		if (propList[attrib[i]])
 			element.insert(attrib[i], propList[attrib[i]]->getStr());

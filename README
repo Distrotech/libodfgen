@@ -1,34 +1,32 @@
 DESCRIPTION:
 
 libodfgen is a library for generating documents in (surprise!) Open
-Document Format (ODF). It provides generator implementation for the
-following libraries:
-* libwpd (::WPXDocumentInterface): text documents
-* libwpg (libwpg::WPGPaintInterface): vector drawings
-* libetonyek (libetonyek::KEYPresentationInterface): presentations
+Document Format (ODF). It provides generator implementations for all
+document interfaces supported by librevenge:
+* text documents
+* vector drawings
+* presentations
+* spreadsheets
 As these APIs are used by multiple libraries, libodfgen can be used to
 generate ODF from many sources.
 
-INSTALLATION:
+BUILD DEPENDENCIES:
 
-Installation on Unix/Linux should be simple. Simply execute the following 
-sequence of commands:
+* librevenge
+* pkgconfig (for the build system to find librevenge)
+* doxygen (unless you choose to disable building of API documentation)
+* boost (unless you build with C++ shared_ptr)
+
+BUILD AND INSTALLATION:
+
+Build and installation on Unix/Linux should be simple. Simply execute
+the following sequence of commands:
 
 ./configure ; make ; su -c 'make install'
-
-Note that this assumes that you have development versions of libwpd (>= 0.9.0),
-libwpg (>= 0.2.0) installed. Eventually you should have boost headers if you
-choose to compile using boost smart pointers.
-
-You will also need to have pkgconfig installed, for the build system to find
-both libwpd and libwpg, and doxygen, unless you choose to disable building
-of API documentation.
 
 This will make + install a libodfgen library and all files needed to use the
 library from your code.
 
 LINKS:
 
-libwpd is available at http://libwpd.sf.net
-libwpg is available at http://libwpg.sf.net
 boost is available at http://www.boost.org
