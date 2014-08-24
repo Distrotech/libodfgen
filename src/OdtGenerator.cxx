@@ -24,25 +24,26 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include <librevenge/librevenge.h>
-#include <vector>
 #include <map>
 #include <stack>
 #include <string>
+#include <vector>
 
+#include <librevenge/librevenge.h>
 #include <libodfgen/libodfgen.hxx>
 
 #include "DocumentElement.hxx"
-#include "TextRunStyle.hxx"
-#include "FontStyle.hxx"
-#include "ListStyle.hxx"
-#include "OdfGenerator.hxx"
-#include "PageSpan.hxx"
-#include "SectionStyle.hxx"
-#include "TableStyle.hxx"
 #include "FilterInternal.hxx"
 #include "InternalHandler.hxx"
 
+#include "FontStyle.hxx"
+#include "ListStyle.hxx"
+#include "PageSpan.hxx"
+#include "SectionStyle.hxx"
+#include "TableStyle.hxx"
+#include "TextRunStyle.hxx"
+
+#include "OdfGenerator.hxx"
 
 class OdtGeneratorPrivate : public OdfGenerator
 {
@@ -150,7 +151,6 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
-	mFontManager.write(pHandler); // do nothing
 	mSpanManager.writeAutomaticStyles(pHandler);
 	mParagraphManager.writeAutomaticStyles(pHandler);
 	mGraphicManager.writeAutomaticStyles(pHandler);
@@ -159,13 +159,8 @@ void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	// writing out the sections styles
 	for (std::vector<SectionStyle *>::const_iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); ++iterSectionStyles)
 		(*iterSectionStyles)->write(pHandler);
-	// writing out the lists styles
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if (!(*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
-	}
-	mTableManager.write(pHandler);
+	mListManager.writeAutomaticStyles(pHandler);
+	mTableManager.writeAutomaticStyles(pHandler);
 	pHandler->endElement("office:automatic-styles");
 }
 
@@ -174,6 +169,7 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	TagOpenElement("office:styles").write(pHandler);
 
 	// style:default-style
+	mFontManager.write(pHandler); // do nothing
 
 	// graphic
 	TagOpenElement defaultGraphicStyleOpenElement("style:default-style");
@@ -276,13 +272,9 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:text-properties");
 		pHandler->endElement("style:style");
 	}
-	mSpanManager.writeNamedStyles(pHandler);
-	mParagraphManager.writeNamedStyles(pHandler);
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if ((*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
-	}
+	mSpanManager.writeStyles(pHandler);
+	mParagraphManager.writeStyles(pHandler);
+	mListManager.writeStyles(pHandler);
 
 	TagOpenElement lineOpenElement("text:linenumbering-configuration");
 	lineOpenElement.addAttribute("text:number-lines", "false");

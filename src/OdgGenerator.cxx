@@ -24,20 +24,23 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include <libodfgen/libodfgen.hxx>
-
-#include "FilterInternal.hxx"
-#include "DocumentElement.hxx"
-#include "FontStyle.hxx"
-#include "GraphicStyle.hxx"
-#include "ListStyle.hxx"
-#include "OdfGenerator.hxx"
-#include "TableStyle.hxx"
-#include "TextRunStyle.hxx"
 #include <locale.h>
 #include <math.h>
 #include <string>
 #include <map>
+
+#include <libodfgen/libodfgen.hxx>
+
+#include "FilterInternal.hxx"
+#include "DocumentElement.hxx"
+
+#include "FontStyle.hxx"
+#include "GraphicStyle.hxx"
+#include "ListStyle.hxx"
+#include "TableStyle.hxx"
+#include "TextRunStyle.hxx"
+
+#include "OdfGenerator.hxx"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -106,12 +109,21 @@ public:
 	// state gestion
 	//
 
-	// the state we use for writing the final document
+	//! the state we use for writing the final document
 	struct State
 	{
-		State() : mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false), mbInFalseLayerGroup(false)
+		//! constructor
+		State() : mbInMasterPage(false), mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false),
+			mbInFalseLayerGroup(false)
 		{
 		}
+		//! copy constructor. \note only copy the mbInMasterPage flag
+		State(State const &orig) : mbInMasterPage(orig.mbInMasterPage), mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false),
+			mbInFalseLayerGroup(false)
+		{
+		}
+		/** flag to know if we are in a master page */
+		bool mbInMasterPage;
 		/** flag to know if a text box is opened */
 		bool mbIsTextBox;
 		/** number of intricated text box, in case a textbox is called inside a text box */
@@ -135,7 +147,7 @@ public:
 	// push a state
 	void pushState()
 	{
-		mStateStack.push(State());
+		mStateStack.push(State(getState()));
 	}
 	// pop a state
 	void popState()
@@ -236,10 +248,8 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 		mGraphicManager.writeAutomaticStyles(pHandler);
 		mParagraphManager.write(pHandler);
 		mSpanManager.write(pHandler);
-		// writing out the lists styles
-		for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-			(*iterListStyles)->write(pHandler);
-		mTableManager.write(pHandler, true);
+		mListManager.write(pHandler);
+		mTableManager.writeAutomaticStyles(pHandler, true);
 	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
@@ -518,11 +528,24 @@ void OdgGenerator::endPage()
 
 void OdgGenerator::startMasterPage(const ::librevenge::RVNGPropertyList &/*propList*/)
 {
+	if (mpImpl->getState().mbInMasterPage)
+	{
+		ODFGEN_DEBUG_MSG(("OdgGenerator::startMasterPage: oops a master page is already started\n"));
+		return;
+	}
+	mpImpl->pushState();
+	mpImpl->getState().mbInMasterPage=true;
 	mpImpl->pushStorage(&mpImpl->mDummyMasterSlideStorage);
 }
 
 void OdgGenerator::endMasterPage()
 {
+	if (!mpImpl->getState().mbInMasterPage)
+	{
+		ODFGEN_DEBUG_MSG(("OdgGenerator::endMasterPage: find no opend master page\n"));
+		return;
+	}
+	mpImpl->pushState();
 	mpImpl->popStorage();
 	mpImpl->mDummyMasterSlideStorage.clear();
 }
@@ -655,7 +678,8 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 
 	librevenge::RVNGPropertyList finalStyle;
 	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
-	pDrawFrameElement->addAttribute("draw:style-name", mpImpl->getGraphicManager().findOrAdd(finalStyle));
+	pDrawFrameElement->addAttribute("draw:style-name",
+	                                mpImpl->getGraphicManager().findOrAdd(finalStyle, !mpImpl->getState().mbInMasterPage));
 	pDrawFrameElement->addAttribute("draw:layer", mpImpl->getLayerName());
 
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
@@ -712,7 +736,7 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 		tmpList.insert("draw:fill", "none");
 	mpImpl->getGraphicManager().addGraphicProperties(tmpList, graphicStyle);
 	mpImpl->getGraphicManager().addFrameProperties(propList, graphicStyle);
-	librevenge::RVNGString sValue=mpImpl->getGraphicManager().findOrAdd(graphicStyle);
+	librevenge::RVNGString sValue=mpImpl->getGraphicManager().findOrAdd(graphicStyle, !mpImpl->getState().mbInMasterPage);
 
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);

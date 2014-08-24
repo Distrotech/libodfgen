@@ -106,7 +106,7 @@ public:
 	virtual ~TableManager();
 	//! clean all data
 	void clean();
-	void write(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
+	void writeAutomaticStyles(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
 
 	bool isTableOpened() const
 	{

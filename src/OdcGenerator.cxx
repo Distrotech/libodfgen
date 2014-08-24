@@ -32,15 +32,17 @@
 
 #include <libodfgen/libodfgen.hxx>
 
-#include "DocumentElement.hxx"
-#include "TextRunStyle.hxx"
-#include "FontStyle.hxx"
-#include "ListStyle.hxx"
-#include "TableStyle.hxx"
 #include "FilterInternal.hxx"
 #include "InternalHandler.hxx"
-#include "OdfGenerator.hxx"
+
+#include "DocumentElement.hxx"
+#include "FontStyle.hxx"
+#include "ListStyle.hxx"
 #include "SheetStyle.hxx"
+#include "TableStyle.hxx"
+#include "TextRunStyle.hxx"
+
+#include "OdfGenerator.hxx"
 
 #include "OdcGenerator.hxx"
 
@@ -214,15 +216,10 @@ void OdcGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 	mFontManager.write(pHandler); // do nothing
 	mSpanManager.writeAutomaticStyles(pHandler);
 	mParagraphManager.writeAutomaticStyles(pHandler);
+	mListManager.writeAutomaticStyles(pHandler);
 	mGraphicManager.writeAutomaticStyles(pHandler);
+	mTableManager.writeAutomaticStyles(pHandler);
 
-	// writing out the lists styles
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if (!(*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
-	}
-	mTableManager.write(pHandler);
 	std::map<librevenge::RVNGString, librevenge::RVNGPropertyList>::const_iterator iterChartStyles;
 	for (iterChartStyles=mChartStyleHash.begin(); iterChartStyles!=mChartStyleHash.end(); ++iterChartStyles)
 		writeChartStyle(iterChartStyles->second,pHandler);
@@ -312,13 +309,9 @@ void OdcGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:style");
 	}
 
-	mSpanManager.writeNamedStyles(pHandler);
-	mParagraphManager.writeNamedStyles(pHandler);
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if ((*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
-	}
+	mSpanManager.writeStyles(pHandler);
+	mParagraphManager.writeStyles(pHandler);
+	mListManager.writeStyles(pHandler);
 	mGraphicManager.writeStyles(pHandler);
 	pHandler->endElement("office:styles");
 }

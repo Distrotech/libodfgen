@@ -343,7 +343,7 @@ bool TableManager::closeTable()
 	return true;
 }
 
-void TableManager::write(OdfDocumentHandler *pHandler, bool compatibleOdp) const
+void TableManager::writeAutomaticStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
 {
 	for (size_t i=0; i < mTableStyles.size(); ++i)
 	{

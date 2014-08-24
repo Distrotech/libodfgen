@@ -35,12 +35,16 @@
 
 #include "DocumentElement.hxx"
 #include "FilterInternal.hxx"
+
 #include "InternalHandler.hxx"
+#include "FontStyle.hxx"
 #include "ListStyle.hxx"
-#include "OdcGenerator.hxx"
-#include "OdfGenerator.hxx"
 #include "PageSpan.hxx"
 #include "SheetStyle.hxx"
+#include "TableStyle.hxx"
+
+#include "OdcGenerator.hxx"
+#include "OdfGenerator.hxx"
 
 class OdsGeneratorPrivate : public OdfGenerator
 {
@@ -519,15 +523,12 @@ void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
 
-	mFontManager.write(pHandler); // do nothing
-	mSpanManager.write(pHandler);
-	mParagraphManager.write(pHandler);
+	mSpanManager.writeAutomaticStyles(pHandler);
+	mParagraphManager.writeAutomaticStyles(pHandler);
+	mListManager.writeAutomaticStyles(pHandler);
 	mGraphicManager.writeAutomaticStyles(pHandler);
 
 	_writePageLayouts(pHandler);
-	// writing out the lists styles
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-		(*iterListStyles)->write(pHandler);
 	mSheetManager.write(pHandler);
 
 	pHandler->endElement("office:automatic-styles");
@@ -538,6 +539,8 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	TagOpenElement("office:styles").write(pHandler);
 
 	// style:default-style
+
+	mFontManager.write(pHandler); // do nothing
 
 	// paragraph
 	TagOpenElement defaultParagraphStyleOpenElement("style:default-style");
@@ -647,6 +650,9 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:style");
 	}
 
+	mSpanManager.writeStyles(pHandler);
+	mParagraphManager.writeStyles(pHandler);
+	mListManager.writeStyles(pHandler);
 	mGraphicManager.writeStyles(pHandler);
 	pHandler->endElement("office:styles");
 }

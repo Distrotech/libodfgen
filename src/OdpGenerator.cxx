@@ -26,19 +26,23 @@
 
 #include <libodfgen/libodfgen.hxx>
 
-#include "DocumentElement.hxx"
-#include "FilterInternal.hxx"
-#include "FontStyle.hxx"
-#include "GraphicStyle.hxx"
-#include "ListStyle.hxx"
-#include "OdfGenerator.hxx"
-#include "TableStyle.hxx"
-#include "TextRunStyle.hxx"
 #include <locale.h>
 #include <math.h>
+
 #include <string>
 #include <map>
 #include <stack>
+
+#include "DocumentElement.hxx"
+#include "FilterInternal.hxx"
+
+#include "FontStyle.hxx"
+#include "GraphicStyle.hxx"
+#include "ListStyle.hxx"
+#include "TableStyle.hxx"
+#include "TextRunStyle.hxx"
+
+#include "OdfGenerator.hxx"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -346,11 +350,8 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 
 	mParagraphManager.write(pHandler);
 	mSpanManager.write(pHandler);
-
-	// writing out the lists styles
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-		(*iterListStyles)->write(pHandler);
-	mTableManager.write(pHandler, true);
+	mListManager.write(pHandler);
+	mTableManager.writeAutomaticStyles(pHandler, true);
 
 	writeNotesStyles(pHandler);
 

@@ -81,10 +81,9 @@ static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
 
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
-	mFontManager(), mGraphicManager(), mSpanManager(), mParagraphManager(), mTableManager(),
+	mFontManager(), mGraphicManager(), mSpanManager(), mParagraphManager(), mListManager(), mTableManager(),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
-	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(),
 	miFrameNumber(0),  mFrameNameIdMap(), mLayerNameStack(), mLayerNameSet(),
 	mGraphicStyle(),
 	mIdChartMap(), mIdChartNameMap(),
@@ -93,7 +92,6 @@ OdfGenerator::OdfGenerator() :
 	mImageHandlers(), mObjectHandlers(),
 	mCurrentParaIsHeading(false)
 {
-	mListStates.push(ListState());
 }
 
 OdfGenerator::~OdfGenerator()
@@ -105,9 +103,6 @@ OdfGenerator::~OdfGenerator()
 	mTableManager.clean();
 	emptyStorage(&mMetaDataStorage);
 	emptyStorage(&mBodyStorage);
-	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
-	        iterListStyles != mListStyles.end(); ++iterListStyles)
-		delete(*iterListStyles);
 	std::map<librevenge::RVNGString, ObjectContainer *>::iterator it;
 	for (it=mNameObjectMap.begin(); it!=mNameObjectMap.end(); ++it)
 	{
@@ -736,113 +731,19 @@ void OdfGenerator::closeParagraph()
 ////////////////////////////////////////////////////////////
 // list
 ////////////////////////////////////////////////////////////
-OdfGenerator::ListState::ListState() :
-	mpCurrentListStyle(0),
-	miCurrentListLevel(0),
-	miLastListLevel(0),
-	miLastListNumber(0),
-	mbListContinueNumbering(false),
-	mbListElementParagraphOpened(false),
-	mbListElementOpened()
-{
-}
-
-OdfGenerator::ListState::ListState(const OdfGenerator::ListState &state) :
-	mpCurrentListStyle(state.mpCurrentListStyle),
-	miCurrentListLevel(state.miCurrentListLevel),
-	miLastListLevel(state.miCurrentListLevel),
-	miLastListNumber(state.miLastListNumber),
-	mbListContinueNumbering(state.mbListContinueNumbering),
-	mbListElementParagraphOpened(state.mbListElementParagraphOpened),
-	mbListElementOpened(state.mbListElementOpened)
-{
-}
-
-OdfGenerator::ListState &OdfGenerator::getListState()
-{
-	if (!mListStates.empty()) return mListStates.top();
-	ODFGEN_DEBUG_MSG(("OdfGenerator::getListState: call with no state\n"));
-	static OdfGenerator::ListState bad;
-	return bad;
-}
-
 void OdfGenerator::popListState()
 {
-	if (mListStates.size()>1)
-		mListStates.pop();
+	mListManager.popState();
 }
 
 void OdfGenerator::pushListState()
 {
-	mListStates.push(ListState());
-}
-
-void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
-{
-	int id = -1;
-	if (propList["librevenge:list-id"])
-		id = propList["librevenge:list-id"]->getInt();
-
-	ListStyle *pListStyle = 0;
-	ListState &state=getListState();
-	// as all direct list have the same id:-1, we reused the last list
-	// excepted at level 0 where we force the redefinition of a new list
-	if ((id!=-1 || !state.mbListElementOpened.empty()) &&
-	        state.mpCurrentListStyle && state.mpCurrentListStyle->getListID() == id)
-		pListStyle = state.mpCurrentListStyle;
-
-	// this rather appalling conditional makes sure we only start a
-	// new list (rather than continue an old one) if: (1) we have no
-	// prior list or the prior list has another listId OR (2) we can
-	// tell that the user actually is starting a new list at level 1
-	// (and only level 1)
-	if (pListStyle == 0 ||
-	        (ordered && propList["librevenge:level"] && propList["librevenge:level"]->getInt()==1 &&
-	         (propList["text:start-value"] && propList["text:start-value"]->getInt() != int(state.miLastListNumber+1))))
-	{
-		// first retrieve the displayname
-		librevenge::RVNGString displayName("");
-		if (propList["style:display-name"])
-			displayName=propList["style:display-name"]->getStr();
-		else if (pListStyle)
-			displayName=pListStyle->getDisplayName();
-
-		ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
-		librevenge::RVNGString sName;
-		if (ordered)
-			sName.sprintf("OL%i", miNumListStyles);
-		else
-			sName.sprintf("UL%i", miNumListStyles);
-		miNumListStyles++;
-
-		pListStyle = new ListStyle(sName.cstr(), id);
-		if (!displayName.empty())
-			pListStyle->setDisplayName(displayName.cstr());
-		storeListStyle(pListStyle);
-		if (ordered)
-		{
-			state.mbListContinueNumbering = false;
-			state.miLastListNumber = 0;
-		}
-	}
-	else if (ordered)
-		state.mbListContinueNumbering = true;
-
-	if (!propList["librevenge:level"])
-		return;
-	// Iterate through ALL list styles with the same WordPerfect list id and define a level if it is not already defined
-	// This solves certain problems with lists that start and finish without reaching certain levels and then begin again
-	// and reach those levels. See gradguide0405_PC.wpd in the regression suite
-	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if ((* iterListStyles) && (* iterListStyles)->getListID() == id)
-			(* iterListStyles)->updateListLevel((propList["librevenge:level"]->getInt() - 1), propList, ordered);
-	}
+	mListManager.pushState();
 }
 
 void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
 {
-	ListState &state=getListState();
+	ListStyleManager::State &state=mListManager.getState();
 	if (state.mbListElementParagraphOpened)
 	{
 		closeParagraph();
@@ -851,7 +752,7 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 	librevenge::RVNGPropertyList pList(propList);
 	if (!pList["librevenge:level"])
 		pList.insert("librevenge:level", int(state.mbListElementOpened.size())+1);
-	defineListLevel(pList, ordered);
+	mListManager.defineLevel(pList, ordered);
 
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	if (!state.mbListElementOpened.empty() && !state.mbListElementOpened.top())
@@ -875,7 +776,7 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 
 void OdfGenerator::closeListLevel()
 {
-	ListState &state=getListState();
+	ListStyleManager::State &state=mListManager.getState();
 	if (state.mbListElementOpened.empty())
 	{
 		// this implies that openListLevel was not called, so it is better to stop here
@@ -894,7 +795,7 @@ void OdfGenerator::closeListLevel()
 
 void OdfGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 {
-	ListState &state=getListState();
+	ListStyleManager::State &state=mListManager.getState();
 	state.miLastListLevel = state.miCurrentListLevel;
 	if (state.miCurrentListLevel == 1)
 		state.miLastListNumber++;
@@ -933,38 +834,13 @@ void OdfGenerator::closeListElement()
 	// this code is kind of tricky, because we don't actually close the list element (because this list element
 	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
 	// code (or when we open another list element)
-	if (getListState().mbListElementParagraphOpened)
+	if (mListManager.getState().mbListElementParagraphOpened)
 	{
 		closeParagraph();
-		getListState().mbListElementParagraphOpened = false;
+		mListManager.getState().mbListElementParagraphOpened = false;
 	}
 }
 
-void OdfGenerator::storeListStyle(ListStyle *listStyle)
-{
-	if (!listStyle || listStyle == getListState().mpCurrentListStyle)
-		return;
-	mListStyles.push_back(listStyle);
-	getListState().mpCurrentListStyle = listStyle;
-	mIdListStyleMap[listStyle->getListID()]=listStyle;
-}
-
-void OdfGenerator::retrieveListStyle(int id)
-{
-	// first look if the current style is ok
-	if (getListState().mpCurrentListStyle &&
-	        id == getListState().mpCurrentListStyle->getListID())
-		return;
-
-	// use the global map
-	if (mIdListStyleMap.find(id) != mIdListStyleMap.end())
-	{
-		getListState().mpCurrentListStyle = mIdListStyleMap.find(id)->second;
-		return;
-	}
-
-	ODFGEN_DEBUG_MSG(("OdfGenerator: impossible to find a list with id=%d\n",id));
-}
 
 ////////////////////////////////////////////////////////////
 // table

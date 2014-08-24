@@ -203,8 +203,6 @@ public:
 	/// push the list state by adding an empty value
 	void pushListState();
 
-	/// call to define a list level
-	void defineListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
 	/// call to open a list level
 	void openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
 	/// call to close a list level
@@ -295,38 +293,6 @@ public:
 protected:
 
 	//
-	// list
-	//
-
-	// list state
-	struct ListState
-	{
-		ListState();
-		ListState(const ListState &state);
-
-		ListStyle *mpCurrentListStyle;
-		unsigned int miCurrentListLevel;
-		unsigned int miLastListLevel;
-		unsigned int miLastListNumber;
-		bool mbListContinueNumbering;
-		bool mbListElementParagraphOpened;
-		std::stack<bool> mbListElementOpened;
-	private:
-		ListState &operator=(const ListState &state);
-	};
-
-	/// access to the current list state
-	ListState &getListState();
-
-	/** stores a list style: update mListStyles,
-		mWriterListStates.top().mpCurrentListStyle and the different
-		maps
-	 */
-	void storeListStyle(ListStyle *listStyle);
-	/** retrieves the list style corresponding to a given id. */
-	void retrieveListStyle(int id);
-
-	//
 	// frame/graphic
 	//
 
@@ -356,6 +322,8 @@ protected:
 	SpanStyleManager mSpanManager;
 	// paragraph manager
 	ParagraphStyleManager mParagraphManager;
+	// list manager
+	ListStyleManager mListManager;
 	// table manager
 	TableManager mTableManager;
 
@@ -372,15 +340,6 @@ protected:
 	std::map<int, librevenge::RVNGString> mIdParagraphNameMap;
 	// the last paragraph name
 	librevenge::RVNGString mLastParagraphName;
-
-	// list styles
-	unsigned int miNumListStyles;
-	// list styles
-	std::vector<ListStyle *> mListStyles;
-	// list states
-	std::stack<ListState> mListStates;
-	// a map id -> last list style defined with id
-	std::map<int, ListStyle *> mIdListStyleMap;
 
 	// the number of created frame
 	unsigned miFrameNumber;
@@ -399,6 +358,10 @@ protected:
 	std::map<int, librevenge::RVNGPropertyList> mIdChartMap;
 	// id to chart name map
 	std::map<int, librevenge::RVNGString> mIdChartNameMap;
+
+	//
+	// handler and/or object creation
+	//
 
 	// the document handlers
 	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;

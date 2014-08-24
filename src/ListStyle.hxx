@@ -26,6 +26,7 @@
 #define _LISTSTYLE_HXX_
 
 #include <map>
+#include <stack>
 #include <librevenge/librevenge.h>
 
 #include "Style.hxx"
@@ -92,6 +93,74 @@ private:
 	librevenge::RVNGString mDisplayName;
 	std::map<int, ListLevelStyle *> mxListLevels;
 	const int miListID;
+};
+
+/** a list manager */
+class ListStyleManager
+{
+public:
+	// list state
+	struct State
+	{
+		State();
+		State(const State &state);
+
+		ListStyle *mpCurrentListStyle;
+		unsigned int miCurrentListLevel;
+		unsigned int miLastListLevel;
+		unsigned int miLastListNumber;
+		bool mbListContinueNumbering;
+		bool mbListElementParagraphOpened;
+		std::stack<bool> mbListElementOpened;
+	private:
+		State &operator=(const State &state);
+	};
+
+public:
+	//! constructor
+	ListStyleManager();
+	//! destructor
+	~ListStyleManager();
+
+	/// call to define a list level
+	void defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
+
+	/// write all
+	virtual void write(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, false);
+		write(pHandler, true);
+	}
+	/// write basic style
+	void writeStyles(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, false);
+	}
+	/// write automatic style
+	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, true);
+	}
+
+	/// access to the current list state
+	State &getState();
+	/// pop the list state (if possible)
+	void popState();
+	/// push the list state by adding an empty value
+	void pushState();
+
+protected:
+	// write automatic/named style
+	void write(OdfDocumentHandler *, bool automaticStyle) const;
+	// list styles
+	unsigned int miNumListStyles;
+	// list styles
+	std::vector<ListStyle *> mListStylesVector;
+	// a map id -> last list style defined with id
+	std::map<int, ListStyle *> mIdListStyleMap;
+
+	//! list states
+	std::stack<State> mStatesStack;
 };
 
 #endif
