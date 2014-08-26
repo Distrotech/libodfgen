@@ -369,4 +369,59 @@ void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
 	}
 }
 
+//
+// the page manager
+//
+
+void PageSpanManager::clean()
+{
+	mpPageList.clear();
+}
+
+PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList)
+{
+	shared_ptr<PageSpan> page(new PageSpan(xPropList));
+	mpPageList.push_back(page);
+	return page.get();
+}
+
+PageSpan *PageSpanManager::getCurrentPageSpan()
+{
+	if (mpPageList.empty())
+	{
+		ODFGEN_DEBUG_MSG(("PageSpanManager::getCurrentPageSpan: can not find any page span\n"));
+		return 0;
+	}
+	return mpPageList.back().get();
+}
+
+librevenge::RVNGString PageSpanManager::getCurrentPageSpanName() const
+{
+	if (mpPageList.empty())
+	{
+		ODFGEN_DEBUG_MSG(("PageSpanManager::getCurrentPageSpanName: can not find any page span\n"));
+		return "Page_Style_0";
+	}
+	librevenge::RVNGString name;
+	name.sprintf("Page_Style_%i", int(mpPageList.size()));
+	return name;
+}
+
+void PageSpanManager::writePageLayout(OdfDocumentHandler *pHandler) const
+{
+	for (size_t i=0; i<mpPageList.size(); ++i)
+		mpPageList[i]->writePageLayout((int)i, pHandler);
+}
+
+void PageSpanManager::writeMasterPages(OdfDocumentHandler *pHandler) const
+{
+	int pageNumber = 1;
+	size_t numPagesSpan=mpPageList.size();
+	for (size_t i=0; i<numPagesSpan; ++i)
+	{
+		mpPageList[i]->writeMasterPages(pageNumber, (int)i, (i+1 == numPagesSpan), pHandler);
+		pageNumber += mpPageList[i]->getSpan();
+	}
+}
+
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

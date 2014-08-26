@@ -112,10 +112,10 @@ public:
 	// section styles manager
 	SectionStyleManager mSectionManager;
 
-	// page state
-	std::vector<PageSpan *> mPageSpans;
+	// page manager
+	PageSpanManager mPageSpanManager;
+	// the current page span
 	PageSpan *mpCurrentPageSpan;
-	int miNumPageStyles;
 
 private:
 	OdtGeneratorPrivate(const OdtGeneratorPrivate &);
@@ -126,9 +126,8 @@ private:
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
 	mStateStack(),
 	mSectionManager(),
-	mPageSpans(),
-	mpCurrentPageSpan(0),
-	miNumPageStyles(0)
+	mPageSpanManager(),
+	mpCurrentPageSpan(0)
 {
 	pushState();
 }
@@ -137,11 +136,6 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 {
 	// clean up the mess we made
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Cleaning up our mess..\n"));
-
-	ODFGEN_DEBUG_MSG(("OdtGenerator: Destroying the body elements\n"));
-	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
-	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
-		delete(*iterPageSpans);
 }
 
 void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
@@ -177,7 +171,6 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	TagOpenElement("office:styles").write(pHandler);
 
 	// style:default-style
-	mFontManager.write(pHandler); // do nothing
 
 	// graphic
 	TagOpenElement defaultGraphicStyleOpenElement("style:default-style");
@@ -334,14 +327,7 @@ void OdtGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:master-page");
 	}
 
-	int pageNumber = 1;
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
-	{
-		bool bLastPage;
-		(i == (mPageSpans.size() - 1)) ? bLastPage = true : bLastPage = false;
-		mPageSpans[i]->writeMasterPages(pageNumber, (int)i, bLastPage, pHandler);
-		pageNumber += mPageSpans[i]->getSpan();
-	}
+	mPageSpanManager.writeMasterPages(pHandler);
 	pHandler->endElement("office:master-styles");
 }
 
@@ -379,8 +365,7 @@ void OdtGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 
 		TagCloseElement("style:page-layout").write(pHandler);
 	}
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
-		mPageSpans[i]->writePageLayout((int)i, pHandler);
+	mPageSpanManager.writePageLayout(pHandler);
 }
 
 bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
@@ -520,10 +505,7 @@ void OdtGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*prop
 
 void OdtGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 {
-	PageSpan *pPageSpan = new PageSpan(propList);
-	mpImpl->mPageSpans.push_back(pPageSpan);
-	mpImpl->mpCurrentPageSpan = pPageSpan;
-	mpImpl->miNumPageStyles++;
+	mpImpl->mpCurrentPageSpan = mpImpl->mPageSpanManager.add(propList);
 
 	mpImpl->getState().mbFirstParagraphInPageSpan = true;
 }
@@ -613,9 +595,7 @@ void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGPropertyList finalPropList(propList);
 	if (mpImpl->getState().mbFirstParagraphInPageSpan && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 	{
-		librevenge::RVNGString sPageStyleName;
-		sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
-		finalPropList.insert("style:master-page-name", sPageStyleName);
+		finalPropList.insert("style:master-page-name", mpImpl->mPageSpanManager.getCurrentPageSpanName());
 		mpImpl->getState().mbFirstElement = false;
 		mpImpl->getState().mbFirstParagraphInPageSpan = false;
 	}

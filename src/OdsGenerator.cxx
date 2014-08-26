@@ -369,10 +369,9 @@ public:
 	// table styles
 	SheetManager  mSheetManager;
 
-	// page state
-	std::vector<PageSpan *> mPageSpans;
+	// page manager
+	PageSpanManager mPageSpanManager;
 	PageSpan *mpCurrentPageSpan;
-	int miNumPageStyles;
 
 	//
 private:
@@ -386,7 +385,7 @@ OdsGeneratorPrivate::OdsGeneratorPrivate() : OdfGenerator(),
 	mStateStack(),
 	mAuxiliarOdcState(), mAuxiliarOdtState(),
 	mSheetManager(),
-	mPageSpans(), mpCurrentPageSpan(0),	miNumPageStyles(0)
+	mPageSpanManager(), mpCurrentPageSpan(0)
 {
 	mStateStack.push(State());
 }
@@ -398,10 +397,6 @@ OdsGeneratorPrivate::~OdsGeneratorPrivate()
 
 	ODFGEN_DEBUG_MSG(("OdsGenerator: Destroying the body elements\n"));
 	mSheetManager.clean();
-
-	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
-	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
-		delete(*iterPageSpans);
 }
 
 bool OdsGeneratorPrivate::close(Command command)
@@ -439,14 +434,7 @@ void OdsGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:master-page");
 	}
 
-	int pageNumber = 1;
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
-	{
-		bool bLastPage;
-		(i == (mPageSpans.size() - 1)) ? bLastPage = true : bLastPage = false;
-		mPageSpans[i]->writeMasterPages(pageNumber, (int)i, bLastPage, pHandler);
-		pageNumber += mPageSpans[i]->getSpan();
-	}
+	mPageSpanManager.writeMasterPages(pHandler);
 	pHandler->endElement("office:master-styles");
 }
 
@@ -484,9 +472,7 @@ void OdsGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
 
 		TagCloseElement("style:page-layout").write(pHandler);
 	}
-
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
-		mPageSpans[i]->writePageLayout((int)i, pHandler);
+	mPageSpanManager.writePageLayout(pHandler);
 }
 
 OdsGenerator::OdsGenerator() : mpImpl(new OdsGeneratorPrivate())
@@ -786,10 +772,7 @@ void OdsGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 	mpImpl->open(OdsGeneratorPrivate::C_PageSpan);
 	if (!mpImpl->checkOutsideOdc("openPageSpan") || !mpImpl->checkOutsideOdt("openPageSpan"))
 		return;
-	PageSpan *pPageSpan = new PageSpan(propList);
-	mpImpl->mPageSpans.push_back(pPageSpan);
-	mpImpl->mpCurrentPageSpan = pPageSpan;
-	mpImpl->miNumPageStyles++;
+	mpImpl->mpCurrentPageSpan = mpImpl->mPageSpanManager.add(propList);
 }
 
 void OdsGenerator::closePageSpan()
@@ -823,9 +806,7 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 	}
 
 	librevenge::RVNGPropertyList finalPropList(propList);
-	librevenge::RVNGString sPageStyleName;
-	sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
-	finalPropList.insert("style:master-page-name", sPageStyleName);
+	finalPropList.insert("style:master-page-name", mpImpl->mPageSpanManager.getCurrentPageSpanName());
 	if (!mpImpl->mSheetManager.openSheet(finalPropList, Style::Z_ContentAutomatic)) return;
 	mpImpl->getState().mbInSheet=true;
 

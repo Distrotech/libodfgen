@@ -64,6 +64,37 @@ private:
 	std::vector<DocumentElement *> *mpHeaderLastContent;
 	std::vector<DocumentElement *> *mpFooterLastContent;
 };
+
+//! class used to store the list of created page
+class PageSpanManager
+{
+public:
+	//! constructor
+	PageSpanManager() : mpPageList()
+	{
+	}
+	//! destructor
+	~PageSpanManager()
+	{
+		clean();
+	}
+	//! clean data
+	void clean();
+	//! create a new page and set it to current. Returns a pointer to this new page
+	PageSpan *add(const librevenge::RVNGPropertyList &xPropList);
+	//! returns the current page name
+	librevenge::RVNGString getCurrentPageSpanName() const;
+	//! returns the current page span or 0
+	PageSpan *getCurrentPageSpan();
+
+	void writePageLayout(OdfDocumentHandler *pHandler) const;
+	void writeMasterPages(OdfDocumentHandler *pHandler) const;
+
+
+protected:
+	//! the list of page
+	std::vector<shared_ptr<PageSpan> > mpPageList;
+};
 #endif
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

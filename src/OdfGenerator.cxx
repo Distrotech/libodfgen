@@ -546,7 +546,7 @@ void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 		}
 		if (!ok)
 		{
-			ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: called with an existing name, can not find new name\n"));
+			ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not find a new name, used old\n"));
 		}
 	}
 	mLayerNameSet.insert(layer);
