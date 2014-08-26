@@ -426,8 +426,8 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	mGraphicManager.addFrameProperties(propList, graphic);
 	graphic.insert("style:parent-style-name", frameStyleName);
 	graphic.insert("draw:ole-draw-aspect", "1");
-	librevenge::RVNGString frameAutomaticStyleName=mGraphicManager.findOrAdd
-	                                               (graphic, inMasterPage() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
+	librevenge::RVNGString frameAutomaticStyleName=
+	    mGraphicManager.findOrAdd(graphic, inMasterPage() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 
 	// And write the frame itself
 	unsigned objectId = 0;
@@ -476,7 +476,7 @@ void OdfGenerator::addFrameProperties(const librevenge::RVNGPropertyList &propLi
 		element.addAttribute("svg:height", propList["svg:height"]->getStr());
 	else if (propList["fo:min-height"]) // fixme: must be an attribute of draw:text-box
 		element.addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
-	element.addAttribute("draw:layer", getLayerName());
+	element.addAttribute("draw:layer", getLayerName(propList));
 }
 
 unsigned OdfGenerator::getFrameId(librevenge::RVNGString val)
@@ -502,8 +502,16 @@ void OdfGenerator::closeGroup()
 	mpCurrentStorage->push_back(new TagCloseElement("draw:g"));
 }
 
-librevenge::RVNGString OdfGenerator::getLayerName() const
+librevenge::RVNGString OdfGenerator::getLayerName(const librevenge::RVNGPropertyList &propList) const
 {
+	if (propList["draw:layer"] && !propList["draw:layer"]->getStr().empty())
+	{
+		librevenge::RVNGString layer;
+		layer.appendEscapedXML(propList["draw:layer"]->getStr());
+		if (mLayerNameSet.find(layer)!=mLayerNameSet.end())
+			return layer;
+		ODFGEN_DEBUG_MSG(("OdfGenerator::getLayerName: called with not existing layer, returns the current layer name\n"));
+	}
 	if (mLayerNameStack.empty())
 		return "layout";
 	return mLayerNameStack.top();
@@ -519,6 +527,28 @@ void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 	}
 	librevenge::RVNGString layer;
 	layer.appendEscapedXML(propList["draw:layer"]->getStr());
+	if (mLayerNameSet.find(layer)!=mLayerNameSet.end())
+	{
+		// try to find a new name
+		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: called with an existing name, try to find a new name\n"));
+		bool ok=false;
+		for (int i=0; i<100; ++i)
+		{
+			librevenge::RVNGString suffix;
+			suffix.sprintf("#%d", i);
+			librevenge::RVNGString newName(layer);
+			newName.append(suffix);
+			if (mLayerNameSet.find(newName)!=mLayerNameSet.end())
+				continue;
+			layer=newName;
+			ok=true;
+			break;
+		}
+		if (!ok)
+		{
+			ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: called with an existing name, can not find new name\n"));
+		}
+	}
 	mLayerNameSet.insert(layer);
 	mLayerNameStack.push(layer);
 }

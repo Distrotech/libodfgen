@@ -688,7 +688,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	pDrawFrameElement->addAttribute("draw:style-name",
 	                                mpImpl->getGraphicManager().findOrAdd
 	                                (finalStyle, mpImpl->inMasterPage() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic));
-	pDrawFrameElement->addAttribute("draw:layer", mpImpl->getLayerName());
+	pDrawFrameElement->addAttribute("draw:layer", mpImpl->getLayerName(propList));
 
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
 	pDrawFrameElement->addAttribute("svg:width", framePropList["svg:width"]->getStr());
@@ -749,7 +749,7 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);
-	pDrawFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName());
+	pDrawFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName(propList));
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{
@@ -856,7 +856,7 @@ void OdgGenerator::startTableObject(const ::librevenge::RVNGPropertyList &propLi
 	TagOpenElement *pFrameOpenElement = new TagOpenElement("draw:frame");
 
 	pFrameOpenElement->addAttribute("draw:style-name", "standard");
-	pFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName());
+	pFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName(propList));
 
 	if (propList["svg:x"])
 		pFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());

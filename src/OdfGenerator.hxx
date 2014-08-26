@@ -261,8 +261,8 @@ public:
 	void openLayer(const librevenge::RVNGPropertyList &propList);
 	/// call to close a layer
 	void closeLayer();
-	/// return the actual layer name or "layout"
-	librevenge::RVNGString getLayerName() const;
+	/// return the layer name: either propList[draw:layer] if it exists or the current layer name
+	librevenge::RVNGString getLayerName(const librevenge::RVNGPropertyList &propList) const;
 
 	//
 	// image
