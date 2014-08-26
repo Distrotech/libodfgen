@@ -82,6 +82,7 @@ static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
 	mFontManager(), mGraphicManager(), mSpanManager(), mParagraphManager(), mListManager(), mTableManager(),
+	mbInMasterPage(false),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
 	miFrameNumber(0),  mFrameNameIdMap(), mLayerNameStack(), mLayerNameSet(),
@@ -372,6 +373,29 @@ void OdfGenerator::registerEmbeddedImageHandler(const librevenge::RVNGString &mi
 ////////////////////////////////////////////////////////////
 // frame/group
 ////////////////////////////////////////////////////////////
+void OdfGenerator::startMasterPage(const librevenge::RVNGPropertyList &)
+{
+	if (mbInMasterPage)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::startMasterPage: a master page is already open\n"));
+		return;
+	}
+	mbInMasterPage=true;
+}
+
+void OdfGenerator::endMasterPage()
+{
+	if (!mbInMasterPage)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::endMasterPage: can not find any open master page\n"));
+		return;
+	}
+	mbInMasterPage=false;
+}
+
+////////////////////////////////////////////////////////////
+// frame/group
+////////////////////////////////////////////////////////////
 void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 {
 	// First, let's create a basic Style for this box
@@ -392,7 +416,7 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 		style.insert("style:vertical-rel", propList["style:vertical-rel"]->getStr());
 	else
 		style.insert("style:vertical-rel", "page-content");
-	librevenge::RVNGString frameStyleName=mGraphicManager.findOrAdd(style, false);
+	librevenge::RVNGString frameStyleName=mGraphicManager.findOrAdd(style, Style::Z_Style);
 
 	librevenge::RVNGPropertyList graphic;
 	mGraphicManager.addGraphicProperties(propList, graphic);
@@ -402,7 +426,8 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	mGraphicManager.addFrameProperties(propList, graphic);
 	graphic.insert("style:parent-style-name", frameStyleName);
 	graphic.insert("draw:ole-draw-aspect", "1");
-	librevenge::RVNGString frameAutomaticStyleName=mGraphicManager.findOrAdd(graphic);
+	librevenge::RVNGString frameAutomaticStyleName=mGraphicManager.findOrAdd
+	                                               (graphic, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Automatic);
 
 	// And write the frame itself
 	unsigned objectId = 0;
@@ -629,7 +654,7 @@ void OdfGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 	{
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
-		sName = mSpanManager.findOrAdd(pList);
+		sName = mSpanManager.findOrAdd(pList, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Unknown);
 		if (pList["librevenge:span-id"])
 			mIdSpanNameMap[pList["librevenge:span-id"]->getInt()]=sName;
 	}
@@ -699,7 +724,7 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	{
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
-		paragraphName = mParagraphManager.findOrAdd(pList);
+		paragraphName = mParagraphManager.findOrAdd(pList, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Unknown);
 		if (pList["librevenge:paragraph-id"])
 			mIdParagraphNameMap[pList["librevenge:paragraph-id"]->getInt()]=paragraphName;
 	}
@@ -752,7 +777,7 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 	librevenge::RVNGPropertyList pList(propList);
 	if (!pList["librevenge:level"])
 		pList.insert("librevenge:level", int(state.mbListElementOpened.size())+1);
-	mListManager.defineLevel(pList, ordered);
+	mListManager.defineLevel(pList, ordered, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Unknown);
 
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	if (!state.mbListElementOpened.empty() && !state.mbListElementOpened.top())
@@ -813,7 +838,7 @@ void OdfGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 		finalPropList.insert("style:list-style-name", state.mpCurrentListStyle->getName());
 #endif
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName =mParagraphManager.findOrAdd(finalPropList);
+	librevenge::RVNGString paragName =mParagraphManager.findOrAdd(finalPropList, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Unknown);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
@@ -847,7 +872,7 @@ void OdfGenerator::closeListElement()
 ////////////////////////////////////////////////////////////
 void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
-	mTableManager.openTable(propList);
+	mTableManager.openTable(propList, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Automatic);
 
 	Table *table=mTableManager.getActualTable();
 	if (!table)
@@ -1060,7 +1085,7 @@ librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName()
 {
 	librevenge::RVNGPropertyList styleList;
 	mGraphicManager.addGraphicProperties(mGraphicStyle,styleList);
-	return mGraphicManager.findOrAdd(styleList);
+	return mGraphicManager.findOrAdd(styleList, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Automatic);
 }
 
 librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName(const librevenge::RVNGPropertyList &shapeList)
@@ -1068,7 +1093,7 @@ librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName(const librevenge
 	librevenge::RVNGPropertyList styleList;
 	mGraphicManager.addGraphicProperties(shapeList,styleList);
 	mGraphicManager.addGraphicProperties(mGraphicStyle,styleList);
-	return mGraphicManager.findOrAdd(styleList);
+	return mGraphicManager.findOrAdd(styleList, inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Automatic);
 }
 
 void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)

@@ -53,7 +53,7 @@ public:
 
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeStyles(OdfDocumentHandler *pHandler);
-	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
@@ -109,8 +109,8 @@ public:
 	}
 	std::stack<State> mStateStack;
 
-	// section styles
-	std::vector<SectionStyle *> mSectionStyles;
+	// section styles manager
+	SectionStyleManager mSectionManager;
 
 	// page state
 	std::vector<PageSpan *> mPageSpans;
@@ -125,7 +125,7 @@ private:
 
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
 	mStateStack(),
-	mSectionStyles(),
+	mSectionManager(),
 	mPageSpans(),
 	mpCurrentPageSpan(0),
 	miNumPageStyles(0)
@@ -139,28 +139,36 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Cleaning up our mess..\n"));
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Destroying the body elements\n"));
-	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin();
-	        iterSectionStyles != mSectionStyles.end(); ++iterSectionStyles)
-		delete(*iterSectionStyles);
-
 	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
 	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
 		delete(*iterPageSpans);
 }
 
-void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
+void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
-	mSpanManager.writeAutomaticStyles(pHandler);
-	mParagraphManager.writeAutomaticStyles(pHandler);
-	mGraphicManager.writeAutomaticStyles(pHandler);
 
-	_writePageLayouts(pHandler);
-	// writing out the sections styles
-	for (std::vector<SectionStyle *>::const_iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); ++iterSectionStyles)
-		(*iterSectionStyles)->write(pHandler);
-	mListManager.writeAutomaticStyles(pHandler);
-	mTableManager.writeAutomaticStyles(pHandler);
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+	{
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mSectionManager.write(pHandler, Style::Z_ContentAutomatic);
+		mTableManager.write(pHandler, Style::Z_ContentAutomatic);
+	}
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
+		mSpanManager.write(pHandler, Style::Z_Automatic);
+		mParagraphManager.write(pHandler, Style::Z_Automatic);
+		mListManager.write(pHandler, Style::Z_Automatic);
+		mGraphicManager.write(pHandler, Style::Z_Automatic);
+		mSectionManager.write(pHandler, Style::Z_Automatic);
+		mTableManager.write(pHandler, Style::Z_Automatic);
+	}
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+		_writePageLayouts(pHandler);
 	pHandler->endElement("office:automatic-styles");
 }
 
@@ -272,9 +280,9 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:text-properties");
 		pHandler->endElement("style:style");
 	}
-	mSpanManager.writeStyles(pHandler);
-	mParagraphManager.writeStyles(pHandler);
-	mListManager.writeStyles(pHandler);
+	mSpanManager.write(pHandler, Style::Z_Style);
+	mParagraphManager.write(pHandler, Style::Z_Style);
+	mListManager.write(pHandler, Style::Z_Style);
 
 	TagOpenElement lineOpenElement("text:linenumbering-configuration");
 	lineOpenElement.addAttribute("text:number-lines", "false");
@@ -308,7 +316,7 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		noteOpenElement.write(pHandler);
 		pHandler->endElement("text:notes-configuration");
 	}
-	mGraphicManager.writeStyles(pHandler);
+	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }
 
@@ -432,7 +440,11 @@ bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 
 	// write out the font styles
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		mFontManager.writeFontsDeclaration(pHandler);
+	{
+		TagOpenElement("office:font-face-decls").write(pHandler);
+		mFontManager.write(pHandler, Style::Z_Font);
+		TagCloseElement("office:font-face-decls").write(pHandler);
+	}
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Writing out the styles..\n"));
 
@@ -441,7 +453,7 @@ bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		_writeStyles(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		_writeAutomaticStyles(pHandler);
+		_writeAutomaticStyles(pHandler, streamType);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
 		_writeMasterPages(pHandler);
@@ -575,15 +587,10 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 	        (fSectionMarginLeft<-eps || fSectionMarginLeft>eps) ||
 	        (fSectionMarginRight<-eps || fSectionMarginRight>eps))
 	{
-		librevenge::RVNGString sSectionName;
-		sSectionName.sprintf("Section%i", mpImpl->mSectionStyles.size());
-
-		SectionStyle *pSectionStyle = new SectionStyle(propList, sSectionName.cstr());
-		mpImpl->mSectionStyles.push_back(pSectionStyle);
-
+		librevenge::RVNGString sSectionName=mpImpl->mSectionManager.add(propList);
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
-		pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
-		pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
+		pSectionOpenElement->addAttribute("text:style-name", sSectionName);
+		pSectionOpenElement->addAttribute("text:name", sSectionName);
 		mpImpl->getCurrentStorage()->push_back(pSectionOpenElement);
 	}
 	else

@@ -33,8 +33,8 @@ double rint(double x);
 #endif /* _WIN32 */
 
 SectionStyle::SectionStyle(const librevenge::RVNGPropertyList &xPropList,
-                           const char *psName) :
-	Style(psName),
+                           const char *psName, Style::Zone zone) :
+	Style(psName, zone),
 	mPropList(xPropList)
 {
 }
@@ -102,6 +102,38 @@ void SectionStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->endElement("style:section-properties");
 
 	pHandler->endElement("style:style");
+}
+
+//
+// the manager
+//
+
+void SectionStyleManager::clean()
+{
+	mStyleList.resize(0);
+}
+
+librevenge::RVNGString SectionStyleManager::add(const librevenge::RVNGPropertyList &propList, Style::Zone zone)
+{
+	if (zone==Style::Z_Unknown)
+		zone=Style::Z_Automatic;
+	librevenge::RVNGString name;
+	if (zone==Style::Z_ContentAutomatic)
+		name.sprintf("Section_M%i", mStyleList.size());
+	else
+		name.sprintf("Section%i", mStyleList.size());
+	shared_ptr<SectionStyle> style(new SectionStyle(propList, name.cstr(), zone));
+	mStyleList.push_back(style);
+	return name;
+}
+
+void SectionStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) const
+{
+	for (size_t i=0; i<mStyleList.size(); ++i)
+	{
+		if (mStyleList[i] && mStyleList[i]->getZone()==zone)
+			mStyleList[i]->write(pHandler);
+	}
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

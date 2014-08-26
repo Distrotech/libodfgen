@@ -127,11 +127,11 @@ void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) co
 	pHandler->endElement("text:list-level-style-bullet");
 }
 
-ListStyle::ListStyle(const char *psName, const int iListID) :
-	Style(psName),
+ListStyle::ListStyle(const char *psName, const int iListID, Style::Zone zone) :
+	Style(psName, zone),
 	mDisplayName(""),
-	mxListLevels(),
-	miListID(iListID)
+	miListID(iListID),
+	mxListLevels()
 {
 }
 
@@ -253,17 +253,17 @@ ListStyleManager::~ListStyleManager()
 		delete(*iterListStyles);
 }
 
-void ListStyleManager::write(OdfDocumentHandler *pHandler, bool automatic) const
+void ListStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
 	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStylesVector.begin(); iterListStyles != mListStylesVector.end(); ++iterListStyles)
 	{
-		if ((*iterListStyles)->hasDisplayName() != automatic)
+		if ((*iterListStyles)->getZone() == zone)
 			(*iterListStyles)->write(pHandler);
 	}
 
 }
 
-void ListStyleManager::defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
+void ListStyleManager::defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered, Style::Zone zone)
 {
 	int id = -1;
 	if (propList["librevenge:list-id"])
@@ -294,14 +294,21 @@ void ListStyleManager::defineLevel(const librevenge::RVNGPropertyList &propList,
 			displayName=pListStyle->getDisplayName();
 
 		ODFGEN_DEBUG_MSG(("ListStyleManager:defineLevel Attempting to create a new list style (listid: %i)\n", id));
+		// first check if we need to store the style as style or as automatic style
+		if (propList["style:display-name"] && !propList["style:master-page-name"])
+			zone=Style::Z_Style;
+		else if (zone==Style::Z_Unknown)
+			zone=Style::Z_Automatic;
 		librevenge::RVNGString sName;
-		if (ordered)
-			sName.sprintf("OL%i", miNumListStyles);
+		if (zone==Style::Z_Style)
+			sName.sprintf(ordered ? "OL_N%i" : "UL_N%i", miNumListStyles);
+		else if (zone==Style::Z_ContentAutomatic)
+			sName.sprintf(ordered ? "OL_M%i" : "UL_M%i", miNumListStyles);
 		else
-			sName.sprintf("UL%i", miNumListStyles);
+			sName.sprintf(ordered ? "OL%i" : "UL%i", miNumListStyles);
 		miNumListStyles++;
 
-		pListStyle = new ListStyle(sName.cstr(), id);
+		pListStyle = new ListStyle(sName.cstr(), id, zone);
 		if (!displayName.empty())
 			pListStyle->setDisplayName(displayName.cstr());
 

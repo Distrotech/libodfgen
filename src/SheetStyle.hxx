@@ -72,10 +72,10 @@ private:
 	librevenge::RVNGPropertyList mPropList;
 };
 
-class SheetStyle : public Style, public TopLevelElementStyle
+class SheetStyle : public Style
 {
 public:
-	SheetStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName);
+	SheetStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName, Style::Zone zone);
 	virtual ~SheetStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
 	int getNumColumns() const
@@ -116,7 +116,14 @@ public:
 	virtual ~SheetManager();
 	//! clean all data
 	void clean();
-	void write(OdfDocumentHandler *pHandler) const;
+	// write all
+	virtual void write(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, Style::Z_ContentAutomatic);
+		write(pHandler, Style::Z_Automatic);
+	}
+	// write automatic/named/... style
+	void write(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 
 	bool isSheetOpened() const
 	{
@@ -128,7 +135,7 @@ public:
 		return mSheetStyles.back().get();
 	}
 	//! open a sheet and update the list of elements
-	bool openSheet(const librevenge::RVNGPropertyList &xPropList);
+	bool openSheet(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone);
 	bool closeSheet();
 
 	static librevenge::RVNGString convertFormula(const librevenge::RVNGPropertyListVector &formatsList);

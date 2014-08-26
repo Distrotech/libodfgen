@@ -69,7 +69,6 @@ public:
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
 	//! write the document meta data
 	void writeDocumentMetaData(OdfDocumentHandler *pHandler);
-
 	//
 	// document handler
 	//
@@ -158,6 +157,18 @@ public:
 	static void emptyStorage(Storage *storage);
 	//! write the storage data to a document handler
 	static void sendStorage(Storage const *storage, OdfDocumentHandler *pHandler);
+
+	// page, master page
+
+	//! starts a master page.
+	void startMasterPage(const librevenge::RVNGPropertyList &propList);
+	//! ends a master page
+	void endMasterPage();
+	//! returns true if we are in a master page
+	bool inMasterPage() const
+	{
+		return mbInMasterPage;
+	}
 
 	//
 	// basic to the font/paragraph/span manager
@@ -326,6 +337,9 @@ protected:
 	ListStyleManager mListManager;
 	// table manager
 	TableManager mTableManager;
+
+	// a flag to know if we are in a master page or note
+	bool mbInMasterPage;
 
 	// id to span map
 	std::map<int, librevenge::RVNGPropertyList> mIdSpanMap;

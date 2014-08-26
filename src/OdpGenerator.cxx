@@ -102,7 +102,7 @@ public:
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeSettings(OdfDocumentHandler *pHandler);
 	void _writeStyles(OdfDocumentHandler *pHandler);
-	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
@@ -339,19 +339,26 @@ void OdpGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
 	pHandler->endElement("office:settings");
 }
 
-void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
+void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
 
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+	{
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
+	}
+
 	// CHECKME: previously, this part was not done in STYLES
 
-	// writing out the graphics automatic styles
-	mGraphicManager.writeAutomaticStyles(pHandler);
-
-	mParagraphManager.write(pHandler);
-	mSpanManager.write(pHandler);
-	mListManager.write(pHandler);
-	mTableManager.writeAutomaticStyles(pHandler, true);
+	mGraphicManager.write(pHandler, Style::Z_Automatic);
+	mParagraphManager.write(pHandler, Style::Z_Automatic);
+	mSpanManager.write(pHandler, Style::Z_Automatic);
+	mListManager.write(pHandler, Style::Z_Automatic);
+	mTableManager.write(pHandler, Style::Z_Automatic, true);
 
 	writeNotesStyles(pHandler);
 
@@ -364,7 +371,10 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
 void OdpGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
-	mGraphicManager.writeStyles(pHandler);
+	mParagraphManager.write(pHandler, Style::Z_Style);
+	mSpanManager.write(pHandler, Style::Z_Style);
+	mListManager.write(pHandler, Style::Z_Style);
+	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }
 
@@ -469,13 +479,17 @@ bool OdpGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		_writeSettings(pHandler);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
-		mFontManager.writeFontsDeclaration(pHandler);
+	{
+		TagOpenElement("office:font-face-decls").write(pHandler);
+		mFontManager.write(pHandler, Style::Z_Font);
+		TagCloseElement("office:font-face-decls").write(pHandler);
+	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 		_writeStyles(pHandler);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
-		_writeAutomaticStyles(pHandler);
+		_writeAutomaticStyles(pHandler, streamType);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 		_writeMasterPages(pHandler);

@@ -356,7 +356,7 @@ public:
 	void _writeMasterPages(OdfDocumentHandler *pHandler);
 	void _writePageLayouts(OdfDocumentHandler *pHandler);
 	void _writeStyles(OdfDocumentHandler *pHandler);
-	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 
 	std::stack<Command> mCommandStack;
 	std::stack<State> mStateStack;
@@ -519,17 +519,30 @@ bool OdsGenerator::getObjectContent(librevenge::RVNGString const &objectName, Od
 	return mpImpl->getObjectContent(objectName, pHandler);
 }
 
-void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
+void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
 
-	mSpanManager.writeAutomaticStyles(pHandler);
-	mParagraphManager.writeAutomaticStyles(pHandler);
-	mListManager.writeAutomaticStyles(pHandler);
-	mGraphicManager.writeAutomaticStyles(pHandler);
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+	{
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mSheetManager.write(pHandler, Style::Z_ContentAutomatic);
+	}
 
-	_writePageLayouts(pHandler);
-	mSheetManager.write(pHandler);
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
+		mSpanManager.write(pHandler, Style::Z_Automatic);
+		mParagraphManager.write(pHandler, Style::Z_Automatic);
+		mListManager.write(pHandler, Style::Z_Automatic);
+		mGraphicManager.write(pHandler, Style::Z_Automatic);
+		mSheetManager.write(pHandler, Style::Z_Automatic);
+	}
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+		_writePageLayouts(pHandler);
 
 	pHandler->endElement("office:automatic-styles");
 }
@@ -650,10 +663,10 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:style");
 	}
 
-	mSpanManager.writeStyles(pHandler);
-	mParagraphManager.writeStyles(pHandler);
-	mListManager.writeStyles(pHandler);
-	mGraphicManager.writeStyles(pHandler);
+	mSpanManager.write(pHandler, Style::Z_Style);
+	mParagraphManager.write(pHandler, Style::Z_Style);
+	mListManager.write(pHandler, Style::Z_Style);
+	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }
 
@@ -719,7 +732,11 @@ bool OdsGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 
 	// write out the font styles
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		mFontManager.writeFontsDeclaration(pHandler);
+	{
+		TagOpenElement("office:font-face-decls").write(pHandler);
+		mFontManager.write(pHandler, Style::Z_Font);
+		TagCloseElement("office:font-face-decls").write(pHandler);
+	}
 
 	// write default styles
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
@@ -729,7 +746,7 @@ bool OdsGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 	}
 	// writing automatic style
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		_writeAutomaticStyles(pHandler);
+		_writeAutomaticStyles(pHandler, streamType);
 
 	// writing out the page masters
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
@@ -809,7 +826,7 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGString sPageStyleName;
 	sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
 	finalPropList.insert("style:master-page-name", sPageStyleName);
-	if (!mpImpl->mSheetManager.openSheet(finalPropList)) return;
+	if (!mpImpl->mSheetManager.openSheet(finalPropList, Style::Z_Automatic)) return;
 	mpImpl->getState().mbInSheet=true;
 
 	SheetStyle *style=mpImpl->mSheetManager.actualSheet();

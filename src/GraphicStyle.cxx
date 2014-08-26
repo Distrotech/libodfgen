@@ -26,10 +26,48 @@
 #include "GraphicStyle.hxx"
 #include "DocumentElement.hxx"
 
+GraphicStyle::GraphicStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName, Style::Zone zone) :
+	Style(psName, zone), mPropList(xPropList)
+{
+}
+
+GraphicStyle::~GraphicStyle()
+{
+}
+
+void GraphicStyle::write(OdfDocumentHandler *pHandler) const
+{
+	librevenge::RVNGPropertyList openElement;
+	openElement.insert("style:name", getName());
+	openElement.insert("style:family", "graphic");
+	if (mPropList["style:parent-style-name"])
+		openElement.insert("style:parent-style-name", mPropList["style:parent-style-name"]->getStr());
+	else
+		openElement.insert("style:parent-style-name", "standard");
+	if (mPropList["style:display-name"])
+		openElement.insert("style:display-name", mPropList["style:display-name"]->getStr());
+	pHandler->startElement("style:style", openElement);
+
+	librevenge::RVNGPropertyList graphicElement;
+	librevenge::RVNGPropertyList::Iter i(mPropList);
+	for (i.rewind(); i.next();)
+	{
+		if (strcmp(i.key(), "style:display-name")==0 || strcmp(i.key(), "style:parent-style-name") == 0 ||
+		        strncmp(i.key(), "librevenge:", 11)==0)
+			continue;
+		graphicElement.insert(i.key(),i()->getStr());
+	}
+	pHandler->startElement("style:graphic-properties", graphicElement);
+	pHandler->endElement("style:graphic-properties");
+
+	pHandler->endElement("style:style");
+}
+
+//
+// manager
+//
 void GraphicStyleManager::clean()
 {
-	for (size_t i=0; i < mAutomaticStyles.size(); ++i)
-		delete mAutomaticStyles[i];
 	for (size_t i=0; i < mBitmapStyles.size(); ++i)
 		delete mBitmapStyles[i];
 	for (size_t i=0; i < mGradientStyles.size(); ++i)
@@ -40,9 +78,8 @@ void GraphicStyleManager::clean()
 		delete mOpacityStyles[i];
 	for (size_t i=0; i < mStrokeDashStyles.size(); ++i)
 		delete mStrokeDashStyles[i];
-	for (size_t i=0; i < mStyles.size(); ++i)
-		delete mStyles[i];
-	mAutomaticStyles.resize(0);
+	mStyles.resize(0);
+
 	mBitmapStyles.resize(0);
 	mGradientStyles.resize(0);
 	mMarkerStyles.resize(0);
@@ -50,7 +87,6 @@ void GraphicStyleManager::clean()
 	mStrokeDashStyles.resize(0);
 	mStyles.resize(0);
 
-	mAutomaticNameMap.clear();
 	mBitmapNameMap.clear();
 	mGradientNameMap.clear();
 	mMarkerNameMap.clear();
@@ -59,67 +95,50 @@ void GraphicStyleManager::clean()
 	mStyleNameMap.clear();
 }
 
-void GraphicStyleManager::writeStyles(OdfDocumentHandler *pHandler) const
+void GraphicStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
-	for (size_t i=0; i < mBitmapStyles.size(); ++i)
-		mBitmapStyles[i]->write(pHandler);
-	for (size_t i=0; i < mGradientStyles.size(); ++i)
-		mGradientStyles[i]->write(pHandler);
-	for (size_t i=0; i < mMarkerStyles.size(); ++i)
-		mMarkerStyles[i]->write(pHandler);
-	for (size_t i=0; i < mOpacityStyles.size(); ++i)
-		mOpacityStyles[i]->write(pHandler);
-	for (size_t i=0; i<mStrokeDashStyles.size(); ++i)
-		mStrokeDashStyles[i]->write(pHandler);
+	if (zone==Style::Z_Style)
+	{
+		for (size_t i=0; i < mBitmapStyles.size(); ++i)
+			mBitmapStyles[i]->write(pHandler);
+		for (size_t i=0; i < mGradientStyles.size(); ++i)
+			mGradientStyles[i]->write(pHandler);
+		for (size_t i=0; i < mMarkerStyles.size(); ++i)
+			mMarkerStyles[i]->write(pHandler);
+		for (size_t i=0; i < mOpacityStyles.size(); ++i)
+			mOpacityStyles[i]->write(pHandler);
+		for (size_t i=0; i<mStrokeDashStyles.size(); ++i)
+			mStrokeDashStyles[i]->write(pHandler);
+	}
 	for (size_t i=0; i<mStyles.size(); ++i)
-		mStyles[i]->write(pHandler);
+	{
+		if (mStyles[i] && mStyles[i]->getZone()==zone)
+			mStyles[i]->write(pHandler);
+	}
 }
 
-void GraphicStyleManager::writeAutomaticStyles(OdfDocumentHandler *pHandler) const
+librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyList const &propList, Style::Zone zone)
 {
-	for (size_t i=0; i < mAutomaticStyles.size(); ++i)
-		mAutomaticStyles[i]->write(pHandler);
-}
+	librevenge::RVNGPropertyList pList(propList);
+	if (zone==Style::Z_Unknown)
+		zone=Style::Z_Automatic;
+	pList.insert("librevenge:zone-style", int(zone));
 
-librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyList const &propList, bool automatic)
-{
-	librevenge::RVNGString hashKey = propList.getPropString();
-	std::vector<DocumentElement *> &styles= automatic ? mAutomaticStyles : mStyles;
-	std::map<librevenge::RVNGString, librevenge::RVNGString> &nameMap=
-	    automatic ? mAutomaticNameMap : mStyleNameMap;
-
-	if (nameMap.find(hashKey) != nameMap.end())
-		return nameMap.find(hashKey)->second;
+	librevenge::RVNGString hashKey = pList.getPropString();
+	if (mStyleNameMap.find(hashKey) != mStyleNameMap.end())
+		return mStyleNameMap.find(hashKey)->second;
 
 	librevenge::RVNGString name;
-	if (automatic)
-		name.sprintf("gr_%i", (int) nameMap.size());
+	if (zone==Style::Z_ContentAutomatic)
+		name.sprintf("gr_M%i", (int) mStyleNameMap.size());
+	else if (zone==Style::Z_Style)
+		name.sprintf("GraphicStyle_%i", (int) mStyleNameMap.size());
 	else
-		name.sprintf("GraphicStyle_%i", (int) nameMap.size());
-	nameMap[hashKey]=name;
+		name.sprintf("gr_%i", (int) mStyleNameMap.size());
 
-	TagOpenElement *openElement = new TagOpenElement("style:style");
-	openElement->addAttribute("style:name", name);
-	openElement->addAttribute("style:family", "graphic");
-	if (propList["style:parent-style-name"])
-		openElement->addAttribute("style:parent-style-name", propList["style:parent-style-name"]->getStr());
-	else
-		openElement->addAttribute("style:parent-style-name", "standard");
-	if (!automatic && propList["style:display-name"])
-		openElement->addAttribute("style:display-name", propList["style:display-name"]->getStr());
-	styles.push_back(openElement);
-
-	TagOpenElement *graphicElement = new TagOpenElement("style:graphic-properties");
-	librevenge::RVNGPropertyList::Iter i(propList);
-	for (i.rewind(); i.next();)
-	{
-		if (strcmp(i.key(), "style:display-name") && strcmp(i.key(), "style:parent-style-name"))
-			graphicElement->addAttribute(i.key(),i()->getStr());
-	}
-	styles.push_back(graphicElement);
-	styles.push_back(new TagCloseElement("style:graphic-properties"));
-
-	styles.push_back(new TagCloseElement("style:style"));
+	mStyleNameMap[hashKey]=name;
+	shared_ptr<GraphicStyle> style(new GraphicStyle(propList, name.cstr(), zone));
+	mStyles.push_back(style);
 
 	return name;
 }

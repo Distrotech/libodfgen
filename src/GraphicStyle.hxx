@@ -34,25 +34,45 @@
 
 class OdfDocumentHandler;
 
+//! graphic style class
+class GraphicStyle : public Style
+{
+public:
+	//! constructor
+	GraphicStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName, Style::Zone zone);
+	//! destructor
+	~GraphicStyle();
+	//! write content to the document handler
+	virtual void write(OdfDocumentHandler *pHandler) const;
+
+private:
+	librevenge::RVNGPropertyList mPropList;
+};
+
+
 class GraphicStyleManager : public StyleManager
 {
 public:
-	GraphicStyleManager() : mAutomaticStyles(), mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mOpacityStyles(),
-		mStrokeDashStyles(), mStyles(), mAutomaticNameMap(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(),
+	GraphicStyleManager() : mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mOpacityStyles(),
+		mStrokeDashStyles(), mStyles(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(),
 		mOpacityNameMap(), mStrokeDashNameMap(), mStyleNameMap() {}
 	virtual ~GraphicStyleManager()
 	{
 		clean();
 	}
 	void clean();
-	void write(OdfDocumentHandler *) const {}
-	// write basic style
-	void writeStyles(OdfDocumentHandler *pHandler) const;
-	// write automatic styles
-	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const;
+	//! write all
+	void write(OdfDocumentHandler *pHandler) const
+	{
+		write(pHandler, Style::Z_Style);
+		write(pHandler, Style::Z_ContentAutomatic);
+		write(pHandler, Style::Z_Automatic);
+	}
+	// write automatic/name/... style
+	void write(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 
 	/** find a style ( or add it to the stored styles) and returns the style name */
-	librevenge::RVNGString findOrAdd(librevenge::RVNGPropertyList const &propList, bool automatic=true);
+	librevenge::RVNGString findOrAdd(librevenge::RVNGPropertyList const &propList, Style::Zone zone=Style::Z_Unknown);
 
 	/** append the graphic in the element, ie. the stroke, pattern, bitmap, marker properties */
 	void addGraphicProperties(librevenge::RVNGPropertyList const &style, librevenge::RVNGPropertyList &element);
@@ -68,16 +88,13 @@ protected:
 	librevenge::RVNGString getStyleNameForOpacity(librevenge::RVNGPropertyList const &style);
 	librevenge::RVNGString getStyleNameForStrokeDash(librevenge::RVNGPropertyList const &style);
 	// graphics styles
-	std::vector<DocumentElement *> mAutomaticStyles;
 	std::vector<DocumentElement *> mBitmapStyles;
 	std::vector<DocumentElement *> mGradientStyles;
 	std::vector<DocumentElement *> mMarkerStyles;
 	std::vector<DocumentElement *> mOpacityStyles;
 	std::vector<DocumentElement *> mStrokeDashStyles;
-	std::vector<DocumentElement *> mStyles;
+	std::vector<shared_ptr<GraphicStyle> > mStyles;
 
-	// automatic hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString> mAutomaticNameMap;
 	// bitmap content -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mBitmapNameMap;
 	// gradient hash -> style name

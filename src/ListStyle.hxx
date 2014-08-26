@@ -59,7 +59,7 @@ private:
 class ListStyle : public Style
 {
 public:
-	ListStyle(const char *psName, const int iListID);
+	ListStyle(const char *psName, const int iListID, Style::Zone zone);
 	virtual ~ListStyle();
 	void updateListLevel(const int iLevel, const librevenge::RVNGPropertyList &xPropList, bool ordered);
 	virtual void write(OdfDocumentHandler *pHandler) const;
@@ -71,10 +71,6 @@ public:
 	librevenge::RVNGString getDisplayName() const
 	{
 		return mDisplayName;
-	}
-	bool hasDisplayName() const
-	{
-		return !mDisplayName.empty();
 	}
 	void setDisplayName(const char *displayName=0)
 	{
@@ -90,9 +86,11 @@ protected:
 private:
 	ListStyle(const ListStyle &);
 	ListStyle &operator=(const ListStyle &);
+	//! the display name ( if defined)
 	librevenge::RVNGString mDisplayName;
-	std::map<int, ListLevelStyle *> mxListLevels;
+	//! the list id
 	const int miListID;
+	std::map<int, ListLevelStyle *> mxListLevels;
 };
 
 /** a list manager */
@@ -123,24 +121,17 @@ public:
 	~ListStyleManager();
 
 	/// call to define a list level
-	void defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
+	void defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered, Style::Zone zone);
 
 	/// write all
 	virtual void write(OdfDocumentHandler *pHandler) const
 	{
-		write(pHandler, false);
-		write(pHandler, true);
+		write(pHandler, Style::Z_Style);
+		write(pHandler, Style::Z_ContentAutomatic);
+		write(pHandler, Style::Z_Automatic);
 	}
-	/// write basic style
-	void writeStyles(OdfDocumentHandler *pHandler) const
-	{
-		write(pHandler, false);
-	}
-	/// write automatic style
-	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const
-	{
-		write(pHandler, true);
-	}
+	// write automatic/named style
+	void write(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 
 	/// access to the current list state
 	State &getState();
@@ -150,8 +141,6 @@ public:
 	void pushState();
 
 protected:
-	// write automatic/named style
-	void write(OdfDocumentHandler *, bool automaticStyle) const;
 	// list styles
 	unsigned int miNumListStyles;
 	// list styles

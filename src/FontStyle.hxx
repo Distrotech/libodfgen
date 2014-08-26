@@ -64,7 +64,7 @@ public:
 
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const {}
-	virtual void writeFontsDeclaration(OdfDocumentHandler *) const;
+	virtual void write(OdfDocumentHandler *, Style::Zone zone) const;
 
 
 protected:
