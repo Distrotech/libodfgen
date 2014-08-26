@@ -116,9 +116,9 @@ void SectionStyleManager::clean()
 librevenge::RVNGString SectionStyleManager::add(const librevenge::RVNGPropertyList &propList, Style::Zone zone)
 {
 	if (zone==Style::Z_Unknown)
-		zone=Style::Z_Automatic;
+		zone=Style::Z_ContentAutomatic;
 	librevenge::RVNGString name;
-	if (zone==Style::Z_ContentAutomatic)
+	if (zone==Style::Z_StyleAutomatic)
 		name.sprintf("Section_M%i", mStyleList.size());
 	else
 		name.sprintf("Section%i", mStyleList.size());

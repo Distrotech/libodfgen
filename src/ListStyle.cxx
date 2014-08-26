@@ -199,7 +199,7 @@ void ListStyle::write(OdfDocumentHandler *pHandler) const
 // list manager
 //
 
-ListStyleManager::State::State() :
+ListManager::State::State() :
 	mpCurrentListStyle(0),
 	miCurrentListLevel(0),
 	miLastListLevel(0),
@@ -210,7 +210,7 @@ ListStyleManager::State::State() :
 {
 }
 
-ListStyleManager::State::State(const ListStyleManager::State &state) :
+ListManager::State::State(const ListManager::State &state) :
 	mpCurrentListStyle(state.mpCurrentListStyle),
 	miCurrentListLevel(state.miCurrentListLevel),
 	miLastListLevel(state.miCurrentListLevel),
@@ -220,40 +220,40 @@ ListStyleManager::State::State(const ListStyleManager::State &state) :
 	mbListElementOpened(state.mbListElementOpened)
 {
 }
-ListStyleManager::State &ListStyleManager::getState()
+ListManager::State &ListManager::getState()
 {
 	if (!mStatesStack.empty()) return mStatesStack.top();
-	ODFGEN_DEBUG_MSG(("ListStyleManager::getState: call with no state\n"));
-	static ListStyleManager::State bad;
+	ODFGEN_DEBUG_MSG(("ListManager::getState: call with no state\n"));
+	static ListManager::State bad;
 	return bad;
 }
 
-void ListStyleManager::popState()
+void ListManager::popState()
 {
 	if (mStatesStack.size()>1)
 		mStatesStack.pop();
 }
 
-void ListStyleManager::pushState()
+void ListManager::pushState()
 {
 	mStatesStack.push(State());
 }
 
 //
 
-ListStyleManager::ListStyleManager() : miNumListStyles(0), mListStylesVector(), mIdListStyleMap(), mStatesStack()
+ListManager::ListManager() : miNumListStyles(0), mListStylesVector(), mIdListStyleMap(), mStatesStack()
 {
 	mStatesStack.push(State());
 }
 
-ListStyleManager::~ListStyleManager()
+ListManager::~ListManager()
 {
 	for (std::vector<ListStyle *>::iterator iterListStyles = mListStylesVector.begin();
 	        iterListStyles != mListStylesVector.end(); ++iterListStyles)
 		delete(*iterListStyles);
 }
 
-void ListStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) const
+void ListManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
 	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStylesVector.begin(); iterListStyles != mListStylesVector.end(); ++iterListStyles)
 	{
@@ -263,7 +263,7 @@ void ListStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) con
 
 }
 
-void ListStyleManager::defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered, Style::Zone zone)
+void ListManager::defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered, Style::Zone zone)
 {
 	int id = -1;
 	if (propList["librevenge:list-id"])
@@ -293,16 +293,16 @@ void ListStyleManager::defineLevel(const librevenge::RVNGPropertyList &propList,
 		else if (pListStyle)
 			displayName=pListStyle->getDisplayName();
 
-		ODFGEN_DEBUG_MSG(("ListStyleManager:defineLevel Attempting to create a new list style (listid: %i)\n", id));
+		ODFGEN_DEBUG_MSG(("ListManager:defineLevel Attempting to create a new list style (listid: %i)\n", id));
 		// first check if we need to store the style as style or as automatic style
 		if (propList["style:display-name"] && !propList["style:master-page-name"])
 			zone=Style::Z_Style;
 		else if (zone==Style::Z_Unknown)
-			zone=Style::Z_Automatic;
+			zone=Style::Z_ContentAutomatic;
 		librevenge::RVNGString sName;
 		if (zone==Style::Z_Style)
 			sName.sprintf(ordered ? "OL_N%i" : "UL_N%i", miNumListStyles);
-		else if (zone==Style::Z_ContentAutomatic)
+		else if (zone==Style::Z_StyleAutomatic)
 			sName.sprintf(ordered ? "OL_M%i" : "UL_M%i", miNumListStyles);
 		else
 			sName.sprintf(ordered ? "OL%i" : "UL%i", miNumListStyles);

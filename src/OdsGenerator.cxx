@@ -525,20 +525,20 @@ void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
+		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
+		mSheetManager.write(pHandler, Style::Z_StyleAutomatic);
+	}
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
 		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
 		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
 		mListManager.write(pHandler, Style::Z_ContentAutomatic);
 		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
 		mSheetManager.write(pHandler, Style::Z_ContentAutomatic);
-	}
-
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
-	{
-		mSpanManager.write(pHandler, Style::Z_Automatic);
-		mParagraphManager.write(pHandler, Style::Z_Automatic);
-		mListManager.write(pHandler, Style::Z_Automatic);
-		mGraphicManager.write(pHandler, Style::Z_Automatic);
-		mSheetManager.write(pHandler, Style::Z_Automatic);
 	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
@@ -826,7 +826,7 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGString sPageStyleName;
 	sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
 	finalPropList.insert("style:master-page-name", sPageStyleName);
-	if (!mpImpl->mSheetManager.openSheet(finalPropList, Style::Z_Automatic)) return;
+	if (!mpImpl->mSheetManager.openSheet(finalPropList, Style::Z_ContentAutomatic)) return;
 	mpImpl->getState().mbInSheet=true;
 
 	SheetStyle *style=mpImpl->mSheetManager.actualSheet();

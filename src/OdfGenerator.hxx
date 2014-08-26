@@ -334,7 +334,7 @@ protected:
 	// paragraph manager
 	ParagraphStyleManager mParagraphManager;
 	// list manager
-	ListStyleManager mListManager;
+	ListManager mListManager;
 	// table manager
 	TableManager mTableManager;
 

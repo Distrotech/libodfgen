@@ -121,7 +121,7 @@ librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyLi
 {
 	librevenge::RVNGPropertyList pList(propList);
 	if (zone==Style::Z_Unknown)
-		zone=Style::Z_Automatic;
+		zone=Style::Z_ContentAutomatic;
 	pList.insert("librevenge:zone-style", int(zone));
 
 	librevenge::RVNGString hashKey = pList.getPropString();
@@ -129,7 +129,7 @@ librevenge::RVNGString GraphicStyleManager::findOrAdd(librevenge::RVNGPropertyLi
 		return mStyleNameMap.find(hashKey)->second;
 
 	librevenge::RVNGString name;
-	if (zone==Style::Z_ContentAutomatic)
+	if (zone==Style::Z_StyleAutomatic)
 		name.sprintf("gr_M%i", (int) mStyleNameMap.size());
 	else if (zone==Style::Z_Style)
 		name.sprintf("GraphicStyle_%i", (int) mStyleNameMap.size());

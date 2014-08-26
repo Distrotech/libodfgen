@@ -114,8 +114,8 @@ public:
 	// write all
 	virtual void write(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const
 	{
+		write(pHandler, Style::Z_StyleAutomatic, compatibleOdp);
 		write(pHandler, Style::Z_ContentAutomatic, compatibleOdp);
-		write(pHandler, Style::Z_Automatic, compatibleOdp);
 	}
 	// write automatic/named/... style
 	void write(OdfDocumentHandler *pHandler, Style::Zone zone, bool compatibleOdp=false) const;

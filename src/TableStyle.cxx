@@ -332,8 +332,8 @@ bool TableManager::openTable(const librevenge::RVNGPropertyList &xPropList, Styl
 {
 	librevenge::RVNGString sTableName;
 	if (zone==Style::Z_Unknown)
-		zone=Style::Z_Automatic;
-	if (zone==Style::Z_ContentAutomatic)
+		zone=Style::Z_ContentAutomatic;
+	if (zone==Style::Z_StyleAutomatic)
 		sTableName.sprintf("Table_M%i", (int) mTableStyles.size());
 	else
 		sTableName.sprintf("Table%i", (int) mTableStyles.size());

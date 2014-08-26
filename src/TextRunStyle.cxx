@@ -181,7 +181,7 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 	if (propList["style:display-name"] && !propList["style:master-page-name"])
 		zone=Style::Z_Style;
 	else if (zone==Style::Z_Unknown)
-		zone=Style::Z_Automatic;
+		zone=Style::Z_ContentAutomatic;
 	pList.insert("librevenge:zone-style", int(zone));
 
 	// look if we have already create this style
@@ -196,7 +196,7 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 	librevenge::RVNGString sName("");
 	if (zone==Style::Z_Style)
 		sName.sprintf("S_N%i", mStyleHash.size());
-	else if (zone==Style::Z_ContentAutomatic)
+	else if (zone==Style::Z_StyleAutomatic)
 		sName.sprintf("S_M%i", mStyleHash.size());
 	else
 		sName.sprintf("S%i", mStyleHash.size());
@@ -321,7 +321,7 @@ librevenge::RVNGString SpanStyleManager::findOrAdd(const librevenge::RVNGPropert
 	if (propList["style:display-name"] && !propList["style:master-page-name"])
 		zone=Style::Z_Style;
 	else if (zone==Style::Z_Unknown)
-		zone=Style::Z_Automatic;
+		zone=Style::Z_ContentAutomatic;
 	pList.insert("librevenge:zone-style", int(zone));
 
 	librevenge::RVNGString hashKey = pList.getPropString();
@@ -335,7 +335,7 @@ librevenge::RVNGString SpanStyleManager::findOrAdd(const librevenge::RVNGPropert
 	librevenge::RVNGString sName("");
 	if (zone==Style::Z_Style)
 		sName.sprintf("Span_N%i", mStyleHash.size());
-	else if (zone==Style::Z_ContentAutomatic)
+	else if (zone==Style::Z_StyleAutomatic)
 		sName.sprintf("Span_M%i", mStyleHash.size());
 	else
 		sName.sprintf("Span%i", mStyleHash.size());

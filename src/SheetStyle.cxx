@@ -523,10 +523,10 @@ bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList, Styl
 	}
 	mbSheetOpened=true;
 	if (zone==Style::Z_Unknown)
-		zone=Style::Z_Automatic;
+		zone=Style::Z_ContentAutomatic;
 
 	librevenge::RVNGString sTableName;
-	if (zone==Style::Z_ContentAutomatic)
+	if (zone==Style::Z_StyleAutomatic)
 		sTableName.sprintf("Sheet_M%i", (int) mSheetStyles.size());
 	else
 		sTableName.sprintf("Sheet%i", (int) mSheetStyles.size());

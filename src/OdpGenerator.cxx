@@ -345,20 +345,20 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
-		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
-		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
-		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
-		mListManager.write(pHandler, Style::Z_ContentAutomatic);
-		mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mTableManager.write(pHandler, Style::Z_StyleAutomatic, true);
 	}
 
 	// CHECKME: previously, this part was not done in STYLES
 
-	mGraphicManager.write(pHandler, Style::Z_Automatic);
-	mParagraphManager.write(pHandler, Style::Z_Automatic);
-	mSpanManager.write(pHandler, Style::Z_Automatic);
-	mListManager.write(pHandler, Style::Z_Automatic);
-	mTableManager.write(pHandler, Style::Z_Automatic, true);
+	mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+	mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+	mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+	mListManager.write(pHandler, Style::Z_ContentAutomatic);
+	mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
 
 	writeNotesStyles(pHandler);
 

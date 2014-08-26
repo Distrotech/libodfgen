@@ -94,7 +94,7 @@ private:
 };
 
 /** a list manager */
-class ListStyleManager
+class ListManager
 {
 public:
 	// list state
@@ -116,9 +116,9 @@ public:
 
 public:
 	//! constructor
-	ListStyleManager();
+	ListManager();
 	//! destructor
-	~ListStyleManager();
+	~ListManager();
 
 	/// call to define a list level
 	void defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered, Style::Zone zone);
@@ -127,8 +127,8 @@ public:
 	virtual void write(OdfDocumentHandler *pHandler) const
 	{
 		write(pHandler, Style::Z_Style);
+		write(pHandler, Style::Z_StyleAutomatic);
 		write(pHandler, Style::Z_ContentAutomatic);
-		write(pHandler, Style::Z_Automatic);
 	}
 	// write automatic/named style
 	void write(OdfDocumentHandler *pHandler, Style::Zone zone) const;

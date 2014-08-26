@@ -32,12 +32,12 @@
 class Style
 {
 public:
-	/** the different zone ( Z_Automatic: automatic zone, Z_Style:
-		must be stored in the styles, Z_ContentAutomatic: must be
+	/** the different zone ( Z_ContentAutomatic: automatic zone, Z_Style:
+		must be stored in the styles, Z_StyleAutomatic: must be
 		stored in the content automatic zone, Z_Font: must be store in
 		the font declaration part) */
-	enum Zone { Z_Automatic, Z_Style, Z_ContentAutomatic, Z_Font, Z_Unknown };
-	Style(const librevenge::RVNGString &psName, Zone type=Z_Automatic) : msName(psName), mZone(type) {}
+	enum Zone { Z_ContentAutomatic, Z_Style, Z_StyleAutomatic, Z_Font, Z_Unknown };
+	Style(const librevenge::RVNGString &psName, Zone type=Z_ContentAutomatic) : msName(psName), mZone(type) {}
 	virtual ~Style() {}
 	//! return the zone
 	Zone getZone() const

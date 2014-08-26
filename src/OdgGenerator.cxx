@@ -238,19 +238,19 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	TagOpenElement("office:automatic-styles").write(pHandler);
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mTableManager.write(pHandler, Style::Z_StyleAutomatic, true);
+	}
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
 		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
 		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
 		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
 		mListManager.write(pHandler, Style::Z_ContentAutomatic);
 		mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
-	}
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
-	{
-		mGraphicManager.write(pHandler, Style::Z_Automatic);
-		mParagraphManager.write(pHandler, Style::Z_Automatic);
-		mSpanManager.write(pHandler, Style::Z_Automatic);
-		mListManager.write(pHandler, Style::Z_Automatic);
-		mTableManager.write(pHandler, Style::Z_Automatic, true);
 	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
@@ -687,7 +687,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
 	pDrawFrameElement->addAttribute("draw:style-name",
 	                                mpImpl->getGraphicManager().findOrAdd
-	                                (finalStyle, mpImpl->inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Automatic));
+	                                (finalStyle, mpImpl->inMasterPage() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic));
 	pDrawFrameElement->addAttribute("draw:layer", mpImpl->getLayerName());
 
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
@@ -745,7 +745,7 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	mpImpl->getGraphicManager().addGraphicProperties(tmpList, graphicStyle);
 	mpImpl->getGraphicManager().addFrameProperties(propList, graphicStyle);
 	librevenge::RVNGString sValue=mpImpl->getGraphicManager().findOrAdd
-	                              (graphicStyle, mpImpl->inMasterPage() ? Style::Z_ContentAutomatic : Style::Z_Automatic);
+	                              (graphicStyle, mpImpl->inMasterPage() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);

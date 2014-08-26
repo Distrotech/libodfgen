@@ -65,8 +65,8 @@ public:
 	void write(OdfDocumentHandler *pHandler) const
 	{
 		write(pHandler, Style::Z_Style);
+		write(pHandler, Style::Z_StyleAutomatic);
 		write(pHandler, Style::Z_ContentAutomatic);
-		write(pHandler, Style::Z_Automatic);
 	}
 	// write automatic/name/... style
 	void write(OdfDocumentHandler *pHandler, Style::Zone zone) const;
