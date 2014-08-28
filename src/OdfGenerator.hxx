@@ -158,16 +158,32 @@ public:
 	//! write the storage data to a document handler
 	static void sendStorage(Storage const *storage, OdfDocumentHandler *pHandler);
 
-	// page, master page
+	// page, header/footer, master page
+
+	//! starts a header/footer page.
+	void startHeaderFooter(bool header, const librevenge::RVNGPropertyList &propList);
+	//! ends a header/footer page
+	void endHeaderFooter();
+	//! returns if we are in a master page
+	bool inHeaderFooter() const
+	{
+		return mbInHeaderFooter;
+	}
 
 	//! starts a master page.
 	void startMasterPage(const librevenge::RVNGPropertyList &propList);
 	//! ends a master page
 	void endMasterPage();
-	//! returns true if we are in a master page
+	//! returns if we are in a master page
 	bool inMasterPage() const
 	{
 		return mbInMasterPage;
+	}
+
+	//! returns if we must store the automatic style in the style or in the content xml zones
+	bool useStyleAutomaticZone() const
+	{
+		return mbInHeaderFooter || mbInMasterPage;
 	}
 
 	//
@@ -338,7 +354,10 @@ protected:
 	// table manager
 	TableManager mTableManager;
 
-	// a flag to know if we are in a master page or note
+	// a flag to know if we are in a header/footer zone
+	bool mbInHeaderFooter;
+
+	// a flag to know if we are in a master page
 	bool mbInMasterPage;
 
 	// id to span map

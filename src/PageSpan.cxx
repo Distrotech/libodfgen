@@ -26,8 +26,10 @@
 #include "PageSpan.hxx"
 #include "DocumentElement.hxx"
 
-PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList) :
+PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName) :
 	mxPropList(xPropList),
+	msMasterPageName(masterPageName),
+	msLayoutName(layoutName),
 	mpHeaderContent(0),
 	mpFooterContent(0),
 	mpHeaderLeftContent(0),
@@ -127,6 +129,14 @@ int PageSpan::getSpan() const
 	return 0; // should never happen
 }
 
+librevenge::RVNGString PageSpan::protectString(librevenge::RVNGString const &orig)
+{
+	librevenge::RVNGString res("");
+	char const *str=orig.cstr();
+	for (int i=0; i<orig.len(); ++i)
+		res.append(str[i]==' ' ? '_' : str[i]);
+	return res;
+}
 void PageSpan::setHeaderContent(std::vector<DocumentElement *> *pHeaderContent)
 {
 	if (mpHeaderContent)
@@ -239,29 +249,44 @@ void PageSpan::setFooterLastContent(std::vector<DocumentElement *> *pFooterConte
 	mpFooterLastContent = pFooterContent;
 }
 
-void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) const
+void PageSpan::writePageLayout(OdfDocumentHandler *pHandler) const
 {
 	librevenge::RVNGPropertyList propList;
 
-	librevenge::RVNGString sPageLayoutName;
-	sPageLayoutName.sprintf("PM%i", iNum+2);
-	propList.insert("style:name", sPageLayoutName);
+	propList.insert("style:name", getLayoutName());
 	pHandler->startElement("style:page-layout", propList);
 
-	librevenge::RVNGPropertyList tempPropList = mxPropList;
-	if (!tempPropList["style:writing-mode"])
-		tempPropList.insert("style:writing-mode", librevenge::RVNGString("lr-tb"));
-	if (!tempPropList["style:footnote-max-height"])
-		tempPropList.insert("style:footnote-max-height", librevenge::RVNGString("0in"));
+	librevenge::RVNGPropertyList tempPropList;
+	tempPropList.insert("style:writing-mode", librevenge::RVNGString("lr-tb"));
+	tempPropList.insert("style:footnote-max-height", librevenge::RVNGString("0in"));
+	librevenge::RVNGPropertyList::Iter i(mxPropList);
+	for (i.rewind(); i.next();)
+	{
+		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0) continue;
+		tempPropList.insert(i.key(), i()->clone());
+	}
 	pHandler->startElement("style:page-layout-properties", tempPropList);
 
 	librevenge::RVNGPropertyList footnoteSepPropList;
-	footnoteSepPropList.insert("style:width", librevenge::RVNGString("0.0071in"));
-	footnoteSepPropList.insert("style:distance-before-sep", librevenge::RVNGString("0.0398in"));
-	footnoteSepPropList.insert("style:distance-after-sep", librevenge::RVNGString("0.0398in"));
-	footnoteSepPropList.insert("style:adjustment", librevenge::RVNGString("left"));
-	footnoteSepPropList.insert("style:rel-width", librevenge::RVNGString("25%"));
-	footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
+	if (mxPropList.child("librevenge:footnote"))
+	{
+		librevenge::RVNGPropertyListVector const *footnoteVector=mxPropList.child("librevenge:footnote");
+		if (footnoteVector->count()!=1)
+		{
+			ODFGEN_DEBUG_MSG(("PageSpan::writePageLayout: the footnote property list seems bad\n"));
+		}
+		else
+			footnoteSepPropList=(*footnoteVector)[0];
+	}
+	else
+	{
+		footnoteSepPropList.insert("style:width", librevenge::RVNGString("0.0071in"));
+		footnoteSepPropList.insert("style:distance-before-sep", librevenge::RVNGString("0.0398in"));
+		footnoteSepPropList.insert("style:distance-after-sep", librevenge::RVNGString("0.0398in"));
+		footnoteSepPropList.insert("style:adjustment", librevenge::RVNGString("left"));
+		footnoteSepPropList.insert("style:rel-width", librevenge::RVNGString("25%"));
+		footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
+	}
 	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
 
 	pHandler->endElement("style:footnote-sep");
@@ -269,90 +294,87 @@ void PageSpan::writePageLayout(const int iNum, OdfDocumentHandler *pHandler) con
 	pHandler->endElement("style:page-layout");
 }
 
-void PageSpan::writeMasterPages(const int iStartingNum, const int iPageLayoutNum, const bool bLastPageSpan,
-                                OdfDocumentHandler *pHandler) const
+void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 {
-	int iSpan = 0;
-	(bLastPageSpan) ? iSpan = 1 : iSpan = getSpan();
-
-	for (int i=iStartingNum; i<(iStartingNum+iSpan); ++i)
-	{
-		TagOpenElement masterPageOpen("style:master-page");
-		librevenge::RVNGString sMasterPageName, sMasterPageDisplayName;
-		sMasterPageName.sprintf("Page_Style_%i", i);
-		sMasterPageDisplayName.sprintf("Page Style %i", i);
-		librevenge::RVNGString sPageLayoutName;
-		librevenge::RVNGPropertyList propList;
-		sPageLayoutName.sprintf("PM%i", iPageLayoutNum+2);
-		propList.insert("style:name", sMasterPageName);
+	TagOpenElement masterPageOpen("style:master-page");
+	librevenge::RVNGString sMasterPageDisplayName(msMasterPageName);
+	librevenge::RVNGString sMasterPageName=protectString(sMasterPageDisplayName);
+	librevenge::RVNGPropertyList propList;
+	propList.insert("style:name", sMasterPageName);
+	if (sMasterPageDisplayName!=sMasterPageName)
 		propList.insert("style:display-name", sMasterPageDisplayName);
-		propList.insert("style:page-layout-name", sPageLayoutName);
-		if (!bLastPageSpan)
-		{
-			librevenge::RVNGString sNextMasterPageName;
-			sNextMasterPageName.sprintf("Page_Style_%i", (i+1));
-			propList.insert("style:next-style-name", sNextMasterPageName);
-		}
-		pHandler->startElement("style:master-page", propList);
+	/* always set next-style to actual style to avoid problem when the input is
+	   OpenPageSpan("A")
+	      ... : many pages of text without page break
+	   ClosePageSpan()
+	   OpenPageSpan("B")
+	      ...
+	   ClosePageSpan()
 
-		if (mpHeaderContent)
-		{
-			_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
-			pHandler->endElement("style:header");
-		}
-		else if (mpHeaderLeftContent || mpHeaderFirstContent /* || mpHeaderLastContent */)
-		{
-			TagOpenElement("style:header").write(pHandler);
-			pHandler->endElement("style:header");
-		}
-		if (mpHeaderLeftContent)
-		{
-			_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
-			pHandler->endElement("style:header-left");
-		}
-		if (mpHeaderFirstContent)
-		{
-			_writeHeaderFooter("style:header-first", *mpHeaderFirstContent, pHandler);
-			pHandler->endElement("style:header-first");
-		}
-		/*
-		if (mpHeaderLastContent)
-		{
-			_writeHeaderFooter("style:header-last", *mpHeaderLastContent, pHandler);
-			pHandler->endElement("style:header-last");
-		}
-		*/
+	   ie. in this case, we need to set the next-style of A to A if we
+	         do not want the second page of the document to have the layout B
+	 */
+	propList.insert("style:next-style-name", sMasterPageName);
+	propList.insert("style:page-layout-name", getLayoutName());
+	pHandler->startElement("style:master-page", propList);
 
-		if (mpFooterContent)
-		{
-			_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
-			pHandler->endElement("style:footer");
-		}
-		else if (mpFooterLeftContent || mpFooterFirstContent /* || mpFooterLastContent */)
-		{
-			TagOpenElement("style:footer").write(pHandler);
-			pHandler->endElement("style:footer");
-		}
-		if (mpFooterLeftContent)
-		{
-			_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
-			pHandler->endElement("style:footer-left");
-		}
-		if (mpFooterFirstContent)
-		{
-			_writeHeaderFooter("style:footer-first", *mpFooterFirstContent, pHandler);
-			pHandler->endElement("style:footer-first");
-		}
-		/*
-		if (mpFooterLastContent)
-		{
-			_writeHeaderFooter("style:footer-last", *mpFooterLastContent, pHandler);
-			pHandler->endElement("style:footer-last");
-		}
-		*/
-
-		pHandler->endElement("style:master-page");
+	if (mpHeaderContent)
+	{
+		_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
+		pHandler->endElement("style:header");
 	}
+	else if (mpHeaderLeftContent || mpHeaderFirstContent /* || mpHeaderLastContent */)
+	{
+		TagOpenElement("style:header").write(pHandler);
+		pHandler->endElement("style:header");
+	}
+	if (mpHeaderLeftContent)
+	{
+		_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
+		pHandler->endElement("style:header-left");
+	}
+	if (mpHeaderFirstContent)
+	{
+		_writeHeaderFooter("style:header-first", *mpHeaderFirstContent, pHandler);
+		pHandler->endElement("style:header-first");
+	}
+	/*
+	if (mpHeaderLastContent)
+	{
+	    _writeHeaderFooter("style:header-last", *mpHeaderLastContent, pHandler);
+		pHandler->endElement("style:header-last");
+	}
+	*/
+
+	if (mpFooterContent)
+	{
+		_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
+		pHandler->endElement("style:footer");
+	}
+	else if (mpFooterLeftContent || mpFooterFirstContent /* || mpFooterLastContent */)
+	{
+		TagOpenElement("style:footer").write(pHandler);
+		pHandler->endElement("style:footer");
+	}
+	if (mpFooterLeftContent)
+	{
+		_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
+		pHandler->endElement("style:footer-left");
+	}
+	if (mpFooterFirstContent)
+	{
+		_writeHeaderFooter("style:footer-first", *mpFooterFirstContent, pHandler);
+		pHandler->endElement("style:footer-first");
+	}
+	/*
+	if (mpFooterLastContent)
+	{
+	    _writeHeaderFooter("style:footer-last", *mpFooterLastContent, pHandler);
+		pHandler->endElement("style:footer-last");
+	}
+	*/
+
+	pHandler->endElement("style:master-page");
 }
 
 void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
@@ -380,7 +402,35 @@ void PageSpanManager::clean()
 
 PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList)
 {
-	shared_ptr<PageSpan> page(new PageSpan(xPropList));
+	librevenge::RVNGPropertyList propList(xPropList);
+	// first find the master-page name
+	librevenge::RVNGString masterPageName("");
+	if (xPropList["librevenge:master-page-name"])
+	{
+		masterPageName.appendEscapedXML(xPropList["librevenge:master-page-name"]->getStr());
+		propList.remove("librevenge:master-page-name");
+	}
+	if (masterPageName.empty())
+	{
+		do
+			masterPageName.sprintf("Page Style %i", ++miCurrentPageMasterIndex);
+		while (mpPageMasterNameSet.find(masterPageName) != mpPageMasterNameSet.end());
+	}
+	mpPageMasterNameSet.insert(masterPageName);
+	// now find the layout page name
+	librevenge::RVNGString layoutName("");
+	if (xPropList["librevenge:layout-name"])
+	{
+		layoutName.appendEscapedXML(xPropList["librevenge:layout-name"]->getStr());
+		propList.remove("librevenge:layout-name");
+	}
+	if (layoutName.empty())
+	{
+		do
+			layoutName.sprintf("PM%i", miCurrentLayoutIndex++);
+		while (mpLayoutNameSet.find(layoutName) != mpLayoutNameSet.end());
+	}
+	shared_ptr<PageSpan> page(new PageSpan(propList, masterPageName, layoutName));
 	mpPageList.push_back(page);
 	return page.get();
 }
@@ -395,32 +445,21 @@ PageSpan *PageSpanManager::getCurrentPageSpan()
 	return mpPageList.back().get();
 }
 
-librevenge::RVNGString PageSpanManager::getCurrentPageSpanName() const
-{
-	if (mpPageList.empty())
-	{
-		ODFGEN_DEBUG_MSG(("PageSpanManager::getCurrentPageSpanName: can not find any page span\n"));
-		return "Page_Style_0";
-	}
-	librevenge::RVNGString name;
-	name.sprintf("Page_Style_%i", int(mpPageList.size()));
-	return name;
-}
-
 void PageSpanManager::writePageLayout(OdfDocumentHandler *pHandler) const
 {
 	for (size_t i=0; i<mpPageList.size(); ++i)
-		mpPageList[i]->writePageLayout((int)i, pHandler);
+	{
+		if (mpPageList[i])
+			mpPageList[i]->writePageLayout(pHandler);
+	}
 }
 
 void PageSpanManager::writeMasterPages(OdfDocumentHandler *pHandler) const
 {
-	int pageNumber = 1;
-	size_t numPagesSpan=mpPageList.size();
-	for (size_t i=0; i<numPagesSpan; ++i)
+	for (size_t i=0; i<mpPageList.size(); ++i)
 	{
-		mpPageList[i]->writeMasterPages(pageNumber, (int)i, (i+1 == numPagesSpan), pHandler);
-		pageNumber += mpPageList[i]->getSpan();
+		if (mpPageList[i])
+			mpPageList[i]->writeMasterPages(pHandler);
 	}
 }
 

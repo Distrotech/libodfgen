@@ -2,7 +2,7 @@ if COMPILE_TEST
 
 AM_CXXFLAGS = $(REVENGE_CFLAGS) -I../inc/
 
-targets=testChart1 testGraphic1 testLink1 testList1 testPara1 testSpan1 testTable1 testTextbox1
+targets=testChart1 testGraphic1 testLink1 testList1 testPageSpan1 testPara1 testSpan1 testTable1 testTextbox1
 noinst_PROGRAMS= $(targets)
 
 EXTRA_SRC=StringDocumentHandler.cxx StringDocumentHandler.hxx
@@ -25,6 +25,10 @@ testList1_DEPENDENCIES =
 testList1_LDADD =  $(EXTRA_LDD)
 testList1_SOURCES = $(EXTRA_SRC) testList1.cxx
 
+testPageSpan1_DEPENDENCIES = 
+testPageSpan1_LDADD = $(EXTRA_LDD)
+testPageSpan1_SOURCES = $(EXTRA_SRC) testPageSpan1.cxx
+
 testPara1_DEPENDENCIES = 
 testPara1_LDADD = $(EXTRA_LDD)
 testPara1_SOURCES = $(EXTRA_SRC) testParagraph1.cxx
@@ -45,5 +49,5 @@ clean::
 	@rm -f test*.odg test*.odp test*.ods test*.odt $(targets)
 
 launch_all:: $(targets)
-	./testGraphic1 && ./testLink1 && ./testList1 && ./testPara1 && ./testSpan1 && ./testTable1 && ./testTextbox1
+	./testGraphic1 && ./testLink1 && ./testList1 && ./testPageSpan1 && ./testPara1 && ./testSpan1 && ./testTable1 && ./testTextbox1
 endif
