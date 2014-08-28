@@ -303,18 +303,18 @@ void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 	propList.insert("style:name", sMasterPageName);
 	if (sMasterPageDisplayName!=sMasterPageName)
 		propList.insert("style:display-name", sMasterPageDisplayName);
-	/* always set next-style to actual style to avoid problem when the input is
+	/* we do not set any next-style to avoid problem when the input is
 	   OpenPageSpan("A")
-	      ... : many pages of text without page break
+	      ... : many pages of text without any page break
 	   ClosePageSpan()
 	   OpenPageSpan("B")
 	      ...
 	   ClosePageSpan()
 
-	   ie. in this case, we need to set the next-style of A to A if we
-	         do not want the second page of the document to have the layout B
+	   ie. in this case, we need either to set the next-style of A to A or to do not set next-style
+	      but not set next-style to B if we do not want the second page of the document to have
+		  the layout B.
 	 */
-	propList.insert("style:next-style-name", sMasterPageName);
 	propList.insert("style:page-layout-name", getLayoutName());
 	pHandler->startElement("style:master-page", propList);
 
