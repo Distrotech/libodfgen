@@ -512,21 +512,17 @@ void OdpGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*prop
 
 void OdpGenerator::startSlide(const ::librevenge::RVNGPropertyList &propList)
 {
-	double width=0;
 	librevenge::RVNGPropertyList pList(propList);
-	if (propList["svg:width"])
-	{
+	double width=0;
+	if (propList["svg:width"] && !propList["fo:page-width"])
 		pList.insert("fo:page-width", propList["svg:width"]->clone());
-		if (getInchValue(*propList["svg:width"], width) && width>mpImpl->mfMaxWidth)
-			mpImpl->mfMaxWidth=width;
-	}
+	if (getInchValue(*propList["fo:page-width"], width) && width>mpImpl->mfMaxWidth)
+		mpImpl->mfMaxWidth=width;
 	double height=0;
-	if (propList["svg:height"])
-	{
+	if (propList["svg:height"] && !propList["fo:page-height"])
 		pList.insert("fo:page-height", propList["svg:height"]->clone());
-		if (getInchValue(*propList["svg:height"], height) && height>mpImpl->mfMaxHeight)
-			mpImpl->mfMaxHeight=height;
-	}
+	if (getInchValue(*propList["fo:page-height"], height) && height>mpImpl->mfMaxHeight)
+		mpImpl->mfMaxHeight=height;
 
 	// add drawing-page style
 	librevenge::RVNGPropertyList drawingPageStyle;
