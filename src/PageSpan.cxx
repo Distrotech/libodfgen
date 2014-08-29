@@ -30,16 +30,9 @@ PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RV
 	mxPropList(xPropList),
 	msMasterPageName(masterPageName),
 	msLayoutName(layoutName),
-	msPageDrawingName(pageDrawingName),
-	mpHeaderContent(0),
-	mpFooterContent(0),
-	mpHeaderLeftContent(0),
-	mpFooterLeftContent(0),
-	mpHeaderFirstContent(0),
-	mpFooterFirstContent(0),
-	mpHeaderLastContent(0),
-	mpFooterLastContent(0)
+	msPageDrawingName(pageDrawingName)
 {
+	for (int i=0; i<C_NumContentTypes; ++i) mpContent[i]=0;
 }
 
 namespace
@@ -49,76 +42,14 @@ typedef std::vector<DocumentElement *>::iterator DEVIter;
 
 PageSpan::~PageSpan()
 {
-	if (mpHeaderContent)
+	for (int i=0; i<C_NumContentTypes; ++i)
 	{
-		for (DEVIter iterHeaderContent = mpHeaderContent->begin();
-		        iterHeaderContent != mpHeaderContent->end();
+		if (!mpContent[i]) continue;
+		for (DEVIter iterHeaderContent = mpContent[i]->begin();
+		        iterHeaderContent != mpContent[i]->end();
 		        ++iterHeaderContent)
 			delete(*iterHeaderContent);
-		delete mpHeaderContent;
-	}
-
-	if (mpHeaderLeftContent)
-	{
-		for (DEVIter iterHeaderLeftContent = mpHeaderLeftContent->begin();
-		        iterHeaderLeftContent != mpHeaderLeftContent->end();
-		        ++iterHeaderLeftContent)
-			delete(*iterHeaderLeftContent);
-		delete mpHeaderLeftContent;
-	}
-
-	if (mpHeaderFirstContent)
-	{
-		for (DEVIter iterHeaderFirstContent = mpHeaderFirstContent->begin();
-		        iterHeaderFirstContent != mpHeaderFirstContent->end();
-		        ++iterHeaderFirstContent)
-			delete(*iterHeaderFirstContent);
-		delete mpHeaderFirstContent;
-	}
-
-	if (mpHeaderLastContent)
-	{
-		for (DEVIter iterHeaderLastContent = mpHeaderLastContent->begin();
-		        iterHeaderLastContent != mpHeaderLastContent->end();
-		        ++iterHeaderLastContent)
-			delete(*iterHeaderLastContent);
-		delete mpHeaderLastContent;
-	}
-
-	if (mpFooterContent)
-	{
-		for (DEVIter iterFooterContent = mpFooterContent->begin();
-		        iterFooterContent != mpFooterContent->end();
-		        ++iterFooterContent)
-			delete(*iterFooterContent);
-		delete mpFooterContent;
-	}
-
-	if (mpFooterLeftContent)
-	{
-		for (DEVIter iterFooterLeftContent = mpFooterLeftContent->begin();
-		        iterFooterLeftContent != mpFooterLeftContent->end();
-		        ++iterFooterLeftContent)
-			delete(*iterFooterLeftContent);
-		delete mpFooterLeftContent;
-	}
-
-	if (mpFooterFirstContent)
-	{
-		for (DEVIter iterFooterFirstContent = mpFooterFirstContent->begin();
-		        iterFooterFirstContent != mpFooterFirstContent->end();
-		        ++iterFooterFirstContent)
-			delete(*iterFooterFirstContent);
-		delete mpFooterFirstContent;
-	}
-
-	if (mpFooterLastContent)
-	{
-		for (DEVIter iterFooterLastContent = mpFooterLastContent->begin();
-		        iterFooterLastContent != mpFooterLastContent->end();
-		        ++iterFooterLastContent)
-			delete(*iterFooterLastContent);
-		delete mpFooterLastContent;
+		delete mpContent[i];
 	}
 }
 
@@ -149,180 +80,91 @@ librevenge::RVNGString PageSpan::protectString(librevenge::RVNGString const &ori
 		res.append(str[i]==' ' ? '_' : str[i]);
 	return res;
 }
-void PageSpan::setHeaderContent(std::vector<DocumentElement *> *pHeaderContent)
+
+void PageSpan::storeContent(ContentType type, std::vector<DocumentElement *> *pContent)
 {
-	if (mpHeaderContent)
+	if (type<0||type>=C_NumContentTypes)
 	{
-		for (DEVIter iterHeaderContent = mpHeaderContent->begin();
-		        iterHeaderContent != mpHeaderContent->end();
+		ODFGEN_DEBUG_MSG(("PageSpan::storeContent: the type seems bad\n"));
+		// probably better to do not delete it
+		return;
+	}
+	if (mpContent[type])
+	{
+		for (DEVIter iterHeaderContent = mpContent[type]->begin();
+		        iterHeaderContent != mpContent[type]->end();
 		        ++iterHeaderContent)
 			delete(*iterHeaderContent);
-		delete mpHeaderContent;
+		delete mpContent[type];
 	}
-
-	mpHeaderContent = pHeaderContent;
+	mpContent[type]=pContent;
 }
 
-void PageSpan::setFooterContent(std::vector<DocumentElement *> *pFooterContent)
-{
-	if (mpFooterContent)
-	{
-		for (DEVIter iterFooterContent = mpFooterContent->begin();
-		        iterFooterContent != mpFooterContent->end();
-		        ++iterFooterContent)
-			delete(*iterFooterContent);
-		delete mpFooterContent;
-	}
-
-	mpFooterContent = pFooterContent;
-}
-
-void PageSpan::setHeaderLeftContent(std::vector<DocumentElement *> *pHeaderContent)
-{
-	if (mpHeaderLeftContent)
-	{
-		for (DEVIter iterHeaderLeftContent = mpHeaderLeftContent->begin();
-		        iterHeaderLeftContent != mpHeaderLeftContent->end();
-		        ++iterHeaderLeftContent)
-			delete(*iterHeaderLeftContent);
-		delete mpHeaderLeftContent;
-	}
-
-	mpHeaderLeftContent = pHeaderContent;
-}
-
-void PageSpan::setFooterLeftContent(std::vector<DocumentElement *> *pFooterContent)
-{
-	if (mpFooterLeftContent)
-	{
-		for (DEVIter iterFooterLeftContent = mpFooterLeftContent->begin();
-		        iterFooterLeftContent != mpFooterLeftContent->end();
-		        ++iterFooterLeftContent)
-			delete(*iterFooterLeftContent);
-		delete mpFooterLeftContent;
-	}
-
-	mpFooterLeftContent = pFooterContent;
-}
-
-void PageSpan::setHeaderFirstContent(std::vector<DocumentElement *> *pHeaderContent)
-{
-	if (mpHeaderFirstContent)
-	{
-		for (DEVIter iterHeaderFirstContent = mpHeaderFirstContent->begin();
-		        iterHeaderFirstContent != mpHeaderFirstContent->end();
-		        ++iterHeaderFirstContent)
-			delete(*iterHeaderFirstContent);
-		delete mpHeaderFirstContent;
-	}
-
-	mpHeaderFirstContent = pHeaderContent;
-}
-
-void PageSpan::setFooterFirstContent(std::vector<DocumentElement *> *pFooterContent)
-{
-	if (mpFooterFirstContent)
-	{
-		for (DEVIter iterFooterFirstContent = mpFooterFirstContent->begin();
-		        iterFooterFirstContent != mpFooterFirstContent->end();
-		        ++iterFooterFirstContent)
-			delete(*iterFooterFirstContent);
-		delete mpFooterFirstContent;
-	}
-
-	mpFooterFirstContent = pFooterContent;
-}
-
-void PageSpan::setHeaderLastContent(std::vector<DocumentElement *> *pHeaderContent)
-{
-	if (mpHeaderLastContent)
-	{
-		for (DEVIter iterHeaderLastContent = mpHeaderLastContent->begin();
-		        iterHeaderLastContent != mpHeaderLastContent->end();
-		        ++iterHeaderLastContent)
-			delete(*iterHeaderLastContent);
-		delete mpHeaderLastContent;
-	}
-
-	mpHeaderLastContent = pHeaderContent;
-}
-
-void PageSpan::setFooterLastContent(std::vector<DocumentElement *> *pFooterContent)
-{
-	if (mpFooterLastContent)
-	{
-		for (DEVIter iterFooterLastContent = mpFooterLastContent->begin();
-		        iterFooterLastContent != mpFooterLastContent->end();
-		        ++iterFooterLastContent)
-			delete(*iterFooterLastContent);
-		delete mpFooterLastContent;
-	}
-
-	mpFooterLastContent = pFooterContent;
-}
-
-void PageSpan::writePageStyle(OdfDocumentHandler *pHandler) const
+void PageSpan::writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
 	librevenge::RVNGPropertyList propList;
-
-	propList.insert("style:name", getLayoutName());
-	pHandler->startElement("style:page-layout", propList);
-
-	librevenge::RVNGPropertyList tempPropList;
-	tempPropList.insert("style:writing-mode", librevenge::RVNGString("lr-tb"));
-	tempPropList.insert("style:footnote-max-height", librevenge::RVNGString("0in"));
-	librevenge::RVNGPropertyList::Iter i(mxPropList);
-	for (i.rewind(); i.next();)
+	if (zone==Style::Z_ContentAutomatic)
 	{
-		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0 || strncmp(i.key(), "svg:", 4)==0)
-			continue;
-		tempPropList.insert(i.key(), i()->clone());
-	}
-	pHandler->startElement("style:page-layout-properties", tempPropList);
+		propList.insert("style:name", getLayoutName());
+		pHandler->startElement("style:page-layout", propList);
 
-	librevenge::RVNGPropertyList footnoteSepPropList;
-	if (mxPropList.child("librevenge:footnote"))
-	{
-		librevenge::RVNGPropertyListVector const *footnoteVector=mxPropList.child("librevenge:footnote");
-		if (footnoteVector->count()==1)
-			footnoteSepPropList=(*footnoteVector)[0];
-		else if (footnoteVector->count())
+		librevenge::RVNGPropertyList tempPropList;
+		tempPropList.insert("style:writing-mode", librevenge::RVNGString("lr-tb"));
+		tempPropList.insert("style:footnote-max-height", librevenge::RVNGString("0in"));
+		librevenge::RVNGPropertyList::Iter i(mxPropList);
+		for (i.rewind(); i.next();)
 		{
-			ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the footnote property list seems bad\n"));
+			if (i.child() || strncmp(i.key(), "librevenge:", 11)==0 || strncmp(i.key(), "svg:", 4)==0)
+				continue;
+			tempPropList.insert(i.key(), i()->clone());
 		}
-	}
-	else
-	{
-		footnoteSepPropList.insert("style:width", librevenge::RVNGString("0.0071in"));
-		footnoteSepPropList.insert("style:distance-before-sep", librevenge::RVNGString("0.0398in"));
-		footnoteSepPropList.insert("style:distance-after-sep", librevenge::RVNGString("0.0398in"));
-		footnoteSepPropList.insert("style:adjustment", librevenge::RVNGString("left"));
-		footnoteSepPropList.insert("style:rel-width", librevenge::RVNGString("25%"));
-		footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
-	}
-	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
+		pHandler->startElement("style:page-layout-properties", tempPropList);
 
-	pHandler->endElement("style:footnote-sep");
-	pHandler->endElement("style:page-layout-properties");
-	pHandler->endElement("style:page-layout");
+		librevenge::RVNGPropertyList footnoteSepPropList;
+		if (mxPropList.child("librevenge:footnote"))
+		{
+			librevenge::RVNGPropertyListVector const *footnoteVector=mxPropList.child("librevenge:footnote");
+			if (footnoteVector->count()==1)
+				footnoteSepPropList=(*footnoteVector)[0];
+			else if (footnoteVector->count())
+			{
+				ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the footnote property list seems bad\n"));
+			}
+		}
+		else
+		{
+			footnoteSepPropList.insert("style:width", librevenge::RVNGString("0.0071in"));
+			footnoteSepPropList.insert("style:distance-before-sep", librevenge::RVNGString("0.0398in"));
+			footnoteSepPropList.insert("style:distance-after-sep", librevenge::RVNGString("0.0398in"));
+			footnoteSepPropList.insert("style:adjustment", librevenge::RVNGString("left"));
+			footnoteSepPropList.insert("style:rel-width", librevenge::RVNGString("25%"));
+			footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
+		}
+		pHandler->startElement("style:footnote-sep", footnoteSepPropList);
 
-	if (msPageDrawingName.empty())
-		return;
-	propList.clear();
-	propList.insert("style:name", getPageDrawingName());
-	propList.insert("style:family", "drawing-page");
-	pHandler->startElement("style:style", propList);
+		pHandler->endElement("style:footnote-sep");
+		pHandler->endElement("style:page-layout-properties");
+		pHandler->endElement("style:page-layout");
+	}
 
-	if (mxPropList.child("librevenge:drawing-page") && mxPropList.child("librevenge:drawing-page")->count()==1)
+	if (zone==Style::Z_StyleAutomatic && !msPageDrawingName.empty())
 	{
-		pHandler->startElement("style:drawing-page-properties", (*mxPropList.child("librevenge:drawing-page"))[0]);
-		pHandler->endElement("style:drawing-page-properties");
+		propList.clear();
+		propList.insert("style:name", getPageDrawingName());
+		propList.insert("style:family", "drawing-page");
+		pHandler->startElement("style:style", propList);
+
+		if (mxPropList.child("librevenge:drawing-page") && mxPropList.child("librevenge:drawing-page")->count()==1)
+		{
+			pHandler->startElement("style:drawing-page-properties", (*mxPropList.child("librevenge:drawing-page"))[0]);
+			pHandler->endElement("style:drawing-page-properties");
+		}
+		else if (mxPropList.child("librevenge:drawing-page"))
+		{
+			ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the drawing page property list seems bad\n"));
+		}
+		pHandler->endElement("style:style");
 	}
-	else if (mxPropList.child("librevenge:drawing-page"))
-	{
-		ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the drawing page property list seems bad\n"));
-	}
-	pHandler->endElement("style:style");
 }
 
 void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
@@ -351,77 +193,58 @@ void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 	propList.insert("style:page-layout-name", getLayoutName());
 	pHandler->startElement("style:master-page", propList);
 
-	if (mpHeaderContent)
-	{
-		_writeHeaderFooter("style:header", *mpHeaderContent, pHandler);
-		pHandler->endElement("style:header");
-	}
-	else if (mpHeaderLeftContent || mpHeaderFirstContent /* || mpHeaderLastContent */)
+	if (mpContent[C_Header])
+		_writeContent("style:header", *mpContent[C_Header], pHandler);
+	else if (mpContent[C_HeaderLeft] || mpContent[C_HeaderFirst] /* || mpContent[C_HeaderLast] */)
 	{
 		TagOpenElement("style:header").write(pHandler);
-		pHandler->endElement("style:header");
+		TagCloseElement("style:header").write(pHandler);
 	}
-	if (mpHeaderLeftContent)
-	{
-		_writeHeaderFooter("style:header-left", *mpHeaderLeftContent, pHandler);
-		pHandler->endElement("style:header-left");
-	}
-	if (mpHeaderFirstContent)
-	{
-		_writeHeaderFooter("style:header-first", *mpHeaderFirstContent, pHandler);
-		pHandler->endElement("style:header-first");
-	}
+	if (mpContent[C_HeaderLeft])
+		_writeContent("style:header-left", *mpContent[C_HeaderLeft], pHandler);
+	if (mpContent[C_HeaderFirst])
+		_writeContent("style:header-first", *mpContent[C_HeaderFirst], pHandler);
 	/*
-	if (mpHeaderLastContent)
-	{
-	    _writeHeaderFooter("style:header-last", *mpHeaderLastContent, pHandler);
-		pHandler->endElement("style:header-last");
-	}
+	if (mpContent[C_HeaderLast])
+	    _writeContent("style:header-last", *mpContent[C_HeaderLast], pHandler);
 	*/
 
-	if (mpFooterContent)
-	{
-		_writeHeaderFooter("style:footer", *mpFooterContent, pHandler);
-		pHandler->endElement("style:footer");
-	}
-	else if (mpFooterLeftContent || mpFooterFirstContent /* || mpFooterLastContent */)
+	if (mpContent[C_Footer])
+		_writeContent("style:footer", *mpContent[C_Footer], pHandler);
+	else if (mpContent[C_FooterLeft] || mpContent[C_FooterFirst] /* || mpContent[C_FooterLast] */)
 	{
 		TagOpenElement("style:footer").write(pHandler);
-		pHandler->endElement("style:footer");
+		TagCloseElement("style:footer").write(pHandler);
 	}
-	if (mpFooterLeftContent)
-	{
-		_writeHeaderFooter("style:footer-left", *mpFooterLeftContent, pHandler);
-		pHandler->endElement("style:footer-left");
-	}
-	if (mpFooterFirstContent)
-	{
-		_writeHeaderFooter("style:footer-first", *mpFooterFirstContent, pHandler);
-		pHandler->endElement("style:footer-first");
-	}
+	if (mpContent[C_FooterLeft])
+		_writeContent("style:footer-left", *mpContent[C_FooterLeft], pHandler);
+	if (mpContent[C_FooterFirst])
+		_writeContent("style:footer-first", *mpContent[C_FooterFirst], pHandler);
 	/*
-	if (mpFooterLastContent)
-	{
-	    _writeHeaderFooter("style:footer-last", *mpFooterLastContent, pHandler);
-		pHandler->endElement("style:footer-last");
-	}
+	if (mpContent[C_FooterLast])
+	    _writeContent("style:footer-last", *mpContent[C_FooterLast], pHandler);
 	*/
 
+	if (mpContent[C_Master])
+		_writeContent(0, *mpContent[C_Master], pHandler);
 	pHandler->endElement("style:master-page");
 }
 
-void PageSpan::_writeHeaderFooter(const char *headerFooterTagName,
-                                  const std::vector<DocumentElement *> &headerFooterContent,
-                                  OdfDocumentHandler *pHandler) const
+void PageSpan::_writeContent(const char *contentTagName,
+                             const std::vector<DocumentElement *> &content,
+                             OdfDocumentHandler *pHandler) const
 {
-	TagOpenElement headerFooterOpen(headerFooterTagName);
-	headerFooterOpen.write(pHandler);
-	for (std::vector<DocumentElement *>::const_iterator iter = headerFooterContent.begin();
-	        iter != headerFooterContent.end();
+	bool hasTagName=contentTagName && strlen(contentTagName);
+	if (hasTagName)
+		TagOpenElement(contentTagName).write(pHandler);
+	for (std::vector<DocumentElement *>::const_iterator iter = content.begin();
+	        iter != content.end();
 	        ++iter)
 	{
 		(*iter)->write(pHandler);
 	}
+	if (hasTagName)
+		TagCloseElement(contentTagName).write(pHandler);
 }
 
 //
@@ -468,7 +291,7 @@ PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList)
 	if (xPropList["librevenge:page-drawing-name"])
 	{
 		layoutName.appendEscapedXML(xPropList["librevenge:page-drawing-name"]->getStr());
-		propList.remove("librevenge:page-drawing--name");
+		propList.remove("librevenge:page-drawing-name");
 	}
 	if (pageDrawingName.empty() && xPropList.child("librevenge:drawing-page"))
 	{
@@ -491,21 +314,43 @@ PageSpan *PageSpanManager::getCurrentPageSpan()
 	return mpPageList.back().get();
 }
 
-void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler) const
+void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
+	/* We need to send each style only one time.
+
+	   Actually, nobody defines the layout or the page-drawing-name, so can send the first data
+	 */
+	std::set<librevenge::RVNGString> done;
 	for (size_t i=0; i<mpPageList.size(); ++i)
 	{
-		if (mpPageList[i])
-			mpPageList[i]->writePageStyle(pHandler);
+		if (!mpPageList[i]) continue;
+		librevenge::RVNGString name;
+		if (zone==Style::Z_StyleAutomatic)
+			name=mpPageList[i]->getLayoutName();
+		else
+			name=mpPageList[i]->getPageDrawingName();
+		if (done.find(name)!=done.end())
+			continue;
+		done.insert(name);
+		mpPageList[i]->writePageStyle(pHandler, zone);
 	}
 }
 
 void PageSpanManager::writeMasterPages(OdfDocumentHandler *pHandler) const
 {
+	/* We need to send each master-page only one time.
+
+	   As a master page must be open before a page, we can send the first page
+	 */
+	std::set<librevenge::RVNGString> done;
 	for (size_t i=0; i<mpPageList.size(); ++i)
 	{
-		if (mpPageList[i])
-			mpPageList[i]->writeMasterPages(pHandler);
+		if (!mpPageList[i]) continue;
+		librevenge::RVNGString name(mpPageList[i]->getMasterName());
+		if (done.find(name)!=done.end())
+			continue;
+		done.insert(name);
+		mpPageList[i]->writeMasterPages(pHandler);
 	}
 }
 

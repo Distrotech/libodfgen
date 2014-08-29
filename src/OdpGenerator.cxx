@@ -338,29 +338,35 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
-		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
-		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+#ifdef MULTIPAGE_WORKAROUND
+		if (mpCurrentPageSpan && miPageIndex>1)
+			mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
+#endif
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
+
 		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
 		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
 		mTableManager.write(pHandler, Style::Z_StyleAutomatic, true);
 	}
-
-	// CHECKME: previously, this part was not done in STYLES
-
-	mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
-	mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
-	mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
-	mListManager.write(pHandler, Style::Z_ContentAutomatic);
-	mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
-
-	writeNotesStyles(pHandler);
-
-	// page layout and page style
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
 #ifdef MULTIPAGE_WORKAROUND
-	if (mpCurrentPageSpan && miPageIndex>1)
-		mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
+		if (mpCurrentPageSpan && miPageIndex>1)
+			mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
 #endif
-	mPageSpanManager.writePageStyles(pHandler);
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
+
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
+	}
+
+	// checkme: do we want to write in the Z_ContentAutomatic or in Z_StyleAutomatic
+	writeNotesStyles(pHandler);
 
 	pHandler->endElement("office:automatic-styles");
 }

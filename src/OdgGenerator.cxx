@@ -197,29 +197,33 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	TagOpenElement("office:automatic-styles").write(pHandler);
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
-		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
-		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+#ifdef MULTIPAGE_WORKAROUND
+		if (mpCurrentPageSpan && miPageIndex>1)
+			mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
+#endif
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
+
 		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
 		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
 		mTableManager.write(pHandler, Style::Z_StyleAutomatic, true);
 	}
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
-	{
-		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
-		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
-		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
-		mListManager.write(pHandler, Style::Z_ContentAutomatic);
-		mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
-	}
-
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
 #ifdef MULTIPAGE_WORKAROUND
 		if (mpCurrentPageSpan && miPageIndex>1)
 			mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
 #endif
-		mPageSpanManager.writePageStyles(pHandler);
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
+
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
 	}
+
 	pHandler->endElement("office:automatic-styles");
 }
 

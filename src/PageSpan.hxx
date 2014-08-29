@@ -29,16 +29,26 @@
 #include <set>
 #include <vector>
 
+#include "Style.hxx"
+
 class DocumentElement;
 class OdfDocumentHandler;
 
 class PageSpan
 {
+protected:
+	enum ContentType
+	{
+		C_Header=0, C_HeaderFirst, C_HeaderLeft, C_HeaderLast,
+		C_Footer, C_FooterFirst, C_FooterLeft, C_FooterLast,
+		C_Master,
+		C_NumContentTypes // keep this one last
+	};
 public:
 	PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName);
 	virtual ~PageSpan();
-	//! writes the page layout style and the page drawing style(if defined)
-	void writePageStyle(OdfDocumentHandler *pHandler) const;
+	//! writes the page layout style: Z_StyleAutomatic and the page drawing style: Z_ContentAutomatic(if defined)
+	void writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 	void writeMasterPages(OdfDocumentHandler *pHandler) const;
 	int getSpan() const;
 	//! returns the display name of the span's master page
@@ -76,20 +86,49 @@ public:
 		\note size are given in inch
 	 */
 	void resetPageSizeAndMargins(double width, double height);
-	void setHeaderContent(std::vector<DocumentElement *> *pHeaderContent);
-	void setFooterContent(std::vector<DocumentElement *> *pFooterContent);
-	void setHeaderLeftContent(std::vector<DocumentElement *> *pHeaderContent);
-	void setFooterLeftContent(std::vector<DocumentElement *> *pFooterContent);
-	void setHeaderFirstContent(std::vector<DocumentElement *> *pHeaderContent);
-	void setFooterFirstContent(std::vector<DocumentElement *> *pFooterContent);
-	void setHeaderLastContent(std::vector<DocumentElement *> *pHeaderContent);
-	void setFooterLastContent(std::vector<DocumentElement *> *pFooterContent);
+	void setHeaderContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_Header, pContent);
+	}
+	void setFooterContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_Footer, pContent);
+	}
+	void setHeaderLeftContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_HeaderLeft, pContent);
+	}
+	void setFooterLeftContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_FooterLeft, pContent);
+	}
+	void setHeaderFirstContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_HeaderFirst, pContent);
+	}
+	void setFooterFirstContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_FooterFirst, pContent);
+	}
+	void setHeaderLastContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_HeaderLast, pContent);
+	}
+	void setFooterLastContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_FooterLast, pContent);
+	}
+	void setMasterContent(std::vector<DocumentElement *> *pContent)
+	{
+		storeContent(C_Master, pContent);
+	}
 
 	/** small function which mainly replaced space by underscore */
 	static librevenge::RVNGString protectString(librevenge::RVNGString const &orig);
 protected:
-	void _writeHeaderFooter(const char *headerFooterTagName, const std::vector<DocumentElement *> &headerFooterContent,
-	                        OdfDocumentHandler *pHandler) const;
+	void storeContent(ContentType type, std::vector<DocumentElement *> *pContent);
+	void _writeContent(const char *contentTagName, const std::vector<DocumentElement *> &content,
+	                   OdfDocumentHandler *pHandler) const;
 private:
 	PageSpan(const PageSpan &);
 	PageSpan &operator=(const PageSpan &);
@@ -100,14 +139,7 @@ private:
 	librevenge::RVNGString msLayoutName;
 	//! the page drawing display name
 	librevenge::RVNGString msPageDrawingName;
-	std::vector<DocumentElement *> *mpHeaderContent;
-	std::vector<DocumentElement *> *mpFooterContent;
-	std::vector<DocumentElement *> *mpHeaderLeftContent;
-	std::vector<DocumentElement *> *mpFooterLeftContent;
-	std::vector<DocumentElement *> *mpHeaderFirstContent;
-	std::vector<DocumentElement *> *mpFooterFirstContent;
-	std::vector<DocumentElement *> *mpHeaderLastContent;
-	std::vector<DocumentElement *> *mpFooterLastContent;
+	std::vector<DocumentElement *> *(mpContent[C_NumContentTypes]);
 };
 
 //! class used to store the list of created page
@@ -132,8 +164,8 @@ public:
 	PageSpan *add(const librevenge::RVNGPropertyList &xPropList);
 	//! returns the current page span or 0
 	PageSpan *getCurrentPageSpan();
-	//! write the pages' layouts and the pages' drawing styles(if defined)
-	void writePageStyles(OdfDocumentHandler *pHandler) const;
+	//! write the pages' layouts (style automatic) or the pages' drawing styles(content automatic)
+	void writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 	void writeMasterPages(OdfDocumentHandler *pHandler) const;
 
 

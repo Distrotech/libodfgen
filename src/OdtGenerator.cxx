@@ -143,25 +143,25 @@ void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
+		mSectionManager.write(pHandler, Style::Z_StyleAutomatic);
 		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
 		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
 		mListManager.write(pHandler, Style::Z_StyleAutomatic);
 		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
-		mSectionManager.write(pHandler, Style::Z_StyleAutomatic);
 		mTableManager.write(pHandler, Style::Z_StyleAutomatic);
 	}
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
+		mSectionManager.write(pHandler, Style::Z_ContentAutomatic);
 		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
 		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
 		mListManager.write(pHandler, Style::Z_ContentAutomatic);
 		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
-		mSectionManager.write(pHandler, Style::Z_ContentAutomatic);
 		mTableManager.write(pHandler, Style::Z_ContentAutomatic);
 	}
 
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
-		mPageSpanManager.writePageStyles(pHandler);
 	pHandler->endElement("office:automatic-styles");
 }
 
