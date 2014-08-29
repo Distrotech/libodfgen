@@ -49,7 +49,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-// Workaround for the incapacity of draw to have multiple page
+// Workaround for the incapacity of impress to have multiple page
 // sizes in the same document. Once that limitation is lifted,
 // remove this
 #define MULTIPAGE_WORKAROUND 1
@@ -516,12 +516,12 @@ void OdpGenerator::startSlide(const ::librevenge::RVNGPropertyList &propList)
 	double width=0;
 	if (propList["svg:width"] && !propList["fo:page-width"])
 		pList.insert("fo:page-width", propList["svg:width"]->clone());
-	if (getInchValue(*propList["fo:page-width"], width) && width>mpImpl->mfMaxWidth)
+	if (propList["fo:page-width"] && getInchValue(*propList["fo:page-width"], width) && width>mpImpl->mfMaxWidth)
 		mpImpl->mfMaxWidth=width;
 	double height=0;
 	if (propList["svg:height"] && !propList["fo:page-height"])
 		pList.insert("fo:page-height", propList["svg:height"]->clone());
-	if (getInchValue(*propList["fo:page-height"], height) && height>mpImpl->mfMaxHeight)
+	if (propList["fo:page-height"] && getInchValue(*propList["fo:page-height"], height) && height>mpImpl->mfMaxHeight)
 		mpImpl->mfMaxHeight=height;
 
 	// add drawing-page style

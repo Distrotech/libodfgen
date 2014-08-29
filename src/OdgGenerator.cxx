@@ -365,12 +365,12 @@ void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 	double width=0;
 	if (propList["svg:width"] && !propList["fo:page-width"])
 		pList.insert("fo:page-width", propList["svg:width"]->clone());
-	if (getInchValue(*propList["fo:page-width"], width) && width>mpImpl->mfMaxWidth)
+	if (propList["fo:page-width"] && getInchValue(*propList["fo:page-width"], width) && width>mpImpl->mfMaxWidth)
 		mpImpl->mfMaxWidth=width;
 	double height=0;
 	if (propList["svg:height"] && !propList["fo:page-height"])
 		pList.insert("fo:page-height", propList["svg:height"]->clone());
-	if (getInchValue(*propList["fo:page-height"], height) && height>mpImpl->mfMaxHeight)
+	if (propList["fo:page-height"] && getInchValue(*propList["fo:page-height"], height) && height>mpImpl->mfMaxHeight)
 		mpImpl->mfMaxHeight=height;
 
 	// generate drawing-page style

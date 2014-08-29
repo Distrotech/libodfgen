@@ -253,8 +253,6 @@ static void createOdg()
 	generator.startDocument(librevenge::RVNGPropertyList());
 	librevenge::RVNGPropertyList page;
 	page.insert("draw:name", "Page with text");
-	page.insert("svg:x",0, librevenge::RVNG_POINT);
-	page.insert("svg:y",0, librevenge::RVNG_POINT);
 	page.insert("svg:width", 9, librevenge::RVNG_INCH);
 	page.insert("svg:height", 11, librevenge::RVNG_INCH);
 	page.insert("librevenge:enforce-frame",true);
@@ -273,8 +271,6 @@ static void createOdg()
 	generator.endPage();
 
 	page.insert("draw:name", "Empty");
-	page.insert("svg:x",0, librevenge::RVNG_POINT);
-	page.insert("svg:y",0, librevenge::RVNG_POINT);
 	page.insert("svg:width", 3, librevenge::RVNG_INCH);
 	page.insert("svg:height", 5, librevenge::RVNG_INCH);
 	generator.startPage(page);
@@ -294,8 +290,6 @@ static void createOdp()
 	generator.startDocument(librevenge::RVNGPropertyList());
 	librevenge::RVNGPropertyList page;
 	page.insert("draw:name", "Page with text");
-	page.insert("svg:x",0, librevenge::RVNG_POINT);
-	page.insert("svg:y",0, librevenge::RVNG_POINT);
 	page.insert("svg:width", 9, librevenge::RVNG_INCH);
 	page.insert("svg:height", 11, librevenge::RVNG_INCH);
 	generator.startSlide(page);
@@ -314,8 +308,6 @@ static void createOdp()
 	generator.endSlide();
 
 	page.insert("draw:name", "Empty");
-	page.insert("svg:x",0, librevenge::RVNG_POINT);
-	page.insert("svg:y",0, librevenge::RVNG_POINT);
 	page.insert("svg:width", 3, librevenge::RVNG_INCH);
 	page.insert("svg:height", 5, librevenge::RVNG_INCH);
 	generator.startSlide(page);
