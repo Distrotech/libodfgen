@@ -274,7 +274,7 @@ void PageSpan::writePageStyle(OdfDocumentHandler *pHandler) const
 	librevenge::RVNGPropertyList::Iter i(mxPropList);
 	for (i.rewind(); i.next();)
 	{
-		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0)
+		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0 || strncmp(i.key(), "svg:", 4)==0)
 			continue;
 		tempPropList.insert(i.key(), i()->clone());
 	}

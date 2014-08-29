@@ -24,4 +24,33 @@ librevenge::RVNGString libodfgen::doubleToString(const double value)
 	return retVal;
 }
 
+bool libodfgen::getInchValue(librevenge::RVNGProperty const &prop, double &value)
+{
+	value=prop.getDouble();
+	switch (prop.getUnit())
+	{
+	case librevenge::RVNG_GENERIC: // assume inch
+	case librevenge::RVNG_INCH:
+		return true;
+	case librevenge::RVNG_POINT:
+		value /= 72.;
+		return true;
+	case librevenge::RVNG_TWIP:
+		value /= 1440.;
+		return true;
+	case librevenge::RVNG_PERCENT:
+	case librevenge::RVNG_UNIT_ERROR:
+	default:
+	{
+		static bool first=true;
+		if (first)
+		{
+			ODFGEN_DEBUG_MSG(("libodfgen::getInchValue: call with no double value\n"));
+			first=false;
+		}
+		break;
+	}
+	}
+	return false;
+}
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

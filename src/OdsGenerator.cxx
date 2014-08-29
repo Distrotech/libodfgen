@@ -369,7 +369,6 @@ public:
 	SheetManager  mSheetManager;
 
 	// page manager
-	PageSpanManager mPageSpanManager;
 	PageSpan *mpCurrentPageSpan;
 
 	//
@@ -384,7 +383,7 @@ OdsGeneratorPrivate::OdsGeneratorPrivate() : OdfGenerator(),
 	mStateStack(),
 	mAuxiliarOdcState(), mAuxiliarOdtState(),
 	mSheetManager(),
-	mPageSpanManager(), mpCurrentPageSpan(0)
+	mpCurrentPageSpan(0)
 {
 	mStateStack.push(State());
 	initPageManager();
@@ -753,7 +752,7 @@ void OdsGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 	mpImpl->open(OdsGeneratorPrivate::C_PageSpan);
 	if (!mpImpl->checkOutsideOdc("openPageSpan") || !mpImpl->checkOutsideOdt("openPageSpan"))
 		return;
-	mpImpl->mpCurrentPageSpan = mpImpl->mPageSpanManager.add(propList);
+	mpImpl->mpCurrentPageSpan = mpImpl->getPageSpanManager().add(propList);
 }
 
 void OdsGenerator::closePageSpan()

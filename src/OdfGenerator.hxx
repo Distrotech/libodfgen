@@ -41,6 +41,7 @@
 #include "FontStyle.hxx"
 #include "GraphicStyle.hxx"
 #include "InternalHandler.hxx"
+#include "PageSpan.hxx"
 #include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 
@@ -159,6 +160,12 @@ public:
 	static void sendStorage(Storage const *storage, OdfDocumentHandler *pHandler);
 
 	// page, header/footer, master page
+
+	//! return the page span manager
+	PageSpanManager &getPageSpanManager()
+	{
+		return mPageSpanManager;
+	}
 
 	//! starts a header/footer page.
 	void startHeaderFooter(bool header, const librevenge::RVNGPropertyList &propList);
@@ -341,6 +348,8 @@ protected:
 	// content elements
 	Storage mBodyStorage;
 
+	// page span manager
+	PageSpanManager mPageSpanManager;
 	// font manager
 	FontStyleManager mFontManager;
 	// graphic manager

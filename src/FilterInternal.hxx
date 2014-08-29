@@ -54,6 +54,7 @@ namespace libodfgen
 {
 
 librevenge::RVNGString doubleToString(const double value);
+bool getInchValue(librevenge::RVNGProperty const &prop, double &value);
 
 } // namespace libodfgen
 

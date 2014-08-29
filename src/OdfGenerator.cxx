@@ -44,44 +44,10 @@
 
 using namespace libodfgen;
 
-namespace
-{
-
-static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
-{
-	value=prop.getDouble();
-	switch (prop.getUnit())
-	{
-	case librevenge::RVNG_INCH:
-	case librevenge::RVNG_GENERIC: // assume inch
-		return true;
-	case librevenge::RVNG_POINT:
-		value /= 72.;
-		return true;
-	case librevenge::RVNG_TWIP:
-		value /= 1440.;
-		return true;
-	case librevenge::RVNG_PERCENT:
-	case librevenge::RVNG_UNIT_ERROR:
-	default:
-	{
-		static bool first=true;
-		if (first)
-		{
-			ODFGEN_DEBUG_MSG(("OdfGenerator::getInchValue: call with no double value\n"));
-			first=false;
-		}
-		break;
-	}
-	}
-	return false;
-}
-} // anonymous namespace
-
-
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
-	mFontManager(), mGraphicManager(), mSpanManager(), mParagraphManager(), mListManager(), mTableManager(),
+	mPageSpanManager(), mFontManager(), mGraphicManager(), mSpanManager(),
+	mParagraphManager(), mListManager(), mTableManager(),
 	mbInHeaderFooter(false), mbInMasterPage(false),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),

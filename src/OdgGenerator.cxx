@@ -52,39 +52,6 @@
 // remove this
 #define MULTIPAGE_WORKAROUND 1
 
-namespace
-{
-static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
-{
-	value=prop.getDouble();
-	switch (prop.getUnit())
-	{
-	case librevenge::RVNG_GENERIC: // assume inch
-	case librevenge::RVNG_INCH:
-		return true;
-	case librevenge::RVNG_POINT:
-		value /= 72.;
-		return true;
-	case librevenge::RVNG_TWIP:
-		value /= 1440.;
-		return true;
-	case librevenge::RVNG_PERCENT:
-	case librevenge::RVNG_UNIT_ERROR:
-	default:
-	{
-		static bool first=true;
-		if (first)
-		{
-			ODFGEN_DEBUG_MSG(("::getInchValue[OdgGenerator.cxx]: call with no double value\n"));
-			first=false;
-		}
-		break;
-	}
-	}
-	return false;
-}
-} // anonymous namespace
-
 using namespace libodfgen;
 
 class OdgGeneratorPrivate : public OdfGenerator
@@ -157,8 +124,6 @@ public:
 	double mfMaxWidth;
 	double mfMaxHeight;
 
-	//! page manager
-	PageSpanManager mPageSpanManager;
 	//! the current page
 	PageSpan *mpCurrentPageSpan;
 	//! the actual page index
@@ -174,7 +139,7 @@ private:
 OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 	mStateStack(),
 	mfMaxWidth(0.0), mfMaxHeight(0.0),
-	mPageSpanManager(), mpCurrentPageSpan(0), miPageIndex(0),
+	mpCurrentPageSpan(0), miPageIndex(0),
 	mDummyMasterSlideStorage()
 {
 	pushState();
@@ -417,9 +382,9 @@ void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 
 #ifdef MULTIPAGE_WORKAROUND
 	if (!mpImpl->mpCurrentPageSpan)
-		mpImpl->mpCurrentPageSpan=mpImpl->mPageSpanManager.add(pList);
+		mpImpl->mpCurrentPageSpan=mpImpl->getPageSpanManager().add(pList);
 #else
-	mpImpl->mpCurrentPageSpan=mpImpl->mPageSpanManager.add(pList);
+	mpImpl->mpCurrentPageSpan=mpImpl->getPageSpanManager().add(pList);
 #endif
 
 	++mpImpl->miPageIndex;
