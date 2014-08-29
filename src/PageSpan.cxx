@@ -26,10 +26,11 @@
 #include "PageSpan.hxx"
 #include "DocumentElement.hxx"
 
-PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName) :
+PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName) :
 	mxPropList(xPropList),
 	msMasterPageName(masterPageName),
 	msLayoutName(layoutName),
+	msPageDrawingName(pageDrawingName),
 	mpHeaderContent(0),
 	mpFooterContent(0),
 	mpHeaderLeftContent(0),
@@ -127,6 +128,17 @@ int PageSpan::getSpan() const
 		return mxPropList["librevenge:num-pages"]->getInt();
 
 	return 0; // should never happen
+}
+
+void PageSpan::resetPageSizeAndMargins(double width, double height)
+{
+	mxPropList.insert("fo:page-width", width, librevenge::RVNG_INCH);
+	mxPropList.insert("fo:page-height", height, librevenge::RVNG_INCH);
+	mxPropList.insert("fo:margin-top", "0in");
+	mxPropList.insert("fo:margin-bottom", "0in");
+	mxPropList.insert("fo:margin-left", "0in");
+	mxPropList.insert("fo:margin-right", "0in");
+	mxPropList.insert("style:print-orientation", "portrait");
 }
 
 librevenge::RVNGString PageSpan::protectString(librevenge::RVNGString const &orig)
@@ -249,7 +261,7 @@ void PageSpan::setFooterLastContent(std::vector<DocumentElement *> *pFooterConte
 	mpFooterLastContent = pFooterContent;
 }
 
-void PageSpan::writePageLayout(OdfDocumentHandler *pHandler) const
+void PageSpan::writePageStyle(OdfDocumentHandler *pHandler) const
 {
 	librevenge::RVNGPropertyList propList;
 
@@ -262,7 +274,8 @@ void PageSpan::writePageLayout(OdfDocumentHandler *pHandler) const
 	librevenge::RVNGPropertyList::Iter i(mxPropList);
 	for (i.rewind(); i.next();)
 	{
-		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0) continue;
+		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0)
+			continue;
 		tempPropList.insert(i.key(), i()->clone());
 	}
 	pHandler->startElement("style:page-layout-properties", tempPropList);
@@ -271,12 +284,12 @@ void PageSpan::writePageLayout(OdfDocumentHandler *pHandler) const
 	if (mxPropList.child("librevenge:footnote"))
 	{
 		librevenge::RVNGPropertyListVector const *footnoteVector=mxPropList.child("librevenge:footnote");
-		if (footnoteVector->count()!=1)
-		{
-			ODFGEN_DEBUG_MSG(("PageSpan::writePageLayout: the footnote property list seems bad\n"));
-		}
-		else
+		if (footnoteVector->count()==1)
 			footnoteSepPropList=(*footnoteVector)[0];
+		else if (footnoteVector->count())
+		{
+			ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the footnote property list seems bad\n"));
+		}
 	}
 	else
 	{
@@ -292,6 +305,24 @@ void PageSpan::writePageLayout(OdfDocumentHandler *pHandler) const
 	pHandler->endElement("style:footnote-sep");
 	pHandler->endElement("style:page-layout-properties");
 	pHandler->endElement("style:page-layout");
+
+	if (msPageDrawingName.empty())
+		return;
+	propList.clear();
+	propList.insert("style:name", getPageDrawingName());
+	propList.insert("style:family", "drawing-page");
+	pHandler->startElement("style:style", propList);
+
+	if (mxPropList.child("librevenge:drawing-page") && mxPropList.child("librevenge:drawing-page")->count()==1)
+	{
+		pHandler->startElement("style:drawing-page-properties", (*mxPropList.child("librevenge:drawing-page"))[0]);
+		pHandler->endElement("style:drawing-page-properties");
+	}
+	else if (mxPropList.child("librevenge:drawing-page"))
+	{
+		ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the drawing page property list seems bad\n"));
+	}
+	pHandler->endElement("style:style");
 }
 
 void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
@@ -303,6 +334,8 @@ void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 	propList.insert("style:name", sMasterPageName);
 	if (sMasterPageDisplayName!=sMasterPageName)
 		propList.insert("style:display-name", sMasterPageDisplayName);
+	if (!msPageDrawingName.empty())
+		propList.insert("draw:style-name", getPageDrawingName());
 	/* we do not set any next-style to avoid problem when the input is
 	   OpenPageSpan("A")
 	      ... : many pages of text without any page break
@@ -430,7 +463,20 @@ PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList)
 			layoutName.sprintf("PM%i", miCurrentLayoutIndex++);
 		while (mpLayoutNameSet.find(layoutName) != mpLayoutNameSet.end());
 	}
-	shared_ptr<PageSpan> page(new PageSpan(propList, masterPageName, layoutName));
+	// now find the page drawing style (if needed)
+	librevenge::RVNGString pageDrawingName("");
+	if (xPropList["librevenge:page-drawing-name"])
+	{
+		layoutName.appendEscapedXML(xPropList["librevenge:page-drawing-name"]->getStr());
+		propList.remove("librevenge:page-drawing--name");
+	}
+	if (pageDrawingName.empty() && xPropList.child("librevenge:drawing-page"))
+	{
+		do
+			pageDrawingName.sprintf("dp%i", ++miCurrentPageDrawingIndex);
+		while (mpPageDrawingNameSet.find(pageDrawingName) != mpPageDrawingNameSet.end());
+	}
+	shared_ptr<PageSpan> page(new PageSpan(propList, masterPageName, layoutName, pageDrawingName));
 	mpPageList.push_back(page);
 	return page.get();
 }
@@ -445,12 +491,12 @@ PageSpan *PageSpanManager::getCurrentPageSpan()
 	return mpPageList.back().get();
 }
 
-void PageSpanManager::writePageLayout(OdfDocumentHandler *pHandler) const
+void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler) const
 {
 	for (size_t i=0; i<mpPageList.size(); ++i)
 	{
 		if (mpPageList[i])
-			mpPageList[i]->writePageLayout(pHandler);
+			mpPageList[i]->writePageStyle(pHandler);
 	}
 }
 

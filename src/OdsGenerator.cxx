@@ -508,7 +508,7 @@ void OdsGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	}
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
-		mPageSpanManager.writePageLayout(pHandler);
+		mPageSpanManager.writePageStyles(pHandler);
 
 	pHandler->endElement("office:automatic-styles");
 }
