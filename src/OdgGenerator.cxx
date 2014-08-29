@@ -153,17 +153,16 @@ public:
 	}
 	std::stack<State> mStateStack;
 
-	// page styles
+	// union of page size
 	double mfMaxWidth;
 	double mfMaxHeight;
 
-	// page manager
+	//! page manager
 	PageSpanManager mPageSpanManager;
-	int miPageIndex;
 	//! the current page
 	PageSpan *mpCurrentPageSpan;
-	//! a flag to know if the document has several page
-	bool mbHasSeveralPages;
+	//! the actual page index
+	int miPageIndex;
 	Storage mDummyMasterSlideStorage;
 
 private:
@@ -174,9 +173,8 @@ private:
 
 OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 	mStateStack(),
-	mfMaxWidth(0.0),
-	mfMaxHeight(0.0),
-	mPageSpanManager(), miPageIndex(0), mpCurrentPageSpan(0), mbHasSeveralPages(false),
+	mfMaxWidth(0.0), mfMaxHeight(0.0),
+	mPageSpanManager(), mpCurrentPageSpan(0), miPageIndex(0),
 	mDummyMasterSlideStorage()
 {
 	pushState();
@@ -252,7 +250,7 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
 #ifdef MULTIPAGE_WORKAROUND
-		if (mpCurrentPageSpan && mbHasSeveralPages)
+		if (mpCurrentPageSpan && miPageIndex>1)
 			mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
 #endif
 		mPageSpanManager.writePageStyles(pHandler);
@@ -398,7 +396,6 @@ void OdgGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*prop
 
 void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->mbHasSeveralPages=mpImpl->mpCurrentPageSpan!=0;
 	double width=0;
 	if (propList["svg:width"] && getInchValue(*propList["svg:width"], width) && width>mpImpl->mfMaxWidth)
 		mpImpl->mfMaxWidth=width;
@@ -407,13 +404,16 @@ void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 		mpImpl->mfMaxHeight=height;
 
 	librevenge::RVNGPropertyList pList(propList);
-	pList.insert("librevenge:footnote", librevenge::RVNGPropertyListVector());
 
+	// generate drawing-page style
 	librevenge::RVNGPropertyList drawingPageStyle;
 	librevenge::RVNGPropertyListVector drawingPageVector;
 	drawingPageStyle.insert("draw:fill", "none");
 	drawingPageVector.append(drawingPageStyle);
 	pList.insert("librevenge:drawing-page", drawingPageVector);
+
+	// do not generate footnote separator data
+	pList.insert("librevenge:footnote", librevenge::RVNGPropertyListVector());
 
 #ifdef MULTIPAGE_WORKAROUND
 	if (!mpImpl->mpCurrentPageSpan)
@@ -422,8 +422,14 @@ void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 	mpImpl->mpCurrentPageSpan=mpImpl->mPageSpanManager.add(pList);
 #endif
 
+	++mpImpl->miPageIndex;
+	librevenge::RVNGString pageName;
+	if (propList["draw:name"])
+		pageName.appendEscapedXML(propList["draw:name"]->getStr());
+	else
+		pageName.sprintf("page%i", mpImpl->miPageIndex);
 	TagOpenElement *pDrawPageOpenElement = new TagOpenElement("draw:page");
-	pDrawPageOpenElement->addAttribute("draw:name", "page1");
+	pDrawPageOpenElement->addAttribute("draw:name", pageName);
 	pDrawPageOpenElement->addAttribute("draw:style-name", mpImpl->mpCurrentPageSpan->getPageDrawingName());
 	pDrawPageOpenElement->addAttribute("draw:master-page-name", mpImpl->mpCurrentPageSpan->getMasterName());
 	mpImpl->getCurrentStorage()->push_back(pDrawPageOpenElement);

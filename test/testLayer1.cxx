@@ -194,8 +194,7 @@ static void createOdg()
 	/*
 	  now let's try what happens if we reuse the same layer names:
 
-	  Red will become Red#0 (excepted the ellipse which set "draw:layer"="Red"
-	  which remains in the "Red" layer), Blue will become Blue#0
+	  Red will become Red#0, Blue will become Blue#0
 	*/
 	page.insert("draw:name", "Reusing same layer names is bad");
 	generator.startPage(page);

@@ -381,8 +381,10 @@ protected:
 
 	// the layer name stack
 	std::stack<librevenge::RVNGString> mLayerNameStack;
-	// the layer list of name
+	// the list of layer (final name)
 	std::set<librevenge::RVNGString> mLayerNameSet;
+	// the layer original name to final name
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mLayerNameMap;
 
 	// the last graphic style
 	librevenge::RVNGPropertyList mGraphicStyle;

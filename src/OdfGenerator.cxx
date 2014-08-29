@@ -85,7 +85,8 @@ OdfGenerator::OdfGenerator() :
 	mbInHeaderFooter(false), mbInMasterPage(false),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
-	miFrameNumber(0),  mFrameNameIdMap(), mLayerNameStack(), mLayerNameSet(),
+	miFrameNumber(0),  mFrameNameIdMap(),
+	mLayerNameStack(), mLayerNameSet(), mLayerNameMap(),
 	mGraphicStyle(),
 	mIdChartMap(), mIdChartNameMap(),
 	mDocumentStreamHandlers(),
@@ -528,8 +529,8 @@ librevenge::RVNGString OdfGenerator::getLayerName(const librevenge::RVNGProperty
 	{
 		librevenge::RVNGString layer;
 		layer.appendEscapedXML(propList["draw:layer"]->getStr());
-		if (mLayerNameSet.find(layer)!=mLayerNameSet.end())
-			return layer;
+		if (mLayerNameMap.find(layer)!=mLayerNameMap.end())
+			return mLayerNameMap.find(layer)->second;
 		ODFGEN_DEBUG_MSG(("OdfGenerator::getLayerName: called with not existing layer, returns the current layer name\n"));
 	}
 	if (mLayerNameStack.empty())
@@ -560,6 +561,7 @@ void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 			newName.append(suffix);
 			if (mLayerNameSet.find(newName)!=mLayerNameSet.end())
 				continue;
+			mLayerNameMap[layer]=newName;
 			layer=newName;
 			ok=true;
 			break;
@@ -569,6 +571,8 @@ void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 			ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not find a new name, used old\n"));
 		}
 	}
+	else
+		mLayerNameMap[layer]=layer;
 	mLayerNameSet.insert(layer);
 	mLayerNameStack.push(layer);
 }

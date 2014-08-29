@@ -252,6 +252,7 @@ static void createOdg()
 
 	generator.startDocument(librevenge::RVNGPropertyList());
 	librevenge::RVNGPropertyList page;
+	page.insert("draw:name", "Page with text");
 	page.insert("svg:x",0, librevenge::RVNG_POINT);
 	page.insert("svg:y",0, librevenge::RVNG_POINT);
 	page.insert("svg:width", 9, librevenge::RVNG_INCH);
@@ -271,6 +272,7 @@ static void createOdg()
 	generator.endTextObject();
 	generator.endPage();
 
+	page.insert("draw:name", "Empty");
 	page.insert("svg:x",0, librevenge::RVNG_POINT);
 	page.insert("svg:y",0, librevenge::RVNG_POINT);
 	page.insert("svg:width", 3, librevenge::RVNG_INCH);
