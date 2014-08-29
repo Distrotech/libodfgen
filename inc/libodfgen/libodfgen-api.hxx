@@ -29,8 +29,12 @@
 #else
 #define ODFGENAPI __declspec(dllimport)
 #endif
+#else // !DLL_EXPORT
+#ifdef LIBODFGEN_VISIBILITY
+#define ODFGENAPI __attribute__((visibility("default")))
 #else
 #define ODFGENAPI
+#endif
 #endif
 
 #endif // INCLUDED_LIBODFGEN_LIBODFGEN_API_HXX
