@@ -339,8 +339,8 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
 #ifdef MULTIPAGE_WORKAROUND
-		if (mpCurrentPageSpan && miPageIndex>1)
-			mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
+		if (miPageIndex>1)
+			mPageSpanManager.resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
 #endif
 		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
 
@@ -353,8 +353,8 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
 #ifdef MULTIPAGE_WORKAROUND
-		if (mpCurrentPageSpan && miPageIndex>1)
-			mpCurrentPageSpan->resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
+		if (miPageIndex>1)
+			mPageSpanManager.resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
 #endif
 		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
 

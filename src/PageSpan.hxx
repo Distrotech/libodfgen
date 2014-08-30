@@ -26,6 +26,7 @@
 #define _PAGESPAN_HXX_
 
 #include <librevenge/librevenge.h>
+#include <map>
 #include <set>
 #include <vector>
 
@@ -47,7 +48,7 @@ protected:
 		C_NumContentTypes // keep this one last
 	};
 public:
-	PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName);
+	PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName, bool isMasterPage);
 	virtual ~PageSpan();
 	//! writes the page layout style: Z_StyleAutomatic and the page drawing style: Z_ContentAutomatic(if defined)
 	void writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) const;
@@ -83,7 +84,7 @@ public:
 	{
 		return protectString(msPageDrawingName);
 	}
-	/** reset the page size (used by OdgGenerator to reset the size to union size)
+	/** reset the page size (used by Od[pg]Generator to reset the size to union size)
 		and the margins to 0
 		\note size are given in inch
 	 */
@@ -135,6 +136,8 @@ private:
 	PageSpan(const PageSpan &);
 	PageSpan &operator=(const PageSpan &);
 	librevenge::RVNGPropertyList mxPropList;
+	//! flag to know if this is a master page
+	bool mbIsMasterPage;
 	//! the page master display name
 	librevenge::RVNGString msMasterPageName;
 	//! the layout display name
@@ -149,7 +152,7 @@ class PageSpanManager
 {
 public:
 	//! constructor
-	PageSpanManager() : mpPageList(),
+	PageSpanManager() : mpPageList(), mpNameToMasterPageMap(),
 		mpPageMasterNameSet(), miCurrentPageMasterIndex(0),
 		mpLayoutNameSet(), miCurrentLayoutIndex(0),
 		mpPageDrawingNameSet(), miCurrentPageDrawingIndex(0)
@@ -163,17 +166,24 @@ public:
 	//! clean data
 	void clean();
 	//! create a new page and set it to current. Returns a pointer to this new page
-	PageSpan *add(const librevenge::RVNGPropertyList &xPropList);
-	//! returns the current page span or 0
-	PageSpan *getCurrentPageSpan();
+	PageSpan *add(const librevenge::RVNGPropertyList &xPropList, bool masterPage=false);
+	//! return the page span which correspond to a master name
+	PageSpan *get(librevenge::RVNGString const &name);
 	//! write the pages' layouts (style automatic) or the pages' drawing styles(content automatic)
 	void writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 	void writeMasterPages(OdfDocumentHandler *pHandler) const;
 
+	/** reset all page sizes (used by OdgGenerator to reset the size to union size)
+		and the margins to 0
+		\note size are given in inch
+	 */
+	void resetPageSizeAndMargins(double width, double height);
 
 protected:
 	//! the list of page
 	std::vector<shared_ptr<PageSpan> > mpPageList;
+	//! a map master page name to pagespan
+	std::map<librevenge::RVNGString, shared_ptr<PageSpan> > mpNameToMasterPageMap;
 	//! the list of page master name
 	std::set<librevenge::RVNGString> mpPageMasterNameSet;
 	//! the current page master index (use to create a new page name)

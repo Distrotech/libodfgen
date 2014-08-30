@@ -26,8 +26,9 @@
 #include "PageSpan.hxx"
 #include "DocumentElement.hxx"
 
-PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName) :
+PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName, bool isMasterPage) :
 	mxPropList(xPropList),
+	mbIsMasterPage(isMasterPage),
 	msMasterPageName(masterPageName),
 	msLayoutName(layoutName),
 	msPageDrawingName(pageDrawingName)
@@ -131,7 +132,9 @@ void PageSpan::writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) co
 		pHandler->endElement("style:page-layout");
 	}
 
-	if (zone==Style::Z_ContentAutomatic && !msPageDrawingName.empty())
+	if (!msPageDrawingName.empty() &&
+	        ((zone==Style::Z_ContentAutomatic && !mbIsMasterPage) ||
+	         (zone==Style::Z_StyleAutomatic && mbIsMasterPage)))
 	{
 		propList.clear();
 		propList.insert("style:name", getPageDrawingName());
@@ -209,7 +212,7 @@ void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 	    _writeContent("style:footer-last", *mpContent[C_FooterLast], pHandler);
 	*/
 
-	if (mpContent[C_Master])
+	if (mpContent[C_Master] && mbIsMasterPage)
 		_writeContent(0, *mpContent[C_Master], pHandler);
 	pHandler->endElement("style:master-page");
 }
@@ -240,7 +243,19 @@ void PageSpanManager::clean()
 	mpPageList.clear();
 }
 
-PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList)
+PageSpan *PageSpanManager::get(librevenge::RVNGString const &name)
+{
+	librevenge::RVNGString masterPageName("");
+	masterPageName.appendEscapedXML(name);
+	if (mpNameToMasterPageMap.find(masterPageName)==mpNameToMasterPageMap.end())
+	{
+		ODFGEN_DEBUG_MSG(("PageSpan::get: can not find a master page name\n"));
+		return 0;
+	}
+	return mpNameToMasterPageMap.find(masterPageName)->second.get();
+}
+
+PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList, bool isMasterPage)
 {
 	librevenge::RVNGPropertyList propList(xPropList);
 	// first find the master-page name
@@ -249,6 +264,19 @@ PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList)
 	{
 		masterPageName.appendEscapedXML(xPropList["librevenge:master-page-name"]->getStr());
 		propList.remove("librevenge:master-page-name");
+	}
+	if (isMasterPage)
+	{
+		if (masterPageName.empty())
+		{
+			ODFGEN_DEBUG_MSG(("PageSpan::add: can not find the master page name\n"));
+			return 0;
+		}
+		if (mpNameToMasterPageMap.find(masterPageName)!=mpNameToMasterPageMap.end())
+		{
+			ODFGEN_DEBUG_MSG(("PageSpan::add: a master page already exists with the same name\n"));
+			return 0;
+		}
 	}
 	if (masterPageName.empty())
 	{
@@ -283,19 +311,11 @@ PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList)
 			pageDrawingName.sprintf("dp%i", ++miCurrentPageDrawingIndex);
 		while (mpPageDrawingNameSet.find(pageDrawingName) != mpPageDrawingNameSet.end());
 	}
-	shared_ptr<PageSpan> page(new PageSpan(propList, masterPageName, layoutName, pageDrawingName));
+	shared_ptr<PageSpan> page(new PageSpan(propList, masterPageName, layoutName, pageDrawingName, isMasterPage));
 	mpPageList.push_back(page);
+	if (isMasterPage)
+		mpNameToMasterPageMap[masterPageName]=page;
 	return page.get();
-}
-
-PageSpan *PageSpanManager::getCurrentPageSpan()
-{
-	if (mpPageList.empty())
-	{
-		ODFGEN_DEBUG_MSG(("PageSpanManager::getCurrentPageSpan: can not find any page span\n"));
-		return 0;
-	}
-	return mpPageList.back().get();
 }
 
 void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const
@@ -335,6 +355,15 @@ void PageSpanManager::writeMasterPages(OdfDocumentHandler *pHandler) const
 			continue;
 		done.insert(name);
 		mpPageList[i]->writeMasterPages(pHandler);
+	}
+}
+
+void PageSpanManager::resetPageSizeAndMargins(double width, double height)
+{
+	for (size_t i=0; i<mpPageList.size(); ++i)
+	{
+		if (!mpPageList[i]) continue;
+		mpPageList[i]->resetPageSizeAndMargins(width, height);
 	}
 }
 

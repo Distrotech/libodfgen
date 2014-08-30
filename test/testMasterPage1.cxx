@@ -179,29 +179,76 @@ static void createOdg()
 
 	generator.startDocument(librevenge::RVNGPropertyList());
 	librevenge::RVNGPropertyList page;
-	page.insert("draw:name", "Basic");
+	page.insert("librevenge:master-page-name", "Master1");
 	page.insert("svg:width", 9, librevenge::RVNG_INCH);
 	page.insert("svg:height", 11, librevenge::RVNG_INCH);
 	page.insert("librevenge:enforce-frame",true);
-	generator.startPage(page);
+	generator.startMasterPage(page);
 
 	sendGraphic(generator, &OdgGenerator::setStyle);
 
+	generator.endMasterPage();
+
+	page.clear();
+	page.insert("librevenge:master-page-name", "Master1");
+	page.insert("draw:name", "Only Master1");
+	generator.startPage(page);
 	generator.endPage();
 
 	/*
-	  now let's try what happens if we reuse the same layer names:
-
-	  Red will become Red#0, Blue will become Blue#0
+	  now let's try what happens if we use the same layer names:
 	*/
-	page.insert("draw:name", "Reusing same layer names is bad");
+	page.clear();
+	page.insert("librevenge:master-page-name", "Master1");
+	page.insert("draw:name", "Master1 + copy with layer");
 	generator.startPage(page);
-	sendGraphic(generator, &OdgGenerator::setStyle);
+	sendGraphic(generator, &OdgGenerator::setStyle, 0, 300);
+	generator.endPage();
+
+	//
+	// now try with a empty master
+	//
+	page.insert("librevenge:master-page-name", "Master2");
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+	generator.startMasterPage(page);
+	sendGraphic(generator, &OdgGenerator::setStyle, 0, 200);
+	generator.endMasterPage();
+
+	page.clear();
+	page.insert("librevenge:master-page-name", "Master2");
+	page.insert("draw:name", "empty + Master2");
+	generator.startPage(page);
+	generator.endPage();
+
+	//
+	// now try with no master
+	//
+	page.insert("draw:name", "no master");
+	page.remove("librevenge:master-page-name");
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+
+	generator.startPage(page);
+	generator.endPage();
+
+	//
+	// now try with bad master name ( note, in this case, we must define the page size)
+	//
+	page.insert("draw:name", "bad master name = no master page");
+	page.insert("librevenge:master-page-name", "UnknownMaster");
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+
+	generator.startPage(page);
 	generator.endPage();
 
 	generator.endDocument();
 
-	std::ofstream file("testLayer1.odg");
+	std::ofstream file("testMasterPage1.odg");
 	file << content.cstr();
 }
 

@@ -470,6 +470,10 @@ void OdfGenerator::closeGroup()
 
 librevenge::RVNGString OdfGenerator::getLayerName(const librevenge::RVNGPropertyList &propList) const
 {
+	// layer does not seems to works in masterpage
+	if (inMasterPage())
+		return "layout";
+
 	if (propList["draw:layer"] && !propList["draw:layer"]->getStr().empty())
 	{
 		librevenge::RVNGString layer;
@@ -485,6 +489,12 @@ librevenge::RVNGString OdfGenerator::getLayerName(const librevenge::RVNGProperty
 
 void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 {
+	if (inMasterPage())
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not create layer in master page\n"));
+		mLayerNameStack.push("layout");
+		return;
+	}
 	if (!propList["draw:layer"] || propList["draw:layer"]->getStr().empty())
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not find the layer name\n"));
