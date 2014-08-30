@@ -14,6 +14,8 @@
  * For further information visit http://libwpd.sourceforge.net
  */
 
+#include "DocumentElement.hxx"
+
 #include "FilterInternal.hxx"
 
 librevenge::RVNGString libodfgen::doubleToString(const double value)
@@ -53,4 +55,14 @@ bool libodfgen::getInchValue(librevenge::RVNGProperty const &prop, double &value
 	}
 	return false;
 }
+
+void libodfgen::DocumentElementVector::clear()
+{
+	for (size_t i=0; i<size(); ++i)
+	{
+		if ((*this)[i]) delete(*this)[i];
+	}
+	resize(0);
+}
+
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

@@ -128,7 +128,7 @@ public:
 	PageSpan *mpCurrentPageSpan;
 	//! the actual page index
 	int miPageIndex;
-	Storage mDummyMasterSlideStorage;
+	libodfgen::DocumentElementVector mDummyMasterSlideStorage;
 
 private:
 	OdgGeneratorPrivate(const OdgGeneratorPrivate &);

@@ -117,7 +117,7 @@ public:
 	// generator state
 	GeneratorState mState;
 
-	Storage mDummyMasterSlideStorage;
+	libodfgen::DocumentElementVector mDummyMasterSlideStorage;
 
 private:
 	OdpGeneratorPrivate(const OdpGeneratorPrivate &);

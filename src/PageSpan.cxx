@@ -35,21 +35,11 @@ PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RV
 	for (int i=0; i<C_NumContentTypes; ++i) mpContent[i]=0;
 }
 
-namespace
-{
-typedef std::vector<DocumentElement *>::iterator DEVIter;
-}
-
 PageSpan::~PageSpan()
 {
 	for (int i=0; i<C_NumContentTypes; ++i)
 	{
-		if (!mpContent[i]) continue;
-		for (DEVIter iterHeaderContent = mpContent[i]->begin();
-		        iterHeaderContent != mpContent[i]->end();
-		        ++iterHeaderContent)
-			delete(*iterHeaderContent);
-		delete mpContent[i];
+		if (mpContent[i]) delete mpContent[i];
 	}
 }
 
@@ -81,7 +71,7 @@ librevenge::RVNGString PageSpan::protectString(librevenge::RVNGString const &ori
 	return res;
 }
 
-void PageSpan::storeContent(ContentType type, std::vector<DocumentElement *> *pContent)
+void PageSpan::storeContent(ContentType type, libodfgen::DocumentElementVector *pContent)
 {
 	if (type<0||type>=C_NumContentTypes)
 	{
@@ -90,20 +80,14 @@ void PageSpan::storeContent(ContentType type, std::vector<DocumentElement *> *pC
 		return;
 	}
 	if (mpContent[type])
-	{
-		for (DEVIter iterHeaderContent = mpContent[type]->begin();
-		        iterHeaderContent != mpContent[type]->end();
-		        ++iterHeaderContent)
-			delete(*iterHeaderContent);
 		delete mpContent[type];
-	}
 	mpContent[type]=pContent;
 }
 
 void PageSpan::writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
 	librevenge::RVNGPropertyList propList;
-	if (zone==Style::Z_ContentAutomatic)
+	if (zone==Style::Z_StyleAutomatic)
 	{
 		propList.insert("style:name", getLayoutName());
 		pHandler->startElement("style:page-layout", propList);
@@ -147,7 +131,7 @@ void PageSpan::writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) co
 		pHandler->endElement("style:page-layout");
 	}
 
-	if (zone==Style::Z_StyleAutomatic && !msPageDrawingName.empty())
+	if (zone==Style::Z_ContentAutomatic && !msPageDrawingName.empty())
 	{
 		propList.clear();
 		propList.insert("style:name", getPageDrawingName());
@@ -231,7 +215,7 @@ void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 }
 
 void PageSpan::_writeContent(const char *contentTagName,
-                             const std::vector<DocumentElement *> &content,
+                             const libodfgen::DocumentElementVector &content,
                              OdfDocumentHandler *pHandler) const
 {
 	bool hasTagName=contentTagName && strlen(contentTagName);

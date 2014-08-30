@@ -24,6 +24,8 @@
 
 #include <string.h> // for strcmp
 
+#include <vector>
+
 #include <librevenge/librevenge.h>
 
 #ifdef HAVE_CONFIG_H
@@ -50,11 +52,28 @@ using boost::shared_ptr;
 
 #define ODFGEN_N_ELEMENTS(m) sizeof(m)/sizeof(m[0])
 
+class DocumentElement;
+
 namespace libodfgen
 {
 
 librevenge::RVNGString doubleToString(const double value);
 bool getInchValue(librevenge::RVNGProperty const &prop, double &value);
+
+//! small class used to store a list of DocumentElement
+class DocumentElementVector : public std::vector<DocumentElement *>
+{
+public:
+	//! constructor
+	DocumentElementVector() : std::vector<DocumentElement *>() {}
+	//! destructor
+	~DocumentElementVector()
+	{
+		clear();
+	}
+	//! delete all document element
+	void clear();
+};
 
 } // namespace libodfgen
 

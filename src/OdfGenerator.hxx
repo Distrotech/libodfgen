@@ -51,8 +51,6 @@ class ListStyle;
 class OdfGenerator
 {
 public:
-	typedef std::vector<DocumentElement *> Storage;
-
 	//! constructor
 	OdfGenerator();
 	//! destructor
@@ -89,7 +87,7 @@ public:
 		//! true if the file is not a plain file
 		bool mIsDir;
 		//! the contain storage
-		Storage mStorage;
+		libodfgen::DocumentElementVector mStorage;
 		//! the handler
 		InternalHandler mInternalHandler;
 	private:
@@ -136,28 +134,26 @@ public:
 	//
 
 	//! returns the current storage
-	Storage *getCurrentStorage()
+	libodfgen::DocumentElementVector *getCurrentStorage()
 	{
 		return mpCurrentStorage;
 	}
 	//! push a storage
-	void pushStorage(Storage *newStorage);
+	void pushStorage(libodfgen::DocumentElementVector *newStorage);
 	/** pop a storage */
 	bool popStorage();
 	//! returns the body storage
-	Storage &getBodyStorage()
+	libodfgen::DocumentElementVector &getBodyStorage()
 	{
 		return mBodyStorage;
 	}
 	//! returns the meta data storage
-	Storage &getMetaDataStorage()
+	libodfgen::DocumentElementVector &getMetaDataStorage()
 	{
 		return mMetaDataStorage;
 	}
-	//! delete the storage content ( but not the Storage pointer )
-	static void emptyStorage(Storage *storage);
 	//! write the storage data to a document handler
-	static void sendStorage(Storage const *storage, OdfDocumentHandler *pHandler);
+	static void sendStorage(libodfgen::DocumentElementVector const *storage, OdfDocumentHandler *pHandler);
 
 	// page, header/footer, master page
 
@@ -340,13 +336,13 @@ protected:
 	librevenge::RVNGString getCurrentGraphicStyleName();
 
 	// the current set of elements that we're writing to
-	Storage *mpCurrentStorage;
+	libodfgen::DocumentElementVector *mpCurrentStorage;
 	// the stack of all storage
-	std::stack<Storage *> mStorageStack;
+	std::stack<libodfgen::DocumentElementVector *> mStorageStack;
 	// the meta data elements
-	Storage mMetaDataStorage;
+	libodfgen::DocumentElementVector mMetaDataStorage;
 	// content elements
-	Storage mBodyStorage;
+	libodfgen::DocumentElementVector mBodyStorage;
 
 	// page span manager
 	PageSpanManager mPageSpanManager;

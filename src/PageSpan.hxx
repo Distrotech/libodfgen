@@ -29,6 +29,8 @@
 #include <set>
 #include <vector>
 
+#include "FilterInternal.hxx"
+
 #include "Style.hxx"
 
 class DocumentElement;
@@ -86,39 +88,39 @@ public:
 		\note size are given in inch
 	 */
 	void resetPageSizeAndMargins(double width, double height);
-	void setHeaderContent(std::vector<DocumentElement *> *pContent)
+	void setHeaderContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_Header, pContent);
 	}
-	void setFooterContent(std::vector<DocumentElement *> *pContent)
+	void setFooterContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_Footer, pContent);
 	}
-	void setHeaderLeftContent(std::vector<DocumentElement *> *pContent)
+	void setHeaderLeftContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_HeaderLeft, pContent);
 	}
-	void setFooterLeftContent(std::vector<DocumentElement *> *pContent)
+	void setFooterLeftContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_FooterLeft, pContent);
 	}
-	void setHeaderFirstContent(std::vector<DocumentElement *> *pContent)
+	void setHeaderFirstContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_HeaderFirst, pContent);
 	}
-	void setFooterFirstContent(std::vector<DocumentElement *> *pContent)
+	void setFooterFirstContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_FooterFirst, pContent);
 	}
-	void setHeaderLastContent(std::vector<DocumentElement *> *pContent)
+	void setHeaderLastContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_HeaderLast, pContent);
 	}
-	void setFooterLastContent(std::vector<DocumentElement *> *pContent)
+	void setFooterLastContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_FooterLast, pContent);
 	}
-	void setMasterContent(std::vector<DocumentElement *> *pContent)
+	void setMasterContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_Master, pContent);
 	}
@@ -126,8 +128,8 @@ public:
 	/** small function which mainly replaced space by underscore */
 	static librevenge::RVNGString protectString(librevenge::RVNGString const &orig);
 protected:
-	void storeContent(ContentType type, std::vector<DocumentElement *> *pContent);
-	void _writeContent(const char *contentTagName, const std::vector<DocumentElement *> &content,
+	void storeContent(ContentType type, libodfgen::DocumentElementVector *pContent);
+	void _writeContent(const char *contentTagName, const libodfgen::DocumentElementVector &content,
 	                   OdfDocumentHandler *pHandler) const;
 private:
 	PageSpan(const PageSpan &);
@@ -139,7 +141,7 @@ private:
 	librevenge::RVNGString msLayoutName;
 	//! the page drawing display name
 	librevenge::RVNGString msPageDrawingName;
-	std::vector<DocumentElement *> *(mpContent[C_NumContentTypes]);
+	libodfgen::DocumentElementVector *(mpContent[C_NumContentTypes]);
 };
 
 //! class used to store the list of created page

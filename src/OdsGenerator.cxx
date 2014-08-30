@@ -102,17 +102,13 @@ public:
 		}
 		~OdcGeneratorState()
 		{
-			for (size_t i=0; i < mContentElements.size(); ++i)
-			{
-				if (mContentElements[i]) delete mContentElements[i];
-			}
 		}
 		OdcGenerator &get()
 		{
 			return mGenerator;
 		}
 		librevenge::RVNGString mDir;
-		std::vector<DocumentElement *> mContentElements;
+		libodfgen::DocumentElementVector mContentElements;
 		InternalHandler mInternalHandler;
 		OdcGenerator mGenerator;
 	};
@@ -126,16 +122,12 @@ public:
 		}
 		~OdtGeneratorState()
 		{
-			for (size_t i=0; i < mContentElements.size(); ++i)
-			{
-				if (mContentElements[i]) delete mContentElements[i];
-			}
 		}
 		OdtGenerator &get()
 		{
 			return mGenerator;
 		}
-		std::vector<DocumentElement *> mContentElements;
+		libodfgen::DocumentElementVector mContentElements;
 		InternalHandler mInternalHandler;
 		OdtGenerator mGenerator;
 	};
@@ -1171,7 +1163,7 @@ void OdsGenerator::openHeader(const librevenge::RVNGPropertyList &propList)
 	if (!mpImpl->inHeaderFooter())
 		return;
 
-	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
+	libodfgen::DocumentElementVector *pHeaderFooterContentElements = new libodfgen::DocumentElementVector;
 	if (propList["librevenge:occurrence"] && (propList["librevenge:occurrence"]->getStr() == "even" ||
 	                                          propList["librevenge:occurrence"]->getStr() == "left"))
 		mpImpl->mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
@@ -1215,7 +1207,7 @@ void OdsGenerator::openFooter(const librevenge::RVNGPropertyList &propList)
 	if (!mpImpl->inHeaderFooter())
 		return;
 
-	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
+	libodfgen::DocumentElementVector *pHeaderFooterContentElements = new libodfgen::DocumentElementVector;
 	if (propList["librevenge:occurrence"] && (propList["librevenge:occurrence"]->getStr() == "even" ||
 	                                          propList["librevenge:occurrence"]->getStr() == "left"))
 		mpImpl->mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);

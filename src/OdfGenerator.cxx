@@ -69,8 +69,6 @@ OdfGenerator::~OdfGenerator()
 	mFontManager.clean();
 	mGraphicManager.clean();
 	mTableManager.clean();
-	emptyStorage(&mMetaDataStorage);
-	emptyStorage(&mBodyStorage);
 	std::map<librevenge::RVNGString, ObjectContainer *>::iterator it;
 	for (it=mNameObjectMap.begin(); it!=mNameObjectMap.end(); ++it)
 	{
@@ -186,11 +184,6 @@ void OdfGenerator::initStateWith(OdfGenerator const &orig)
 ////////////////////////////////////////////////////////////
 OdfGenerator::ObjectContainer::~ObjectContainer()
 {
-	for (size_t i=0; i<mStorage.size(); ++i)
-	{
-		if (mStorage[i])
-			delete mStorage[i];
-	}
 }
 
 OdfGenerator::ObjectContainer &OdfGenerator::createObjectFile
@@ -236,21 +229,7 @@ bool OdfGenerator::getObjectContent(librevenge::RVNGString const &objectName, Od
 ////////////////////////////////////////////////////////////
 // storage
 ////////////////////////////////////////////////////////////
-void OdfGenerator::emptyStorage(Storage *storage)
-{
-	if (!storage)
-	{
-		ODFGEN_DEBUG_MSG(("OdfGenerator::sendStorage: called without storage\n"));
-		return;
-	}
-	for (size_t i=0; i<storage->size(); ++i)
-	{
-		if ((*storage)[i]) delete(*storage)[i];
-	}
-	storage->resize(0);
-}
-
-void OdfGenerator::sendStorage(Storage const *storage, OdfDocumentHandler *pHandler)
+void OdfGenerator::sendStorage(libodfgen::DocumentElementVector const *storage, OdfDocumentHandler *pHandler)
 {
 	if (!storage)
 	{
@@ -263,7 +242,7 @@ void OdfGenerator::sendStorage(Storage const *storage, OdfDocumentHandler *pHand
 	}
 }
 
-void OdfGenerator::pushStorage(Storage *newStorage)
+void OdfGenerator::pushStorage(libodfgen::DocumentElementVector *newStorage)
 {
 	if (!newStorage)
 	{
