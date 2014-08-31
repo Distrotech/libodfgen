@@ -171,6 +171,7 @@ static void sendGraphic(Generator &generator, void (Generator::*SetStyle)(const 
 	//
 }
 
+
 static void createOdg()
 {
 	StringDocumentHandler content;
@@ -252,11 +253,92 @@ static void createOdg()
 	file << content.cstr();
 }
 
+static void createOdp()
+{
+	StringDocumentHandler content;
+	OdpGenerator generator;
+	generator.addDocumentHandler(&content, ODF_FLAT_XML);
+
+	generator.startDocument(librevenge::RVNGPropertyList());
+	librevenge::RVNGPropertyList page;
+	page.insert("librevenge:master-page-name", "Master1");
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+	generator.startMasterSlide(page);
+
+	sendGraphic(generator, &OdpGenerator::setStyle);
+
+	generator.endMasterSlide();
+
+	page.clear();
+	page.insert("librevenge:master-page-name", "Master1");
+	page.insert("draw:name", "Only Master1");
+	generator.startSlide(page);
+	generator.endSlide();
+
+	/*
+	  now let's try what happens if we use the same layer names:
+	*/
+	page.clear();
+	page.insert("librevenge:master-page-name", "Master1");
+	page.insert("draw:name", "Master1 + copy with layer");
+	generator.startSlide(page);
+	sendGraphic(generator, &OdpGenerator::setStyle, 0, 300);
+	generator.endSlide();
+
+	//
+	// now try with a empty master
+	//
+	page.insert("librevenge:master-page-name", "Master2");
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+	generator.startMasterSlide(page);
+	sendGraphic(generator, &OdpGenerator::setStyle, 0, 200);
+	generator.endMasterSlide();
+
+	page.clear();
+	page.insert("librevenge:master-page-name", "Master2");
+	page.insert("draw:name", "empty + Master2");
+	generator.startSlide(page);
+	generator.endSlide();
+
+	//
+	// now try with no master
+	//
+	page.insert("draw:name", "no master");
+	page.remove("librevenge:master-page-name");
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+
+	generator.startSlide(page);
+	generator.endSlide();
+
+	//
+	// now try with bad master name ( note, in this case, we must define the page size)
+	//
+	page.insert("draw:name", "bad master name = no master page");
+	page.insert("librevenge:master-page-name", "UnknownMaster");
+	page.insert("svg:width", 9, librevenge::RVNG_INCH);
+	page.insert("svg:height", 11, librevenge::RVNG_INCH);
+	page.insert("librevenge:enforce-frame",true);
+
+	generator.startSlide(page);
+	generator.endSlide();
+
+	generator.endDocument();
+
+	std::ofstream file("testMasterPage1.odp");
+	file << content.cstr();
+}
+
 int main()
 {
 	createOdg();
+	createOdp();
 	return 0;
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
-

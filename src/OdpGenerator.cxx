@@ -97,6 +97,8 @@ public:
 		return mGraphicManager;
 	}
 
+	void updatePageSpanPropertiesToCreatePage(librevenge::RVNGPropertyList &propList);
+
 	void writeNotesStyles(OdfDocumentHandler *pHandler);
 
 	//! returns the document type
@@ -137,6 +139,30 @@ OdpGeneratorPrivate::~OdpGeneratorPrivate()
 {
 }
 
+void OdpGeneratorPrivate::updatePageSpanPropertiesToCreatePage(librevenge::RVNGPropertyList &pList)
+{
+	double width=0;
+	if (pList["svg:width"] && !pList["fo:page-width"])
+		pList.insert("fo:page-width", pList["svg:width"]->clone());
+	if (pList["fo:page-width"] && getInchValue(*pList["fo:page-width"], width) && width>mfMaxWidth)
+		mfMaxWidth=width;
+	double height=0;
+	if (pList["svg:height"] && !pList["fo:page-height"])
+		pList.insert("fo:page-height", pList["svg:height"]->clone());
+	if (pList["fo:page-height"] && getInchValue(*pList["fo:page-height"], height) && height>mfMaxHeight)
+		mfMaxHeight=height;
+
+	// generate drawing-page style
+	librevenge::RVNGPropertyList drawingPageStyle;
+	librevenge::RVNGPropertyListVector drawingPageVector;
+	drawingPageStyle.insert("draw:fill", "none");
+	drawingPageVector.append(drawingPageStyle);
+	pList.insert("librevenge:drawing-page", drawingPageVector);
+
+	// do not generate footnote separator data
+	pList.insert("librevenge:footnote", librevenge::RVNGPropertyListVector());
+}
+
 void OdpGeneratorPrivate::openTextBoxFrame(const ::librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList tmpList(propList), graphicStyle;
@@ -146,7 +172,8 @@ void OdpGeneratorPrivate::openTextBoxFrame(const ::librevenge::RVNGPropertyList 
 		tmpList.insert("draw:fill", "none");
 	mGraphicManager.addGraphicProperties(tmpList, graphicStyle);
 	mGraphicManager.addFrameProperties(propList, graphicStyle);
-	librevenge::RVNGString sValue=mGraphicManager.findOrAdd(graphicStyle);
+	librevenge::RVNGString sValue=mGraphicManager.findOrAdd
+	                              (graphicStyle, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);
@@ -338,10 +365,6 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
-#ifdef MULTIPAGE_WORKAROUND
-		if (miPageIndex>1)
-			mPageSpanManager.resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
-#endif
 		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
 
 		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
@@ -352,10 +375,6 @@ void OdpGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	}
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
-#ifdef MULTIPAGE_WORKAROUND
-		if (miPageIndex>1)
-			mPageSpanManager.resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
-#endif
 		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
 
 		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
@@ -502,6 +521,10 @@ void OdpGenerator::startDocument(const ::librevenge::RVNGPropertyList &/*propLis
 
 void OdpGenerator::endDocument()
 {
+#ifdef MULTIPAGE_WORKAROUND
+	if (mpImpl->miPageIndex>1)
+		mpImpl->getPageSpanManager().resetPageSizeAndMargins(mpImpl->mfMaxWidth, mpImpl->mfMaxHeight);
+#endif
 	// Write out the collected document
 	mpImpl->writeTargetDocuments();
 }
@@ -519,34 +542,20 @@ void OdpGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*prop
 void OdpGenerator::startSlide(const ::librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList pList(propList);
-	double width=0;
-	if (propList["svg:width"] && !propList["fo:page-width"])
-		pList.insert("fo:page-width", propList["svg:width"]->clone());
-	if (propList["fo:page-width"] && getInchValue(*propList["fo:page-width"], width) && width>mpImpl->mfMaxWidth)
-		mpImpl->mfMaxWidth=width;
-	double height=0;
-	if (propList["svg:height"] && !propList["fo:page-height"])
-		pList.insert("fo:page-height", propList["svg:height"]->clone());
-	if (propList["fo:page-height"] && getInchValue(*propList["fo:page-height"], height) && height>mpImpl->mfMaxHeight)
-		mpImpl->mfMaxHeight=height;
 
-	// add drawing-page style
-	librevenge::RVNGPropertyList drawingPageStyle;
-	librevenge::RVNGPropertyListVector drawingPageVector;
-	drawingPageStyle.insert("draw:fill", "none");
-	drawingPageVector.append(drawingPageStyle);
-	pList.insert("librevenge:drawing-page", drawingPageVector);
+	mpImpl->mpCurrentPageSpan=0;
+	if (pList["librevenge:master-page-name"])
+	{
+		mpImpl->mpCurrentPageSpan=mpImpl->getPageSpanManager().get(pList["librevenge:master-page-name"]->getStr());
+		if (!mpImpl->mpCurrentPageSpan)
+			pList.remove("librevenge:master-page-name");
+	}
 
-	// do not generate footnote separator data
-	pList.insert("librevenge:footnote", librevenge::RVNGPropertyListVector());
-
-#ifdef MULTIPAGE_WORKAROUND
 	if (!mpImpl->mpCurrentPageSpan)
+	{
+		mpImpl->updatePageSpanPropertiesToCreatePage(pList);
 		mpImpl->mpCurrentPageSpan=mpImpl->getPageSpanManager().add(pList);
-#else
-	mpImpl->mpCurrentPageSpan=mpImpl->getPageSpanManager().add(pList);
-#endif
-
+	}
 	++mpImpl->miPageIndex;
 	librevenge::RVNGString pageName;
 	if (propList["draw:name"])
@@ -565,14 +574,46 @@ void OdpGenerator::endSlide()
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:page"));
 }
 
-void OdpGenerator::startMasterSlide(const ::librevenge::RVNGPropertyList &/*propList*/)
+void OdpGenerator::startMasterSlide(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->pushStorage(&mpImpl->mDummyMasterSlideStorage);
+	if (mpImpl->inMasterPage())
+	{
+		ODFGEN_DEBUG_MSG(("OdpGenerator::startMasterSlide oops a master page is already started\n"));
+		return;
+	}
+	mpImpl->startMasterPage(propList);
+	bool ok=mpImpl->inMasterPage() && propList["librevenge:master-page-name"];
+	if (ok)
+	{
+		librevenge::RVNGPropertyList pList(propList);
+		mpImpl->updatePageSpanPropertiesToCreatePage(pList);
+
+		PageSpan *pageSpan=mpImpl->getPageSpanManager().add(pList, true);
+		if (pageSpan)
+		{
+			libodfgen::DocumentElementVector *pMasterElements = new libodfgen::DocumentElementVector;
+			pageSpan->setMasterContent(pMasterElements);
+			mpImpl->pushStorage(pMasterElements);
+		}
+		else
+			ok=false;
+	}
+	if (!ok)
+	{
+		ODFGEN_DEBUG_MSG(("OdpGenerator::startMasterSlide creation of the master page has failed\n"));
+		mpImpl->pushStorage(&mpImpl->mDummyMasterSlideStorage);
+	}
 }
 
 void OdpGenerator::endMasterSlide()
 {
+	if (!mpImpl->inMasterPage())
+	{
+		ODFGEN_DEBUG_MSG(("OdpGenerator::endMasterSlide: find no opend master page\n"));
+		return;
+	}
 	mpImpl->popStorage();
+	mpImpl->endMasterPage();
 	mpImpl->mDummyMasterSlideStorage.clear();
 }
 
@@ -685,7 +726,9 @@ void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 
 	librevenge::RVNGPropertyList finalStyle;
 	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
-	pDrawFrameElement->addAttribute("draw:style-name", mpImpl->getGraphicManager().findOrAdd(finalStyle));
+	pDrawFrameElement->addAttribute
+	("draw:style-name", mpImpl->getGraphicManager().findOrAdd
+	 (finalStyle, mpImpl->useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic));
 
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
 	pDrawFrameElement->addAttribute("svg:width", framePropList["svg:width"]->getStr());

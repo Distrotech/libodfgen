@@ -342,10 +342,7 @@ void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone 
 
 void PageSpanManager::writeMasterPages(OdfDocumentHandler *pHandler) const
 {
-	/* We need to send each master-page only one time.
-
-	   As a master page must be open before a page, we can send the first page
-	 */
+	/* We need to send each master-page only one time. */
 	std::set<librevenge::RVNGString> done;
 	for (size_t i=0; i<mpPageList.size(); ++i)
 	{

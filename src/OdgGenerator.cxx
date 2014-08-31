@@ -222,10 +222,6 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	TagOpenElement("office:automatic-styles").write(pHandler);
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
-#ifdef MULTIPAGE_WORKAROUND
-		if (miPageIndex>1)
-			mPageSpanManager.resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
-#endif
 		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
 
 		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
@@ -236,10 +232,6 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 	}
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
-#ifdef MULTIPAGE_WORKAROUND
-		if (miPageIndex>1)
-			mPageSpanManager.resetPageSizeAndMargins(mfMaxWidth, mfMaxHeight);
-#endif
 		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
 
 		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
@@ -374,6 +366,10 @@ void OdgGenerator::startDocument(const librevenge::RVNGPropertyList &)
 
 void OdgGenerator::endDocument()
 {
+#ifdef MULTIPAGE_WORKAROUND
+	if (mpImpl->miPageIndex>1)
+		mpImpl->getPageSpanManager().resetPageSizeAndMargins(mpImpl->mfMaxWidth, mpImpl->mfMaxHeight);
+#endif
 	// Write out the collected document
 	mpImpl->writeTargetDocuments();
 }
@@ -443,13 +439,6 @@ void OdgGenerator::startMasterPage(const ::librevenge::RVNGPropertyList &propLis
 			libodfgen::DocumentElementVector *pMasterElements = new libodfgen::DocumentElementVector;
 			pageSpan->setMasterContent(pMasterElements);
 			mpImpl->pushStorage(pMasterElements);
-#ifdef MULTIPAGE_WORKAROUND
-			if (mpImpl->mpCurrentPageSpan)
-			{
-				ODFGEN_DEBUG_MSG(("OdgGenerator::startMasterPage: not sure that start master page can work if some page are already started\n"));
-				mpImpl->mpCurrentPageSpan=0;
-			}
-#endif
 		}
 		else
 			ok=false;
