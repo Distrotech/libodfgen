@@ -247,6 +247,8 @@ void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, Od
 void OdgGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
+	mPageSpanManager.writePageStyles(pHandler, Style::Z_Style);
+
 	mGraphicManager.write(pHandler, Style::Z_Style);
 	mParagraphManager.write(pHandler, Style::Z_Style);
 	mSpanManager.write(pHandler, Style::Z_Style);
@@ -409,7 +411,7 @@ void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 		pageName.sprintf("page%i", mpImpl->miPageIndex);
 	TagOpenElement *pDrawPageOpenElement = new TagOpenElement("draw:page");
 	pDrawPageOpenElement->addAttribute("draw:name", pageName);
-	pDrawPageOpenElement->addAttribute("draw:style-name", mpImpl->mpCurrentPageSpan->getPageDrawingName());
+	pDrawPageOpenElement->addAttribute("draw:style-name", mpImpl->mpCurrentPageSpan->getDrawingName());
 	pDrawPageOpenElement->addAttribute("draw:master-page-name", mpImpl->mpCurrentPageSpan->getMasterName());
 	mpImpl->getCurrentStorage()->push_back(pDrawPageOpenElement);
 }

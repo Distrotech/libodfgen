@@ -37,6 +37,18 @@
 class DocumentElement;
 class OdfDocumentHandler;
 
+//! the page drawing style
+class PageDrawingStyle : public Style
+{
+public:
+	PageDrawingStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGString &sName, Style::Zone zone);
+	virtual ~PageDrawingStyle();
+	virtual void write(OdfDocumentHandler *pHandler) const;
+
+private:
+	librevenge::RVNGPropertyList mpPropList;
+};
+
 class PageSpan
 {
 protected:
@@ -48,7 +60,7 @@ protected:
 		C_NumContentTypes // keep this one last
 	};
 public:
-	PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName, bool isMasterPage);
+	PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterName, librevenge::RVNGString const &masterDisplay="", bool isMasterPage=false);
 	virtual ~PageSpan();
 	//! writes the page layout style: Z_StyleAutomatic and the page drawing style: Z_ContentAutomatic(if defined)
 	void writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) const;
@@ -57,12 +69,17 @@ public:
 	//! returns the display name of the span's master page
 	librevenge::RVNGString getDisplayMasterName() const
 	{
-		return msMasterPageName;
+		return msMasterDisplay;
 	}
 	//! returns the name of the span's master page
 	librevenge::RVNGString getMasterName() const
 	{
-		return protectString(msMasterPageName);
+		return msMasterName;
+	}
+	//! set the layout name
+	void setLayoutNames(librevenge::RVNGString const &name)
+	{
+		msLayoutName=name;
 	}
 	//! returns the display name of the span's layout page
 	librevenge::RVNGString getDisplayLayoutName() const
@@ -74,15 +91,20 @@ public:
 	{
 		return protectString(msLayoutName);
 	}
-	//! returns the page drawing name of the span's pageDrawing page
-	librevenge::RVNGString getDisplayPageDrawingName() const
+	//! set the display page drawing name
+	void setDrawingName(librevenge::RVNGString const &name)
 	{
-		return msPageDrawingName;
+		msDrawingName=name;
+	}
+	//! returns the page drawing name of the span's drawing page
+	librevenge::RVNGString getDisplayDrawingName() const
+	{
+		return msDrawingName;
 	}
 	//! returns the name of the span's page drawing
-	librevenge::RVNGString getPageDrawingName() const
+	librevenge::RVNGString getDrawingName() const
 	{
-		return protectString(msPageDrawingName);
+		return protectString(msDrawingName);
 	}
 	/** reset the page size (used by Od[pg]Generator to reset the size to union size)
 		and the margins to 0
@@ -138,12 +160,14 @@ private:
 	librevenge::RVNGPropertyList mxPropList;
 	//! flag to know if this is a master page
 	bool mbIsMasterPage;
+	//! the page master name
+	librevenge::RVNGString msMasterName;
 	//! the page master display name
-	librevenge::RVNGString msMasterPageName;
+	librevenge::RVNGString msMasterDisplay;
 	//! the layout display name
 	librevenge::RVNGString msLayoutName;
 	//! the page drawing display name
-	librevenge::RVNGString msPageDrawingName;
+	librevenge::RVNGString msDrawingName;
 	libodfgen::DocumentElementVector *(mpContent[C_NumContentTypes]);
 };
 
@@ -152,10 +176,10 @@ class PageSpanManager
 {
 public:
 	//! constructor
-	PageSpanManager() : mpPageList(), mpNameToMasterPageMap(),
-		mpPageMasterNameSet(), miCurrentPageMasterIndex(0),
+	PageSpanManager() : mpPageList(), mpNameToMasterMap(),
+		mpMasterNameSet(), miCurrentMasterIndex(0),
 		mpLayoutNameSet(), miCurrentLayoutIndex(0),
-		mpPageDrawingNameSet(), miCurrentPageDrawingIndex(0)
+		mpDrawingList(), mpNameToDrawingMap(), mHashDrawingMap()
 	{
 	}
 	//! destructor
@@ -168,7 +192,7 @@ public:
 	//! create a new page and set it to current. Returns a pointer to this new page
 	PageSpan *add(const librevenge::RVNGPropertyList &xPropList, bool masterPage=false);
 	//! return the page span which correspond to a master name
-	PageSpan *get(librevenge::RVNGString const &name);
+	PageSpan *get(librevenge::RVNGString const &masterName);
 	//! write the pages' layouts (style automatic) or the pages' drawing styles(content automatic)
 	void writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 	void writeMasterPages(OdfDocumentHandler *pHandler) const;
@@ -180,22 +204,29 @@ public:
 	void resetPageSizeAndMargins(double width, double height);
 
 protected:
+	/* create a new drawing style if it does not exists and returns the final name for the drawing properties.
+
+	   \note If the property list does not contain any drawing style, returns the empty string*/
+	librevenge::RVNGString findOrAddDrawing(const librevenge::RVNGPropertyList &xPropList, bool masterPage);
+
 	//! the list of page
 	std::vector<shared_ptr<PageSpan> > mpPageList;
 	//! a map master page name to pagespan
-	std::map<librevenge::RVNGString, shared_ptr<PageSpan> > mpNameToMasterPageMap;
+	std::map<librevenge::RVNGString, shared_ptr<PageSpan> > mpNameToMasterMap;
 	//! the list of page master name
-	std::set<librevenge::RVNGString> mpPageMasterNameSet;
+	std::set<librevenge::RVNGString> mpMasterNameSet;
 	//! the current page master index (use to create a new page name)
-	int miCurrentPageMasterIndex;
+	int miCurrentMasterIndex;
 	//! the list of layout name
 	std::set<librevenge::RVNGString> mpLayoutNameSet;
 	//! the current layout index (use to create a new page name)
 	int miCurrentLayoutIndex;
-	//! the list of page drawing name
-	std::set<librevenge::RVNGString> mpPageDrawingNameSet;
-	//! the current page drawing index (use to create a new page name)
-	int miCurrentPageDrawingIndex;
+	//! the list of drawing style
+	std::vector<shared_ptr<PageDrawingStyle> > mpDrawingList;
+	//! a map named drawing to page drawing style
+	std::map<librevenge::RVNGString, shared_ptr<PageDrawingStyle> > mpNameToDrawingMap;
+	// hash key -> drawing style
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mHashDrawingMap;
 };
 #endif
 

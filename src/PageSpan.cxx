@@ -26,12 +26,53 @@
 #include "PageSpan.hxx"
 #include "DocumentElement.hxx"
 
-PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterPageName, librevenge::RVNGString const &layoutName, librevenge::RVNGString const &pageDrawingName, bool isMasterPage) :
+#include <string.h>
+
+//
+// page drawing style
+//
+PageDrawingStyle::PageDrawingStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName, Style::Zone zone) : Style(sName, zone),
+	mpPropList(pPropList)
+{
+}
+
+PageDrawingStyle::~PageDrawingStyle()
+{
+}
+
+void PageDrawingStyle::write(OdfDocumentHandler *pHandler) const
+{
+	librevenge::RVNGPropertyList propList;
+	propList.insert("style:name", getName());
+	if (mpPropList["style:display-name"])
+		propList.insert("style:display-name", mpPropList["style:display-name"]);
+	propList.insert("style:family", "drawing-page");
+	pHandler->startElement("style:style", propList);
+
+	propList.clear();
+	librevenge::RVNGPropertyList::Iter i(mpPropList);
+	for (i.rewind(); i.next();)
+	{
+		if (i.child() || strcmp(i.key(), "style:display-name")==0 ||
+		        strncmp(i.key(), "librevenge:",11)==0) continue;
+		propList.insert(i.key(), i()->clone());
+	}
+	pHandler->startElement("style:drawing-page-properties", propList);
+	pHandler->endElement("style:drawing-page-properties");
+
+	pHandler->endElement("style:style");
+}
+
+//
+// page span
+//
+PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterName, librevenge::RVNGString const &masterDisplay, bool isMasterPage) :
 	mxPropList(xPropList),
 	mbIsMasterPage(isMasterPage),
-	msMasterPageName(masterPageName),
-	msLayoutName(layoutName),
-	msPageDrawingName(pageDrawingName)
+	msMasterName(masterName),
+	msMasterDisplay(masterDisplay),
+	msLayoutName(""),
+	msDrawingName("")
 {
 	for (int i=0; i<C_NumContentTypes; ++i) mpContent[i]=0;
 }
@@ -132,39 +173,15 @@ void PageSpan::writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) co
 		pHandler->endElement("style:page-layout");
 	}
 
-	if (!msPageDrawingName.empty() &&
-	        ((zone==Style::Z_ContentAutomatic && !mbIsMasterPage) ||
-	         (zone==Style::Z_StyleAutomatic && mbIsMasterPage)))
-	{
-		propList.clear();
-		propList.insert("style:name", getPageDrawingName());
-		propList.insert("style:family", "drawing-page");
-		pHandler->startElement("style:style", propList);
-
-		if (mxPropList.child("librevenge:drawing-page") && mxPropList.child("librevenge:drawing-page")->count()==1)
-		{
-			pHandler->startElement("style:drawing-page-properties", (*mxPropList.child("librevenge:drawing-page"))[0]);
-			pHandler->endElement("style:drawing-page-properties");
-		}
-		else if (mxPropList.child("librevenge:drawing-page"))
-		{
-			ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the drawing page property list seems bad\n"));
-		}
-		pHandler->endElement("style:style");
-	}
 }
 
 void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 {
-	TagOpenElement masterPageOpen("style:master-page");
-	librevenge::RVNGString sMasterPageDisplayName(msMasterPageName);
-	librevenge::RVNGString sMasterPageName=protectString(sMasterPageDisplayName);
+	TagOpenElement masterOpen("style:master-page");
 	librevenge::RVNGPropertyList propList;
-	propList.insert("style:name", sMasterPageName);
-	if (sMasterPageDisplayName!=sMasterPageName)
-		propList.insert("style:display-name", sMasterPageDisplayName);
-	if (!msPageDrawingName.empty())
-		propList.insert("draw:style-name", getPageDrawingName());
+	propList.insert("style:name", msMasterName);
+	if (!msMasterDisplay.empty() && msMasterDisplay!=msMasterName)
+		propList.insert("style:display-name", msMasterDisplay);
 	/* we do not set any next-style to avoid problem when the input is
 	   OpenPageSpan("A")
 	      ... : many pages of text without any page break
@@ -177,7 +194,10 @@ void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
 	      but not set next-style to B if we do not want the second page of the document to have
 		  the layout B.
 	 */
-	propList.insert("style:page-layout-name", getLayoutName());
+	if (!msDrawingName.empty())
+		propList.insert("draw:style-name", getDrawingName());
+	if (!msLayoutName.empty())
+		propList.insert("style:page-layout-name", msLayoutName);
 	pHandler->startElement("style:master-page", propList);
 
 	if (mpContent[C_Header])
@@ -245,77 +265,115 @@ void PageSpanManager::clean()
 
 PageSpan *PageSpanManager::get(librevenge::RVNGString const &name)
 {
-	librevenge::RVNGString masterPageName("");
-	masterPageName.appendEscapedXML(name);
-	if (mpNameToMasterPageMap.find(masterPageName)==mpNameToMasterPageMap.end())
+	librevenge::RVNGString masterName("");
+	masterName.appendEscapedXML(name);
+	if (mpNameToMasterMap.find(masterName)==mpNameToMasterMap.end())
 	{
 		ODFGEN_DEBUG_MSG(("PageSpan::get: can not find a master page name\n"));
 		return 0;
 	}
-	return mpNameToMasterPageMap.find(masterPageName)->second.get();
+	return mpNameToMasterMap.find(masterName)->second.get();
 }
 
 PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList, bool isMasterPage)
 {
 	librevenge::RVNGPropertyList propList(xPropList);
 	// first find the master-page name
-	librevenge::RVNGString masterPageName("");
+	librevenge::RVNGString masterName("");
 	if (xPropList["librevenge:master-page-name"])
 	{
-		masterPageName.appendEscapedXML(xPropList["librevenge:master-page-name"]->getStr());
+		masterName.appendEscapedXML(xPropList["librevenge:master-page-name"]->getStr());
 		propList.remove("librevenge:master-page-name");
 	}
 	if (isMasterPage)
 	{
-		if (masterPageName.empty())
+		if (masterName.empty())
 		{
 			ODFGEN_DEBUG_MSG(("PageSpan::add: can not find the master page name\n"));
 			return 0;
 		}
-		if (mpNameToMasterPageMap.find(masterPageName)!=mpNameToMasterPageMap.end())
+		if (mpNameToMasterMap.find(masterName)!=mpNameToMasterMap.end())
 		{
 			ODFGEN_DEBUG_MSG(("PageSpan::add: a master page already exists with the same name\n"));
 			return 0;
 		}
 	}
-	if (masterPageName.empty())
+	if (masterName.empty())
 	{
 		do
-			masterPageName.sprintf("Page Style %i", ++miCurrentPageMasterIndex);
-		while (mpPageMasterNameSet.find(masterPageName) != mpPageMasterNameSet.end());
+			masterName.sprintf("Page Style %i", ++miCurrentMasterIndex);
+		while (mpMasterNameSet.find(masterName) != mpMasterNameSet.end());
 	}
-	mpPageMasterNameSet.insert(masterPageName);
+	mpMasterNameSet.insert(masterName);
+
+	shared_ptr<PageSpan> page(new PageSpan(propList, PageSpan::protectString(masterName), masterName, isMasterPage));
+	mpPageList.push_back(page);
+	if (isMasterPage)
+		mpNameToMasterMap[masterName]=page;
+
 	// now find the layout page name
-	librevenge::RVNGString layoutName("");
+	librevenge::RVNGString layoutName="";
 	if (xPropList["librevenge:layout-name"])
-	{
 		layoutName.appendEscapedXML(xPropList["librevenge:layout-name"]->getStr());
-		propList.remove("librevenge:layout-name");
-	}
 	if (layoutName.empty())
 	{
 		do
-			layoutName.sprintf("PM%i", miCurrentLayoutIndex++);
+			layoutName.sprintf("PL%i", miCurrentLayoutIndex++);
 		while (mpLayoutNameSet.find(layoutName) != mpLayoutNameSet.end());
 	}
+	page->setLayoutNames(layoutName);
 	// now find the page drawing style (if needed)
-	librevenge::RVNGString pageDrawingName("");
-	if (xPropList["librevenge:page-drawing-name"])
-	{
-		layoutName.appendEscapedXML(xPropList["librevenge:page-drawing-name"]->getStr());
-		propList.remove("librevenge:page-drawing-name");
-	}
-	if (pageDrawingName.empty() && xPropList.child("librevenge:drawing-page"))
-	{
-		do
-			pageDrawingName.sprintf("dp%i", ++miCurrentPageDrawingIndex);
-		while (mpPageDrawingNameSet.find(pageDrawingName) != mpPageDrawingNameSet.end());
-	}
-	shared_ptr<PageSpan> page(new PageSpan(propList, masterPageName, layoutName, pageDrawingName, isMasterPage));
-	mpPageList.push_back(page);
-	if (isMasterPage)
-		mpNameToMasterPageMap[masterPageName]=page;
+	librevenge::RVNGString drawingName=findOrAddDrawing(xPropList, isMasterPage);
+	if (!drawingName.empty())
+		page->setDrawingName(drawingName);
 	return page.get();
+}
+
+librevenge::RVNGString PageSpanManager::findOrAddDrawing(const librevenge::RVNGPropertyList &propList, bool isMaster)
+{
+	if (!propList["librevenge:page-drawing-name"] && !propList.child("librevenge:drawing-page"))
+		return 0;
+
+	librevenge::RVNGString drawingName("");
+	Style::Zone zone=isMaster ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic;
+	if (propList["librevenge:page-drawing-name"])
+	{
+		drawingName.appendEscapedXML(propList["librevenge:page-drawing-name"]->getStr());
+		if (mpNameToDrawingMap.find(drawingName)!=mpNameToDrawingMap.end()
+		        && mpNameToDrawingMap.find(drawingName)->second)
+		{
+			if (mpNameToDrawingMap.find(drawingName)->second->getZone()==zone)
+				return mpNameToDrawingMap.find(drawingName)->second->getName();
+			// bad zone, we need to create a new anonymous style
+			drawingName="";
+		}
+		zone=Style::Z_Style;
+	}
+
+	librevenge::RVNGPropertyList drawingList;
+	if (!propList.child("librevenge:drawing-page"))
+	{
+		ODFGEN_DEBUG_MSG(("PageSpanManager::findOrAddDrawing: can not find the drawing definition"));
+	}
+	else if (propList.child("librevenge:drawing-page")->count()>=1)
+		drawingList=(*propList.child("librevenge:drawing-page"))[0];
+	if (!drawingName.empty())
+		drawingList.insert("style:display-name", drawingName);
+	drawingList.insert("librevenge:zone-style", int(zone));
+
+	librevenge::RVNGString hashKey = drawingList.getPropString();
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
+	    mHashDrawingMap.find(hashKey);
+	if (iter!=mHashDrawingMap.end()) return iter->second;
+
+	librevenge::RVNGString finalName("");
+	finalName.sprintf("DP%i", (int) mpDrawingList.size()+1);
+	mHashDrawingMap[hashKey]=finalName;
+	shared_ptr<PageDrawingStyle> style(new PageDrawingStyle(drawingList, finalName, zone));
+	mpDrawingList.push_back(style);
+	if (!drawingName.empty())
+		mpNameToDrawingMap[drawingName]=style;
+	return finalName;
 }
 
 void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const
@@ -324,19 +382,26 @@ void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone 
 
 	   Actually, nobody defines the layout or the page-drawing-name, so can send the first data
 	 */
-	std::set<librevenge::RVNGString> done;
-	for (size_t i=0; i<mpPageList.size(); ++i)
+
+	// first the layout
+	if (zone==Style::Z_StyleAutomatic)
 	{
-		if (!mpPageList[i]) continue;
-		librevenge::RVNGString name;
-		if (zone==Style::Z_StyleAutomatic)
-			name=mpPageList[i]->getLayoutName();
-		else
-			name=mpPageList[i]->getPageDrawingName();
-		if (done.find(name)!=done.end())
-			continue;
-		done.insert(name);
-		mpPageList[i]->writePageStyle(pHandler, zone);
+		std::set<librevenge::RVNGString> done;
+		for (size_t i=0; i<mpPageList.size(); ++i)
+		{
+			if (!mpPageList[i]) continue;
+			librevenge::RVNGString name=mpPageList[i]->getLayoutName();
+			if (done.find(name)!=done.end())
+				continue;
+			done.insert(name);
+			mpPageList[i]->writePageStyle(pHandler, zone);
+		}
+	}
+	// now the drawing style
+	for (size_t i=0; i<mpDrawingList.size(); ++i)
+	{
+		if (!mpDrawingList[i] || mpDrawingList[i]->getZone()!=zone) continue;
+		mpDrawingList[i]->write(pHandler);
 	}
 }
 
