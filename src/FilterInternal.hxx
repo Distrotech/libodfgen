@@ -61,18 +61,58 @@ librevenge::RVNGString doubleToString(const double value);
 bool getInchValue(librevenge::RVNGProperty const &prop, double &value);
 
 //! small class used to store a list of DocumentElement
-class DocumentElementVector : public std::vector<DocumentElement *>
+class DocumentElementVector
 {
 public:
 	//! constructor
-	DocumentElementVector() : std::vector<DocumentElement *>() {}
+	DocumentElementVector() : mpElements() {}
 	//! destructor
 	~DocumentElementVector()
 	{
 		clear();
 	}
+
 	//! delete all document element
 	void clear();
+	//! returns true if the list is empty
+	bool empty() const
+	{
+		return mpElements.empty();
+	}
+	//! returns the vector size
+	size_t size() const
+	{
+		return mpElements.size();
+	}
+	//! push_back
+	void push_back(DocumentElement *elt)
+	{
+		mpElements.push_back(elt);
+	}
+	//! move data at the end of res ( and then clear this )
+	void appendTo(DocumentElementVector &res);
+	//! operator[]
+	DocumentElement const *operator[](size_t index) const
+	{
+		return mpElements[index];
+	}
+
+	//! iterator
+	std::vector<DocumentElement *>::const_iterator begin() const
+	{
+		return mpElements.begin();
+	}
+	std::vector<DocumentElement *>::const_iterator end() const
+	{
+		return mpElements.end();
+	}
+
+private:
+	DocumentElementVector(const DocumentElementVector &orig);
+	DocumentElementVector &operator=(const DocumentElementVector &orig);
+protected:
+	//! the list of elements
+	std::vector<DocumentElement *> mpElements;
 };
 
 } // namespace libodfgen

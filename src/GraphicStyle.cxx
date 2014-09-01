@@ -68,24 +68,13 @@ void GraphicStyle::write(OdfDocumentHandler *pHandler) const
 //
 void GraphicStyleManager::clean()
 {
-	for (size_t i=0; i < mBitmapStyles.size(); ++i)
-		delete mBitmapStyles[i];
-	for (size_t i=0; i < mGradientStyles.size(); ++i)
-		delete mGradientStyles[i];
-	for (size_t i=0; i < mMarkerStyles.size(); ++i)
-		delete mMarkerStyles[i];
-	for (size_t i=0; i < mOpacityStyles.size(); ++i)
-		delete mOpacityStyles[i];
-	for (size_t i=0; i < mStrokeDashStyles.size(); ++i)
-		delete mStrokeDashStyles[i];
 	mStyles.resize(0);
 
-	mBitmapStyles.resize(0);
-	mGradientStyles.resize(0);
-	mMarkerStyles.resize(0);
-	mOpacityStyles.resize(0);
-	mStrokeDashStyles.resize(0);
-	mStyles.resize(0);
+	mBitmapStyles.clear();
+	mGradientStyles.clear();
+	mMarkerStyles.clear();
+	mOpacityStyles.clear();
+	mStrokeDashStyles.clear();
 
 	mBitmapNameMap.clear();
 	mGradientNameMap.clear();

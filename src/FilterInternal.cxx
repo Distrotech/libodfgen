@@ -56,13 +56,22 @@ bool libodfgen::getInchValue(librevenge::RVNGProperty const &prop, double &value
 	return false;
 }
 
-void libodfgen::DocumentElementVector::clear()
+namespace libodfgen
+{
+void DocumentElementVector::clear()
 {
 	for (size_t i=0; i<size(); ++i)
 	{
-		if ((*this)[i]) delete(*this)[i];
+		if (mpElements[i]) delete mpElements[i];
 	}
-	resize(0);
+	mpElements.clear();
 }
 
+void DocumentElementVector::appendTo(DocumentElementVector &res)
+{
+	for (size_t i=0; i<mpElements.size(); ++i)
+		res.mpElements.push_back(mpElements[i]);
+	mpElements.clear();
+}
+}
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

@@ -88,11 +88,11 @@ protected:
 	librevenge::RVNGString getStyleNameForOpacity(librevenge::RVNGPropertyList const &style);
 	librevenge::RVNGString getStyleNameForStrokeDash(librevenge::RVNGPropertyList const &style);
 	// graphics styles
-	std::vector<DocumentElement *> mBitmapStyles;
-	std::vector<DocumentElement *> mGradientStyles;
-	std::vector<DocumentElement *> mMarkerStyles;
-	std::vector<DocumentElement *> mOpacityStyles;
-	std::vector<DocumentElement *> mStrokeDashStyles;
+	libodfgen::DocumentElementVector mBitmapStyles;
+	libodfgen::DocumentElementVector mGradientStyles;
+	libodfgen::DocumentElementVector mMarkerStyles;
+	libodfgen::DocumentElementVector mOpacityStyles;
+	libodfgen::DocumentElementVector mStrokeDashStyles;
 	std::vector<shared_ptr<GraphicStyle> > mStyles;
 
 	// bitmap content -> style name

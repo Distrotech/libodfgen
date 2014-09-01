@@ -27,7 +27,6 @@
 #include <map>
 #include <stack>
 #include <string>
-#include <vector>
 
 #include <librevenge/librevenge.h>
 #include <libodfgen/libodfgen.hxx>

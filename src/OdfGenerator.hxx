@@ -31,7 +31,6 @@
 #include <set>
 #include <stack>
 #include <string>
-#include <vector>
 
 #include <librevenge/librevenge.h>
 

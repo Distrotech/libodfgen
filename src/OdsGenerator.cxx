@@ -25,7 +25,7 @@
  */
 
 #include <librevenge/librevenge.h>
-#include <vector>
+
 #include <map>
 #include <stack>
 #include <sstream>
@@ -274,9 +274,7 @@ public:
 			object->addAttribute("xlink:actuate","onLoad");
 		}
 		getCurrentStorage()->push_back(object);
-		for (std::vector<DocumentElement *>::const_iterator iter = mAuxiliarOdcState->mContentElements.begin(); iter != mAuxiliarOdcState->mContentElements.end(); ++iter)
-			getCurrentStorage()->push_back(*iter);
-		mAuxiliarOdcState->mContentElements.resize(0);
+		mAuxiliarOdcState->mContentElements.appendTo(*getCurrentStorage());
 		getCurrentStorage()->push_back(new TagCloseElement("draw:object"));
 		return true;
 	}
@@ -326,9 +324,7 @@ public:
 			return false;
 		}
 		getCurrentStorage()->push_back(new TagOpenElement("draw:object"));
-		for (std::vector<DocumentElement *>::const_iterator iter = mAuxiliarOdtState->mContentElements.begin(); iter != mAuxiliarOdtState->mContentElements.end(); ++iter)
-			getCurrentStorage()->push_back(*iter);
-		mAuxiliarOdtState->mContentElements.resize(0);
+		mAuxiliarOdtState->mContentElements.appendTo(*getCurrentStorage());
 		getCurrentStorage()->push_back(new TagCloseElement("draw:object"));
 		return true;
 	}

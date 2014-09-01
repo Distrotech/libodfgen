@@ -1024,7 +1024,7 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 			librevenge::RVNGBinaryData data(propList["office:binary-data"]->getStr());
 			if (tmpObjectHandler)
 			{
-				std::vector<DocumentElement *> tmpContentElements;
+				DocumentElementVector tmpContentElements;
 				InternalHandler tmpHandler(&tmpContentElements);
 
 

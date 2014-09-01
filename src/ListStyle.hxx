@@ -27,6 +27,7 @@
 
 #include <map>
 #include <stack>
+#include <vector>
 #include <librevenge/librevenge.h>
 
 #include "Style.hxx"

@@ -25,7 +25,7 @@
  */
 
 #include <librevenge/librevenge.h>
-#include <vector>
+
 #include <map>
 #include <stack>
 #include <string>
