@@ -64,6 +64,65 @@ void PageDrawingStyle::write(OdfDocumentHandler *pHandler) const
 }
 
 //
+// page layout style
+//
+PageLayoutStyle::PageLayoutStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName, Style::Zone zone) : Style(sName, zone),
+	mpPropList(pPropList)
+{
+}
+
+PageLayoutStyle::~PageLayoutStyle()
+{
+}
+
+void PageLayoutStyle::write(OdfDocumentHandler *pHandler) const
+{
+	librevenge::RVNGPropertyList propList;
+	propList.insert("style:name", getName());
+	if (mpPropList["style:display-name"])
+		propList.insert("style:display-name", mpPropList["style:display-name"]);
+	pHandler->startElement("style:page-layout", propList);
+
+	librevenge::RVNGPropertyList tempPropList;
+	tempPropList.insert("style:writing-mode", librevenge::RVNGString("lr-tb"));
+	tempPropList.insert("style:footnote-max-height", librevenge::RVNGString("0in"));
+	librevenge::RVNGPropertyList::Iter i(mpPropList);
+	for (i.rewind(); i.next();)
+	{
+		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0 || strncmp(i.key(), "svg:", 4)==0)
+			continue;
+		tempPropList.insert(i.key(), i()->clone());
+	}
+	pHandler->startElement("style:page-layout-properties", tempPropList);
+
+	librevenge::RVNGPropertyList footnoteSepPropList;
+	if (mpPropList.child("librevenge:footnote"))
+	{
+		librevenge::RVNGPropertyListVector const *footnoteVector=mpPropList.child("librevenge:footnote");
+		if (footnoteVector->count()==1)
+			footnoteSepPropList=(*footnoteVector)[0];
+		else if (footnoteVector->count())
+		{
+			ODFGEN_DEBUG_MSG(("PageLayoutStyle::write: the footnote property list seems bad\n"));
+		}
+	}
+	else
+	{
+		footnoteSepPropList.insert("style:width", librevenge::RVNGString("0.0071in"));
+		footnoteSepPropList.insert("style:distance-before-sep", librevenge::RVNGString("0.0398in"));
+		footnoteSepPropList.insert("style:distance-after-sep", librevenge::RVNGString("0.0398in"));
+		footnoteSepPropList.insert("style:adjustment", librevenge::RVNGString("left"));
+		footnoteSepPropList.insert("style:rel-width", librevenge::RVNGString("25%"));
+		footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
+	}
+	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
+
+	pHandler->endElement("style:footnote-sep");
+	pHandler->endElement("style:page-layout-properties");
+	pHandler->endElement("style:page-layout");
+}
+
+//
 // page span
 //
 PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterName, librevenge::RVNGString const &masterDisplay, bool isMasterPage) :
@@ -124,55 +183,6 @@ void PageSpan::storeContent(ContentType type, libodfgen::DocumentElementVector *
 	if (mpContent[type])
 		delete mpContent[type];
 	mpContent[type]=pContent;
-}
-
-void PageSpan::writePageStyle(OdfDocumentHandler *pHandler, Style::Zone zone) const
-{
-	librevenge::RVNGPropertyList propList;
-	if (zone==Style::Z_StyleAutomatic)
-	{
-		propList.insert("style:name", getLayoutName());
-		pHandler->startElement("style:page-layout", propList);
-
-		librevenge::RVNGPropertyList tempPropList;
-		tempPropList.insert("style:writing-mode", librevenge::RVNGString("lr-tb"));
-		tempPropList.insert("style:footnote-max-height", librevenge::RVNGString("0in"));
-		librevenge::RVNGPropertyList::Iter i(mxPropList);
-		for (i.rewind(); i.next();)
-		{
-			if (i.child() || strncmp(i.key(), "librevenge:", 11)==0 || strncmp(i.key(), "svg:", 4)==0)
-				continue;
-			tempPropList.insert(i.key(), i()->clone());
-		}
-		pHandler->startElement("style:page-layout-properties", tempPropList);
-
-		librevenge::RVNGPropertyList footnoteSepPropList;
-		if (mxPropList.child("librevenge:footnote"))
-		{
-			librevenge::RVNGPropertyListVector const *footnoteVector=mxPropList.child("librevenge:footnote");
-			if (footnoteVector->count()==1)
-				footnoteSepPropList=(*footnoteVector)[0];
-			else if (footnoteVector->count())
-			{
-				ODFGEN_DEBUG_MSG(("PageSpan::writePageStyle: the footnote property list seems bad\n"));
-			}
-		}
-		else
-		{
-			footnoteSepPropList.insert("style:width", librevenge::RVNGString("0.0071in"));
-			footnoteSepPropList.insert("style:distance-before-sep", librevenge::RVNGString("0.0398in"));
-			footnoteSepPropList.insert("style:distance-after-sep", librevenge::RVNGString("0.0398in"));
-			footnoteSepPropList.insert("style:adjustment", librevenge::RVNGString("left"));
-			footnoteSepPropList.insert("style:rel-width", librevenge::RVNGString("25%"));
-			footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
-		}
-		pHandler->startElement("style:footnote-sep", footnoteSepPropList);
-
-		pHandler->endElement("style:footnote-sep");
-		pHandler->endElement("style:page-layout-properties");
-		pHandler->endElement("style:page-layout");
-	}
-
 }
 
 void PageSpan::writeMasterPages(OdfDocumentHandler *pHandler) const
@@ -312,16 +322,7 @@ PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList, bo
 		mpNameToMasterMap[masterName]=page;
 
 	// now find the layout page name
-	librevenge::RVNGString layoutName="";
-	if (xPropList["librevenge:layout-name"])
-		layoutName.appendEscapedXML(xPropList["librevenge:layout-name"]->getStr());
-	if (layoutName.empty())
-	{
-		do
-			layoutName.sprintf("PL%i", miCurrentLayoutIndex++);
-		while (mpLayoutNameSet.find(layoutName) != mpLayoutNameSet.end());
-	}
-	page->setLayoutNames(layoutName);
+	page->setLayoutName(findOrAddLayout(xPropList));
 	// now find the page drawing style (if needed)
 	librevenge::RVNGString drawingName=findOrAddDrawing(xPropList, isMasterPage);
 	if (!drawingName.empty())
@@ -331,22 +332,17 @@ PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList, bo
 
 librevenge::RVNGString PageSpanManager::findOrAddDrawing(const librevenge::RVNGPropertyList &propList, bool isMaster)
 {
-	if (!propList["librevenge:page-drawing-name"] && !propList.child("librevenge:drawing-page"))
+	if (!propList["librevenge:drawing-name"] && !propList.child("librevenge:drawing-page"))
 		return 0;
 
 	librevenge::RVNGString drawingName("");
 	Style::Zone zone=isMaster ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic;
-	if (propList["librevenge:page-drawing-name"])
+	if (propList["librevenge:drawing-name"])
 	{
-		drawingName.appendEscapedXML(propList["librevenge:page-drawing-name"]->getStr());
+		drawingName.appendEscapedXML(propList["librevenge:drawing-name"]->getStr());
 		if (mpNameToDrawingMap.find(drawingName)!=mpNameToDrawingMap.end()
 		        && mpNameToDrawingMap.find(drawingName)->second)
-		{
-			if (mpNameToDrawingMap.find(drawingName)->second->getZone()==zone)
-				return mpNameToDrawingMap.find(drawingName)->second->getName();
-			// bad zone, we need to create a new anonymous style
-			drawingName="";
-		}
+			return mpNameToDrawingMap.find(drawingName)->second->getName();
 		zone=Style::Z_Style;
 	}
 
@@ -376,6 +372,49 @@ librevenge::RVNGString PageSpanManager::findOrAddDrawing(const librevenge::RVNGP
 	return finalName;
 }
 
+librevenge::RVNGString PageSpanManager::findOrAddLayout(const librevenge::RVNGPropertyList &propList)
+{
+	librevenge::RVNGString layoutName("");
+	Style::Zone zone=Style::Z_StyleAutomatic;
+	if (propList["librevenge:layout-name"])
+	{
+		layoutName.appendEscapedXML(propList["librevenge:layout-name"]->getStr());
+		if (mpNameToLayoutMap.find(layoutName)!=mpNameToLayoutMap.end()
+		        && mpNameToLayoutMap.find(layoutName)->second)
+			return mpNameToLayoutMap.find(layoutName)->second->getName();
+		zone=Style::Z_Style;
+	}
+
+	librevenge::RVNGPropertyList layoutList;
+	librevenge::RVNGPropertyList::Iter i(propList);
+	for (i.rewind(); i.next();)
+	{
+		if (i.child() || strcmp(i.key(), "style:display-name")==0 ||
+		        strncmp(i.key(), "librevenge:",11)==0) continue;
+		layoutList.insert(i.key(), i()->clone());
+	}
+	if (propList.child("librevenge:footnote"))
+		layoutList.insert("librevenge:footnote", *propList.child("librevenge:footnote"));
+
+	if (!layoutName.empty())
+		layoutList.insert("style:display-name", layoutName);
+	layoutList.insert("librevenge:zone-style", int(zone));
+
+	librevenge::RVNGString hashKey = layoutList.getPropString();
+	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
+	    mHashLayoutMap.find(hashKey);
+	if (iter!=mHashLayoutMap.end()) return iter->second;
+
+	librevenge::RVNGString finalName("");
+	finalName.sprintf("PL%i", (int) mpLayoutList.size());
+	mHashLayoutMap[hashKey]=finalName;
+	shared_ptr<PageLayoutStyle> style(new PageLayoutStyle(layoutList, finalName, zone));
+	mpLayoutList.push_back(style);
+	if (!layoutName.empty())
+		mpNameToLayoutMap[layoutName]=style;
+	return finalName;
+}
+
 void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
 	/* We need to send each style only one time.
@@ -384,18 +423,10 @@ void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone 
 	 */
 
 	// first the layout
-	if (zone==Style::Z_StyleAutomatic)
+	for (size_t i=0; i<mpLayoutList.size(); ++i)
 	{
-		std::set<librevenge::RVNGString> done;
-		for (size_t i=0; i<mpPageList.size(); ++i)
-		{
-			if (!mpPageList[i]) continue;
-			librevenge::RVNGString name=mpPageList[i]->getLayoutName();
-			if (done.find(name)!=done.end())
-				continue;
-			done.insert(name);
-			mpPageList[i]->writePageStyle(pHandler, zone);
-		}
+		if (!mpLayoutList[i] || mpLayoutList[i]->getZone()!=zone) continue;
+		mpLayoutList[i]->write(pHandler);
 	}
 	// now the drawing style
 	for (size_t i=0; i<mpDrawingList.size(); ++i)

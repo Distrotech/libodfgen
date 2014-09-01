@@ -235,6 +235,18 @@ static void createOds()
 	list.clear();
 	list.insert("librevenge:columns", columns);
 	generator.openSheet(list);
+	list.clear();
+	list.insert("style:row-height", 100, librevenge::RVNG_POINT);
+	generator.openSheetRow(list);
+	list.clear();
+	list.insert("librevenge:column", 2);
+	list.insert("librevenge:row", 1);
+	list.insert("table:number-columns-spanned", 1);
+	list.insert("table:number-rows-spanned", 1);
+	generator.openSheetCell(list);
+	sendText(generator);
+	generator.closeSheetCell();
+	generator.closeSheetRow();
 	generator.closeSheet();
 	generator.closePageSpan();
 

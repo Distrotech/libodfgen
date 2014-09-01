@@ -169,6 +169,8 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
 
+	mPageSpanManager.writePageStyles(pHandler, Style::Z_Style);
+
 	// style:default-style
 
 	// graphic

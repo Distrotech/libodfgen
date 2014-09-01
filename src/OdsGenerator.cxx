@@ -507,8 +507,9 @@ void OdsGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
 
-	// style:default-style
+	mPageSpanManager.writePageStyles(pHandler, Style::Z_Style);
 
+	// style:default-style
 	// paragraph
 	TagOpenElement defaultParagraphStyleOpenElement("style:default-style");
 	defaultParagraphStyleOpenElement.addAttribute("style:family", "paragraph");
