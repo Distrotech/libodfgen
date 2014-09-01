@@ -56,6 +56,11 @@ public:
 	PageLayoutStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGString &sName, Style::Zone zone);
 	virtual ~PageLayoutStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
+	/** reset the page size (used by Od[pg]Generator to reset the size to union size)
+		and the margins to 0
+		\note size are given in inch
+	 */
+	void resetPageSizeAndMargins(double width, double height);
 
 private:
 	librevenge::RVNGPropertyList mpPropList;
@@ -72,10 +77,9 @@ protected:
 		C_NumContentTypes // keep this one last
 	};
 public:
-	PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterName, librevenge::RVNGString const &masterDisplay="", bool isMasterPage=false);
+	PageSpan(librevenge::RVNGString const &masterName, librevenge::RVNGString const &masterDisplay="", bool isMasterPage=false);
 	virtual ~PageSpan();
 	void writeMasterPages(OdfDocumentHandler *pHandler) const;
-	int getSpan() const;
 	//! returns the display name of the span's master page
 	librevenge::RVNGString getDisplayMasterName() const
 	{
@@ -106,11 +110,6 @@ public:
 	{
 		return msDrawingName;
 	}
-	/** reset the page size (used by Od[pg]Generator to reset the size to union size)
-		and the margins to 0
-		\note size are given in inch
-	 */
-	void resetPageSizeAndMargins(double width, double height);
 	void setHeaderContent(libodfgen::DocumentElementVector *pContent)
 	{
 		storeContent(C_Header, pContent);
@@ -157,7 +156,6 @@ protected:
 private:
 	PageSpan(const PageSpan &);
 	PageSpan &operator=(const PageSpan &);
-	librevenge::RVNGPropertyList mxPropList;
 	//! flag to know if this is a master page
 	bool mbIsMasterPage;
 	//! the page master name
@@ -177,7 +175,6 @@ class PageSpanManager
 public:
 	//! constructor
 	PageSpanManager() : mpPageList(), mpNameToMasterMap(),
-		mpMasterNameSet(), miCurrentMasterIndex(0),
 		mpLayoutList(), mpNameToLayoutMap(), mHashLayoutMap(),
 		mpDrawingList(), mpNameToDrawingMap(), mHashDrawingMap()
 	{
@@ -197,9 +194,11 @@ public:
 	void writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 	void writeMasterPages(OdfDocumentHandler *pHandler) const;
 
-	/** reset all page sizes (used by OdgGenerator to reset the size to union size)
-		and the margins to 0
-		\note size are given in inch
+	/** reset all layout page sizes given in inches	and the margins to 0
+
+		\note this function is used by Od[pg]Generator to reset the
+		size to union size, so it only reset size if there are several
+		page layouts, ie. at least 2.
 	 */
 	void resetPageSizeAndMargins(double width, double height);
 
@@ -216,10 +215,7 @@ protected:
 	std::vector<shared_ptr<PageSpan> > mpPageList;
 	//! a map master page name to pagespan
 	std::map<librevenge::RVNGString, shared_ptr<PageSpan> > mpNameToMasterMap;
-	//! the list of page master name
-	std::set<librevenge::RVNGString> mpMasterNameSet;
-	//! the current page master index (use to create a new page name)
-	int miCurrentMasterIndex;
+
 	//! the list of layout style
 	std::vector<shared_ptr<PageLayoutStyle> > mpLayoutList;
 	//! a map named layout to page layout style

@@ -75,6 +75,17 @@ PageLayoutStyle::~PageLayoutStyle()
 {
 }
 
+void PageLayoutStyle::resetPageSizeAndMargins(double width, double height)
+{
+	mpPropList.insert("fo:page-width", width, librevenge::RVNG_INCH);
+	mpPropList.insert("fo:page-height", height, librevenge::RVNG_INCH);
+	mpPropList.insert("fo:margin-top", "0in");
+	mpPropList.insert("fo:margin-bottom", "0in");
+	mpPropList.insert("fo:margin-left", "0in");
+	mpPropList.insert("fo:margin-right", "0in");
+	mpPropList.insert("style:print-orientation", "portrait");
+}
+
 void PageLayoutStyle::write(OdfDocumentHandler *pHandler) const
 {
 	librevenge::RVNGPropertyList propList;
@@ -125,8 +136,7 @@ void PageLayoutStyle::write(OdfDocumentHandler *pHandler) const
 //
 // page span
 //
-PageSpan::PageSpan(const librevenge::RVNGPropertyList &xPropList, librevenge::RVNGString const &masterName, librevenge::RVNGString const &masterDisplay, bool isMasterPage) :
-	mxPropList(xPropList),
+PageSpan::PageSpan(librevenge::RVNGString const &masterName, librevenge::RVNGString const &masterDisplay, bool isMasterPage) :
 	mbIsMasterPage(isMasterPage),
 	msMasterName(masterName),
 	msMasterDisplay(masterDisplay),
@@ -142,25 +152,6 @@ PageSpan::~PageSpan()
 	{
 		if (mpContent[i]) delete mpContent[i];
 	}
-}
-
-int PageSpan::getSpan() const
-{
-	if (mxPropList["librevenge:num-pages"])
-		return mxPropList["librevenge:num-pages"]->getInt();
-
-	return 0; // should never happen
-}
-
-void PageSpan::resetPageSizeAndMargins(double width, double height)
-{
-	mxPropList.insert("fo:page-width", width, librevenge::RVNG_INCH);
-	mxPropList.insert("fo:page-height", height, librevenge::RVNG_INCH);
-	mxPropList.insert("fo:margin-top", "0in");
-	mxPropList.insert("fo:margin-bottom", "0in");
-	mxPropList.insert("fo:margin-left", "0in");
-	mxPropList.insert("fo:margin-right", "0in");
-	mxPropList.insert("style:print-orientation", "portrait");
 }
 
 librevenge::RVNGString PageSpan::protectString(librevenge::RVNGString const &orig)
@@ -289,37 +280,32 @@ PageSpan *PageSpanManager::add(const librevenge::RVNGPropertyList &xPropList, bo
 {
 	librevenge::RVNGPropertyList propList(xPropList);
 	// first find the master-page name
-	librevenge::RVNGString masterName("");
+	librevenge::RVNGString displayName("");
 	if (xPropList["librevenge:master-page-name"])
 	{
-		masterName.appendEscapedXML(xPropList["librevenge:master-page-name"]->getStr());
+		displayName.appendEscapedXML(xPropList["librevenge:master-page-name"]->getStr());
 		propList.remove("librevenge:master-page-name");
 	}
 	if (isMasterPage)
 	{
-		if (masterName.empty())
+		if (displayName.empty())
 		{
 			ODFGEN_DEBUG_MSG(("PageSpan::add: can not find the master page name\n"));
 			return 0;
 		}
-		if (mpNameToMasterMap.find(masterName)!=mpNameToMasterMap.end())
+		if (mpNameToMasterMap.find(displayName)!=mpNameToMasterMap.end())
 		{
 			ODFGEN_DEBUG_MSG(("PageSpan::add: a master page already exists with the same name\n"));
 			return 0;
 		}
 	}
-	if (masterName.empty())
-	{
-		do
-			masterName.sprintf("Page Style %i", ++miCurrentMasterIndex);
-		while (mpMasterNameSet.find(masterName) != mpMasterNameSet.end());
-	}
-	mpMasterNameSet.insert(masterName);
+	librevenge::RVNGString masterName("");
+	masterName.sprintf("PM%i", (int) mpPageList.size());
 
-	shared_ptr<PageSpan> page(new PageSpan(propList, PageSpan::protectString(masterName), masterName, isMasterPage));
+	shared_ptr<PageSpan> page(new PageSpan(masterName, displayName, isMasterPage));
 	mpPageList.push_back(page);
 	if (isMasterPage)
-		mpNameToMasterMap[masterName]=page;
+		mpNameToMasterMap[displayName]=page;
 
 	// now find the layout page name
 	page->setLayoutName(findOrAddLayout(xPropList));
@@ -417,11 +403,6 @@ librevenge::RVNGString PageSpanManager::findOrAddLayout(const librevenge::RVNGPr
 
 void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
-	/* We need to send each style only one time.
-
-	   Actually, nobody defines the layout or the page-drawing-name, so can send the first data
-	 */
-
 	// first the layout
 	for (size_t i=0; i<mpLayoutList.size(); ++i)
 	{
@@ -438,25 +419,21 @@ void PageSpanManager::writePageStyles(OdfDocumentHandler *pHandler, Style::Zone 
 
 void PageSpanManager::writeMasterPages(OdfDocumentHandler *pHandler) const
 {
-	/* We need to send each master-page only one time. */
-	std::set<librevenge::RVNGString> done;
 	for (size_t i=0; i<mpPageList.size(); ++i)
 	{
 		if (!mpPageList[i]) continue;
-		librevenge::RVNGString name(mpPageList[i]->getMasterName());
-		if (done.find(name)!=done.end())
-			continue;
-		done.insert(name);
 		mpPageList[i]->writeMasterPages(pHandler);
 	}
 }
 
 void PageSpanManager::resetPageSizeAndMargins(double width, double height)
 {
-	for (size_t i=0; i<mpPageList.size(); ++i)
+	if (mpLayoutList.size() <= 1)
+		return;
+	for (size_t i=0; i<mpLayoutList.size(); ++i)
 	{
-		if (!mpPageList[i]) continue;
-		mpPageList[i]->resetPageSizeAndMargins(width, height);
+		if (!mpLayoutList[i]) continue;
+		mpLayoutList[i]->resetPageSizeAndMargins(width, height);
 	}
 }
 

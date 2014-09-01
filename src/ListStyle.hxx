@@ -118,7 +118,7 @@ public:
 	//! constructor
 	ListManager();
 	//! destructor
-	~ListManager();
+	virtual ~ListManager();
 
 	/// call to define a list level
 	void defineLevel(const librevenge::RVNGPropertyList &propList, bool ordered, Style::Zone zone);

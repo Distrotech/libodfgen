@@ -111,8 +111,6 @@ public:
 	// section styles manager
 	SectionStyleManager mSectionManager;
 
-	// page manager
-	PageSpanManager mPageSpanManager;
 	// the current page span
 	PageSpan *mpCurrentPageSpan;
 
@@ -490,7 +488,7 @@ void OdtGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*prop
 
 void OdtGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->mpCurrentPageSpan = mpImpl->mPageSpanManager.add(propList);
+	mpImpl->mpCurrentPageSpan = mpImpl->getPageSpanManager().add(propList);
 
 	mpImpl->getState().mbFirstParagraphInPageSpan = true;
 }
