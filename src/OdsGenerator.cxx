@@ -275,6 +275,7 @@ public:
 		}
 		getCurrentStorage()->push_back(object);
 		mAuxiliarOdcState->mContentElements.appendTo(*getCurrentStorage());
+		mAuxiliarOdcState->mContentElements.resize(0);
 		getCurrentStorage()->push_back(new TagCloseElement("draw:object"));
 		return true;
 	}
@@ -325,6 +326,7 @@ public:
 		}
 		getCurrentStorage()->push_back(new TagOpenElement("draw:object"));
 		mAuxiliarOdtState->mContentElements.appendTo(*getCurrentStorage());
+		mAuxiliarOdtState->mContentElements.resize(0);
 		getCurrentStorage()->push_back(new TagCloseElement("draw:object"));
 		return true;
 	}

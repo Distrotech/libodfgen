@@ -245,7 +245,7 @@ void PageSpan::_writeContent(const char *contentTagName,
 	bool hasTagName=contentTagName && strlen(contentTagName);
 	if (hasTagName)
 		TagOpenElement(contentTagName).write(pHandler);
-	for (std::vector<DocumentElement *>::const_iterator iter = content.begin();
+	for (std::vector<shared_ptr<DocumentElement> >::const_iterator iter = content.begin();
 	        iter != content.end();
 	        ++iter)
 	{

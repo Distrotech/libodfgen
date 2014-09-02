@@ -1031,8 +1031,7 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 				if (tmpObjectHandler(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
 				{
 					mpCurrentStorage->push_back(new TagOpenElement("draw:object"));
-					for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); ++iter)
-						mpCurrentStorage->push_back(*iter);
+					tmpContentElements.appendTo(*mpCurrentStorage);
 					mpCurrentStorage->push_back(new TagCloseElement("draw:object"));
 				}
 			}

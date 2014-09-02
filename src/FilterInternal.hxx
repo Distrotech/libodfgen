@@ -60,20 +60,20 @@ namespace libodfgen
 librevenge::RVNGString doubleToString(const double value);
 bool getInchValue(librevenge::RVNGProperty const &prop, double &value);
 
-//! small class used to store a list of DocumentElement
+//! small class used to store a list of shared_ptr DocumentElement
 class DocumentElementVector
 {
 public:
 	//! constructor
 	DocumentElementVector() : mpElements() {}
 	//! destructor
-	~DocumentElementVector()
-	{
-		clear();
-	}
+	~DocumentElementVector();
 
 	//! delete all document element
-	void clear();
+	void clear()
+	{
+		resize(0);
+	}
 	//! returns true if the list is empty
 	bool empty() const
 	{
@@ -84,25 +84,31 @@ public:
 	{
 		return mpElements.size();
 	}
+	//! returns the vector size
+	void resize(size_t newSize);
 	//! push_back
-	void push_back(DocumentElement *elt)
-	{
-		mpElements.push_back(elt);
-	}
-	//! move data at the end of res ( and then clear this )
+	void push_back(shared_ptr<DocumentElement> elt);
+	//! push_back (given a pointer)
+	void push_back(DocumentElement *elt);
+	//! append data at the end of res
 	void appendTo(DocumentElementVector &res);
 	//! operator[]
-	DocumentElement const *operator[](size_t index) const
+	shared_ptr<DocumentElement> operator[](size_t index) const
+	{
+		return mpElements[index];
+	}
+	//! operator[]
+	shared_ptr<DocumentElement> &operator[](size_t index)
 	{
 		return mpElements[index];
 	}
 
 	//! iterator
-	std::vector<DocumentElement *>::const_iterator begin() const
+	std::vector<shared_ptr<DocumentElement> >::const_iterator begin() const
 	{
 		return mpElements.begin();
 	}
-	std::vector<DocumentElement *>::const_iterator end() const
+	std::vector<shared_ptr<DocumentElement> >::const_iterator end() const
 	{
 		return mpElements.end();
 	}
@@ -112,7 +118,7 @@ private:
 	DocumentElementVector &operator=(const DocumentElementVector &orig);
 protected:
 	//! the list of elements
-	std::vector<DocumentElement *> mpElements;
+	std::vector<shared_ptr<DocumentElement> > mpElements;
 };
 
 } // namespace libodfgen
