@@ -205,9 +205,9 @@ void OdpGeneratorPrivate::openTextBoxFrame(const ::librevenge::RVNGPropertyList 
 	double x = 0.0;
 	double y = 0.0;
 	if (propList["svg:x"])
-		x = propList["svg:x"]->getDouble();
+		libodfgen::getInchValue(*propList["svg:x"], x);
 	if (propList["svg:y"])
-		y = propList["svg:y"]->getDouble();
+		libodfgen::getInchValue(*propList["svg:y"], y);
 	double angle(propList["librevenge:rotate"] ? - M_PI * propList["librevenge:rotate"]->getDouble() / 180.0 : 0.0);
 	if (angle != 0.0)
 	{
@@ -215,13 +215,19 @@ void OdpGeneratorPrivate::openTextBoxFrame(const ::librevenge::RVNGPropertyList 
 		double width = 0.0;
 		double height = 0.0;
 		if (propList["librevenge:rotate-cx"])
-			width = 2.0*(propList["librevenge:rotate-cx"]->getDouble()-x);
+		{
+			getInchValue(*propList["librevenge:rotate-cx"],width);
+			width = 2.0*(width-x);
+		}
 		else if (propList["svg:width"])
-			width = propList["svg:width"]->getDouble();
+			getInchValue(*propList["svg:width"],width);
 		if (propList["librevenge:rotate-cy"])
-			height = 2.0*(propList["librevenge:rotate-cy"]->getDouble()-y);
+		{
+			getInchValue(*propList["librevenge:rotate-cy"],height);
+			height = 2.0*(height-y);
+		}
 		else if (propList["svg:height"])
-			height = propList["svg:height"]->getDouble();
+			getInchValue(*propList["svg:height"],height);
 		double deltax((width*cos(angle)+height*sin(angle)-width)/2.0);
 		double deltay((-width*sin(angle)+height*cos(angle)-height)/2.0);
 		x -= deltax;
@@ -694,11 +700,12 @@ void OdpGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	if (propList["draw:blue"])
 		style.insert("draw:blue", propList["draw:blue"]->getStr());
 
-
-	double x = propList["svg:x"]->getDouble();
-	double y = propList["svg:y"]->getDouble();
-	double height = propList["svg:height"]->getDouble();
-	double width = propList["svg:width"]->getDouble();
+	double x, y;
+	double height, width;
+	getInchValue(*propList["svg:x"], x);
+	getInchValue(*propList["svg:y"], y);
+	getInchValue(*propList["svg:height"], height);
+	getInchValue(*propList["svg:width"], width);
 
 	if (flipY)
 	{
@@ -1002,14 +1009,15 @@ void OdpGenerator::startComment(const ::librevenge::RVNGPropertyList &propList)
 	TagOpenElement *const commentElement = new TagOpenElement("officeooo:annotation");
 
 	// position & size
-	if (propList["svg:x"])
-		commentElement->addAttribute("svg:x", doubleToString(72 * propList["svg:x"]->getDouble()));
-	if (propList["svg:y"])
-		commentElement->addAttribute("svg:y", doubleToString(72 * propList["svg:y"]->getDouble()));
-	if (propList["svg:width"])
-		commentElement->addAttribute("svg:width", doubleToString(72 * propList["svg:width"]->getDouble()));
-	if (propList["svg:height"])
-		commentElement->addAttribute("svg:height", doubleToString(72 * propList["svg:height"]->getDouble()));
+	double val;
+	if (propList["svg:x"] && getInchValue(*propList["svg:x"], val))
+		commentElement->addAttribute("svg:x", doubleToString(72 * val));
+	if (propList["svg:y"] && getInchValue(*propList["svg:y"], val))
+		commentElement->addAttribute("svg:y", doubleToString(72 * val));
+	if (propList["svg:width"] && getInchValue(*propList["svg:width"], val))
+		commentElement->addAttribute("svg:width", doubleToString(72 * val));
+	if (propList["svg:height"] && getInchValue(*propList["svg:height"], val))
+		commentElement->addAttribute("svg:height", doubleToString(72 * val));
 
 	mpImpl->getCurrentStorage()->push_back(commentElement);
 }
