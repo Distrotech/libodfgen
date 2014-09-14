@@ -299,8 +299,8 @@ void OdpGeneratorPrivate::writeNotesStyles(OdfDocumentHandler *pHandler)
 		paraProps.insert("fo:margin-right", "0in");
 		paraProps.insert("fo:text-indent", "0in");
 
-		pHandler->startElement("style:para-properties", paraProps);
-		pHandler->endElement("style:para-properties");
+		pHandler->startElement("style:paragraph-properties", paraProps);
+		pHandler->endElement("style:paragraph-properties");
 
 		pHandler->endElement("style:style");
 	}
