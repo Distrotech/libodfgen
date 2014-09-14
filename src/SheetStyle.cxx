@@ -338,8 +338,8 @@ void SheetRowStyle::write(OdfDocumentHandler *pHandler) const
 }
 
 
-SheetStyle::SheetStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName) :
-	Style(psName), mPropList(xPropList), mColumns(0),
+SheetStyle::SheetStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName, Style::Zone zone) :
+	Style(psName, zone), mPropList(xPropList), mColumns(0),
 	mRowNameHash(), mRowStyleHash(), mCellNameHash(), mCellStyleHash(), mNumberingHash()
 {
 	mColumns = mPropList.child("librevenge:columns");
@@ -514,7 +514,7 @@ void SheetManager::clean()
 	mSheetStyles.clear();
 }
 
-bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList)
+bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone)
 {
 	if (mbSheetOpened)
 	{
@@ -522,9 +522,15 @@ bool SheetManager::openSheet(const librevenge::RVNGPropertyList &xPropList)
 		return false;
 	}
 	mbSheetOpened=true;
+	if (zone==Style::Z_Unknown)
+		zone=Style::Z_ContentAutomatic;
+
 	librevenge::RVNGString sTableName;
-	sTableName.sprintf("Sheet%i", (int) mSheetStyles.size());
-	shared_ptr<SheetStyle> sheet(new SheetStyle(xPropList, sTableName.cstr()));
+	if (zone==Style::Z_StyleAutomatic)
+		sTableName.sprintf("Sheet_M%i", (int) mSheetStyles.size());
+	else
+		sTableName.sprintf("Sheet%i", (int) mSheetStyles.size());
+	shared_ptr<SheetStyle> sheet(new SheetStyle(xPropList, sTableName.cstr(), zone));
 	mSheetStyles.push_back(sheet);
 	return true;
 }
@@ -696,11 +702,11 @@ librevenge::RVNGString SheetManager::convertCellsRange(const librevenge::RVNGPro
 	return s.str().c_str();
 }
 
-void SheetManager::write(OdfDocumentHandler *pHandler) const
+void SheetManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
 	for (size_t i=0; i < mSheetStyles.size(); ++i)
 	{
-		if (mSheetStyles[i])
+		if (mSheetStyles[i] && mSheetStyles[i]->getZone()==zone)
 			mSheetStyles[i]->write(pHandler);
 	}
 }

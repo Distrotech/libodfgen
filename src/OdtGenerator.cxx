@@ -24,25 +24,25 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include <librevenge/librevenge.h>
-#include <vector>
 #include <map>
 #include <stack>
 #include <string>
 
+#include <librevenge/librevenge.h>
 #include <libodfgen/libodfgen.hxx>
 
 #include "DocumentElement.hxx"
-#include "TextRunStyle.hxx"
-#include "FontStyle.hxx"
-#include "ListStyle.hxx"
-#include "OdfGenerator.hxx"
-#include "PageSpan.hxx"
-#include "SectionStyle.hxx"
-#include "TableStyle.hxx"
 #include "FilterInternal.hxx"
 #include "InternalHandler.hxx"
 
+#include "FontStyle.hxx"
+#include "ListStyle.hxx"
+#include "PageSpan.hxx"
+#include "SectionStyle.hxx"
+#include "TableStyle.hxx"
+#include "TextRunStyle.hxx"
+
+#include "OdfGenerator.hxx"
 
 class OdtGeneratorPrivate : public OdfGenerator
 {
@@ -52,10 +52,9 @@ public:
 
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeStyles(OdfDocumentHandler *pHandler);
-	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
-	void _writeMasterPages(OdfDocumentHandler *pHandler);
-	void _writePageLayouts(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 
+	void initPageManager();
 
 	//
 	// state gestion
@@ -64,7 +63,7 @@ public:
 	// the state we use for writing the final document
 	struct State
 	{
-		State() : mbFirstElement(true),	mbFirstParagraphInPageSpan(true),
+		State() : mbFirstElement(true),	mbFirstParagraphInPageSpan(false),
 			mbInFakeSection(false), mbListElementOpenedAtCurrentLevel(false),
 			mbTableCellOpened(false),	mbInNote(false),
 			mbInTextBox(false), mbInFrame(false)
@@ -108,13 +107,11 @@ public:
 	}
 	std::stack<State> mStateStack;
 
-	// section styles
-	std::vector<SectionStyle *> mSectionStyles;
+	// section styles manager
+	SectionStyleManager mSectionManager;
 
-	// page state
-	std::vector<PageSpan *> mPageSpans;
+	// the current page span
 	PageSpan *mpCurrentPageSpan;
-	int miNumPageStyles;
 
 private:
 	OdtGeneratorPrivate(const OdtGeneratorPrivate &);
@@ -124,11 +121,10 @@ private:
 
 OdtGeneratorPrivate::OdtGeneratorPrivate() :
 	mStateStack(),
-	mSectionStyles(),
-	mPageSpans(),
-	mpCurrentPageSpan(0),
-	miNumPageStyles(0)
+	mSectionManager(),
+	mpCurrentPageSpan(0)
 {
+	initPageManager();
 	pushState();
 }
 
@@ -136,42 +132,41 @@ OdtGeneratorPrivate::~OdtGeneratorPrivate()
 {
 	// clean up the mess we made
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Cleaning up our mess..\n"));
-
-	ODFGEN_DEBUG_MSG(("OdtGenerator: Destroying the body elements\n"));
-	for (std::vector<SectionStyle *>::iterator iterSectionStyles = mSectionStyles.begin();
-	        iterSectionStyles != mSectionStyles.end(); ++iterSectionStyles)
-		delete(*iterSectionStyles);
-
-	for (std::vector<PageSpan *>::iterator iterPageSpans = mPageSpans.begin();
-	        iterPageSpans != mPageSpans.end(); ++iterPageSpans)
-		delete(*iterPageSpans);
 }
 
-void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
+void OdtGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
-	mFontManager.write(pHandler); // do nothing
-	mSpanManager.writeAutomaticStyles(pHandler);
-	mParagraphManager.writeAutomaticStyles(pHandler);
-	mGraphicManager.writeAutomaticStyles(pHandler);
 
-	_writePageLayouts(pHandler);
-	// writing out the sections styles
-	for (std::vector<SectionStyle *>::const_iterator iterSectionStyles = mSectionStyles.begin(); iterSectionStyles != mSectionStyles.end(); ++iterSectionStyles)
-		(*iterSectionStyles)->write(pHandler);
-	// writing out the lists styles
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
-		if (!(*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
+		mSectionManager.write(pHandler, Style::Z_StyleAutomatic);
+		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
+		mTableManager.write(pHandler, Style::Z_StyleAutomatic);
 	}
-	mTableManager.write(pHandler);
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
+		mSectionManager.write(pHandler, Style::Z_ContentAutomatic);
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mTableManager.write(pHandler, Style::Z_ContentAutomatic);
+	}
+
 	pHandler->endElement("office:automatic-styles");
 }
 
 void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
+
+	mPageSpanManager.writePageStyles(pHandler, Style::Z_Style);
 
 	// style:default-style
 
@@ -276,13 +271,9 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:text-properties");
 		pHandler->endElement("style:style");
 	}
-	mSpanManager.writeNamedStyles(pHandler);
-	mParagraphManager.writeNamedStyles(pHandler);
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if ((*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
-	}
+	mSpanManager.write(pHandler, Style::Z_Style);
+	mParagraphManager.write(pHandler, Style::Z_Style);
+	mListManager.write(pHandler, Style::Z_Style);
 
 	TagOpenElement lineOpenElement("text:linenumbering-configuration");
 	lineOpenElement.addAttribute("text:number-lines", "false");
@@ -316,71 +307,43 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		noteOpenElement.write(pHandler);
 		pHandler->endElement("text:notes-configuration");
 	}
-	mGraphicManager.writeStyles(pHandler);
+	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }
 
-void OdtGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
+void OdtGeneratorPrivate::initPageManager()
 {
-	TagOpenElement("office:master-styles").write(pHandler);
+	librevenge::RVNGPropertyList page;
+	page.insert("fo:margin-bottom", "1in");
+	page.insert("fo:margin-left", "1in");
+	page.insert("fo:margin-right", "1in");
+	page.insert("fo:margin-top", "1in");
+	page.insert("fo:page-height", "11in");
+	page.insert("fo:page-width", "8.5in");
+	page.insert("style:print-orientation", "portrait");
 
-	static char const *(s_default[2*2]) = { "Standard", "PM0", "Endnote", "PM1" };
-	for (int i=0; i < 2; ++i)
-	{
-		TagOpenElement pageOpenElement("style:master-page");
-		pageOpenElement.addAttribute("style:name", s_default[2*i]);
-		pageOpenElement.addAttribute("style:page-layout-name", s_default[2*i+1]);
-		pageOpenElement.write(pHandler);
-		pHandler->endElement("style:master-page");
-	}
+	librevenge::RVNGPropertyList footnoteSep;
+	footnoteSep.insert("style:adjustment","left");
+	footnoteSep.insert("style:color","#000000");
+	footnoteSep.insert("style:rel-width","25%");
+	footnoteSep.insert("style:distance-after-sep","0.0398in");
+	footnoteSep.insert("style:distance-before-sep","0.0398in");
+	footnoteSep.insert("style:width","0.0071in");
+	librevenge::RVNGPropertyListVector footnoteVector;
+	footnoteVector.append(footnoteSep);
+	page.insert("librevenge:footnote", footnoteVector);
+	page.insert("librevenge:master-page-name", "Standard");
+	mPageSpanManager.add(page);
 
-	int pageNumber = 1;
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
-	{
-		bool bLastPage;
-		(i == (mPageSpans.size() - 1)) ? bLastPage = true : bLastPage = false;
-		mPageSpans[i]->writeMasterPages(pageNumber, (int)i, bLastPage, pHandler);
-		pageNumber += mPageSpans[i]->getSpan();
-	}
-	pHandler->endElement("office:master-styles");
-}
 
-void OdtGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
-{
-	for (int i=0; i < 2; ++i)
-	{
-		TagOpenElement layout("style:page-layout");
-		layout.addAttribute("style:name", i==0 ? "PM0" : "PM1");
-		layout.write(pHandler);
-
-		TagOpenElement layoutProperties("style:page-layout-properties");
-		layoutProperties.addAttribute("fo:margin-bottom", "1in");
-		layoutProperties.addAttribute("fo:margin-left", "1in");
-		layoutProperties.addAttribute("fo:margin-right", "1in");
-		layoutProperties.addAttribute("fo:margin-top", "1in");
-		layoutProperties.addAttribute("fo:page-height", "11in");
-		layoutProperties.addAttribute("fo:page-width", "8.5in");
-		layoutProperties.addAttribute("style:print-orientation", "portrait");
-		layoutProperties.write(pHandler);
-
-		TagOpenElement footnoteSep("style:footnote-sep");
-		footnoteSep.addAttribute("style:adjustment","left");
-		footnoteSep.addAttribute("style:color","#000000");
-		footnoteSep.addAttribute("style:rel-width","25%");
-		if (i==0)
-		{
-			footnoteSep.addAttribute("style:distance-after-sep","0.0398in");
-			footnoteSep.addAttribute("style:distance-before-sep","0.0398in");
-			footnoteSep.addAttribute("style:width","0.0071in");
-		}
-		footnoteSep.write(pHandler);
-		TagCloseElement("style:footnote-sep").write(pHandler);
-		TagCloseElement("style:page-layout-properties").write(pHandler);
-
-		TagCloseElement("style:page-layout").write(pHandler);
-	}
-	for (unsigned int i=0; i<mPageSpans.size(); ++i)
-		mPageSpans[i]->writePageLayout((int)i, pHandler);
+	footnoteSep.remove("style:distance-after-sep");
+	footnoteSep.remove("style:distance-before-sep");
+	footnoteSep.remove("style:width");
+	footnoteVector.clear();
+	footnoteVector.append(footnoteSep);
+	page.insert("librevenge:footnote", footnoteVector);
+	page.insert("librevenge:master-page-name", "EndNote");
+	mPageSpanManager.add(page);
 }
 
 bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType)
@@ -440,7 +403,11 @@ bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 
 	// write out the font styles
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		mFontManager.writeFontsDeclaration(pHandler);
+	{
+		TagOpenElement("office:font-face-decls").write(pHandler);
+		mFontManager.write(pHandler, Style::Z_Font);
+		TagCloseElement("office:font-face-decls").write(pHandler);
+	}
 
 	ODFGEN_DEBUG_MSG(("OdtGenerator: Document Body: Writing out the styles..\n"));
 
@@ -449,10 +416,14 @@ bool OdtGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		_writeStyles(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		_writeAutomaticStyles(pHandler);
+		_writeAutomaticStyles(pHandler, streamType);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML)
-		_writeMasterPages(pHandler);
+	{
+		TagOpenElement("office:master-styles").write(pHandler);
+		mPageSpanManager.writeMasterPages(pHandler);
+		pHandler->endElement("office:master-styles");
+	}
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
 	{
@@ -516,18 +487,23 @@ void OdtGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*prop
 
 void OdtGenerator::openPageSpan(const librevenge::RVNGPropertyList &propList)
 {
-	PageSpan *pPageSpan = new PageSpan(propList);
-	mpImpl->mPageSpans.push_back(pPageSpan);
-	mpImpl->mpCurrentPageSpan = pPageSpan;
-	mpImpl->miNumPageStyles++;
+	mpImpl->mpCurrentPageSpan = mpImpl->getPageSpanManager().add(propList);
 
 	mpImpl->getState().mbFirstParagraphInPageSpan = true;
 }
 
 void OdtGenerator::openHeader(const librevenge::RVNGPropertyList &propList)
 {
-	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
+	if (mpImpl->inHeaderFooter() || !mpImpl->mpCurrentPageSpan)
+	{
+		ODFGEN_DEBUG_MSG(("OdtGenerator::openHeader: can not open a header\n"));
+		return;
+	}
+	mpImpl->startHeaderFooter(true, propList);
+	if (!mpImpl->inHeaderFooter())
+		return;
 
+	libodfgen::DocumentElementVector *pHeaderFooterContentElements = new libodfgen::DocumentElementVector;
 	if (propList["librevenge:occurrence"] && (propList["librevenge:occurrence"]->getStr() == "even" ||
 	                                          propList["librevenge:occurrence"]->getStr() == "left"))
 		mpImpl->mpCurrentPageSpan->setHeaderLeftContent(pHeaderFooterContentElements);
@@ -543,13 +519,27 @@ void OdtGenerator::openHeader(const librevenge::RVNGPropertyList &propList)
 
 void OdtGenerator::closeHeader()
 {
+	if (!mpImpl->inHeaderFooter())
+	{
+		ODFGEN_DEBUG_MSG(("OdtGenerator::closeHeader: no header/footer is already opened\n"));
+		return;
+	}
+	mpImpl->endHeaderFooter();
 	mpImpl->popStorage();
 }
 
 void OdtGenerator::openFooter(const librevenge::RVNGPropertyList &propList)
 {
-	std::vector<DocumentElement *> *pHeaderFooterContentElements = new std::vector<DocumentElement *>;
+	if (mpImpl->inHeaderFooter() || !mpImpl->mpCurrentPageSpan)
+	{
+		ODFGEN_DEBUG_MSG(("OdtGenerator::openFooter: can not open a footer\n"));
+		return;
+	}
+	mpImpl->startHeaderFooter(false, propList);
+	if (!mpImpl->inHeaderFooter())
+		return;
 
+	libodfgen::DocumentElementVector *pHeaderFooterContentElements = new libodfgen::DocumentElementVector;
 	if (propList["librevenge:occurrence"] && (propList["librevenge:occurrence"]->getStr() == "even" ||
 	                                          propList["librevenge:occurrence"]->getStr() == "left"))
 		mpImpl->mpCurrentPageSpan->setFooterLeftContent(pHeaderFooterContentElements);
@@ -565,6 +555,12 @@ void OdtGenerator::openFooter(const librevenge::RVNGPropertyList &propList)
 
 void OdtGenerator::closeFooter()
 {
+	if (!mpImpl->inHeaderFooter())
+	{
+		ODFGEN_DEBUG_MSG(("OdtGenerator::closeFooter: no header/footer is already opened\n"));
+		return;
+	}
+	mpImpl->endHeaderFooter();
 	mpImpl->popStorage();
 }
 
@@ -583,15 +579,11 @@ void OdtGenerator::openSection(const librevenge::RVNGPropertyList &propList)
 	        (fSectionMarginLeft<-eps || fSectionMarginLeft>eps) ||
 	        (fSectionMarginRight<-eps || fSectionMarginRight>eps))
 	{
-		librevenge::RVNGString sSectionName;
-		sSectionName.sprintf("Section%i", mpImpl->mSectionStyles.size());
-
-		SectionStyle *pSectionStyle = new SectionStyle(propList, sSectionName.cstr());
-		mpImpl->mSectionStyles.push_back(pSectionStyle);
-
+		librevenge::RVNGString sSectionName=
+		    mpImpl->mSectionManager.add(propList, mpImpl->useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown);
 		TagOpenElement *pSectionOpenElement = new TagOpenElement("text:section");
-		pSectionOpenElement->addAttribute("text:style-name", pSectionStyle->getName());
-		pSectionOpenElement->addAttribute("text:name", pSectionStyle->getName());
+		pSectionOpenElement->addAttribute("text:style-name", sSectionName);
+		pSectionOpenElement->addAttribute("text:name", sSectionName);
 		mpImpl->getCurrentStorage()->push_back(pSectionOpenElement);
 	}
 	else
@@ -614,11 +606,16 @@ void OdtGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGPropertyList finalPropList(propList);
 	if (mpImpl->getState().mbFirstParagraphInPageSpan && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 	{
-		librevenge::RVNGString sPageStyleName;
-		sPageStyleName.sprintf("Page_Style_%i", mpImpl->miNumPageStyles);
-		finalPropList.insert("style:master-page-name", sPageStyleName);
-		mpImpl->getState().mbFirstElement = false;
-		mpImpl->getState().mbFirstParagraphInPageSpan = false;
+		if (!mpImpl->mpCurrentPageSpan)
+		{
+			ODFGEN_DEBUG_MSG(("OdtGenerator::openParagraph: can not find the current page\n"));
+		}
+		else
+		{
+			finalPropList.insert("style:master-page-name", mpImpl->mpCurrentPageSpan->getMasterName());
+			mpImpl->getState().mbFirstElement = false;
+			mpImpl->getState().mbFirstParagraphInPageSpan = false;
+		}
 	}
 
 	if (mpImpl->getState().mbTableCellOpened)
@@ -801,8 +798,15 @@ void OdtGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGPropertyList pList(propList);
 	if (mpImpl->getState().mbFirstElement && mpImpl->getCurrentStorage() == &mpImpl->getBodyStorage())
 	{
-		pList.insert("style:master-page-name", "Page_Style_1");
-		mpImpl->getState().mbFirstElement = false;
+		if (!mpImpl->mpCurrentPageSpan)
+		{
+			ODFGEN_DEBUG_MSG(("OdtGenerator::openTable: can not find the current page\n"));
+		}
+		else
+		{
+			pList.insert("style:master-page-name", mpImpl->mpCurrentPageSpan->getMasterName());
+			mpImpl->getState().mbFirstElement = false;
+		}
 	}
 	mpImpl->openTable(pList);
 }

@@ -44,48 +44,15 @@
 
 using namespace libodfgen;
 
-namespace
-{
-
-static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
-{
-	value=prop.getDouble();
-	switch (prop.getUnit())
-	{
-	case librevenge::RVNG_INCH:
-	case librevenge::RVNG_GENERIC: // assume inch
-		return true;
-	case librevenge::RVNG_POINT:
-		value /= 72.;
-		return true;
-	case librevenge::RVNG_TWIP:
-		value /= 1440.;
-		return true;
-	case librevenge::RVNG_PERCENT:
-	case librevenge::RVNG_UNIT_ERROR:
-	default:
-	{
-		static bool first=true;
-		if (first)
-		{
-			ODFGEN_DEBUG_MSG(("OdfGenerator::getInchValue: call with no double value\n"));
-			first=false;
-		}
-		break;
-	}
-	}
-	return false;
-}
-} // anonymous namespace
-
-
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
-	mFontManager(), mGraphicManager(), mSpanManager(), mParagraphManager(), mTableManager(),
+	mPageSpanManager(), mFontManager(), mGraphicManager(), mSpanManager(),
+	mParagraphManager(), mListManager(), mTableManager(),
+	mbInHeaderFooter(false), mbInMasterPage(false),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
 	mIdParagraphMap(), mIdParagraphNameMap(), mLastParagraphName(""),
-	miNumListStyles(0), mListStyles(), mListStates(), mIdListStyleMap(),
-	miFrameNumber(0),  mFrameNameIdMap(), mLayerNameStack(), mLayerNameSet(),
+	miFrameNumber(0),  mFrameNameIdMap(),
+	mLayerNameStack(), mLayerNameSet(), mLayerNameMap(),
 	mGraphicStyle(),
 	mIdChartMap(), mIdChartNameMap(),
 	mDocumentStreamHandlers(),
@@ -93,7 +60,6 @@ OdfGenerator::OdfGenerator() :
 	mImageHandlers(), mObjectHandlers(),
 	mCurrentParaIsHeading(false)
 {
-	mListStates.push(ListState());
 }
 
 OdfGenerator::~OdfGenerator()
@@ -103,11 +69,6 @@ OdfGenerator::~OdfGenerator()
 	mFontManager.clean();
 	mGraphicManager.clean();
 	mTableManager.clean();
-	emptyStorage(&mMetaDataStorage);
-	emptyStorage(&mBodyStorage);
-	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin();
-	        iterListStyles != mListStyles.end(); ++iterListStyles)
-		delete(*iterListStyles);
 	std::map<librevenge::RVNGString, ObjectContainer *>::iterator it;
 	for (it=mNameObjectMap.begin(); it!=mNameObjectMap.end(); ++it)
 	{
@@ -223,11 +184,6 @@ void OdfGenerator::initStateWith(OdfGenerator const &orig)
 ////////////////////////////////////////////////////////////
 OdfGenerator::ObjectContainer::~ObjectContainer()
 {
-	for (size_t i=0; i<mStorage.size(); ++i)
-	{
-		if (mStorage[i])
-			delete mStorage[i];
-	}
 }
 
 OdfGenerator::ObjectContainer &OdfGenerator::createObjectFile
@@ -273,21 +229,7 @@ bool OdfGenerator::getObjectContent(librevenge::RVNGString const &objectName, Od
 ////////////////////////////////////////////////////////////
 // storage
 ////////////////////////////////////////////////////////////
-void OdfGenerator::emptyStorage(Storage *storage)
-{
-	if (!storage)
-	{
-		ODFGEN_DEBUG_MSG(("OdfGenerator::sendStorage: called without storage\n"));
-		return;
-	}
-	for (size_t i=0; i<storage->size(); ++i)
-	{
-		if ((*storage)[i]) delete(*storage)[i];
-	}
-	storage->resize(0);
-}
-
-void OdfGenerator::sendStorage(Storage const *storage, OdfDocumentHandler *pHandler)
+void OdfGenerator::sendStorage(libodfgen::DocumentElementVector const *storage, OdfDocumentHandler *pHandler)
 {
 	if (!storage)
 	{
@@ -300,7 +242,7 @@ void OdfGenerator::sendStorage(Storage const *storage, OdfDocumentHandler *pHand
 	}
 }
 
-void OdfGenerator::pushStorage(Storage *newStorage)
+void OdfGenerator::pushStorage(libodfgen::DocumentElementVector *newStorage)
 {
 	if (!newStorage)
 	{
@@ -375,6 +317,49 @@ void OdfGenerator::registerEmbeddedImageHandler(const librevenge::RVNGString &mi
 }
 
 ////////////////////////////////////////////////////////////
+// page function
+////////////////////////////////////////////////////////////
+void OdfGenerator::startHeaderFooter(bool , const librevenge::RVNGPropertyList &)
+{
+	if (mbInHeaderFooter)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::startHeaderFooter: a master page is already open\n"));
+		return;
+	}
+	mbInHeaderFooter=true;
+}
+
+void OdfGenerator::endHeaderFooter()
+{
+	if (!mbInHeaderFooter)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::endHeaderFooter: can not find any open master page\n"));
+		return;
+	}
+	mbInHeaderFooter=false;
+}
+
+void OdfGenerator::startMasterPage(const librevenge::RVNGPropertyList &)
+{
+	if (mbInMasterPage)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::startMasterPage: a master page is already open\n"));
+		return;
+	}
+	mbInMasterPage=true;
+}
+
+void OdfGenerator::endMasterPage()
+{
+	if (!mbInMasterPage)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::endMasterPage: can not find any open master page\n"));
+		return;
+	}
+	mbInMasterPage=false;
+}
+
+////////////////////////////////////////////////////////////
 // frame/group
 ////////////////////////////////////////////////////////////
 void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
@@ -397,7 +382,7 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 		style.insert("style:vertical-rel", propList["style:vertical-rel"]->getStr());
 	else
 		style.insert("style:vertical-rel", "page-content");
-	librevenge::RVNGString frameStyleName=mGraphicManager.findOrAdd(style, false);
+	librevenge::RVNGString frameStyleName=mGraphicManager.findOrAdd(style, Style::Z_Style);
 
 	librevenge::RVNGPropertyList graphic;
 	mGraphicManager.addGraphicProperties(propList, graphic);
@@ -407,7 +392,8 @@ void OdfGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	mGraphicManager.addFrameProperties(propList, graphic);
 	graphic.insert("style:parent-style-name", frameStyleName);
 	graphic.insert("draw:ole-draw-aspect", "1");
-	librevenge::RVNGString frameAutomaticStyleName=mGraphicManager.findOrAdd(graphic);
+	librevenge::RVNGString frameAutomaticStyleName=
+	    mGraphicManager.findOrAdd(graphic, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 
 	// And write the frame itself
 	unsigned objectId = 0;
@@ -456,7 +442,7 @@ void OdfGenerator::addFrameProperties(const librevenge::RVNGPropertyList &propLi
 		element.addAttribute("svg:height", propList["svg:height"]->getStr());
 	else if (propList["fo:min-height"]) // fixme: must be an attribute of draw:text-box
 		element.addAttribute("fo:min-height", propList["fo:min-height"]->getStr());
-	element.addAttribute("draw:layer", getLayerName());
+	element.addAttribute("draw:layer", getLayerName(propList));
 }
 
 unsigned OdfGenerator::getFrameId(librevenge::RVNGString val)
@@ -482,8 +468,20 @@ void OdfGenerator::closeGroup()
 	mpCurrentStorage->push_back(new TagCloseElement("draw:g"));
 }
 
-librevenge::RVNGString OdfGenerator::getLayerName() const
+librevenge::RVNGString OdfGenerator::getLayerName(const librevenge::RVNGPropertyList &propList) const
 {
+	// layer does not seems to works in masterpage
+	if (inMasterPage())
+		return "layout";
+
+	if (propList["draw:layer"] && !propList["draw:layer"]->getStr().empty())
+	{
+		librevenge::RVNGString layer;
+		layer.appendEscapedXML(propList["draw:layer"]->getStr());
+		if (mLayerNameMap.find(layer)!=mLayerNameMap.end())
+			return mLayerNameMap.find(layer)->second;
+		ODFGEN_DEBUG_MSG(("OdfGenerator::getLayerName: called with not existing layer, returns the current layer name\n"));
+	}
 	if (mLayerNameStack.empty())
 		return "layout";
 	return mLayerNameStack.top();
@@ -491,6 +489,12 @@ librevenge::RVNGString OdfGenerator::getLayerName() const
 
 void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 {
+	if (inMasterPage())
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not create layer in master page\n"));
+		mLayerNameStack.push("layout");
+		return;
+	}
 	if (!propList["draw:layer"] || propList["draw:layer"]->getStr().empty())
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not find the layer name\n"));
@@ -499,6 +503,31 @@ void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 	}
 	librevenge::RVNGString layer;
 	layer.appendEscapedXML(propList["draw:layer"]->getStr());
+	if (mLayerNameSet.find(layer)!=mLayerNameSet.end())
+	{
+		// try to find a new name
+		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: called with an existing name, try to find a new name\n"));
+		bool ok=false;
+		for (int i=0; i<100; ++i)
+		{
+			librevenge::RVNGString suffix;
+			suffix.sprintf("#%d", i);
+			librevenge::RVNGString newName(layer);
+			newName.append(suffix);
+			if (mLayerNameSet.find(newName)!=mLayerNameSet.end())
+				continue;
+			mLayerNameMap[layer]=newName;
+			layer=newName;
+			ok=true;
+			break;
+		}
+		if (!ok)
+		{
+			ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not find a new name, used old\n"));
+		}
+	}
+	else
+		mLayerNameMap[layer]=layer;
 	mLayerNameSet.insert(layer);
 	mLayerNameStack.push(layer);
 }
@@ -634,7 +663,7 @@ void OdfGenerator::openSpan(const librevenge::RVNGPropertyList &propList)
 	{
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
-		sName = mSpanManager.findOrAdd(pList);
+		sName = mSpanManager.findOrAdd(pList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown);
 		if (pList["librevenge:span-id"])
 			mIdSpanNameMap[pList["librevenge:span-id"]->getInt()]=sName;
 	}
@@ -686,6 +715,7 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 {
 	librevenge::RVNGPropertyList pList(propList);
 	librevenge::RVNGString paragraphName("");
+	bool isMasterPage=(propList["style:master-page-name"]!=0);
 	if (pList["librevenge:paragraph-id"])
 	{
 		int id=pList["librevenge:paragraph-id"]->getInt();
@@ -698,14 +728,16 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 			ODFGEN_DEBUG_MSG(("OdfGenerator::openParagraph: can not find the style %d\n", id));
 			pList.clear();
 		}
+		if (isMasterPage)
+			pList.insert("style:master-page-name", propList["style:master-page-name"]->clone());
 	}
 
-	if (paragraphName.empty())
+	if (paragraphName.empty() || isMasterPage)
 	{
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
-		paragraphName = mParagraphManager.findOrAdd(pList);
-		if (pList["librevenge:paragraph-id"])
+		paragraphName = mParagraphManager.findOrAdd(pList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown);
+		if (pList["librevenge:paragraph-id"] && !isMasterPage)
 			mIdParagraphNameMap[pList["librevenge:paragraph-id"]->getInt()]=paragraphName;
 	}
 
@@ -736,113 +768,19 @@ void OdfGenerator::closeParagraph()
 ////////////////////////////////////////////////////////////
 // list
 ////////////////////////////////////////////////////////////
-OdfGenerator::ListState::ListState() :
-	mpCurrentListStyle(0),
-	miCurrentListLevel(0),
-	miLastListLevel(0),
-	miLastListNumber(0),
-	mbListContinueNumbering(false),
-	mbListElementParagraphOpened(false),
-	mbListElementOpened()
-{
-}
-
-OdfGenerator::ListState::ListState(const OdfGenerator::ListState &state) :
-	mpCurrentListStyle(state.mpCurrentListStyle),
-	miCurrentListLevel(state.miCurrentListLevel),
-	miLastListLevel(state.miCurrentListLevel),
-	miLastListNumber(state.miLastListNumber),
-	mbListContinueNumbering(state.mbListContinueNumbering),
-	mbListElementParagraphOpened(state.mbListElementParagraphOpened),
-	mbListElementOpened(state.mbListElementOpened)
-{
-}
-
-OdfGenerator::ListState &OdfGenerator::getListState()
-{
-	if (!mListStates.empty()) return mListStates.top();
-	ODFGEN_DEBUG_MSG(("OdfGenerator::getListState: call with no state\n"));
-	static OdfGenerator::ListState bad;
-	return bad;
-}
-
 void OdfGenerator::popListState()
 {
-	if (mListStates.size()>1)
-		mListStates.pop();
+	mListManager.popState();
 }
 
 void OdfGenerator::pushListState()
 {
-	mListStates.push(ListState());
-}
-
-void OdfGenerator::defineListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
-{
-	int id = -1;
-	if (propList["librevenge:list-id"])
-		id = propList["librevenge:list-id"]->getInt();
-
-	ListStyle *pListStyle = 0;
-	ListState &state=getListState();
-	// as all direct list have the same id:-1, we reused the last list
-	// excepted at level 0 where we force the redefinition of a new list
-	if ((id!=-1 || !state.mbListElementOpened.empty()) &&
-	        state.mpCurrentListStyle && state.mpCurrentListStyle->getListID() == id)
-		pListStyle = state.mpCurrentListStyle;
-
-	// this rather appalling conditional makes sure we only start a
-	// new list (rather than continue an old one) if: (1) we have no
-	// prior list or the prior list has another listId OR (2) we can
-	// tell that the user actually is starting a new list at level 1
-	// (and only level 1)
-	if (pListStyle == 0 ||
-	        (ordered && propList["librevenge:level"] && propList["librevenge:level"]->getInt()==1 &&
-	         (propList["text:start-value"] && propList["text:start-value"]->getInt() != int(state.miLastListNumber+1))))
-	{
-		// first retrieve the displayname
-		librevenge::RVNGString displayName("");
-		if (propList["style:display-name"])
-			displayName=propList["style:display-name"]->getStr();
-		else if (pListStyle)
-			displayName=pListStyle->getDisplayName();
-
-		ODFGEN_DEBUG_MSG(("OdfGenerator: Attempting to create a new list style (listid: %i)\n", id));
-		librevenge::RVNGString sName;
-		if (ordered)
-			sName.sprintf("OL%i", miNumListStyles);
-		else
-			sName.sprintf("UL%i", miNumListStyles);
-		miNumListStyles++;
-
-		pListStyle = new ListStyle(sName.cstr(), id);
-		if (!displayName.empty())
-			pListStyle->setDisplayName(displayName.cstr());
-		storeListStyle(pListStyle);
-		if (ordered)
-		{
-			state.mbListContinueNumbering = false;
-			state.miLastListNumber = 0;
-		}
-	}
-	else if (ordered)
-		state.mbListContinueNumbering = true;
-
-	if (!propList["librevenge:level"])
-		return;
-	// Iterate through ALL list styles with the same WordPerfect list id and define a level if it is not already defined
-	// This solves certain problems with lists that start and finish without reaching certain levels and then begin again
-	// and reach those levels. See gradguide0405_PC.wpd in the regression suite
-	for (std::vector<ListStyle *>::iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if ((* iterListStyles) && (* iterListStyles)->getListID() == id)
-			(* iterListStyles)->updateListLevel((propList["librevenge:level"]->getInt() - 1), propList, ordered);
-	}
+	mListManager.pushState();
 }
 
 void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered)
 {
-	ListState &state=getListState();
+	ListManager::State &state=mListManager.getState();
 	if (state.mbListElementParagraphOpened)
 	{
 		closeParagraph();
@@ -851,7 +789,7 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 	librevenge::RVNGPropertyList pList(propList);
 	if (!pList["librevenge:level"])
 		pList.insert("librevenge:level", int(state.mbListElementOpened.size())+1);
-	defineListLevel(pList, ordered);
+	mListManager.defineLevel(pList, ordered, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown);
 
 	TagOpenElement *pListLevelOpenElement = new TagOpenElement("text:list");
 	if (!state.mbListElementOpened.empty() && !state.mbListElementOpened.top())
@@ -875,7 +813,7 @@ void OdfGenerator::openListLevel(const librevenge::RVNGPropertyList &propList, b
 
 void OdfGenerator::closeListLevel()
 {
-	ListState &state=getListState();
+	ListManager::State &state=mListManager.getState();
 	if (state.mbListElementOpened.empty())
 	{
 		// this implies that openListLevel was not called, so it is better to stop here
@@ -894,7 +832,7 @@ void OdfGenerator::closeListLevel()
 
 void OdfGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 {
-	ListState &state=getListState();
+	ListManager::State &state=mListManager.getState();
 	state.miLastListLevel = state.miCurrentListLevel;
 	if (state.miCurrentListLevel == 1)
 		state.miLastListNumber++;
@@ -912,7 +850,7 @@ void OdfGenerator::openListElement(const librevenge::RVNGPropertyList &propList)
 		finalPropList.insert("style:list-style-name", state.mpCurrentListStyle->getName());
 #endif
 	finalPropList.insert("style:parent-style-name", "Standard");
-	librevenge::RVNGString paragName =mParagraphManager.findOrAdd(finalPropList);
+	librevenge::RVNGString paragName =mParagraphManager.findOrAdd(finalPropList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown);
 
 	TagOpenElement *pOpenListItem = new TagOpenElement("text:list-item");
 	if (propList["text:start-value"] && propList["text:start-value"]->getInt() > 0)
@@ -933,45 +871,20 @@ void OdfGenerator::closeListElement()
 	// this code is kind of tricky, because we don't actually close the list element (because this list element
 	// could contain another list level in OOo's implementation of lists). that is done in the closeListLevel
 	// code (or when we open another list element)
-	if (getListState().mbListElementParagraphOpened)
+	if (mListManager.getState().mbListElementParagraphOpened)
 	{
 		closeParagraph();
-		getListState().mbListElementParagraphOpened = false;
+		mListManager.getState().mbListElementParagraphOpened = false;
 	}
 }
 
-void OdfGenerator::storeListStyle(ListStyle *listStyle)
-{
-	if (!listStyle || listStyle == getListState().mpCurrentListStyle)
-		return;
-	mListStyles.push_back(listStyle);
-	getListState().mpCurrentListStyle = listStyle;
-	mIdListStyleMap[listStyle->getListID()]=listStyle;
-}
-
-void OdfGenerator::retrieveListStyle(int id)
-{
-	// first look if the current style is ok
-	if (getListState().mpCurrentListStyle &&
-	        id == getListState().mpCurrentListStyle->getListID())
-		return;
-
-	// use the global map
-	if (mIdListStyleMap.find(id) != mIdListStyleMap.end())
-	{
-		getListState().mpCurrentListStyle = mIdListStyleMap.find(id)->second;
-		return;
-	}
-
-	ODFGEN_DEBUG_MSG(("OdfGenerator: impossible to find a list with id=%d\n",id));
-}
 
 ////////////////////////////////////////////////////////////
 // table
 ////////////////////////////////////////////////////////////
 void OdfGenerator::openTable(const librevenge::RVNGPropertyList &propList)
 {
-	mTableManager.openTable(propList);
+	mTableManager.openTable(propList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 
 	Table *table=mTableManager.getActualTable();
 	if (!table)
@@ -1111,15 +1024,14 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 			librevenge::RVNGBinaryData data(propList["office:binary-data"]->getStr());
 			if (tmpObjectHandler)
 			{
-				std::vector<DocumentElement *> tmpContentElements;
+				DocumentElementVector tmpContentElements;
 				InternalHandler tmpHandler(&tmpContentElements);
 
 
 				if (tmpObjectHandler(data, &tmpHandler, ODF_FLAT_XML) && !tmpContentElements.empty())
 				{
 					mpCurrentStorage->push_back(new TagOpenElement("draw:object"));
-					for (std::vector<DocumentElement *>::const_iterator iter = tmpContentElements.begin(); iter != tmpContentElements.end(); ++iter)
-						mpCurrentStorage->push_back(*iter);
+					tmpContentElements.appendTo(*mpCurrentStorage);
 					mpCurrentStorage->push_back(new TagCloseElement("draw:object"));
 				}
 			}
@@ -1184,7 +1096,7 @@ librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName()
 {
 	librevenge::RVNGPropertyList styleList;
 	mGraphicManager.addGraphicProperties(mGraphicStyle,styleList);
-	return mGraphicManager.findOrAdd(styleList);
+	return mGraphicManager.findOrAdd(styleList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 }
 
 librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName(const librevenge::RVNGPropertyList &shapeList)
@@ -1192,7 +1104,7 @@ librevenge::RVNGString OdfGenerator::getCurrentGraphicStyleName(const librevenge
 	librevenge::RVNGPropertyList styleList;
 	mGraphicManager.addGraphicProperties(shapeList,styleList);
 	mGraphicManager.addGraphicProperties(mGraphicStyle,styleList);
-	return mGraphicManager.findOrAdd(styleList);
+	return mGraphicManager.findOrAdd(styleList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 }
 
 void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)

@@ -24,6 +24,8 @@
 
 #include <string.h> // for strcmp
 
+#include <vector>
+
 #include <librevenge/librevenge.h>
 
 #ifdef HAVE_CONFIG_H
@@ -50,10 +52,74 @@ using boost::shared_ptr;
 
 #define ODFGEN_N_ELEMENTS(m) sizeof(m)/sizeof(m[0])
 
+class DocumentElement;
+
 namespace libodfgen
 {
 
 librevenge::RVNGString doubleToString(const double value);
+bool getInchValue(librevenge::RVNGProperty const &prop, double &value);
+
+//! small class used to store a list of shared_ptr DocumentElement
+class DocumentElementVector
+{
+public:
+	//! constructor
+	DocumentElementVector() : mpElements() {}
+	//! destructor
+	~DocumentElementVector();
+
+	//! delete all document element
+	void clear()
+	{
+		resize(0);
+	}
+	//! returns true if the list is empty
+	bool empty() const
+	{
+		return mpElements.empty();
+	}
+	//! returns the vector size
+	size_t size() const
+	{
+		return mpElements.size();
+	}
+	//! returns the vector size
+	void resize(size_t newSize);
+	//! push_back
+	void push_back(shared_ptr<DocumentElement> elt);
+	//! push_back (given a pointer)
+	void push_back(DocumentElement *elt);
+	//! append data at the end of res
+	void appendTo(DocumentElementVector &res);
+	//! operator[]
+	shared_ptr<DocumentElement> operator[](size_t index) const
+	{
+		return mpElements[index];
+	}
+	//! operator[]
+	shared_ptr<DocumentElement> &operator[](size_t index)
+	{
+		return mpElements[index];
+	}
+
+	//! iterator
+	std::vector<shared_ptr<DocumentElement> >::const_iterator begin() const
+	{
+		return mpElements.begin();
+	}
+	std::vector<shared_ptr<DocumentElement> >::const_iterator end() const
+	{
+		return mpElements.end();
+	}
+
+private:
+	DocumentElementVector(const DocumentElementVector &orig);
+	DocumentElementVector &operator=(const DocumentElementVector &orig);
+protected:
+	//! the list of elements
+	std::vector<shared_ptr<DocumentElement> > mpElements;
+};
 
 } // namespace libodfgen
 

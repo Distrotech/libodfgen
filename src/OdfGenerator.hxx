@@ -31,7 +31,6 @@
 #include <set>
 #include <stack>
 #include <string>
-#include <vector>
 
 #include <librevenge/librevenge.h>
 
@@ -41,6 +40,7 @@
 #include "FontStyle.hxx"
 #include "GraphicStyle.hxx"
 #include "InternalHandler.hxx"
+#include "PageSpan.hxx"
 #include "TableStyle.hxx"
 #include "TextRunStyle.hxx"
 
@@ -50,8 +50,6 @@ class ListStyle;
 class OdfGenerator
 {
 public:
-	typedef std::vector<DocumentElement *> Storage;
-
 	//! constructor
 	OdfGenerator();
 	//! destructor
@@ -69,7 +67,6 @@ public:
 	void setDocumentMetaData(const librevenge::RVNGPropertyList &propList);
 	//! write the document meta data
 	void writeDocumentMetaData(OdfDocumentHandler *pHandler);
-
 	//
 	// document handler
 	//
@@ -89,7 +86,7 @@ public:
 		//! true if the file is not a plain file
 		bool mIsDir;
 		//! the contain storage
-		Storage mStorage;
+		libodfgen::DocumentElementVector mStorage;
 		//! the handler
 		InternalHandler mInternalHandler;
 	private:
@@ -136,28 +133,60 @@ public:
 	//
 
 	//! returns the current storage
-	Storage *getCurrentStorage()
+	libodfgen::DocumentElementVector *getCurrentStorage()
 	{
 		return mpCurrentStorage;
 	}
 	//! push a storage
-	void pushStorage(Storage *newStorage);
+	void pushStorage(libodfgen::DocumentElementVector *newStorage);
 	/** pop a storage */
 	bool popStorage();
 	//! returns the body storage
-	Storage &getBodyStorage()
+	libodfgen::DocumentElementVector &getBodyStorage()
 	{
 		return mBodyStorage;
 	}
 	//! returns the meta data storage
-	Storage &getMetaDataStorage()
+	libodfgen::DocumentElementVector &getMetaDataStorage()
 	{
 		return mMetaDataStorage;
 	}
-	//! delete the storage content ( but not the Storage pointer )
-	static void emptyStorage(Storage *storage);
 	//! write the storage data to a document handler
-	static void sendStorage(Storage const *storage, OdfDocumentHandler *pHandler);
+	static void sendStorage(libodfgen::DocumentElementVector const *storage, OdfDocumentHandler *pHandler);
+
+	// page, header/footer, master page
+
+	//! return the page span manager
+	PageSpanManager &getPageSpanManager()
+	{
+		return mPageSpanManager;
+	}
+
+	//! starts a header/footer page.
+	void startHeaderFooter(bool header, const librevenge::RVNGPropertyList &propList);
+	//! ends a header/footer page
+	void endHeaderFooter();
+	//! returns if we are in a master page
+	bool inHeaderFooter() const
+	{
+		return mbInHeaderFooter;
+	}
+
+	//! starts a master page.
+	void startMasterPage(const librevenge::RVNGPropertyList &propList);
+	//! ends a master page
+	void endMasterPage();
+	//! returns if we are in a master page
+	bool inMasterPage() const
+	{
+		return mbInMasterPage;
+	}
+
+	//! returns if we must store the automatic style in the style or in the content xml zones
+	bool useStyleAutomaticZone() const
+	{
+		return mbInHeaderFooter || mbInMasterPage;
+	}
 
 	//
 	// basic to the font/paragraph/span manager
@@ -203,8 +232,6 @@ public:
 	/// push the list state by adding an empty value
 	void pushListState();
 
-	/// call to define a list level
-	void defineListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
 	/// call to open a list level
 	void openListLevel(const librevenge::RVNGPropertyList &propList, bool ordered);
 	/// call to close a list level
@@ -252,8 +279,8 @@ public:
 	void openLayer(const librevenge::RVNGPropertyList &propList);
 	/// call to close a layer
 	void closeLayer();
-	/// return the actual layer name or "layout"
-	librevenge::RVNGString getLayerName() const;
+	/// return the layer name: either propList[draw:layer] if it exists or the current layer name
+	librevenge::RVNGString getLayerName(const librevenge::RVNGPropertyList &propList) const;
 
 	//
 	// image
@@ -295,38 +322,6 @@ public:
 protected:
 
 	//
-	// list
-	//
-
-	// list state
-	struct ListState
-	{
-		ListState();
-		ListState(const ListState &state);
-
-		ListStyle *mpCurrentListStyle;
-		unsigned int miCurrentListLevel;
-		unsigned int miLastListLevel;
-		unsigned int miLastListNumber;
-		bool mbListContinueNumbering;
-		bool mbListElementParagraphOpened;
-		std::stack<bool> mbListElementOpened;
-	private:
-		ListState &operator=(const ListState &state);
-	};
-
-	/// access to the current list state
-	ListState &getListState();
-
-	/** stores a list style: update mListStyles,
-		mWriterListStates.top().mpCurrentListStyle and the different
-		maps
-	 */
-	void storeListStyle(ListStyle *listStyle);
-	/** retrieves the list style corresponding to a given id. */
-	void retrieveListStyle(int id);
-
-	//
 	// frame/graphic
 	//
 
@@ -340,14 +335,16 @@ protected:
 	librevenge::RVNGString getCurrentGraphicStyleName();
 
 	// the current set of elements that we're writing to
-	Storage *mpCurrentStorage;
+	libodfgen::DocumentElementVector *mpCurrentStorage;
 	// the stack of all storage
-	std::stack<Storage *> mStorageStack;
+	std::stack<libodfgen::DocumentElementVector *> mStorageStack;
 	// the meta data elements
-	Storage mMetaDataStorage;
+	libodfgen::DocumentElementVector mMetaDataStorage;
 	// content elements
-	Storage mBodyStorage;
+	libodfgen::DocumentElementVector mBodyStorage;
 
+	// page span manager
+	PageSpanManager mPageSpanManager;
 	// font manager
 	FontStyleManager mFontManager;
 	// graphic manager
@@ -356,8 +353,16 @@ protected:
 	SpanStyleManager mSpanManager;
 	// paragraph manager
 	ParagraphStyleManager mParagraphManager;
+	// list manager
+	ListManager mListManager;
 	// table manager
 	TableManager mTableManager;
+
+	// a flag to know if we are in a header/footer zone
+	bool mbInHeaderFooter;
+
+	// a flag to know if we are in a master page
+	bool mbInMasterPage;
 
 	// id to span map
 	std::map<int, librevenge::RVNGPropertyList> mIdSpanMap;
@@ -373,15 +378,6 @@ protected:
 	// the last paragraph name
 	librevenge::RVNGString mLastParagraphName;
 
-	// list styles
-	unsigned int miNumListStyles;
-	// list styles
-	std::vector<ListStyle *> mListStyles;
-	// list states
-	std::stack<ListState> mListStates;
-	// a map id -> last list style defined with id
-	std::map<int, ListStyle *> mIdListStyleMap;
-
 	// the number of created frame
 	unsigned miFrameNumber;
 	// the list of frame seens
@@ -389,8 +385,10 @@ protected:
 
 	// the layer name stack
 	std::stack<librevenge::RVNGString> mLayerNameStack;
-	// the layer list of name
+	// the list of layer (final name)
 	std::set<librevenge::RVNGString> mLayerNameSet;
+	// the layer original name to final name
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mLayerNameMap;
 
 	// the last graphic style
 	librevenge::RVNGPropertyList mGraphicStyle;
@@ -399,6 +397,10 @@ protected:
 	std::map<int, librevenge::RVNGPropertyList> mIdChartMap;
 	// id to chart name map
 	std::map<int, librevenge::RVNGString> mIdChartNameMap;
+
+	//
+	// handler and/or object creation
+	//
 
 	// the document handlers
 	std::map<OdfStreamType, OdfDocumentHandler *> mDocumentStreamHandlers;

@@ -27,11 +27,6 @@
 
 #include <string.h>
 
-InternalHandler::InternalHandler(std::vector<DocumentElement *> *elements):
-	mpElements(elements)
-{
-}
-
 void InternalHandler::startElement(const char *psName, const librevenge::RVNGPropertyList &xPropList)
 {
 	TagOpenElement *element = new TagOpenElement(psName);

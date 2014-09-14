@@ -25,22 +25,24 @@
  */
 
 #include <librevenge/librevenge.h>
-#include <vector>
+
 #include <map>
 #include <stack>
 #include <string>
 
 #include <libodfgen/libodfgen.hxx>
 
-#include "DocumentElement.hxx"
-#include "TextRunStyle.hxx"
-#include "FontStyle.hxx"
-#include "ListStyle.hxx"
-#include "TableStyle.hxx"
 #include "FilterInternal.hxx"
 #include "InternalHandler.hxx"
-#include "OdfGenerator.hxx"
+
+#include "DocumentElement.hxx"
+#include "FontStyle.hxx"
+#include "ListStyle.hxx"
 #include "SheetStyle.hxx"
+#include "TableStyle.hxx"
+#include "TextRunStyle.hxx"
+
+#include "OdfGenerator.hxx"
 
 #include "OdcGenerator.hxx"
 
@@ -73,7 +75,7 @@ public:
 
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeStyles(OdfDocumentHandler *pHandler);
-	void _writeAutomaticStyles(OdfDocumentHandler *pHandler);
+	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 
 	bool canWriteText() const
 	{
@@ -208,24 +210,32 @@ librevenge::RVNGString OdcGeneratorPrivate::getAddressString(librevenge::RVNGPro
 	return res;
 }
 
-void OdcGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler)
+void OdcGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
-	mFontManager.write(pHandler); // do nothing
-	mSpanManager.writeAutomaticStyles(pHandler);
-	mParagraphManager.writeAutomaticStyles(pHandler);
-	mGraphicManager.writeAutomaticStyles(pHandler);
 
-	// writing out the lists styles
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 	{
-		if (!(*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
+		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
+		mTableManager.write(pHandler, Style::Z_StyleAutomatic);
 	}
-	mTableManager.write(pHandler);
-	std::map<librevenge::RVNGString, librevenge::RVNGPropertyList>::const_iterator iterChartStyles;
-	for (iterChartStyles=mChartStyleHash.begin(); iterChartStyles!=mChartStyleHash.end(); ++iterChartStyles)
-		writeChartStyle(iterChartStyles->second,pHandler);
+
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
+	{
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mTableManager.write(pHandler, Style::Z_ContentAutomatic);
+
+		std::map<librevenge::RVNGString, librevenge::RVNGPropertyList>::const_iterator iterChartStyles;
+		for (iterChartStyles=mChartStyleHash.begin(); iterChartStyles!=mChartStyleHash.end(); ++iterChartStyles)
+			writeChartStyle(iterChartStyles->second,pHandler);
+	}
+
 	pHandler->endElement("office:automatic-styles");
 }
 
@@ -312,14 +322,10 @@ void OdcGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		pHandler->endElement("style:style");
 	}
 
-	mSpanManager.writeNamedStyles(pHandler);
-	mParagraphManager.writeNamedStyles(pHandler);
-	for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-	{
-		if ((*iterListStyles)->hasDisplayName())
-			(*iterListStyles)->write(pHandler);
-	}
-	mGraphicManager.writeStyles(pHandler);
+	mSpanManager.write(pHandler, Style::Z_Style);
+	mParagraphManager.write(pHandler, Style::Z_Style);
+	mListManager.write(pHandler, Style::Z_Style);
+	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }
 
@@ -381,8 +387,11 @@ bool OdcGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 
 	// write out the font styles
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		mFontManager.writeFontsDeclaration(pHandler);
-
+	{
+		TagOpenElement("office:font-face-decls").write(pHandler);
+		mFontManager.write(pHandler, Style::Z_Font);
+		TagCloseElement("office:font-face-decls").write(pHandler);
+	}
 	ODFGEN_DEBUG_MSG(("OdcGenerator: Document Body: Writing out the styles..\n"));
 
 	// write default styles
@@ -390,7 +399,7 @@ bool OdcGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		_writeStyles(pHandler);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_STYLES_XML || streamType == ODF_CONTENT_XML)
-		_writeAutomaticStyles(pHandler);
+		_writeAutomaticStyles(pHandler, streamType);
 
 	if (streamType == ODF_FLAT_XML || streamType == ODF_CONTENT_XML)
 	{

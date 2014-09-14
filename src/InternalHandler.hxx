@@ -30,10 +30,14 @@
 #include <libodfgen/libodfgen.hxx>
 #include "DocumentElement.hxx"
 
+#include "FilterInternal.hxx"
+
 class InternalHandler : public OdfDocumentHandler
 {
 public:
-	InternalHandler(std::vector<DocumentElement *> *elements);
+	InternalHandler(libodfgen::DocumentElementVector *elements) :mpElements(elements)
+	{
+	}
 	~InternalHandler() {};
 
 	void startDocument() {};
@@ -44,7 +48,7 @@ public:
 private:
 	InternalHandler(const InternalHandler &);
 	InternalHandler &operator=(const InternalHandler &);
-	std::vector<DocumentElement *> *mpElements;
+	libodfgen::DocumentElementVector *mpElements;
 };
 #endif
 

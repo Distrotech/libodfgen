@@ -58,12 +58,15 @@ private:
 	librevenge::RVNGPropertyList mPropList;
 };
 
-class Table : public Style, public TopLevelElementStyle
+class Table : public Style
 {
 public:
-	Table(const librevenge::RVNGPropertyList &xPropList, const char *psName);
+	Table(const librevenge::RVNGPropertyList &xPropList, const char *psName, Style::Zone zone);
 	virtual ~Table();
-	virtual void writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
+
+	// write automatic/named style
+	virtual void write(OdfDocumentHandler *, bool compatibleOdp) const;
+
 	int getNumColumns() const;
 
 	librevenge::RVNGString openRow(const librevenge::RVNGPropertyList &propList);
@@ -80,7 +83,9 @@ public:
 	{
 		return mbCellOpened;
 	}
-
+protected:
+	// default write function ( must not be called)
+	virtual void write(OdfDocumentHandler *) const;
 private:
 	librevenge::RVNGPropertyList mPropList;
 	bool mbRowOpened, mbRowHeaderOpened, mbCellOpened;
@@ -106,7 +111,14 @@ public:
 	virtual ~TableManager();
 	//! clean all data
 	void clean();
-	void write(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const;
+	// write all
+	virtual void write(OdfDocumentHandler *pHandler, bool compatibleOdp=false) const
+	{
+		write(pHandler, Style::Z_StyleAutomatic, compatibleOdp);
+		write(pHandler, Style::Z_ContentAutomatic, compatibleOdp);
+	}
+	// write automatic/named/... style
+	void write(OdfDocumentHandler *pHandler, Style::Zone zone, bool compatibleOdp=false) const;
 
 	bool isTableOpened() const
 	{
@@ -123,7 +135,7 @@ public:
 		return mTableOpened.back().get();
 	}
 	//! open a table and update the list of elements
-	bool openTable(const librevenge::RVNGPropertyList &xPropList);
+	bool openTable(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone);
 	bool closeTable();
 
 private:

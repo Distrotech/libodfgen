@@ -24,20 +24,24 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
-#include <libodfgen/libodfgen.hxx>
-
-#include "FilterInternal.hxx"
-#include "DocumentElement.hxx"
-#include "FontStyle.hxx"
-#include "GraphicStyle.hxx"
-#include "ListStyle.hxx"
-#include "OdfGenerator.hxx"
-#include "TableStyle.hxx"
-#include "TextRunStyle.hxx"
 #include <locale.h>
 #include <math.h>
 #include <string>
 #include <map>
+
+#include <libodfgen/libodfgen.hxx>
+
+#include "FilterInternal.hxx"
+#include "DocumentElement.hxx"
+
+#include "FontStyle.hxx"
+#include "GraphicStyle.hxx"
+#include "ListStyle.hxx"
+#include "PageSpan.hxx"
+#include "TableStyle.hxx"
+#include "TextRunStyle.hxx"
+
+#include "OdfGenerator.hxx"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -47,39 +51,6 @@
 // sizes in the same document. Once that limitation is lifted,
 // remove this
 #define MULTIPAGE_WORKAROUND 1
-
-namespace
-{
-static bool getInchValue(librevenge::RVNGProperty const &prop, double &value)
-{
-	value=prop.getDouble();
-	switch (prop.getUnit())
-	{
-	case librevenge::RVNG_GENERIC: // assume inch
-	case librevenge::RVNG_INCH:
-		return true;
-	case librevenge::RVNG_POINT:
-		value /= 72.;
-		return true;
-	case librevenge::RVNG_TWIP:
-		value /= 1440.;
-		return true;
-	case librevenge::RVNG_PERCENT:
-	case librevenge::RVNG_UNIT_ERROR:
-	default:
-	{
-		static bool first=true;
-		if (first)
-		{
-			ODFGEN_DEBUG_MSG(("::getInchValue[OdgGenerator.cxx]: call with no double value\n"));
-			first=false;
-		}
-		break;
-	}
-	}
-	return false;
-}
-} // anonymous namespace
 
 using namespace libodfgen;
 
@@ -94,22 +65,23 @@ public:
 		return mGraphicManager;
 	}
 
-	//! returns the document type
+	void updatePageSpanPropertiesToCreatePage(librevenge::RVNGPropertyList &propList);
+
 	bool writeTargetDocument(OdfDocumentHandler *pHandler, OdfStreamType streamType);
 	void _writeSettings(OdfDocumentHandler *pHandler);
 	void _writeStyles(OdfDocumentHandler *pHandler);
 	void _writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType);
-	void _writeMasterPages(OdfDocumentHandler *pHandler);
-	void _writePageLayouts(OdfDocumentHandler *pHandler);
 
 	//
 	// state gestion
 	//
 
-	// the state we use for writing the final document
+	//! the state we use for writing the final document
 	struct State
 	{
-		State() : mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false), mbInFalseLayerGroup(false)
+		//! constructor
+		State() : mbIsTextBox(false), miIntricatedTextBox(0), mbInTableCell(false),
+			mbInFalseLayerGroup(false)
 		{
 		}
 		/** flag to know if a text box is opened */
@@ -149,15 +121,15 @@ public:
 	}
 	std::stack<State> mStateStack;
 
-	// page styles
-	std::vector<DocumentElement *> mPageAutomaticStyles;
-	std::vector<DocumentElement *> mPageMasterStyles;
+	// union of page size
+	double mfMaxWidth;
+	double mfMaxHeight;
 
+	//! the current page
+	PageSpan *mpCurrentPageSpan;
+	//! the actual page index
 	int miPageIndex;
-	double mfWidth, mfMaxWidth;
-	double mfHeight, mfMaxHeight;
-
-	Storage mDummyMasterSlideStorage;
+	libodfgen::DocumentElementVector mDummyMasterSlideStorage;
 
 private:
 	OdgGeneratorPrivate(const OdgGeneratorPrivate &);
@@ -167,13 +139,8 @@ private:
 
 OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 	mStateStack(),
-	mPageAutomaticStyles(),
-	mPageMasterStyles(),
-	miPageIndex(1),
-	mfWidth(0.0),
-	mfMaxWidth(0.0),
-	mfHeight(0.0),
-	mfMaxHeight(0.0),
+	mfMaxWidth(0.0), mfMaxHeight(0.0),
+	mpCurrentPageSpan(0), miPageIndex(0),
 	mDummyMasterSlideStorage()
 {
 	pushState();
@@ -181,8 +148,30 @@ OdgGeneratorPrivate::OdgGeneratorPrivate() : OdfGenerator(),
 
 OdgGeneratorPrivate::~OdgGeneratorPrivate()
 {
-	emptyStorage(&mPageAutomaticStyles);
-	emptyStorage(&mPageMasterStyles);
+}
+
+void OdgGeneratorPrivate::updatePageSpanPropertiesToCreatePage(librevenge::RVNGPropertyList &pList)
+{
+	double width=0;
+	if (pList["svg:width"] && !pList["fo:page-width"])
+		pList.insert("fo:page-width", pList["svg:width"]->clone());
+	if (pList["fo:page-width"] && getInchValue(*pList["fo:page-width"], width) && width>mfMaxWidth)
+		mfMaxWidth=width;
+	double height=0;
+	if (pList["svg:height"] && !pList["fo:page-height"])
+		pList.insert("fo:page-height", pList["svg:height"]->clone());
+	if (pList["fo:page-height"] && getInchValue(*pList["fo:page-height"], height) && height>mfMaxHeight)
+		mfMaxHeight=height;
+
+	// generate drawing-page style
+	librevenge::RVNGPropertyList drawingPageStyle;
+	librevenge::RVNGPropertyListVector drawingPageVector;
+	drawingPageStyle.insert("draw:fill", "none");
+	drawingPageVector.append(drawingPageStyle);
+	pList.insert("librevenge:drawing-page", drawingPageVector);
+
+	// do not generate footnote separator data
+	pList.insert("librevenge:footnote", librevenge::RVNGPropertyListVector());
 }
 
 void OdgGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
@@ -231,79 +220,39 @@ void OdgGeneratorPrivate::_writeSettings(OdfDocumentHandler *pHandler)
 void OdgGeneratorPrivate::_writeAutomaticStyles(OdfDocumentHandler *pHandler, OdfStreamType streamType)
 {
 	TagOpenElement("office:automatic-styles").write(pHandler);
+	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
+	{
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_StyleAutomatic);
+
+		mSpanManager.write(pHandler, Style::Z_StyleAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_StyleAutomatic);
+		mListManager.write(pHandler, Style::Z_StyleAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_StyleAutomatic);
+		mTableManager.write(pHandler, Style::Z_StyleAutomatic, true);
+	}
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
-		mGraphicManager.writeAutomaticStyles(pHandler);
-		mParagraphManager.write(pHandler);
-		mSpanManager.write(pHandler);
-		// writing out the lists styles
-		for (std::vector<ListStyle *>::const_iterator iterListStyles = mListStyles.begin(); iterListStyles != mListStyles.end(); ++iterListStyles)
-			(*iterListStyles)->write(pHandler);
-		mTableManager.write(pHandler, true);
+		mPageSpanManager.writePageStyles(pHandler, Style::Z_ContentAutomatic);
+
+		mSpanManager.write(pHandler, Style::Z_ContentAutomatic);
+		mParagraphManager.write(pHandler, Style::Z_ContentAutomatic);
+		mListManager.write(pHandler, Style::Z_ContentAutomatic);
+		mGraphicManager.write(pHandler, Style::Z_ContentAutomatic);
+		mTableManager.write(pHandler, Style::Z_ContentAutomatic, true);
 	}
 
-	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
-		_writePageLayouts(pHandler);
-
 	pHandler->endElement("office:automatic-styles");
-}
-
-void OdgGeneratorPrivate::_writeMasterPages(OdfDocumentHandler *pHandler)
-{
-	TagOpenElement("office:master-styles").write(pHandler);
-	sendStorage(&mPageMasterStyles, pHandler);
-	appendLayersMasterStyles(pHandler);
-	pHandler->endElement("office:master-styles");
-}
-
-void OdgGeneratorPrivate::_writePageLayouts(OdfDocumentHandler *pHandler)
-{
-#ifdef MULTIPAGE_WORKAROUND
-	TagOpenElement tmpStylePageLayoutOpenElement("style:page-layout");
-	tmpStylePageLayoutOpenElement.addAttribute("style:name", "PM0");
-	tmpStylePageLayoutOpenElement.write(pHandler);
-
-	TagOpenElement tmpStylePageLayoutPropertiesOpenElement("style:page-layout-properties");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-top", "0in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-bottom", "0in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-left", "0in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:margin-right", "0in");
-	librevenge::RVNGString sValue;
-	sValue = doubleToString(mfMaxWidth);
-	sValue.append("in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-width", sValue);
-	sValue = doubleToString(mfMaxHeight);
-	sValue.append("in");
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("fo:page-height", sValue);
-	tmpStylePageLayoutPropertiesOpenElement.addAttribute("style:print-orientation", "portrait");
-	tmpStylePageLayoutPropertiesOpenElement.write(pHandler);
-
-	pHandler->endElement("style:page-layout-properties");
-
-	pHandler->endElement("style:page-layout");
-
-	TagOpenElement tmpStyleStyleOpenElement("style:style");
-	tmpStyleStyleOpenElement.addAttribute("style:name", "dp1");
-	tmpStyleStyleOpenElement.addAttribute("style:family", "drawing-page");
-	tmpStyleStyleOpenElement.write(pHandler);
-
-	TagOpenElement tmpStyleDrawingPagePropertiesOpenElement("style:drawing-page-properties");
-	// tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:background-size", "border");
-	tmpStyleDrawingPagePropertiesOpenElement.addAttribute("draw:fill", "none");
-	tmpStyleDrawingPagePropertiesOpenElement.write(pHandler);
-	pHandler->endElement("style:drawing-page-properties");
-
-	pHandler->endElement("style:style");
-#else
-	sendStorage(&mPageAutomaticStyles, pHandler);
-#endif
-
 }
 
 void OdgGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 {
 	TagOpenElement("office:styles").write(pHandler);
-	mGraphicManager.writeStyles(pHandler);
+	mPageSpanManager.writePageStyles(pHandler, Style::Z_Style);
+
+	mGraphicManager.write(pHandler, Style::Z_Style);
+	mParagraphManager.write(pHandler, Style::Z_Style);
+	mSpanManager.write(pHandler, Style::Z_Style);
+	mListManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }
 
@@ -351,8 +300,11 @@ bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		_writeSettings(pHandler);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML) || (streamType == ODF_STYLES_XML))
-		mFontManager.writeFontsDeclaration(pHandler);
-
+	{
+		TagOpenElement("office:font-face-decls").write(pHandler);
+		mFontManager.write(pHandler, Style::Z_Font);
+		TagCloseElement("office:font-face-decls").write(pHandler);
+	}
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
 		_writeStyles(pHandler);
 
@@ -360,8 +312,12 @@ bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		_writeAutomaticStyles(pHandler, streamType);
 
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_STYLES_XML))
-		_writeMasterPages(pHandler);
-
+	{
+		TagOpenElement("office:master-styles").write(pHandler);
+		mPageSpanManager.writeMasterPages(pHandler);
+		appendLayersMasterStyles(pHandler);
+		pHandler->endElement("office:master-styles");
+	}
 	if ((streamType == ODF_FLAT_XML) || (streamType == ODF_CONTENT_XML))
 	{
 		TagOpenElement("office:body").write(pHandler);
@@ -412,6 +368,10 @@ void OdgGenerator::startDocument(const librevenge::RVNGPropertyList &)
 
 void OdgGenerator::endDocument()
 {
+#ifdef MULTIPAGE_WORKAROUND
+	if (mpImpl->miPageIndex>1)
+		mpImpl->getPageSpanManager().resetPageSizeAndMargins(mpImpl->mfMaxWidth, mpImpl->mfMaxHeight);
+#endif
 	// Write out the collected document
 	mpImpl->writeTargetDocuments();
 }
@@ -428,102 +388,81 @@ void OdgGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*prop
 
 void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)
 {
-	if (propList["svg:width"] && getInchValue(*propList["svg:width"], mpImpl->mfWidth))
-		mpImpl->mfMaxWidth = mpImpl->mfMaxWidth < mpImpl->mfWidth ? mpImpl->mfWidth : mpImpl->mfMaxWidth;
+	librevenge::RVNGPropertyList pList(propList);
 
-	if (propList["svg:height"] && getInchValue(*propList["svg:height"], mpImpl->mfHeight))
-		mpImpl->mfMaxHeight = mpImpl->mfMaxHeight < mpImpl->mfHeight ? mpImpl->mfHeight : mpImpl->mfMaxHeight;
+	mpImpl->mpCurrentPageSpan=0;
+	if (pList["librevenge:master-page-name"])
+	{
+		mpImpl->mpCurrentPageSpan=mpImpl->getPageSpanManager().get(pList["librevenge:master-page-name"]->getStr());
+		if (!mpImpl->mpCurrentPageSpan)
+			pList.remove("librevenge:master-page-name");
+	}
 
-	TagOpenElement *pStyleMasterPageOpenElement = new TagOpenElement("style:master-page");
-
-	TagOpenElement *pDrawPageOpenElement = new TagOpenElement("draw:page");
-
-	TagOpenElement *pStylePageLayoutOpenElement = new TagOpenElement("style:page-layout");
-
-	librevenge::RVNGString sValue;
+	if (!mpImpl->mpCurrentPageSpan)
+	{
+		mpImpl->updatePageSpanPropertiesToCreatePage(pList);
+		mpImpl->mpCurrentPageSpan=mpImpl->getPageSpanManager().add(pList);
+	}
+	++mpImpl->miPageIndex;
+	librevenge::RVNGString pageName;
 	if (propList["draw:name"])
-		sValue.appendEscapedXML(propList["draw:name"]->getStr());
+		pageName.appendEscapedXML(propList["draw:name"]->getStr());
 	else
-		sValue.sprintf("page%i", mpImpl->miPageIndex);
-	pDrawPageOpenElement->addAttribute("draw:name", sValue);
-#ifdef MULTIPAGE_WORKAROUND
-	pStyleMasterPageOpenElement->addAttribute("style:page-layout-name", "PM0");
-	pStylePageLayoutOpenElement->addAttribute("style:page-layout-name", "PM0");
-#else
-	sValue.sprintf("PM%i", mpImpl->miPageIndex);
-	pStyleMasterPageOpenElement->addAttribute("style:page-layout-name", sValue);
-	pStylePageLayoutOpenElement->addAttribute("style:name", sValue);
-#endif
-
-	mpImpl->mPageAutomaticStyles.push_back(pStylePageLayoutOpenElement);
-
-	TagOpenElement *pStylePageLayoutPropertiesOpenElement = new TagOpenElement("style:page-layout-properties");
-	pStylePageLayoutPropertiesOpenElement->addAttribute("fo:margin-top", "0in");
-	pStylePageLayoutPropertiesOpenElement->addAttribute("fo:margin-bottom", "0in");
-	pStylePageLayoutPropertiesOpenElement->addAttribute("fo:margin-left", "0in");
-	pStylePageLayoutPropertiesOpenElement->addAttribute("fo:margin-right", "0in");
-	sValue.sprintf("%s%s", doubleToString(mpImpl->mfWidth).cstr(), "in");
-	pStylePageLayoutPropertiesOpenElement->addAttribute("fo:page-width", sValue);
-	sValue.sprintf("%s%s", doubleToString(mpImpl->mfHeight).cstr(), "in");
-	pStylePageLayoutPropertiesOpenElement->addAttribute("fo:page-height", sValue);
-	pStylePageLayoutPropertiesOpenElement->addAttribute("style:print-orientation", "portrait");
-	mpImpl->mPageAutomaticStyles.push_back(pStylePageLayoutPropertiesOpenElement);
-
-	mpImpl->mPageAutomaticStyles.push_back(new TagCloseElement("style:page-layout-properties"));
-
-	mpImpl->mPageAutomaticStyles.push_back(new TagCloseElement("style:page-layout"));
-
-#ifdef MULTIPAGE_WORKAROUND
-	pDrawPageOpenElement->addAttribute("draw:style-name", "dp1");
-	pStyleMasterPageOpenElement->addAttribute("draw:style-name", "dp1");
-#else
-	sValue.sprintf("dp%i", mpImpl->miPageIndex);
-	pDrawPageOpenElement->addAttribute("draw:style-name", sValue);
-	pStyleMasterPageOpenElement->addAttribute("draw:style-name", sValue);
-#endif
-
-	TagOpenElement *pStyleStyleOpenElement = new TagOpenElement("style:style");
-	pStyleStyleOpenElement->addAttribute("style:name", sValue);
-	pStyleStyleOpenElement->addAttribute("style:family", "drawing-page");
-	mpImpl->mPageAutomaticStyles.push_back(pStyleStyleOpenElement);
-
-#ifdef MULTIPAGE_WORKAROUND
-	pDrawPageOpenElement->addAttribute("draw:master-page-name", "Default");
-	pStyleMasterPageOpenElement->addAttribute("style:name", "Default");
-#else
-	sValue.sprintf("Page%i", mpImpl->miPageIndex);
-	pDrawPageOpenElement->addAttribute("draw:master-page-name", sValue);
-	pStyleMasterPageOpenElement->addAttribute("style:name", sValue);
-#endif
-
+		pageName.sprintf("page%i", mpImpl->miPageIndex);
+	TagOpenElement *pDrawPageOpenElement = new TagOpenElement("draw:page");
+	pDrawPageOpenElement->addAttribute("draw:name", pageName);
+	pDrawPageOpenElement->addAttribute("draw:style-name", mpImpl->mpCurrentPageSpan->getDrawingName());
+	pDrawPageOpenElement->addAttribute("draw:master-page-name", mpImpl->mpCurrentPageSpan->getMasterName());
 	mpImpl->getCurrentStorage()->push_back(pDrawPageOpenElement);
-
-	mpImpl->mPageMasterStyles.push_back(pStyleMasterPageOpenElement);
-	mpImpl->mPageMasterStyles.push_back(new TagCloseElement("style:master-page"));
-
-	TagOpenElement *pStyleDrawingPagePropertiesOpenElement = new TagOpenElement("style:drawing-page-properties");
-	pStyleDrawingPagePropertiesOpenElement->addAttribute("draw:fill", "none");
-	mpImpl->mPageAutomaticStyles.push_back(pStyleDrawingPagePropertiesOpenElement);
-
-	mpImpl->mPageAutomaticStyles.push_back(new TagCloseElement("style:drawing-page-properties"));
-
-	mpImpl->mPageAutomaticStyles.push_back(new TagCloseElement("style:style"));
 }
 
 void OdgGenerator::endPage()
 {
 	mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:page"));
-	mpImpl->miPageIndex++;
 }
 
-void OdgGenerator::startMasterPage(const ::librevenge::RVNGPropertyList &/*propList*/)
+void OdgGenerator::startMasterPage(const ::librevenge::RVNGPropertyList &propList)
 {
-	mpImpl->pushStorage(&mpImpl->mDummyMasterSlideStorage);
+	if (mpImpl->inMasterPage())
+	{
+		ODFGEN_DEBUG_MSG(("OdgGenerator::startMasterPage: oops a master page is already started\n"));
+		return;
+	}
+	mpImpl->startMasterPage(propList);
+	bool ok=mpImpl->inMasterPage() && propList["librevenge:master-page-name"];
+	if (ok)
+	{
+		librevenge::RVNGPropertyList pList(propList);
+		mpImpl->updatePageSpanPropertiesToCreatePage(pList);
+
+		PageSpan *pageSpan=mpImpl->getPageSpanManager().add(pList, true);
+		if (pageSpan)
+		{
+			libodfgen::DocumentElementVector *pMasterElements = new libodfgen::DocumentElementVector;
+			pageSpan->setMasterContent(pMasterElements);
+			mpImpl->pushStorage(pMasterElements);
+		}
+		else
+			ok=false;
+	}
+	if (!ok)
+	{
+		ODFGEN_DEBUG_MSG(("OdgGenerator::startMasterPage: creation of the master page has failed\n"));
+		mpImpl->pushStorage(&mpImpl->mDummyMasterSlideStorage);
+	}
+	mpImpl->pushState();
 }
 
 void OdgGenerator::endMasterPage()
 {
+	if (!mpImpl->inMasterPage())
+	{
+		ODFGEN_DEBUG_MSG(("OdgGenerator::endMasterPage: find no opend master page\n"));
+		return;
+	}
+	mpImpl->popState();
 	mpImpl->popStorage();
+	mpImpl->endMasterPage();
 	mpImpl->mDummyMasterSlideStorage.clear();
 }
 
@@ -534,6 +473,12 @@ void OdgGenerator::setStyle(const ::librevenge::RVNGPropertyList &propList)
 
 void OdgGenerator::startLayer(const ::librevenge::RVNGPropertyList &propList)
 {
+	if (mpImpl->inMasterPage())
+	{
+		ODFGEN_DEBUG_MSG(("OdgGenerator::startLayer: can not be called in master page\n"));
+		return;
+	}
+
 	mpImpl->pushState();
 	if (propList["draw:layer"]&&!propList["draw:layer"]->getStr().empty())
 		mpImpl->openLayer(propList);
@@ -546,6 +491,9 @@ void OdgGenerator::startLayer(const ::librevenge::RVNGPropertyList &propList)
 
 void OdgGenerator::endLayer()
 {
+	if (mpImpl->inMasterPage())
+		return;
+
 	if (mpImpl->getState().mbInFalseLayerGroup)
 		mpImpl->getCurrentStorage()->push_back(new TagCloseElement("draw:g"));
 	else
@@ -655,8 +603,10 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 
 	librevenge::RVNGPropertyList finalStyle;
 	mpImpl->getGraphicManager().addGraphicProperties(style, finalStyle);
-	pDrawFrameElement->addAttribute("draw:style-name", mpImpl->getGraphicManager().findOrAdd(finalStyle));
-	pDrawFrameElement->addAttribute("draw:layer", mpImpl->getLayerName());
+	pDrawFrameElement->addAttribute("draw:style-name",
+	                                mpImpl->getGraphicManager().findOrAdd
+	                                (finalStyle, mpImpl->useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic));
+	pDrawFrameElement->addAttribute("draw:layer", mpImpl->getLayerName(propList));
 
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
 	pDrawFrameElement->addAttribute("svg:width", framePropList["svg:width"]->getStr());
@@ -712,11 +662,12 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 		tmpList.insert("draw:fill", "none");
 	mpImpl->getGraphicManager().addGraphicProperties(tmpList, graphicStyle);
 	mpImpl->getGraphicManager().addFrameProperties(propList, graphicStyle);
-	librevenge::RVNGString sValue=mpImpl->getGraphicManager().findOrAdd(graphicStyle);
+	librevenge::RVNGString sValue=mpImpl->getGraphicManager().findOrAdd
+	                              (graphicStyle, mpImpl->useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_ContentAutomatic);
 
 	TagOpenElement *pDrawFrameOpenElement = new TagOpenElement("draw:frame");
 	pDrawFrameOpenElement->addAttribute("draw:style-name", sValue);
-	pDrawFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName());
+	pDrawFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName(propList));
 
 	if (!propList["svg:width"] && !propList["svg:height"])
 	{
@@ -823,7 +774,7 @@ void OdgGenerator::startTableObject(const ::librevenge::RVNGPropertyList &propLi
 	TagOpenElement *pFrameOpenElement = new TagOpenElement("draw:frame");
 
 	pFrameOpenElement->addAttribute("draw:style-name", "standard");
-	pFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName());
+	pFrameOpenElement->addAttribute("draw:layer", mpImpl->getLayerName(propList));
 
 	if (propList["svg:x"])
 		pFrameOpenElement->addAttribute("svg:x", propList["svg:x"]->getStr());

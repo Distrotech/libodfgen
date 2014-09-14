@@ -29,7 +29,7 @@
 
 #include "DocumentElement.hxx"
 
-FontStyle::FontStyle(const char *psName, const char *psFontFamily) : Style(psName),
+FontStyle::FontStyle(const char *psName, const char *psFontFamily) : Style(psName, Style::Z_Font),
 	msFontFamily()
 {
 	msFontFamily.appendEscapedXML(psFontFamily);
@@ -54,23 +54,23 @@ void FontStyleManager::clean()
 	mStyleHash.clear();
 }
 
-void FontStyleManager::writeFontsDeclaration(OdfDocumentHandler *pHandler) const
+void FontStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone) const
 {
-	TagOpenElement("office:font-face-decls").write(pHandler);
 	std::map<librevenge::RVNGString, shared_ptr<FontStyle> >::const_iterator iter;
 	for (iter = mStyleHash.begin(); iter != mStyleHash.end(); ++iter)
 	{
-		(iter->second)->write(pHandler);
+		if (iter->second->getZone()==zone)
+			(iter->second)->write(pHandler);
 	}
 
+	if (zone!=Style::Z_Font)
+		return;
 	TagOpenElement symbolFontOpen("style:font-face");
 	symbolFontOpen.addAttribute("style:name", "StarSymbol");
 	symbolFontOpen.addAttribute("svg:font-family", "StarSymbol");
 	symbolFontOpen.addAttribute("style:font-charset", "x-symbol");
 	symbolFontOpen.write(pHandler);
 	pHandler->endElement("style:font-face");
-
-	pHandler->endElement("office:font-face-decls");
 }
 
 librevenge::RVNGString FontStyleManager::findOrAdd(const char *psFontFamily)

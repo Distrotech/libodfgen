@@ -37,30 +37,23 @@
 
 class OdfDocumentHandler;
 
-class ParagraphStyle
+class ParagraphStyle : public Style
 {
 public:
-	ParagraphStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGString &sName);
+	ParagraphStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGString &sName, Style::Zone zone);
 	virtual ~ParagraphStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	librevenge::RVNGString getName() const
-	{
-		return msName;
-	}
-	bool hasDisplayName() const;
 
 private:
 	librevenge::RVNGPropertyList mpPropList;
-	librevenge::RVNGString msName;
 };
 
 
 class SpanStyle : public Style
 {
 public:
-	SpanStyle(const char *psName, const librevenge::RVNGPropertyList &xPropList);
+	SpanStyle(const char *psName, const librevenge::RVNGPropertyList &xPropList, Style::Zone zone);
 	virtual void write(OdfDocumentHandler *pHandler) const;
-	bool hasDisplayName() const;
 private:
 	librevenge::RVNGPropertyList mPropList;
 };
@@ -76,8 +69,8 @@ public:
 
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
-	Note: using S%i as new name*/
-	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList);
+	Note: using S%i(or S_M%i) as new name*/
+	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone=Style::Z_Unknown);
 
 	/* returns the style corresponding to a given name ( if it exists ) */
 	shared_ptr<ParagraphStyle> const get(const librevenge::RVNGString &name) const;
@@ -88,23 +81,14 @@ public:
 	// write all
 	virtual void write(OdfDocumentHandler *pHandler) const
 	{
-		write(pHandler, false);
-		write(pHandler, true);
+		write(pHandler, Style::Z_Style);
+		write(pHandler, Style::Z_StyleAutomatic);
+		write(pHandler, Style::Z_ContentAutomatic);
 	}
-	// write named style
-	void writeNamedStyles(OdfDocumentHandler *pHandler) const
-	{
-		write(pHandler, false);
-	}
-	// write basic style
-	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const
-	{
-		write(pHandler, true);
-	}
+	// write automatic/named style
+	void write(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 
 protected:
-	// write automatic/named style
-	void write(OdfDocumentHandler *, bool automaticStyle) const;
 	// hash key -> name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mHashNameMap;
 	// style name -> paragraph style
@@ -124,8 +108,8 @@ public:
 
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
-	Note: using Span%i as new name*/
-	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList);
+	Note: using Span%i (or Span_M%i) as new name*/
+	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone=Style::Z_Unknown);
 	/* returns the style corresponding to a given name ( if it exists ) */
 	shared_ptr<SpanStyle> const get(const librevenge::RVNGString &name) const;
 	/** append the span in the element, ie. the stroke, pattern, bitmap, marker properties */
@@ -137,23 +121,14 @@ public:
 	// write all
 	virtual void write(OdfDocumentHandler *pHandler) const
 	{
-		write(pHandler, false);
-		write(pHandler, true);
+		write(pHandler, Style::Z_Style);
+		write(pHandler, Style::Z_StyleAutomatic);
+		write(pHandler, Style::Z_ContentAutomatic);
 	}
-	// write named style
-	void writeNamedStyles(OdfDocumentHandler *pHandler) const
-	{
-		write(pHandler, false);
-	}
-	// write basic style
-	void writeAutomaticStyles(OdfDocumentHandler *pHandler) const
-	{
-		write(pHandler, true);
-	}
+	// write automatic/named style
+	void write(OdfDocumentHandler *pHandler, Style::Zone zone) const;
 
 protected:
-	// write automatic/named style
-	void write(OdfDocumentHandler *, bool automaticStyle) const;
 	// hash key -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mHashNameMap;
 	// style name -> SpanStyle

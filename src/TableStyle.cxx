@@ -127,8 +127,8 @@ void TableRowStyle::write(OdfDocumentHandler *pHandler) const
 }
 
 
-Table::Table(const librevenge::RVNGPropertyList &xPropList, const char *psName) :
-	Style(psName), mPropList(xPropList),
+Table::Table(const librevenge::RVNGPropertyList &xPropList, const char *psName, Style::Zone zone) :
+	Style(psName, zone), mPropList(xPropList),
 	mbRowOpened(false), mbRowHeaderOpened(false), mbCellOpened(false),
 	mRowNameHash(), mRowStyleHash(), mCellNameHash(), mCellStyleHash()
 {
@@ -243,7 +243,13 @@ bool Table::insertCoveredCell(const librevenge::RVNGPropertyList &)
 	return true;
 }
 
-void Table::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOdp) const
+void Table::write(OdfDocumentHandler *pHandler) const
+{
+	ODFGEN_DEBUG_MSG(("Table::write: default function must not be called\n"));
+	write(pHandler, false);
+}
+
+void Table::write(OdfDocumentHandler *pHandler, bool compatibleOdp) const
 {
 	TagOpenElement styleOpen("style:style");
 	styleOpen.addAttribute("style:name", getName());
@@ -322,11 +328,17 @@ void TableManager::clean()
 	mTableStyles.clear();
 }
 
-bool TableManager::openTable(const librevenge::RVNGPropertyList &xPropList)
+bool TableManager::openTable(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone)
 {
 	librevenge::RVNGString sTableName;
-	sTableName.sprintf("Table%i", (int) mTableStyles.size());
-	shared_ptr<Table> table(new Table(xPropList, sTableName.cstr()));
+	if (zone==Style::Z_Unknown)
+		zone=Style::Z_ContentAutomatic;
+	if (zone==Style::Z_StyleAutomatic)
+		sTableName.sprintf("Table_M%i", (int) mTableStyles.size());
+	else
+		sTableName.sprintf("Table%i", (int) mTableStyles.size());
+
+	shared_ptr<Table> table(new Table(xPropList, sTableName.cstr(), zone));
 	mTableOpened.push_back(table);
 	mTableStyles.push_back(table);
 	return true;
@@ -343,12 +355,12 @@ bool TableManager::closeTable()
 	return true;
 }
 
-void TableManager::write(OdfDocumentHandler *pHandler, bool compatibleOdp) const
+void TableManager::write(OdfDocumentHandler *pHandler, Style::Zone zone, bool compatibleOdp) const
 {
 	for (size_t i=0; i < mTableStyles.size(); ++i)
 	{
-		if (mTableStyles[i])
-			mTableStyles[i]->writeStyles(pHandler, compatibleOdp);
+		if (mTableStyles[i] && mTableStyles[i]->getZone()==zone)
+			mTableStyles[i]->write(pHandler, compatibleOdp);
 	}
 }
 
