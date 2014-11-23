@@ -1,3 +1,17 @@
+libodfgen 0.1.2
+
+- Use text:h element for headings. Any paragraph with text:outline-level
+  property is recognized as a heading.
+- Handle layers.
+- Improve handling of styles. Particularly, do not emit duplicate styles.
+- Slightly improve documentation.
+- Handle master pages.
+- Do not expect that integer properties are always in inches.
+- Fix misspelled style:paragraph-properties element in presentation notes.
+- Only export public symbols on Linux.
+- Fix bogus XML-escaping of metadata values.
+- And many other improvements and fixes.
+
 libodfgen 0.1.1
 
 - Export API symbols on Windows.
