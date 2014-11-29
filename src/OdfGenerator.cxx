@@ -28,6 +28,8 @@
 
 #include <string>
 
+#include <boost/optional.hpp>
+
 #include <librevenge/librevenge.h>
 
 #include "DocumentElement.hxx"
@@ -714,6 +716,15 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGPropertyList pList(propList);
 	librevenge::RVNGString paragraphName("");
 	bool isMasterPage=(propList["style:master-page-name"]!=0);
+
+	boost::optional<librevenge::RVNGString> outlineLevel;
+	if (pList["text:outline-level"])
+	{
+		outlineLevel = pList["text:outline-level"]->getStr();
+		// text:outline-level is not allowed in style
+		pList.remove("text:outline-level");
+	}
+
 	if (pList["librevenge:paragraph-id"])
 	{
 		int id=pList["librevenge:paragraph-id"]->getInt();
@@ -742,11 +753,11 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pParagraphOpenElement = 0;
 
-	if (pList["text:outline-level"])
+	if (bool(outlineLevel))
 	{
 		mCurrentParaIsHeading = true;
 		pParagraphOpenElement = new TagOpenElement("text:h");
-		pParagraphOpenElement->addAttribute("text:outline-level", pList["text:outline-level"]->getStr());
+		pParagraphOpenElement->addAttribute("text:outline-level", get(outlineLevel));
 	}
 	else
 	{
