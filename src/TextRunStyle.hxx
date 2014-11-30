@@ -40,12 +40,13 @@ class OdfDocumentHandler;
 class ParagraphStyle : public Style
 {
 public:
-	ParagraphStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGString &sName, Style::Zone zone);
+	ParagraphStyle(librevenge::RVNGPropertyList const &propList, const librevenge::RVNGString &sName, Style::Zone zone, int outlineLevel);
 	virtual ~ParagraphStyle();
 	virtual void write(OdfDocumentHandler *pHandler) const;
 
 private:
 	librevenge::RVNGPropertyList mpPropList;
+	const int mOutlineLevel;
 };
 
 
@@ -70,7 +71,7 @@ public:
 	/* create a new style if it does not exists. In all case, returns the name of the style
 
 	Note: using S%i(or S_M%i) as new name*/
-	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone=Style::Z_Unknown);
+	librevenge::RVNGString findOrAdd(const librevenge::RVNGPropertyList &xPropList, Style::Zone zone=Style::Z_Unknown, int outlineLevel = 0);
 
 	/* returns the style corresponding to a given name ( if it exists ) */
 	shared_ptr<ParagraphStyle> const get(const librevenge::RVNGString &name) const;

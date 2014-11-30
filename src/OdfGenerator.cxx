@@ -721,6 +721,7 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 		outlineLevel.reset(pList["text:outline-level"]->clone());
 		// text:outline-level is not allowed in style
 		pList.remove("text:outline-level");
+		pList.insert("style:default-outline-level", outlineLevel->clone());
 	}
 
 	if (pList["librevenge:paragraph-id"])
@@ -743,7 +744,8 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	{
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
-		paragraphName = mParagraphManager.findOrAdd(pList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown);
+		const int outlLevel = bool(outlineLevel) ? outlineLevel->getInt() : 0;
+		paragraphName = mParagraphManager.findOrAdd(pList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown, outlLevel);
 		if (pList["librevenge:paragraph-id"] && !isMasterPage)
 			mIdParagraphNameMap[pList["librevenge:paragraph-id"]->getInt()]=paragraphName;
 	}

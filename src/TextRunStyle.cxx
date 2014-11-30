@@ -33,8 +33,9 @@
 
 #include <string.h>
 
-ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName, Style::Zone zone) : Style(sName, zone),
-	mpPropList(pPropList)
+ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName, Style::Zone zone, const int outlineLevel) : Style(sName, zone),
+	mpPropList(pPropList),
+	mOutlineLevel(outlineLevel)
 {
 }
 
@@ -55,6 +56,8 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 		propList.insert("style:parent-style-name", mpPropList["style:parent-style-name"]->clone());
 	if (mpPropList["style:master-page-name"])
 		propList.insert("style:master-page-name", mpPropList["style:master-page-name"]->clone());
+	if (mOutlineLevel > 0)
+		propList.insert("style:default-outline-level", mOutlineLevel);
 	pHandler->startElement("style:style", propList);
 
 	propList.clear();
@@ -173,7 +176,7 @@ void ParagraphStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone
 	}
 }
 
-librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList, Style::Zone zone)
+librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList, Style::Zone zone, const int outlineLevel)
 {
 	librevenge::RVNGPropertyList pList(propList);
 
@@ -214,7 +217,7 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 			mDisplayNameMap[name]=sName;
 	}
 
-	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(pList, sName, zone));
+	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(pList, sName, zone, outlineLevel));
 	mStyleHash[sName] =parag;
 	mHashNameMap[hashKey] = sName;
 
