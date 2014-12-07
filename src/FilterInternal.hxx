@@ -34,7 +34,7 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-#define ODFGEN_DEBUG_MSG(M) printf M
+#define ODFGEN_DEBUG_MSG(M) libodfgen::debugPrint M
 #else
 #define ODFGEN_DEBUG_MSG(M)
 #endif
@@ -120,6 +120,8 @@ protected:
 	//! the list of elements
 	std::vector<shared_ptr<DocumentElement> > mpElements;
 };
+
+void debugPrint(const char *format, ...);
 
 } // namespace libodfgen
 

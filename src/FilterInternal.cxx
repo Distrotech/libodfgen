@@ -18,6 +18,9 @@
 
 #include "FilterInternal.hxx"
 
+#include <cstdarg>
+#include <cstdio>
+
 librevenge::RVNGString libodfgen::doubleToString(const double value)
 {
 	librevenge::RVNGProperty *prop = librevenge::RVNGPropertyFactory::newDoubleProp(value);
@@ -81,6 +84,14 @@ void DocumentElementVector::appendTo(DocumentElementVector &res)
 {
 	for (size_t i=0; i<mpElements.size(); ++i)
 		res.mpElements.push_back(mpElements[i]);
+}
+
+void debugPrint(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    std::vfprintf(stderr, format, args);
+    va_end(args);
 }
 
 }
