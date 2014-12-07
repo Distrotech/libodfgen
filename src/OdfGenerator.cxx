@@ -493,14 +493,19 @@ void OdfGenerator::openLayer(const librevenge::RVNGPropertyList &propList)
 		mLayerNameStack.push("layout");
 		return;
 	}
-	if (!propList["draw:layer"] || propList["draw:layer"]->getStr().empty())
+	librevenge::RVNGString layerName("");
+	if (propList["draw:layer"])
+		layerName=propList["draw:layer"]->getStr();
+	else if (propList["svg:id"])
+		layerName=propList["svg:id"]->getStr();
+	if (layerName.empty())
 	{
 		ODFGEN_DEBUG_MSG(("OdfGenerator::openLayer: can not find the layer name\n"));
 		mLayerNameStack.push("layout");
 		return;
 	}
 	librevenge::RVNGString layer;
-	layer.appendEscapedXML(propList["draw:layer"]->getStr());
+	layer.appendEscapedXML(layerName);
 	if (mLayerNameSet.find(layer)!=mLayerNameSet.end())
 	{
 		// try to find a new name
@@ -715,15 +720,8 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGString paragraphName("");
 	bool isMasterPage=(propList["style:master-page-name"]!=0);
 
-	shared_ptr<librevenge::RVNGProperty> outlineLevel;
-	if (pList["text:outline-level"])
-	{
-		outlineLevel.reset(pList["text:outline-level"]->clone());
-		// text:outline-level is not allowed in style
-		pList.remove("text:outline-level");
-		pList.insert("style:default-outline-level", outlineLevel->clone());
-	}
-
+	if (propList["text:outline-level"])
+		pList.insert("style:default-outline-level", propList["text:outline-level"]->clone());
 	if (pList["librevenge:paragraph-id"])
 	{
 		int id=pList["librevenge:paragraph-id"]->getInt();
@@ -744,8 +742,7 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	{
 		if (pList["style:font-name"])
 			mFontManager.findOrAdd(pList["style:font-name"]->getStr().cstr());
-		const int outlLevel = bool(outlineLevel) ? outlineLevel->getInt() : 0;
-		paragraphName = mParagraphManager.findOrAdd(pList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown, outlLevel);
+		paragraphName = mParagraphManager.findOrAdd(pList, useStyleAutomaticZone() ? Style::Z_StyleAutomatic : Style::Z_Unknown);
 		if (pList["librevenge:paragraph-id"] && !isMasterPage)
 			mIdParagraphNameMap[pList["librevenge:paragraph-id"]->getInt()]=paragraphName;
 	}
@@ -753,11 +750,11 @@ void OdfGenerator::openParagraph(const librevenge::RVNGPropertyList &propList)
 	// create a document element corresponding to the paragraph, and append it to our list of document elements
 	TagOpenElement *pParagraphOpenElement = 0;
 
-	if (bool(outlineLevel))
+	if (propList["text:outline-level"])
 	{
 		mCurrentParaIsHeading = true;
 		pParagraphOpenElement = new TagOpenElement("text:h");
-		pParagraphOpenElement->addAttribute("text:outline-level", outlineLevel->getStr());
+		pParagraphOpenElement->addAttribute("text:outline-level", propList["text:outline-level"]->getStr());
 	}
 	else
 	{

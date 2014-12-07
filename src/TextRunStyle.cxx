@@ -33,9 +33,8 @@
 
 #include <string.h>
 
-ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName, Style::Zone zone, const int outlineLevel) : Style(sName, zone),
-	mpPropList(pPropList),
-	mOutlineLevel(outlineLevel)
+ParagraphStyle::ParagraphStyle(const librevenge::RVNGPropertyList &pPropList, const librevenge::RVNGString &sName, Style::Zone zone) : Style(sName, zone),
+	mpPropList(pPropList)
 {
 }
 
@@ -56,8 +55,8 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 		propList.insert("style:parent-style-name", mpPropList["style:parent-style-name"]->clone());
 	if (mpPropList["style:master-page-name"])
 		propList.insert("style:master-page-name", mpPropList["style:master-page-name"]->clone());
-	if (mOutlineLevel > 0)
-		propList.insert("style:default-outline-level", mOutlineLevel);
+	if (mpPropList["style:default-outline-level"] && mpPropList["style:default-outline-level"]->getInt()>0)
+		propList.insert("style:default-outline-level", mpPropList["style:default-outline-level"]->clone());
 	pHandler->startElement("style:style", propList);
 
 	propList.clear();
@@ -68,6 +67,7 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 		        !strcmp(i.key(), "style:display-name") ||
 		        !strcmp(i.key(), "style:parent-style-name") ||
 		        !strcmp(i.key(), "style:master-page-name") ||
+		        !strcmp(i.key(), "style:default-outline-level") ||
 		        !strncmp(i.key(), "librevenge:",11))
 			continue;
 		else if (!strncmp(i.key(), "fo:margin-",10))
@@ -102,6 +102,8 @@ void ParagraphStyle::write(OdfDocumentHandler *pHandler) const
 			        !strcmp(i.key(), "fo:border-bottom"))
 				propList.insert(i.key(), i()->clone());
 		}
+		else if (!strcmp(i.key(), "text:outline-level"))
+			continue;
 		else
 			propList.insert(i.key(), i()->clone());
 	}
@@ -176,52 +178,73 @@ void ParagraphStyleManager::write(OdfDocumentHandler *pHandler, Style::Zone zone
 	}
 }
 
-librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList, Style::Zone zone, const int outlineLevel)
+librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPropertyList &propList, Style::Zone zone)
 {
 	librevenge::RVNGPropertyList pList(propList);
 
 	// first check if we need to store the style as style or as automatic style
-	if (propList["style:display-name"] && !propList["style:master-page-name"])
-		zone=Style::Z_Style;
-	else if (zone==Style::Z_Unknown)
-		zone=Style::Z_ContentAutomatic;
-	pList.insert("librevenge:zone-style", int(zone));
+	bool deferMasterPageNameInsertion=false;
+	Style::Zone currentZone=zone;
+	if (propList["style:display-name"])
+	{
+		if (propList["style:master-page-name"])
+		{
+			deferMasterPageNameInsertion=true;
+			pList.remove("style:master-page-name");
+		}
+		currentZone=Style::Z_Style;
+	}
+	else if (currentZone==Style::Z_Unknown)
+		currentZone=Style::Z_ContentAutomatic;
+	pList.insert("librevenge:zone-style", int(currentZone));
 
 	// look if we have already create this style
 	librevenge::RVNGString hashKey = pList.getPropString();
 	std::map<librevenge::RVNGString, librevenge::RVNGString>::const_iterator iter =
 	    mHashNameMap.find(hashKey);
-	if (iter!=mHashNameMap.end()) return iter->second;
-
-	ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
-
-	// ok create a new style
 	librevenge::RVNGString sName("");
-	if (zone==Style::Z_Style)
-		sName.sprintf("S_N%i", mStyleHash.size());
-	else if (zone==Style::Z_StyleAutomatic)
-		sName.sprintf("S_M%i", mStyleHash.size());
-	else
-		sName.sprintf("S%i", mStyleHash.size());
-	if (propList["style:display-name"])
+	if (iter!=mHashNameMap.end())
 	{
-		librevenge::RVNGString name(propList["style:display-name"]->getStr());
-		if (propList["style:master-page-name"])
-			pList.remove("style:display-name");
-		else if (mDisplayNameMap.find(name) != mDisplayNameMap.end())
-		{
-			ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: a paragraph with name %s already exists\n", name.cstr()));
-			pList.remove("style:display-name");
-		}
+		if (!deferMasterPageNameInsertion)
+			return iter->second;
+		sName=iter->second;
+	}
+	else
+	{
+		ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: Paragraph Hash Key: %s\n", hashKey.cstr()));
+
+		// ok create a new style
+		if (currentZone==Style::Z_Style)
+			sName.sprintf("S_N%i", mStyleHash.size());
+		else if (currentZone==Style::Z_StyleAutomatic)
+			sName.sprintf("S_M%i", mStyleHash.size());
 		else
-			mDisplayNameMap[name]=sName;
+			sName.sprintf("S%i", mStyleHash.size());
+		if (propList["style:display-name"])
+		{
+			librevenge::RVNGString name(propList["style:display-name"]->getStr());
+			if (mDisplayNameMap.find(name) != mDisplayNameMap.end())
+			{
+				ODFGEN_DEBUG_MSG(("ParagraphStyleManager::findOrAdd: a paragraph with name %s already exists\n", name.cstr()));
+				pList.remove("style:display-name");
+			}
+			else
+				mDisplayNameMap[name]=sName;
+		}
+		shared_ptr<ParagraphStyle> parag(new ParagraphStyle(pList, sName, currentZone));
+		mStyleHash[sName] =parag;
+		mHashNameMap[hashKey] = sName;
+		if (!deferMasterPageNameInsertion)
+			return sName;
 	}
 
-	shared_ptr<ParagraphStyle> parag(new ParagraphStyle(pList, sName, zone, outlineLevel));
-	mStyleHash[sName] =parag;
-	mHashNameMap[hashKey] = sName;
-
-	return sName;
+	//
+	// we must now create the style with master-page-name attribute : let inherete from the named style
+	//
+	pList=propList;
+	pList.remove("style:display-name");
+	pList.insert("style:parent-style-name", sName);
+	return findOrAdd(pList, zone);
 }
 
 shared_ptr<ParagraphStyle> const ParagraphStyleManager::get(const librevenge::RVNGString &name) const
@@ -295,6 +318,7 @@ void SpanStyleManager::addSpanProperties(librevenge::RVNGPropertyList const &sty
 			        !strncmp(i.key(), "style:rfc-", 10) || !strncmp(i.key(), "style:script", 12) ||
 			        !strncmp(i.key(), "style:text", 10))
 				element.insert(i.key(),i()->clone());
+			// style:writing-mode is ignored
 			break;
 		case 't':
 			if (!strcmp(i.key(), "text:display"))
