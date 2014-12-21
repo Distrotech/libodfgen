@@ -88,10 +88,10 @@ void DocumentElementVector::appendTo(DocumentElementVector &res)
 
 void debugPrint(const char *format, ...)
 {
-    va_list args;
-    va_start(args, format);
-    std::vfprintf(stderr, format, args);
-    va_end(args);
+	va_list args;
+	va_start(args, format);
+	std::vfprintf(stderr, format, args);
+	va_end(args);
 }
 
 }
