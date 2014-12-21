@@ -24,6 +24,8 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
+#include "config.h"
+
 #include <math.h>
 
 #include <string>
@@ -99,17 +101,41 @@ std::string OdfGenerator::getDocumentType(OdfStreamType streamType)
 
 void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propList)
 {
+	std::string generator;
+
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
 	{
 		// filter out librevenge elements
 		if (strncmp(i.key(), "librevenge:", 11) && strncmp(i.key(), "dcterms:", 8))
 		{
-			mMetaDataStorage.push_back(new TagOpenElement(i.key()));
-			mMetaDataStorage.push_back(new CharDataElement(i()->getStr().cstr()));
-			mMetaDataStorage.push_back(new TagCloseElement(i.key()));
+			if (strncmp(i.key(), "meta:generator", 14))
+			{
+				mMetaDataStorage.push_back(new TagOpenElement(i.key()));
+				mMetaDataStorage.push_back(new CharDataElement(i()->getStr().cstr()));
+				mMetaDataStorage.push_back(new TagCloseElement(i.key()));
+			}
+			else
+			{
+				generator = i()->getStr().cstr();
+			}
 		}
 	}
+
+	if (generator.empty())
+	{
+		generator = PACKAGE "/" VERSION;
+	}
+	else
+	{
+		generator += " (";
+		generator += PACKAGE "/" VERSION;
+		generator += ")";
+	}
+
+	mMetaDataStorage.push_back(new TagOpenElement("meta:generator"));
+	mMetaDataStorage.push_back(new CharDataElement(generator.c_str()));
+	mMetaDataStorage.push_back(new TagCloseElement("meta:generator"));
 }
 
 void OdfGenerator::writeDocumentMetaData(OdfDocumentHandler *pHandler)
