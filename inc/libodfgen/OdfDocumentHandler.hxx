@@ -46,6 +46,9 @@ typedef bool (*OdfEmbeddedObject)(const librevenge::RVNGBinaryData &data, OdfDoc
 
 /** Handler for embedded images.
   *
+  * This is also (mis)used for embedded fonts, to avoid API change. In
+  * this case the output format must be TTF.
+  *
   * @param[in] input the image's data
   * @param[in] output the same image in format suitable for the used
   * OdfDocumentHandler.

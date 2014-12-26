@@ -382,9 +382,9 @@ void OdgGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 	mpImpl->setDocumentMetaData(propList);
 }
 
-void OdgGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &/*propList*/)
+void OdgGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &propList)
 {
-	// TODO: implement me
+	mpImpl->defineEmbeddedFont(propList);
 }
 
 void OdgGenerator::startPage(const ::librevenge::RVNGPropertyList &propList)

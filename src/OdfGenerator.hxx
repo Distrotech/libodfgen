@@ -319,6 +319,13 @@ public:
 	//! define a chart style
 	void defineChartStyle(const librevenge::RVNGPropertyList &propList);
 
+	//
+	// font
+	//
+
+	//! add embedded font
+	void defineEmbeddedFont(const librevenge::RVNGPropertyList &propList);
+
 protected:
 
 	//

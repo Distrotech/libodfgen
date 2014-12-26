@@ -25,6 +25,7 @@
 #ifndef _FONTSTYLE_HXX_
 #define _FONTSTYLE_HXX_
 #include <map>
+#include <vector>
 
 #include <librevenge/librevenge.h>
 
@@ -34,6 +35,14 @@
 
 class FontStyle : public Style
 {
+	struct EmbeddedInfo
+	{
+		EmbeddedInfo(const librevenge::RVNGString &mimeType, const librevenge::RVNGBinaryData &data);
+
+		librevenge::RVNGString m_mimeType;
+		librevenge::RVNGBinaryData m_data;
+	};
+
 public:
 	FontStyle(const char *psName, const char *psFontFamily);
 	~FontStyle();
@@ -42,13 +51,23 @@ public:
 	{
 		return msFontFamily;
 	}
+	bool isEmbedded() const
+	{
+		return bool(m_embeddedInfo);
+	}
+	void setEmbedded(const librevenge::RVNGString &mimeType, const librevenge::RVNGBinaryData &data);
+
+private:
+	void writeEmbedded(OdfDocumentHandler *pHandler) const;
 
 private:
 	librevenge::RVNGString msFontFamily;
+	shared_ptr<EmbeddedInfo> m_embeddedInfo;
 };
 
 class FontStyleManager : public StyleManager
 {
+
 public:
 	FontStyleManager() : mStyleHash() {}
 	virtual ~FontStyleManager()
@@ -62,10 +81,13 @@ public:
 	*/
 	librevenge::RVNGString findOrAdd(const char *psFontFamily);
 
+	/** Set given font as embedded with given data.
+	 */
+	void setEmbedded(const librevenge::RVNGString &name, const librevenge::RVNGString &mimeType, const librevenge::RVNGBinaryData &data);
+
 	virtual void clean();
 	virtual void write(OdfDocumentHandler *) const {}
 	virtual void write(OdfDocumentHandler *, Style::Zone zone) const;
-
 
 protected:
 	// style name -> SpanStyle

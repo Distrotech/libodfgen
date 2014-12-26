@@ -28,6 +28,7 @@
 
 #include <math.h>
 
+#include <limits>
 #include <string>
 
 #include <librevenge/librevenge.h>
@@ -1333,6 +1334,50 @@ void OdfGenerator::defineChartStyle(const librevenge::RVNGPropertyList &propList
 	}
 	mIdChartMap[chartId]=propList;
 	mIdChartNameMap.erase(chartId);
+}
+
+////////////////////////////////////////////////////////////
+// font
+////////////////////////////////////////////////////////////
+
+void OdfGenerator::defineEmbeddedFont(const librevenge::RVNGPropertyList &propList)
+{
+	// AbiWord rejects such ODF files (rightfully, as office:binary-data is not allowed in
+	// svg:font-face-uri). So only do this for Flat ODF, until we have a way to insert binary
+	// files into the output archive (which is not possible without an API change).
+	if (!((mDocumentStreamHandlers.size() == 1) && (mDocumentStreamHandlers.begin()->first == ODF_FLAT_XML)))
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::defineEmbeddedFont: embedded fonts are only handled for Flat ODF currently\n"));
+		return;
+	}
+	if (!propList["office:binary-data"] || !propList["librevenge:mime-type"] || !propList["librevenge:name"])
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::defineEmbeddedFont: can not find data, mimetype, or name\n"));
+		return;
+	}
+
+	try
+	{
+		const librevenge::RVNGString name(propList["librevenge:name"]->getStr());
+		const librevenge::RVNGString mimeType(propList["librevenge:mime-type"]->getStr());
+		const librevenge::RVNGBinaryData data(propList["office:binary-data"]->getStr());
+
+		OdfEmbeddedImage imageHandler = findEmbeddedImageHandler(mimeType);
+		if (imageHandler)
+		{
+			librevenge::RVNGBinaryData output;
+			if (imageHandler(data, output))
+				mFontManager.setEmbedded(name, "application/x-font-ttf", output);
+		}
+		else
+		{
+			mFontManager.setEmbedded(name, mimeType, data);
+		}
+	}
+	catch (...)
+	{
+		ODFGEN_DEBUG_MSG(("OdfGenerator::defineEmbeddedFont: ARGHH, catch an exception when decoding font!!!\n"));
+	}
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */

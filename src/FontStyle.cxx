@@ -29,8 +29,15 @@
 
 #include "DocumentElement.hxx"
 
+FontStyle::EmbeddedInfo::EmbeddedInfo(const librevenge::RVNGString &mimeType, const librevenge::RVNGBinaryData &data)
+	: m_mimeType(mimeType)
+	, m_data(data)
+{
+}
+
 FontStyle::FontStyle(const char *psName, const char *psFontFamily) : Style(psName, Style::Z_Font),
 	msFontFamily()
+	, m_embeddedInfo()
 {
 	msFontFamily.appendEscapedXML(psFontFamily);
 }
@@ -45,8 +52,51 @@ void FontStyle::write(OdfDocumentHandler *pHandler) const
 	styleOpen.addAttribute("style:name", getName());
 	styleOpen.addAttribute("svg:font-family", msFontFamily);
 	styleOpen.write(pHandler);
+	if (bool(m_embeddedInfo))
+		writeEmbedded(pHandler);
 	TagCloseElement styleClose("style:font-face");
 	styleClose.write(pHandler);
+}
+
+void FontStyle::writeEmbedded(OdfDocumentHandler *const pHandler) const
+{
+	assert(bool(m_embeddedInfo));
+
+	TagOpenElement("svg:font-face-src").write(pHandler);
+	TagOpenElement("svg:font-face-uri").write(pHandler);
+
+	librevenge::RVNGString type;
+	if (m_embeddedInfo->m_mimeType == "application/x-font-ttf")
+		type = "truetype";
+	else if (m_embeddedInfo->m_mimeType == "application/vnd.ms-fontobject")
+		type = "embedded-opentype";
+	if (!type.empty())
+	{
+		TagOpenElement fontFaceFormatOpen("svg:font-face-format");
+		fontFaceFormatOpen.addAttribute("svg:string", type);
+		fontFaceFormatOpen.write(pHandler);
+		TagCloseElement("svg:font-face-format").write(pHandler);
+	}
+
+	TagOpenElement("office:binary-data").write(pHandler);
+	try
+	{
+		CharDataElement(m_embeddedInfo->m_data.getBase64Data()).write(pHandler);
+	}
+	catch (...)
+	{
+		ODFGEN_DEBUG_MSG(("FontStyle::writeEmbedded: ARGHH, catch an exception when encoding font!!!\n"));
+	}
+	TagCloseElement("office:binary-data").write(pHandler);
+
+	TagCloseElement("svg:font-face-uri").write(pHandler);
+	TagCloseElement("svg:font-face-src").write(pHandler);
+}
+
+void FontStyle::setEmbedded(const librevenge::RVNGString &mimeType, const librevenge::RVNGBinaryData &data)
+{
+	if (!mimeType.empty() && !data.empty())
+		m_embeddedInfo.reset(new EmbeddedInfo(mimeType, data));
 }
 
 void FontStyleManager::clean()
@@ -83,6 +133,12 @@ librevenge::RVNGString FontStyleManager::findOrAdd(const char *psFontFamily)
 	shared_ptr<FontStyle> font(new FontStyle(psFontFamily, psFontFamily));
 	mStyleHash[psFontFamily] = font;
 	return psFontFamily;
+}
+
+void FontStyleManager::setEmbedded(const librevenge::RVNGString &name, const librevenge::RVNGString &mimeType, const librevenge::RVNGBinaryData &data)
+{
+	findOrAdd(name.cstr());
+	mStyleHash[name]->setEmbedded(mimeType, data);
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
