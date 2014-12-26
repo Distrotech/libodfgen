@@ -22,6 +22,7 @@
 #ifndef __FILTERINTERNAL_HXX__
 #define __FILTERINTERNAL_HXX__
 
+#include <assert.h> // for assert
 #include <string.h> // for strcmp
 
 #include <vector>
