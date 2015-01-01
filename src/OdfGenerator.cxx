@@ -112,17 +112,9 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 		{
 			if (strncmp(i.key(), "meta:generator", 14))
 			{
-				// convert meta:user-defined:foo to <meta:user-defined meta:name="foo">
-				bool userDefined = !strncmp(i.key(), "meta:user-defined:", 18);
-				librevenge::RVNGString elementName(i.key());
-				if (userDefined)
-					elementName = "meta:user-defined";
-				TagOpenElement *element = new TagOpenElement(elementName);
-				if (userDefined)
-					element->addAttribute("meta:name", elementName.cstr() + 18);
-				mMetaDataStorage.push_back(element);
+				mMetaDataStorage.push_back(new TagOpenElement(i.key()));
 				mMetaDataStorage.push_back(new CharDataElement(i()->getStr().cstr()));
-				mMetaDataStorage.push_back(new TagCloseElement(elementName));
+				mMetaDataStorage.push_back(new TagCloseElement(i.key()));
 			}
 			else
 			{
