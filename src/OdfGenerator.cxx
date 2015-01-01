@@ -24,7 +24,9 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <math.h>
 
@@ -123,6 +125,7 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 		}
 	}
 
+#if HAVE_CONFIG_H
 	if (generator.empty())
 	{
 		generator = PACKAGE "/" VERSION;
@@ -133,6 +136,7 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 		generator += PACKAGE "/" VERSION;
 		generator += ")";
 	}
+#endif
 
 	mMetaDataStorage.push_back(new TagOpenElement("meta:generator"));
 	mMetaDataStorage.push_back(new CharDataElement(generator.c_str()));
