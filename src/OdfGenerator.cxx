@@ -125,18 +125,21 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 		}
 	}
 
-#ifdef HAVE_CONFIG_H
+#ifdef VERSION
+	const std::string version(VERSION);
+#else
+	const std::string version("unknown");
+#endif
 	if (generator.empty())
 	{
-		generator = "libodfgen/" VERSION;
+		generator = "libodfgen/" + version;
 	}
 	else
 	{
 		generator += " (";
-		generator += "libodfgen/" VERSION;
+		generator += "libodfgen/" + version;
 		generator += ")";
 	}
-#endif
 
 	mMetaDataStorage.push_back(new TagOpenElement("meta:generator"));
 	mMetaDataStorage.push_back(new CharDataElement(generator.c_str()));
