@@ -128,12 +128,12 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 #ifdef HAVE_CONFIG_H
 	if (generator.empty())
 	{
-		generator = PACKAGE "/" VERSION;
+		generator = "libodfgen/" VERSION;
 	}
 	else
 	{
 		generator += " (";
-		generator += PACKAGE "/" VERSION;
+		generator += "libodfgen/" VERSION;
 		generator += ")";
 	}
 #endif
