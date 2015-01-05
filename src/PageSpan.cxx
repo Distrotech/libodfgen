@@ -102,7 +102,10 @@ void PageLayoutStyle::write(OdfDocumentHandler *pHandler) const
 	{
 		if (i.child() || strncmp(i.key(), "librevenge:", 11)==0 || strncmp(i.key(), "svg:", 4)==0)
 			continue;
-		tempPropList.insert(i.key(), i()->clone());
+		if (strncmp(i.key(), "draw:name", 9) == 0)
+			tempPropList.insert(i.key(), librevenge::RVNGString::escapeXML(i()->getStr()));
+		else
+			tempPropList.insert(i.key(), i()->clone());
 	}
 	pHandler->startElement("style:page-layout-properties", tempPropList);
 
