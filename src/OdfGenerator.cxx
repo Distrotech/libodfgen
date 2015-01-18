@@ -123,6 +123,16 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 				generator = i()->getStr().cstr();
 			}
 		}
+		else if (strncmp(i.key(), "librevenge:category", 19) == 0)
+		{
+		    // convert to <meta:user-defined meta:name="category">
+		    librevenge::RVNGString elementName = "meta:user-defined";
+		    TagOpenElement *element = new TagOpenElement(elementName);
+		    element->addAttribute("meta:name", "category");
+		    mMetaDataStorage.push_back(element);
+		    mMetaDataStorage.push_back(new CharDataElement(i()->getStr().cstr()));
+		    mMetaDataStorage.push_back(new TagCloseElement(elementName));
+		}
 	}
 
 #ifdef VERSION
