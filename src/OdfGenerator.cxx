@@ -123,15 +123,30 @@ void OdfGenerator::setDocumentMetaData(const librevenge::RVNGPropertyList &propL
 				generator = i()->getStr().cstr();
 			}
 		}
-		else if (strncmp(i.key(), "librevenge:category", 19) == 0)
+		else if (strncmp(i.key(), "librevenge:template", 19) == 0)
 		{
-		    // convert to <meta:user-defined meta:name="category">
-		    librevenge::RVNGString elementName = "meta:user-defined";
-		    TagOpenElement *element = new TagOpenElement(elementName);
-		    element->addAttribute("meta:name", "category");
-		    mMetaDataStorage.push_back(element);
-		    mMetaDataStorage.push_back(new CharDataElement(i()->getStr().cstr()));
-		    mMetaDataStorage.push_back(new TagCloseElement(elementName));
+			librevenge::RVNGString elementName = "meta:template";
+			TagOpenElement *element = new TagOpenElement(elementName);
+			element->addAttribute("xlink:type", "simple");
+			element->addAttribute("xlink:actuate", "onRequest");
+			element->addAttribute("xlink:title", i()->getStr().cstr());
+			element->addAttribute("xlink:href", "");
+			mMetaDataStorage.push_back(element);
+			mMetaDataStorage.push_back(new TagCloseElement(elementName));
+		}
+		else if (strncmp(i.key(), "librevenge:", 11) == 0)
+		{
+			// convert to <meta:user-defined meta:name="some_metadata">
+			librevenge::RVNGString elementName = "meta:user-defined";
+			TagOpenElement *element = new TagOpenElement(elementName);
+			std::string user_defined(i.key());
+			size_t found = user_defined.find_last_of(":");
+			if (found != std::string::npos)
+				user_defined = user_defined.substr(found+1);
+			element->addAttribute("meta:name", user_defined.c_str());
+			mMetaDataStorage.push_back(element);
+			mMetaDataStorage.push_back(new CharDataElement(i()->getStr().cstr()));
+			mMetaDataStorage.push_back(new TagCloseElement(elementName));
 		}
 	}
 
