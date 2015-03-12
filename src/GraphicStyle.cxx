@@ -226,7 +226,7 @@ librevenge::RVNGString GraphicStyleManager::getStyleNameForGradient(librevenge::
 		// Work around a mess in LibreOffice where both opacities of 100% are interpreted as complete transparency
 		// Nevertheless, when one is different, immediately, they are interpreted correctly
 		if (style["librevenge:start-opacity"] && style["librevenge:end-opacity"]
-		        && (style["librevenge:start-opacity"]->getDouble() != 1.0 || style["librevenge:end-opacity"]->getDouble() != 1.0))
+		        && (style["librevenge:start-opacity"]->getDouble() < 1.0 || style["librevenge:end-opacity"]->getDouble() < 1.0))
 			needCreateOpacityStyle=true;
 	}
 	else if (gradient->count() >= 2)

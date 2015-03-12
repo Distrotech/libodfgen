@@ -585,7 +585,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	}
 
 	double angle(propList["librevenge:rotate"] ? - M_PI * propList["librevenge:rotate"]->getDouble() / 180.0 : 0.0);
-	if (angle != 0.0)
+	if (angle < 0 || angle > 0)
 	{
 		double deltax((width*cos(angle)+height*sin(angle)-width)/2.0);
 		double deltay((-width*sin(angle)+height*cos(angle)-height)/2.0);
@@ -612,7 +612,7 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 	pDrawFrameElement->addAttribute("svg:height", framePropList["svg:height"]->getStr());
 	pDrawFrameElement->addAttribute("svg:width", framePropList["svg:width"]->getStr());
 
-	if (angle != 0.0)
+	if (angle < 0 || angle > 0)
 	{
 		framePropList.insert("librevenge:rotate", angle, librevenge::RVNG_GENERIC);
 		librevenge::RVNGString sValue;
@@ -700,7 +700,7 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	if (propList["svg:y"])
 		getInchValue(*propList["svg:y"],y);
 	double angle(propList["librevenge:rotate"] ? - M_PI * propList["librevenge:rotate"]->getDouble() / 180.0 : 0.0);
-	if (angle != 0.0)
+	if (angle < 0 || angle > 0)
 	{
 		// compute position: make sure that the center position remains invariant
 		double width = 0.0;
@@ -726,7 +726,7 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 	}
 	shared_ptr<librevenge::RVNGProperty> svg_x(librevenge::RVNGPropertyFactory::newInchProp(x));
 	shared_ptr<librevenge::RVNGProperty> svg_y(librevenge::RVNGPropertyFactory::newInchProp(y));
-	if (angle != 0.0)
+	if (angle < 0 || angle > 0)
 	{
 		shared_ptr<librevenge::RVNGProperty> librevenge_rotate(librevenge::RVNGPropertyFactory::newDoubleProp(angle));
 		sValue.sprintf("rotate (%s) translate(%s, %s)",

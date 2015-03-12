@@ -1196,7 +1196,8 @@ void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)
 	sValue = doubleToString(2 * ry);
 	sValue.append("in");
 	pDrawEllipseElement->addAttribute("svg:height", sValue);
-	if (propList["librevenge:rotate"] && propList["librevenge:rotate"]->getDouble() != 0.0)
+	if (propList["librevenge:rotate"] &&
+	        (propList["librevenge:rotate"]->getDouble() < 0 || propList["librevenge:rotate"]->getDouble() > 0))
 	{
 		double rotation = propList["librevenge:rotate"]->getDouble();
 		while (rotation < -180)
