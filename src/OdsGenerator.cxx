@@ -752,12 +752,7 @@ void OdsGenerator::closePageSpan()
 
 void OdsGenerator::defineSheetNumberingStyle(const librevenge::RVNGPropertyList &propList)
 {
-	if (!mpImpl->getState().mbInSheet || !mpImpl->mSheetManager.actualSheet())
-	{
-		ODFGEN_DEBUG_MSG(("OdsGenerator::defineSheetNumberingStyle can not be called outside a sheet!!!\n"));
-		return;
-	}
-	mpImpl->mSheetManager.actualSheet()->addNumberingStyle(propList);
+	mpImpl->mSheetManager.addNumberingStyle(propList);
 }
 
 void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
