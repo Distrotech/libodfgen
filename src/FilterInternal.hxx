@@ -122,7 +122,7 @@ protected:
 	std::vector<shared_ptr<DocumentElement> > mpElements;
 };
 
-void debugPrint(const char *format, ...);
+void debugPrint(const char *format, ...)  __attribute__((format(printf, 1, 2)));
 
 } // namespace libodfgen
 
