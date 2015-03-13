@@ -33,6 +33,12 @@
 #include <config.h>
 #endif
 
+#if defined(__clang__) || defined(__GNUC__)
+#  define ODFGEN_ATTRIBUTE_PRINTF(fmt, arg) __attribute__((__format__(__printf__, fmt, arg)))
+#else
+#  define ODFGEN_ATTRIBUTE_PRINTF(fmt, arg)
+#endif
+
 #ifdef DEBUG
 #include <stdio.h>
 #define ODFGEN_DEBUG_MSG(M) libodfgen::debugPrint M
@@ -122,7 +128,7 @@ protected:
 	std::vector<shared_ptr<DocumentElement> > mpElements;
 };
 
-void debugPrint(const char *format, ...)  __attribute__((format(printf, 1, 2)));
+void debugPrint(const char *format, ...)  ODFGEN_ATTRIBUTE_PRINTF(1, 2);
 
 } // namespace libodfgen
 

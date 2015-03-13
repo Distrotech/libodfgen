@@ -158,7 +158,7 @@ AS_IF([test "x$native_win32" = "xyes"], [
         AS_IF([test x"$enable_wparanoic" != "xno"], [
             CXXFLAGS="$CXXFLAGS -Wcast-align -Wcast-qual -Wchar-subscripts"
             CXXFLAGS="$CXXFLAGS -Wcomment -Wconversion -Wdisabled-optimization"
-            CXXFLAGS="$CXXFLAGS -Wfloat-equal -Wformat -Wformat-security"
+            CXXFLAGS="$CXXFLAGS -Wfloat-equal -Wformat -Wformat=2 -Wformat-security"
             CXXFLAGS="$CXXFLAGS -Wno-format-extra-args -Wno-format-zero-length"
             CXXFLAGS="$CXXFLAGS -Wformat-y2k -Wimport -Winit-self -Winvalid-pch"
             CXXFLAGS="$CXXFLAGS -Wmissing-braces -Wmissing-field-initializers"
