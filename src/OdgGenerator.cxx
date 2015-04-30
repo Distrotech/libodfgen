@@ -260,6 +260,7 @@ bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 {
 	if (streamType == ODF_MANIFEST_XML)
 	{
+		pHandler->startDocument();
 		TagOpenElement manifestElement("manifest:manifest");
 		manifestElement.addAttribute("xmlns:manifest", "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0");
 		manifestElement.write(pHandler);
@@ -270,6 +271,7 @@ bool OdgGeneratorPrivate::writeTargetDocument(OdfDocumentHandler *pHandler, OdfS
 		TagCloseElement("manifest:file-entry").write(pHandler);
 		appendFilesInManifest(pHandler);
 		TagCloseElement("manifest:manifest").write(pHandler);
+		pHandler->endDocument();
 		return true;
 	}
 
