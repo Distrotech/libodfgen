@@ -137,7 +137,7 @@ librevenge::RVNGString OdcGeneratorPrivate::getChartStyleName(int id)
 
 	// ok create a new list
 	librevenge::RVNGString sName("");
-	sName.sprintf("Chart%i", mChartStyleHash.size());
+	sName.sprintf("Chart%i", (int)mChartStyleHash.size());
 	pList.insert("style:name", sName);
 	mChartStyleHash[sName] =pList;
 	mHashChartNameMap[hashKey] = sName;

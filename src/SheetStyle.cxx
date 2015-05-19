@@ -138,7 +138,7 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetManager 
 	}
 	else if (type=="currency")
 	{
-		what.sprintf("number:currency-style", type.c_str());
+		what = "number:currency-style";
 		TagOpenElement styleOpen(what);
 		styleOpen.addAttribute("style:name", getName());
 		styleOpen.write(pHandler);

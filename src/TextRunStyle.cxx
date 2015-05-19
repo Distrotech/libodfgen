@@ -215,11 +215,11 @@ librevenge::RVNGString ParagraphStyleManager::findOrAdd(const librevenge::RVNGPr
 
 		// ok create a new style
 		if (currentZone==Style::Z_Style)
-			sName.sprintf("S_N%i", mStyleHash.size());
+			sName.sprintf("S_N%i", (int)mStyleHash.size());
 		else if (currentZone==Style::Z_StyleAutomatic)
-			sName.sprintf("S_M%i", mStyleHash.size());
+			sName.sprintf("S_M%i", (int)mStyleHash.size());
 		else
-			sName.sprintf("S%i", mStyleHash.size());
+			sName.sprintf("S%i", (int)mStyleHash.size());
 		if (propList["style:display-name"])
 		{
 			librevenge::RVNGString name(propList["style:display-name"]->getStr());
@@ -361,11 +361,11 @@ librevenge::RVNGString SpanStyleManager::findOrAdd(const librevenge::RVNGPropert
 
 	librevenge::RVNGString sName("");
 	if (zone==Style::Z_Style)
-		sName.sprintf("Span_N%i", mStyleHash.size());
+		sName.sprintf("Span_N%i", (int)mStyleHash.size());
 	else if (zone==Style::Z_StyleAutomatic)
-		sName.sprintf("Span_M%i", mStyleHash.size());
+		sName.sprintf("Span_M%i", (int)mStyleHash.size());
 	else
-		sName.sprintf("Span%i", mStyleHash.size());
+		sName.sprintf("Span%i", (int)mStyleHash.size());
 	shared_ptr<SpanStyle> span(new SpanStyle(sName.cstr(), propList, zone));
 	mStyleHash[sName] = span;
 	mHashNameMap[hashKey] = sName;
