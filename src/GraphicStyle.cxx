@@ -60,6 +60,13 @@ void GraphicStyle::write(OdfDocumentHandler *pHandler) const
 	pHandler->startElement("style:graphic-properties", graphicElement);
 	pHandler->endElement("style:graphic-properties");
 
+	if (mPropList["draw:show-unit"] && mPropList["draw:show-unit"]->getStr()=="true")
+	{
+		librevenge::RVNGPropertyList textElement;
+		textElement.insert("fo:font-size", 12, librevenge::RVNG_POINT);
+		pHandler->startElement("style:text-properties", textElement);
+		pHandler->endElement("style:text-properties");
+	}
 	pHandler->endElement("style:style");
 }
 
@@ -489,6 +496,8 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 				element.insert("draw:fill-image-ref-point-x", style["draw:fill-image-ref-point-x"]->getStr());
 			if (style["draw:fill-image-ref-point-y"])
 				element.insert("draw:fill-image-ref-point-y", style["draw:fill-image-ref-point-y"]->getStr());
+			if (style["draw:opacity"])
+				element.insert("draw:opacity", style["draw:opacity"]->getStr());
 		}
 		else
 			element.insert("draw:fill", "none");
@@ -562,6 +571,7 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 	static char const *(others[])=
 	{
 		"draw:ole-draw-aspect",
+		"draw:show-unit",
 		"fo:background-color",
 		"fo:border","fo:border-top","fo:border-left","fo:border-bottom","fo:border-right",
 		"fo:clip",
@@ -571,7 +581,7 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 		"style:mirror", "style:parent-style-name",
 		"style:run-through", "style:wrap"
 	};
-	for (int b = 0; b < 18; b++)
+	for (int b = 0; b < 19; b++)
 	{
 		if (style[others[b]])
 			element.insert(others[b], style[others[b]]->getStr());

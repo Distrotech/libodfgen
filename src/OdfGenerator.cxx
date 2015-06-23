@@ -1284,7 +1284,10 @@ void OdfGenerator::drawPolySomething(const librevenge::RVNGPropertyList &propLis
 			return;
 		}
 		librevenge::RVNGString sValue=getCurrentGraphicStyleName(propList);
-		TagOpenElement *pDrawLineElement = new TagOpenElement("draw:line");
+		bool isMeasure=(propList["draw:show-unit"] && propList["draw:show-unit"]->getStr()=="true");
+		librevenge::RVNGString what= isMeasure ? "draw:measure" : "draw:line";
+
+		TagOpenElement *pDrawLineElement = new TagOpenElement(what);
 		addFrameProperties(propList, *pDrawLineElement);
 		pDrawLineElement->addAttribute("draw:style-name", sValue);
 		pDrawLineElement->addAttribute("svg:x1", (*vertices)[0]["svg:x"]->getStr());
@@ -1292,7 +1295,7 @@ void OdfGenerator::drawPolySomething(const librevenge::RVNGPropertyList &propLis
 		pDrawLineElement->addAttribute("svg:x2", (*vertices)[1]["svg:x"]->getStr());
 		pDrawLineElement->addAttribute("svg:y2", (*vertices)[1]["svg:y"]->getStr());
 		mpCurrentStorage->push_back(pDrawLineElement);
-		mpCurrentStorage->push_back(new TagCloseElement("draw:line"));
+		mpCurrentStorage->push_back(new TagCloseElement(what));
 	}
 	else
 	{
