@@ -368,7 +368,7 @@ librevenge::RVNGString GraphicStyleManager::getStyleNameForOpacity(librevenge::R
 librevenge::RVNGString GraphicStyleManager::getStyleNameForStrokeDash(librevenge::RVNGPropertyList const &style)
 {
 	librevenge::RVNGPropertyList pList;
-	if (style["svg:stoke-linecap"])
+	if (style["svg:stroke-linecap"])
 		pList.insert("draw:style", style["svg:stroke-linecap"]->getStr());
 	else
 		pList.insert("draw:style", "rect");
@@ -423,7 +423,7 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 		if (style["svg:stroke-linejoin"])
 			element.insert("draw:stroke-linejoin", style["svg:stroke-linejoin"]->getStr());
 		if (style["svg:stroke-linecap"])
-			element.insert("svg:stoke-linecap", style["svg:stroke-linecap"]->getStr());
+			element.insert("svg:stroke-linecap", style["svg:stroke-linecap"]->getStr());
 
 		librevenge::RVNGString name("");
 		if (style["draw:stroke"] && style["draw:stroke"]->getStr() == "dash")
