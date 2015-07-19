@@ -1147,6 +1147,12 @@ void OdfGenerator::insertBinaryObject(const librevenge::RVNGPropertyList &propLi
 		else
 			mpCurrentStorage->push_back(new TagCloseElement("draw:image"));
 	}
+
+	librevenge::RVNGPropertyListVector const *replacements=propList.child("librevenge:replacement-objects");
+	if (!replacements)
+		return;
+	for (unsigned long c=0; c < replacements->count(); ++c)
+		insertBinaryObject((*replacements)[c]);
 }
 
 ////////////////////////////////////////////////////////////
