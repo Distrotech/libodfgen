@@ -562,11 +562,11 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			}
 			std::string oper(list["librevenge:operator"]->getStr().cstr());
 			bool find=false;
-			for (int w=0; w<15; ++w)
+			for (int w=0; w<19; ++w)
 			{
-				static char const *(s_operators[15])=
+				static char const *(s_operators[19])=
 				{
-					"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^", "&"
+					"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^", "&", "!", "~", ":", "%"
 				};
 				if (oper!=s_operators[w]) continue;
 				s << oper;
@@ -645,7 +645,8 @@ librevenge::RVNGString SheetManager::convertCellRange(const librevenge::RVNGProp
 		ODFGEN_DEBUG_MSG(("SheetManager::convertCellRange: find bad coordinate!!!\n"));
 		return res;
 	}
-	if (list["librevenge:sheet"]) s << list["librevenge:sheet"]->getStr().cstr();
+	if (list["librevenge:sheet-name"]) s << list["librevenge:sheet-name"]->getStr().cstr();
+	else if (list["librevenge:sheet"]) s << list["librevenge:sheet"]->getStr().cstr();
 	s << ".";
 	if (list["librevenge:column-absolute"] && list["librevenge:column-absolute"]->getInt()) s << "$";
 	if (column>=26) s << char('A'+(column/26-1));
