@@ -235,7 +235,7 @@ AS_IF([test "x$with_sharedptr" = "xc++11"], [
     AC_COMPILE_IFELSE([
         AC_LANG_PROGRAM(
             [[#include <memory>]],
-            [[std::tr1::shared_ptr<int> p;]]
+            [[std::shared_ptr<int> p;]]
         )
     ], [
         AC_MSG_RESULT([no])

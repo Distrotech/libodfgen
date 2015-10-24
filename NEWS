@@ -1,3 +1,14 @@
+libodfgen 0.1.5
+- graphics:
+    + add code for librevenge:replacement-objects
+    + allow to set the opacity value:"draw:opacity" for surfaces which
+      contain patterns,
+    + add minimalist implementation of "measure": if drawPolyline is
+      called with two points and draw:show-unit is set, then create a
+      draw:measure tag instead of a draw:line...
+- sheet interface:
+    + add some operators (plage, union, intersection and %)
+
 libodfgen 0.1.4
 
 - drawing interface: do no forget to call startDocument/endDocument when
