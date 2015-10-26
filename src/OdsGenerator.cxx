@@ -929,6 +929,12 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 
 	TagOpenElement *pSheetCellOpenElement = new TagOpenElement("table:table-cell");
 	pSheetCellOpenElement->addAttribute("table:style-name", sSheetCellStyleName);
+	if (propList["table:number-columns-spanned"])
+		pSheetCellOpenElement->addAttribute("table:number-columns-spanned",
+		                                    propList["table:number-columns-spanned"]->getStr().cstr());
+	if (propList["table:number-rows-spanned"])
+		pSheetCellOpenElement->addAttribute("table:number-rows-spanned",
+		                                    propList["table:number-rows-spanned"]->getStr().cstr());
 
 	if (propList["librevenge:value-type"])
 	{
