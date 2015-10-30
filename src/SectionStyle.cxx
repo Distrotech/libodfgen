@@ -28,10 +28,6 @@
 #include "DocumentElement.hxx"
 #include <math.h>
 
-#ifdef _MSC_VER
-double rint(double x);
-#endif /* _WIN32 */
-
 SectionStyle::SectionStyle(const librevenge::RVNGPropertyList &xPropList,
                            const char *psName, Style::Zone zone) :
 	Style(psName, zone),
