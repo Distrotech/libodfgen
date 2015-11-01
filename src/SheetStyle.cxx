@@ -349,6 +349,27 @@ SheetStyle::~SheetStyle()
 {
 }
 
+void SheetStyle::addColumnDefinitions(libodfgen::DocumentElementVector &storage) const
+{
+	if (!mColumns) return;
+	int col=1;
+	librevenge::RVNGPropertyListVector::Iter j(*mColumns);
+	for (j.rewind(); j.next(); ++col)
+	{
+		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
+		librevenge::RVNGString sColumnStyleName;
+		sColumnStyleName.sprintf("%s_col%i", getName().cstr(), col);
+		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName);
+		if (j()["table:number-columns-repeated"] && j()["table:number-columns-repeated"]->getInt()>1)
+			pTableColumnOpenElement->addAttribute("table:number-columns-repeated",
+			                                      j()["table:number-columns-repeated"]->getStr());
+
+		storage.push_back(pTableColumnOpenElement);
+
+		storage.push_back(new TagCloseElement("table:table-column"));
+	}
+}
+
 void SheetStyle::writeStyle(OdfDocumentHandler *pHandler, SheetManager const &manager) const
 {
 	TagOpenElement styleOpen("style:style");
@@ -391,7 +412,10 @@ void SheetStyle::writeStyle(OdfDocumentHandler *pHandler, SheetManager const &ma
 			columnStyleOpen.addAttribute("style:family", "table-column");
 			columnStyleOpen.write(pHandler);
 
-			pHandler->startElement("style:table-column-properties", j());
+			librevenge::RVNGPropertyList columnProperties(j());
+			if (columnProperties["table:number-columns-repeated"])
+				columnProperties.remove("table:number-columns-repeated");
+			pHandler->startElement("style:table-column-properties", columnProperties);
 			pHandler->endElement("style:table-column-properties");
 
 			pHandler->endElement("style:style");

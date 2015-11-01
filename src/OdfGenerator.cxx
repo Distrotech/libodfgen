@@ -483,9 +483,10 @@ void OdfGenerator::addFrameProperties(const librevenge::RVNGPropertyList &propLi
 		"draw:z-index",
 		"fo:max-width", "fo:max-height",
 		"style:rel-width", "style:rel-height", // checkme
-		"text:anchor-page-number", "text:anchor-type"
+		"text:anchor-page-number", "text:anchor-type",
+		"table:end-cell-address"
 	};
-	for (int i=0; i<7; ++i)
+	for (int i=0; i<8; ++i)
 	{
 		if (propList[frameAttrib[i]])
 			element.addAttribute(frameAttrib[i], propList[frameAttrib[i]]->getStr());

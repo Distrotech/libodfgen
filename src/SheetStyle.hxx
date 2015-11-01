@@ -78,6 +78,12 @@ public:
 	SheetStyle(const librevenge::RVNGPropertyList &xPropList, const char *psName, Style::Zone zone);
 	virtual ~SheetStyle();
 	virtual void writeStyle(OdfDocumentHandler *pHandler, SheetManager const &manager) const;
+	/** add the sheet's column definitions in given storage.
+
+		\note can be call after opening <table:table>
+	 */
+	void addColumnDefinitions(libodfgen::DocumentElementVector &storage) const;
+
 	int getNumColumns() const
 	{
 		return mColumns ? (int)mColumns->count() : 0;

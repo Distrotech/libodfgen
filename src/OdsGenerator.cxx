@@ -798,17 +798,7 @@ void OdsGenerator::openSheet(const librevenge::RVNGPropertyList &propList)
 	/* TODO: open a table:shapes element
 	   a environment to store the table content which must be merged in closeSheet
 	*/
-	for (int i=0; i< style->getNumColumns(); ++i)
-	{
-		TagOpenElement *pTableColumnOpenElement = new TagOpenElement("table:table-column");
-		librevenge::RVNGString sColumnStyleName;
-		sColumnStyleName.sprintf("%s_col%i", sTableName.cstr(), (i+1));
-		pTableColumnOpenElement->addAttribute("table:style-name", sColumnStyleName.cstr());
-		mpImpl->getCurrentStorage()->push_back(pTableColumnOpenElement);
-
-		TagCloseElement *pTableColumnCloseElement = new TagCloseElement("table:table-column");
-		mpImpl->getCurrentStorage()->push_back(pTableColumnCloseElement);
-	}
+	style->addColumnDefinitions(*mpImpl->getCurrentStorage());
 }
 
 void OdsGenerator::closeSheet()
@@ -864,7 +854,10 @@ void OdsGenerator::openSheetRow(const librevenge::RVNGPropertyList &propList)
 	}
 	else
 		row=state.miLastSheetRow;
-	mpImpl->getState().miLastSheetRow=row+1;
+	int numRows=1;
+	if (propList["table:number-rows-repeated"] && propList["table:number-rows-repeated"]->getInt()>1)
+		numRows=propList["table:number-rows-repeated"]->getInt();
+	mpImpl->getState().miLastSheetRow=row+numRows;
 
 	state.miLastSheetColumn=0;
 	state.mbInSheetRow=state.mbFirstInSheetRow=true;
@@ -873,6 +866,8 @@ void OdsGenerator::openSheetRow(const librevenge::RVNGPropertyList &propList)
 	librevenge::RVNGString sSheetRowStyleName=style->addRow(propList);
 	TagOpenElement *pSheetRowOpenElement = new TagOpenElement("table:table-row");
 	pSheetRowOpenElement->addAttribute("table:style-name", sSheetRowStyleName);
+	if (numRows>1)
+		pSheetRowOpenElement->addAttribute("table:number-rows-repeated", propList["table:number-rows-repeated"]->getStr());
 	mpImpl->getCurrentStorage()->push_back(pSheetRowOpenElement);
 }
 
@@ -918,7 +913,10 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 	}
 	else
 		col=state.miLastSheetColumn;
-	mpImpl->getState().miLastSheetColumn=col+1;
+	int numColumns=1;
+	if (propList["table:number-columns-repeated"] && propList["table:number-columns-repeated"]->getInt()>1)
+		numColumns=propList["table:number-columns-repeated"]->getInt();
+	mpImpl->getState().miLastSheetColumn=col+numColumns;
 
 	state.mbInSheetCell=true;
 	mpImpl->pushState(state);
@@ -935,6 +933,8 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 	if (propList["table:number-rows-spanned"])
 		pSheetCellOpenElement->addAttribute("table:number-rows-spanned",
 		                                    propList["table:number-rows-spanned"]->getStr().cstr());
+	if (numColumns>1)
+		pSheetCellOpenElement->addAttribute("table:number-columns-repeated", propList["table:number-columns-repeated"]->getStr());
 
 	if (propList["librevenge:value-type"])
 	{
@@ -1640,7 +1640,9 @@ void OdsGenerator::openFrame(const librevenge::RVNGPropertyList &propList)
 	}
 
 	librevenge::RVNGPropertyList pList(propList);
-	if (!propList["text:anchor-type"])
+	if (!state.mbInSheetCell && propList["table:end-cell-address"])
+		pList.remove("table:end-cell-address");
+	if (!propList["text:anchor-type"] && !pList["table:end-cell-address"])
 		pList.insert("text:anchor-type","paragraph");
 	mpImpl->openFrame(pList);
 }
