@@ -197,7 +197,7 @@ librevenge::RVNGString GraphicStyleManager::getStyleNameForGradient(librevenge::
 		"draw:border", "draw:cx", "draw:cy", "draw:end-color", "draw:end-intensity",
 		"draw:start-color", "draw:start-intensity", "draw:style"
 	};
-	for (int i=0; i<8; ++i)
+	for (unsigned i=0; i<ODFGEN_N_ELEMENTS(wh); ++i)
 	{
 		if (style[wh[i]])
 			pList.insert(wh[i], style[wh[i]]->getStr());
@@ -332,7 +332,7 @@ librevenge::RVNGString GraphicStyleManager::getStyleNameForOpacity(librevenge::R
 	pList.insert("draw:angle", sValue);
 	// basic data
 	char const *(wh[]) = { "draw:border", "draw:cx", "draw:cy"	};
-	for (int i=0; i<3; ++i)
+	for (unsigned i=0; i<ODFGEN_N_ELEMENTS(wh); ++i)
 	{
 		if (style[wh[i]])
 			pList.insert(wh[i], style[wh[i]]->getStr());
@@ -581,7 +581,7 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 		"style:mirror", "style:parent-style-name",
 		"style:run-through", "style:wrap"
 	};
-	for (int b = 0; b < 19; b++)
+	for (unsigned b = 0; b < ODFGEN_N_ELEMENTS(others); b++)
 	{
 		if (style[others[b]])
 			element.insert(others[b], style[others[b]]->getStr());
