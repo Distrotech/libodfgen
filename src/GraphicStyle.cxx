@@ -192,7 +192,7 @@ librevenge::RVNGString GraphicStyleManager::getStyleNameForGradient(librevenge::
 	if (!gradient)
 		gradient = style.child("svg:radialGradient");
 	if (gradient) pList.insert("svg:linearGradient", *gradient);
-	static char const *(wh[]) =
+	char const *(wh[]) =
 	{
 		"draw:border", "draw:cx", "draw:cy", "draw:end-color", "draw:end-intensity",
 		"draw:start-color", "draw:start-intensity", "draw:style"
@@ -331,7 +331,7 @@ librevenge::RVNGString GraphicStyleManager::getStyleNameForOpacity(librevenge::R
 	sValue.sprintf("%i", (unsigned)(angle*10));
 	pList.insert("draw:angle", sValue);
 	// basic data
-	static char const *(wh[]) = { "draw:border", "draw:cx", "draw:cy"	};
+	char const *(wh[]) = { "draw:border", "draw:cx", "draw:cy"	};
 	for (int i=0; i<3; ++i)
 	{
 		if (style[wh[i]])
@@ -568,7 +568,7 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 		}
 	}
 	// other
-	static char const *(others[])=
+	char const *(others[])=
 	{
 		"draw:ole-draw-aspect",
 		"draw:show-unit",
@@ -591,7 +591,7 @@ void GraphicStyleManager::addGraphicProperties(librevenge::RVNGPropertyList cons
 void GraphicStyleManager::addFrameProperties(librevenge::RVNGPropertyList const &propList, librevenge::RVNGPropertyList &element)
 {
 	element.insert("fo:min-width", "1in");
-	static char const *attrib[]=
+	char const *attrib[]=
 	{
 		"fo:min-width", "fo:min-height", "fo:max-width", "fo:max-height", "fo:padding-top", "fo:padding-bottom",
 		"fo:padding-left", "fo:padding-right", "draw:textarea-vertical-align", "draw:fill", "draw:fill-color"
