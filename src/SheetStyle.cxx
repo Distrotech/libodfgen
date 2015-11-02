@@ -564,7 +564,7 @@ void SheetManager::addNumberingStyle(const librevenge::RVNGPropertyList &xPropLi
 
 librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGPropertyListVector &formula)
 {
-	char const *(operators[19])=
+	char const *(operators[])=
 	{
 		"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^", "&", "!", "~", ":", "%"
 	};
@@ -589,7 +589,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 			}
 			std::string oper(list["librevenge:operator"]->getStr().cstr());
 			bool find=false;
-			for (int w=0; w<19; ++w)
+			for (unsigned w=0; w<ODFGEN_N_ELEMENTS(operators); ++w)
 			{
 				if (oper!=operators[w]) continue;
 				s << oper;
