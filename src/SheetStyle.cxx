@@ -444,9 +444,8 @@ librevenge::RVNGString SheetStyle::addRow(const librevenge::RVNGPropertyList &pr
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
 	{
-		if (!strncmp(i.key(), "librevenge:", 11))
-			continue;
-		if (i.child())
+		if (strncmp(i.key(), "librevenge:", 11)==0 ||
+		        strcmp(i.key(), "table:number-rows-repeated")==0 || i.child())
 			continue;
 		pList.insert(i.key(),i()->clone());
 	}
@@ -469,10 +468,10 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 	librevenge::RVNGPropertyList::Iter i(propList);
 	for (i.rewind(); i.next();)
 	{
-		if (!strncmp(i.key(), "librevenge:", 11) &&
-		        strncmp(i.key(), "librevenge:numbering-name", 24))
+		if (strncmp(i.key(), "librevenge:", 11)==0 &&
+		        strncmp(i.key(), "librevenge:numbering-name", 24)!=0)
 			continue;
-		if (i.child())
+		if (strcmp(i.key(), "table:number-columns-repeated")==0 || i.child())
 			continue;
 		pList.insert(i.key(),i()->clone());
 	}
