@@ -471,7 +471,12 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 		if (strncmp(i.key(), "librevenge:", 11)==0 &&
 		        strncmp(i.key(), "librevenge:numbering-name", 24)!=0)
 			continue;
-		if (strcmp(i.key(), "table:number-columns-repeated")==0 || i.child())
+		if (strncmp(i.key(), "table:number-", 13)==0 &&
+		        (strcmp(i.key(), "table:number-columns-repeated")==0 ||
+		         strcmp(i.key(), "table:number-columns-spanned")==0 ||
+		         strcmp(i.key(), "table:number-rows-spanned")==0))
+			continue;
+		if (i.child())
 			continue;
 		pList.insert(i.key(),i()->clone());
 	}
