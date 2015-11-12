@@ -679,7 +679,7 @@ void OdfGenerator::insertField(const librevenge::RVNGPropertyList &propList)
 
 	TagOpenElement *openElement = new TagOpenElement(type);
 	if (type == "text:page-number")
-		openElement->addAttribute("text:select-page", "current");
+		openElement->addAttribute("text:select-page", propList["text:select-page"] ? propList["text:select-page"]->getStr() : "current");
 
 	if (propList["style:num-format"])
 		openElement->addAttribute("style:num-format", propList["style:num-format"]->getStr());
