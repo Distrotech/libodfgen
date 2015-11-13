@@ -206,6 +206,10 @@ librevenge::RVNGString Table::openCell(const librevenge::RVNGPropertyList &propL
 		if (!strncmp(i.key(), "librevenge:", 11) &&
 		        strncmp(i.key(), "librevenge:numbering-name", 24))
 			continue;
+		if (strncmp(i.key(), "table:number-", 13)==0 &&
+		        (strcmp(i.key(), "table:number-columns-spanned")==0 ||
+		         strcmp(i.key(), "table:number-rows-spanned")==0))
+			continue;
 		if (i.child())
 			continue;
 		pList.insert(i.key(),i()->clone());
