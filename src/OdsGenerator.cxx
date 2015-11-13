@@ -935,6 +935,12 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 		                                    propList["table:number-rows-spanned"]->getStr().cstr());
 	if (numColumns>1)
 		pSheetCellOpenElement->addAttribute("table:number-columns-repeated", propList["table:number-columns-repeated"]->getStr());
+	if (propList["table:number-matrix-columns-spanned"] && propList["table:number-matrix-columns-spanned"]->getInt()>1)
+		pSheetCellOpenElement->addAttribute("table:number-matrix-columns-spanned",
+		                                    propList["table:number-matrix-columns-spanned"]->getStr().cstr());
+	if (propList["table:number-matrix-rows-spanned"] && propList["table:number-matrix-rows-spanned"]->getInt()>1)
+		pSheetCellOpenElement->addAttribute("table:number-matrix-rows-spanned",
+		                                    propList["table:number-matrix-rows-spanned"]->getStr().cstr());
 
 	if (propList["librevenge:value-type"])
 	{
