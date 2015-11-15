@@ -573,7 +573,7 @@ librevenge::RVNGString SheetManager::convertFormula(const librevenge::RVNGProper
 {
 	char const *(operators[])=
 	{
-		"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^", "&", "!", "~", ":", "%"
+		"(", ")", "+", "-", "*", "/", "=", "<>",  ";", "<", ">", "<=", ">=", "^", "&", "!", "~", ":", "%", "{", "}", "|"
 	};
 	librevenge::RVNGString res("");
 	std::stringstream s;
