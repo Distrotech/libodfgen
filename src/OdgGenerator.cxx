@@ -167,6 +167,7 @@ void OdgGeneratorPrivate::updatePageSpanPropertiesToCreatePage(librevenge::RVNGP
 	// generate drawing-page style
 	librevenge::RVNGPropertyList drawingPageStyle;
 	librevenge::RVNGPropertyListVector drawingPageVector;
+	// TODO: This is duplicated in OdpGenerator.cxx. Refactor.
 	bool hasFill = false;
 	std::deque<std::string> removedKeys;
 	librevenge::RVNGPropertyList::Iter i(pList);
