@@ -161,7 +161,8 @@ void OdpGeneratorPrivate::updatePageSpanPropertiesToCreatePage(librevenge::RVNGP
 	librevenge::RVNGPropertyList::Iter i(pList);
 	for (i.rewind(); i.next();)
 	{
-		if ((strncmp(i.key(), "draw:", 5) == 0) || (strncmp(i.key(), "presentation:", 13) == 0))
+		if ((strncmp(i.key(), "draw:", 5) == 0) || (strncmp(i.key(), "presentation:", 13) == 0)
+		        || (strcmp(i.key(), "office:binary-data") == 0) || (strcmp(i.key(), "style:repeat") == 0))
 		{
 			drawingPageStyle.insert(i.key(), i()->clone());
 			removedKeys.push_back(i.key());
