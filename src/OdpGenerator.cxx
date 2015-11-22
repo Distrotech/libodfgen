@@ -29,6 +29,7 @@
 #include <locale.h>
 #include <math.h>
 
+#include <deque>
 #include <string>
 #include <map>
 #include <stack>
@@ -155,7 +156,23 @@ void OdpGeneratorPrivate::updatePageSpanPropertiesToCreatePage(librevenge::RVNGP
 	// generate drawing-page style
 	librevenge::RVNGPropertyList drawingPageStyle;
 	librevenge::RVNGPropertyListVector drawingPageVector;
-	drawingPageStyle.insert("draw:fill", "none");
+	bool hasFill = false;
+	std::deque<std::string> removedKeys;
+	librevenge::RVNGPropertyList::Iter i(pList);
+	for (i.rewind(); i.next();)
+	{
+		if ((strncmp(i.key(), "draw:", 5) == 0) || (strncmp(i.key(), "presentation:", 13) == 0))
+		{
+			drawingPageStyle.insert(i.key(), i()->clone());
+			removedKeys.push_back(i.key());
+		}
+		if (strcmp(i.key(), "draw:fill") == 0)
+			hasFill = true;
+	}
+	for (std::deque<std::string>::const_iterator it = removedKeys.begin(); it != removedKeys.end(); ++it)
+		pList.remove(it->c_str());
+	if (!hasFill)
+		drawingPageStyle.insert("draw:fill", "none");
 	drawingPageVector.append(drawingPageStyle);
 	pList.insert("librevenge:drawing-page", drawingPageVector);
 
