@@ -24,6 +24,8 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
+#include <stdio.h>
+
 #include <iostream>
 #include <fstream>
 
@@ -280,12 +282,20 @@ static void createOdt()
 
 int main()
 {
-	createOdg();
-	createOdp();
-	createOds();
-	createOdt();
+	try
+	{
+		createOdg();
+		createOdp();
+		createOds();
+		createOdt();
+	}
+	catch (...)
+	{
+		fprintf(stderr, "ERROR: parse exception\n");
+		return 1;
+	}
+
 	return 0;
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 noexpandtab: */
-

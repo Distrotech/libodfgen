@@ -24,6 +24,8 @@
  * Corel Corporation or Corel Corporation Limited."
  */
 
+#include <stdio.h>
+
 #include <iostream>
 #include <fstream>
 
@@ -294,7 +296,16 @@ static void createOds()
 
 int main()
 {
-	createOds();
+	try
+	{
+		createOds();
+	}
+	catch (...)
+	{
+		fprintf(stderr, "ERROR: parse exception\n");
+		return 1;
+	}
+
 	return 0;
 }
 
