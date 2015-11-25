@@ -37,6 +37,7 @@
 #include "libodfgen/OdfDocumentHandler.hxx"
 
 #include "FilterInternal.hxx"
+#include "FillManager.hxx"
 #include "FontStyle.hxx"
 #include "GraphicStyle.hxx"
 #include "InternalHandler.hxx"
@@ -354,6 +355,8 @@ protected:
 	PageSpanManager mPageSpanManager;
 	// font manager
 	FontStyleManager mFontManager;
+	// fill manager
+	FillManager mFillManager;
 	// graphic manager
 	GraphicStyleManager mGraphicManager;
 	// span manager

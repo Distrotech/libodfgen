@@ -307,6 +307,7 @@ void OdtGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 		noteOpenElement.write(pHandler);
 		pHandler->endElement("text:notes-configuration");
 	}
+	mFillManager.write(pHandler);
 	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }

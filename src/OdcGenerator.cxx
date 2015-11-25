@@ -325,6 +325,7 @@ void OdcGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	mSpanManager.write(pHandler, Style::Z_Style);
 	mParagraphManager.write(pHandler, Style::Z_Style);
 	mListManager.write(pHandler, Style::Z_Style);
+	mFillManager.write(pHandler);
 	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }

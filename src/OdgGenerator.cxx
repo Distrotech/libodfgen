@@ -268,6 +268,7 @@ void OdgGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	TagOpenElement("office:styles").write(pHandler);
 	mPageSpanManager.writePageStyles(pHandler, Style::Z_Style);
 
+	mFillManager.write(pHandler);
 	mGraphicManager.write(pHandler, Style::Z_Style);
 	mParagraphManager.write(pHandler, Style::Z_Style);
 	mSpanManager.write(pHandler, Style::Z_Style);

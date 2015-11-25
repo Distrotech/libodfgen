@@ -51,7 +51,7 @@ using namespace libodfgen;
 
 OdfGenerator::OdfGenerator() :
 	mpCurrentStorage(&mBodyStorage), mStorageStack(), mMetaDataStorage(), mBodyStorage(),
-	mPageSpanManager(), mFontManager(), mGraphicManager(), mSpanManager(),
+	mPageSpanManager(), mFontManager(), mFillManager(), mGraphicManager(mFillManager), mSpanManager(),
 	mParagraphManager(), mListManager(), mTableManager(),
 	mbInHeaderFooter(false), mbInMasterPage(false),
 	mIdSpanMap(), mIdSpanNameMap(), mLastSpanName(""),
@@ -72,6 +72,7 @@ OdfGenerator::~OdfGenerator()
 	mParagraphManager.clean();
 	mSpanManager.clean();
 	mFontManager.clean();
+	mFillManager.clean();
 	mGraphicManager.clean();
 	mTableManager.clean();
 	std::map<librevenge::RVNGString, ObjectContainer *>::iterator it;
