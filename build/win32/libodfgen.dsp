@@ -89,7 +89,19 @@ SOURCE=..\..\src\DocumentElement.cxx
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\FillManager.cxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\FilterInternal.cxx
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\FontStyle.cxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\GraphicFunctions.cxx
 # End Source File
 # Begin Source File
 
@@ -102,6 +114,10 @@ SOURCE=..\..\src\InternalHandler.cxx
 # Begin Source File
 
 SOURCE=..\..\src\ListStyle.cxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\OdcGenerator.cxx
 # End Source File
 # Begin Source File
 
@@ -149,11 +165,19 @@ SOURCE=..\..\src\DocumentElement.hxx
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\FillManager.hxx
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\FilterInternal.hxx
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\src\FontStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\GraphicFunctions.hxx
 # End Source File
 # Begin Source File
 
@@ -165,11 +189,39 @@ SOURCE=..\..\src\InternalHandler.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\inc\libodfgen\libodfgen.hxx
+SOURCE=..\..\src\ListStyle.hxx
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\ListStyle.hxx
+SOURCE=..\..\src\OdcGenerator.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\PageSpan.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\SectionStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\SheetStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\Style.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\TableStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\src\TextRunStyle.hxx
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\inc\libodfgen\libodfgen.hxx
 # End Source File
 # Begin Source File
 
@@ -190,30 +242,6 @@ SOURCE=..\..\inc\libodfgen\OdsGenerator.hxx
 # Begin Source File
 
 SOURCE=..\..\inc\libodfgen\OdtGenerator.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\PageSpan.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\SectionStyle.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\Style.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\SheetStyle.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\TableStyle.hxx
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\src\TextRunStyle.hxx
 # End Source File
 # End Group
 # End Target
