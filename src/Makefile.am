@@ -27,6 +27,8 @@ libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_LDFLAGS = $(ver
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_SOURCES = \
 	DocumentElement.cxx \
 	DocumentElement.hxx \
+	FillManager.cxx \
+	FillManager.hxx \
 	FilterInternal.cxx \
 	FilterInternal.hxx \
 	FontStyle.cxx \

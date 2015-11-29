@@ -32,6 +32,7 @@
 
 #include "Style.hxx"
 
+class FillManager;
 class OdfDocumentHandler;
 
 //! graphic style class
@@ -53,9 +54,10 @@ private:
 class GraphicStyleManager : public StyleManager
 {
 public:
-	GraphicStyleManager() : mBitmapStyles(), mGradientStyles(), mMarkerStyles(), mOpacityStyles(),
-		mStrokeDashStyles(), mStyles(), mBitmapNameMap(), mGradientNameMap(), mMarkerNameMap(),
-		mOpacityNameMap(), mStrokeDashNameMap(), mStyleNameMap() {}
+	explicit GraphicStyleManager(FillManager &fillManager)
+		: mFillManager(fillManager)
+		, mMarkerStyles(), mStrokeDashStyles(), mStyles()
+		, mMarkerNameMap(), mStrokeDashNameMap(), mStyleNameMap() {}
 	virtual ~GraphicStyleManager()
 	{
 		clean();
@@ -80,29 +82,17 @@ public:
 	void addFrameProperties(librevenge::RVNGPropertyList const &propList, librevenge::RVNGPropertyList &element);
 
 protected:
-	// return a bitmap
-	librevenge::RVNGString getStyleNameForBitmap(librevenge::RVNGString const &bitmap);
-	librevenge::RVNGString getStyleNameForGradient(librevenge::RVNGPropertyList const &style,
-	                                               bool &needCreateOpacityStyle);
+	FillManager &mFillManager;
+
 	librevenge::RVNGString getStyleNameForMarker(librevenge::RVNGPropertyList const &style, bool startMarker);
-	librevenge::RVNGString getStyleNameForOpacity(librevenge::RVNGPropertyList const &style);
 	librevenge::RVNGString getStyleNameForStrokeDash(librevenge::RVNGPropertyList const &style);
 	// graphics styles
-	libodfgen::DocumentElementVector mBitmapStyles;
-	libodfgen::DocumentElementVector mGradientStyles;
 	libodfgen::DocumentElementVector mMarkerStyles;
-	libodfgen::DocumentElementVector mOpacityStyles;
 	libodfgen::DocumentElementVector mStrokeDashStyles;
 	std::vector<shared_ptr<GraphicStyle> > mStyles;
 
-	// bitmap content -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString> mBitmapNameMap;
-	// gradient hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString> mGradientNameMap;
 	// marker hash -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mMarkerNameMap;
-	// opacity hash -> style name
-	std::map<librevenge::RVNGString, librevenge::RVNGString> mOpacityNameMap;
 	// stroke dash hash -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mStrokeDashNameMap;
 	// style hash -> style name

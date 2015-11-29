@@ -154,28 +154,25 @@ void OdpGeneratorPrivate::updatePageSpanPropertiesToCreatePage(librevenge::RVNGP
 		mfMaxHeight=height;
 
 	// generate drawing-page style
+	// TODO: This is duplicated in OdpGenerator.cxx. Refactor.
+	if (!pList["draw:fill"]) // it will be removed in a moment again...
+		pList.insert("draw:fill", "none");
 	librevenge::RVNGPropertyList drawingPageStyle;
+	mFillManager.addProperties(pList, drawingPageStyle);
 	librevenge::RVNGPropertyListVector drawingPageVector;
-	bool hasFill = false;
+	drawingPageVector.append(drawingPageStyle);
+	pList.insert("librevenge:drawing-page", drawingPageVector);
+	// remove the drawing page props
 	std::deque<std::string> removedKeys;
 	librevenge::RVNGPropertyList::Iter i(pList);
 	for (i.rewind(); i.next();)
 	{
 		if ((strncmp(i.key(), "draw:", 5) == 0) || (strncmp(i.key(), "presentation:", 13) == 0)
-		        || (strcmp(i.key(), "office:binary-data") == 0) || (strcmp(i.key(), "style:repeat") == 0))
-		{
-			drawingPageStyle.insert(i.key(), i()->clone());
+		        || (strcmp(i.key(), "style:repeat") == 0))
 			removedKeys.push_back(i.key());
-		}
-		if (strcmp(i.key(), "draw:fill") == 0)
-			hasFill = true;
 	}
 	for (std::deque<std::string>::const_iterator it = removedKeys.begin(); it != removedKeys.end(); ++it)
 		pList.remove(it->c_str());
-	if (!hasFill)
-		drawingPageStyle.insert("draw:fill", "none");
-	drawingPageVector.append(drawingPageStyle);
-	pList.insert("librevenge:drawing-page", drawingPageVector);
 
 	// do not generate footnote separator data
 	pList.insert("librevenge:footnote", librevenge::RVNGPropertyListVector());
@@ -422,6 +419,7 @@ void OdpGeneratorPrivate::_writeStyles(OdfDocumentHandler *pHandler)
 	mParagraphManager.write(pHandler, Style::Z_Style);
 	mSpanManager.write(pHandler, Style::Z_Style);
 	mListManager.write(pHandler, Style::Z_Style);
+	mFillManager.write(pHandler);
 	mGraphicManager.write(pHandler, Style::Z_Style);
 	pHandler->endElement("office:styles");
 }
