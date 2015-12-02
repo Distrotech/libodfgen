@@ -167,8 +167,8 @@ void OdpGeneratorPrivate::updatePageSpanPropertiesToCreatePage(librevenge::RVNGP
 	librevenge::RVNGPropertyList::Iter i(pList);
 	for (i.rewind(); i.next();)
 	{
-		if ((strncmp(i.key(), "draw:", 5) == 0 && strcmp(i.key(), "draw:name") != 0) ||
-		        (strncmp(i.key(), "presentation:", 13) == 0) || (strcmp(i.key(), "style:repeat") == 0))
+		if ((strncmp(i.key(), "draw:", 5) == 0) || (strncmp(i.key(), "presentation:", 13) == 0)
+		        || (strcmp(i.key(), "style:repeat") == 0))
 			removedKeys.push_back(i.key());
 	}
 	for (std::deque<std::string>::const_iterator it = removedKeys.begin(); it != removedKeys.end(); ++it)
