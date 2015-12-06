@@ -267,10 +267,13 @@ librevenge::RVNGString FillManager::getStyleNameForOpacity(librevenge::RVNGPrope
 
 void FillManager::addProperties(librevenge::RVNGPropertyList const &style, librevenge::RVNGPropertyList &element)
 {
-	if (style["draw:fill"] && style["draw:fill"]->getStr() == "none")
+	if (!style["draw:fill"])
+		return;
+
+	const librevenge::RVNGString &fill = style["draw:fill"]->getStr();
+	if (fill == "none")
 		element.insert("draw:fill", "none");
-	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "bitmap" &&
-	         style["draw:fill-image"] && style["librevenge:mime-type"])
+	else if (fill == "bitmap" && style["draw:fill-image"] && style["librevenge:mime-type"])
 	{
 		librevenge::RVNGString name=getStyleNameForBitmap(style["draw:fill-image"]->getStr());
 		if (!name.empty())
@@ -299,7 +302,7 @@ void FillManager::addProperties(librevenge::RVNGPropertyList const &style, libre
 		else
 			element.insert("draw:fill", "none");
 	}
-	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "gradient")
+	else if (fill == "gradient")
 	{
 		librevenge::RVNGString gradientName(""), opacityName("");
 		bool bUseOpacityGradient = false;
@@ -326,7 +329,7 @@ void FillManager::addProperties(librevenge::RVNGPropertyList const &style, libre
 				element.insert("draw:fill-color", (*gradient)[0]["svg:stop-color"]->getStr());
 		}
 	}
-	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "hatch")
+	else if (fill == "hatch")
 	{
 		const librevenge::RVNGString hatchName(getStyleNameForHatch(style));
 		if (!hatchName.empty())
@@ -339,7 +342,7 @@ void FillManager::addProperties(librevenge::RVNGPropertyList const &style, libre
 			element.insert("draw:fill", "none");
 		}
 	}
-	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "solid")
+	else if (fill == "solid")
 	{
 		element.insert("draw:fill", "solid");
 		if (style["draw:fill-color"])
