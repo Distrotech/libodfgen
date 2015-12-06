@@ -30,10 +30,12 @@ void FillManager::clean()
 {
 	mBitmapStyles.clear();
 	mGradientStyles.clear();
+	mHatchStyles.clear();
 	mOpacityStyles.clear();
 
 	mBitmapNameMap.clear();
 	mGradientNameMap.clear();
+	mHatchNameMap.clear();
 	mOpacityNameMap.clear();
 }
 
@@ -43,6 +45,8 @@ void FillManager::write(OdfDocumentHandler *pHandler) const
 		mBitmapStyles[i]->write(pHandler);
 	for (size_t i=0; i < mGradientStyles.size(); ++i)
 		mGradientStyles[i]->write(pHandler);
+	for (size_t i=0; i < mHatchStyles.size(); ++i)
+		mHatchStyles[i]->write(pHandler);
 	for (size_t i=0; i < mOpacityStyles.size(); ++i)
 		mOpacityStyles[i]->write(pHandler);
 }
@@ -160,6 +164,33 @@ librevenge::RVNGString FillManager::getStyleNameForGradient(librevenge::RVNGProp
 
 	mGradientStyles.push_back(openElement);
 	mGradientStyles.push_back(new TagCloseElement("draw:gradient"));
+	return name;
+}
+
+librevenge::RVNGString FillManager::getStyleNameForHatch(librevenge::RVNGPropertyList const &style)
+{
+	librevenge::RVNGPropertyList pList;
+	// basic data
+	char const *wh[] = { "draw:color", "draw:distance", "draw:rotation", "draw:style" };
+	for (unsigned i=0; i<ODFGEN_N_ELEMENTS(wh); ++i)
+	{
+		if (style[wh[i]])
+			pList.insert(wh[i], style[wh[i]]->getStr());
+	}
+
+	librevenge::RVNGString hashKey = pList.getPropString();
+	if (mHatchNameMap.find(hashKey) != mHatchNameMap.end())
+		return mHatchNameMap.find(hashKey)->second;
+
+	librevenge::RVNGString name;
+	name.sprintf("Hatch_%i", (int) mHatchNameMap.size());
+	mHatchNameMap[hashKey]=name;
+
+	TagOpenElement *openElement = new TagOpenElement("draw:hatch");
+	openElement->addAttribute("draw:name", name);
+
+	mHatchStyles.push_back(openElement);
+	mHatchStyles.push_back(new TagCloseElement("draw:opacity"));
 	return name;
 }
 
@@ -293,6 +324,19 @@ void FillManager::addProperties(librevenge::RVNGPropertyList const &style, libre
 				gradient = style.child("svg:radialGradient");
 			if (gradient && gradient->count() >= 1 && (*gradient)[0]["svg:stop-color"])
 				element.insert("draw:fill-color", (*gradient)[0]["svg:stop-color"]->getStr());
+		}
+	}
+	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "hatch")
+	{
+		const librevenge::RVNGString hatchName(getStyleNameForHatch(style));
+		if (!hatchName.empty())
+		{
+			element.insert("draw:fill", "hatch");
+			element.insert("draw:fill-hatch-name", hatchName);
+		}
+		else
+		{
+			element.insert("draw:fill", "none");
 		}
 	}
 	else if (style["draw:fill"] && style["draw:fill"]->getStr() == "solid")

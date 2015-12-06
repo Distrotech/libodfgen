@@ -35,8 +35,8 @@ class OdfDocumentHandler;
 class FillManager
 {
 public:
-	FillManager() : mBitmapStyles(), mGradientStyles(), mOpacityStyles(),
-		mBitmapNameMap(), mGradientNameMap(), mOpacityNameMap()
+	FillManager() : mBitmapStyles(), mGradientStyles(), mHatchStyles(), mOpacityStyles(),
+		mBitmapNameMap(), mGradientNameMap(), mHatchNameMap(), mOpacityNameMap()
 	{}
 
 	void clean();
@@ -52,18 +52,22 @@ private:
 	librevenge::RVNGString getStyleNameForBitmap(librevenge::RVNGString const &bitmap);
 	librevenge::RVNGString getStyleNameForGradient(librevenge::RVNGPropertyList const &style,
 	                                               bool &needCreateOpacityStyle);
+	librevenge::RVNGString getStyleNameForHatch(librevenge::RVNGPropertyList const &style);
 	librevenge::RVNGString getStyleNameForOpacity(librevenge::RVNGPropertyList const &style);
 
 private:
 	// graphics styles
 	libodfgen::DocumentElementVector mBitmapStyles;
 	libodfgen::DocumentElementVector mGradientStyles;
+	libodfgen::DocumentElementVector mHatchStyles;
 	libodfgen::DocumentElementVector mOpacityStyles;
 
 	// bitmap content -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mBitmapNameMap;
 	// gradient hash -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mGradientNameMap;
+	// hatch hash -> style name
+	std::map<librevenge::RVNGString, librevenge::RVNGString> mHatchNameMap;
 	// opacity hash -> style name
 	std::map<librevenge::RVNGString, librevenge::RVNGString> mOpacityNameMap;
 };
