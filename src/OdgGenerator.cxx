@@ -645,6 +645,10 @@ void OdgGenerator::drawGraphicObject(const ::librevenge::RVNGPropertyList &propL
 		pDrawFrameElement->addAttribute("svg:x", framePropList["svg:x"]->getStr());
 		pDrawFrameElement->addAttribute("svg:y", framePropList["svg:y"]->getStr());
 	}
+
+	if (propList["draw:display"])
+		pDrawFrameElement->addAttribute("draw:display", propList["draw:display"]->getStr());
+
 	mpImpl->getCurrentStorage()->push_back(pDrawFrameElement);
 
 	mpImpl->insertBinaryObject(propList);
@@ -760,6 +764,10 @@ void OdgGenerator::startTextObject(const librevenge::RVNGPropertyList &propList)
 		if (propList["svg:y"])
 			pDrawFrameOpenElement->addAttribute("svg:y", svg_y->getStr());
 	}
+
+	if (propList["draw:display"])
+		pDrawFrameOpenElement->addAttribute("draw:display", propList["draw:display"]->getStr());
+
 	mpImpl->getCurrentStorage()->push_back(pDrawFrameOpenElement);
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("draw:text-box"));
 

@@ -1234,6 +1234,10 @@ void OdfGenerator::drawEllipse(const librevenge::RVNGPropertyList &propList)
 		sValue.append("in");
 		pDrawEllipseElement->addAttribute("svg:y", sValue);
 	}
+
+	if (propList["draw:display"])
+		pDrawEllipseElement->addAttribute("draw:display", propList["draw:display"]->getStr());
+
 	mpCurrentStorage->push_back(pDrawEllipseElement);
 	mpCurrentStorage->push_back(new TagCloseElement("draw:ellipse"));
 }
@@ -1273,6 +1277,9 @@ void OdfGenerator::drawPath(const librevenge::RVNGPropertyListVector &path, cons
 	sValue.sprintf("%i %i %i %i", 0, 0, (unsigned)(2540*(qx - px)), (unsigned)(2540*(qy - py)));
 	pDrawPathElement->addAttribute("svg:viewBox", sValue);
 
+	if (propList["draw:display"])
+		pDrawPathElement->addAttribute("draw:display", propList["draw:display"]->getStr());
+
 	pDrawPathElement->addAttribute("svg:d", libodfgen::convertPath(path, px, py));
 	mpCurrentStorage->push_back(pDrawPathElement);
 	mpCurrentStorage->push_back(new TagCloseElement("draw:path"));
@@ -1302,6 +1309,8 @@ void OdfGenerator::drawPolySomething(const librevenge::RVNGPropertyList &propLis
 		pDrawLineElement->addAttribute("svg:y1", (*vertices)[0]["svg:y"]->getStr());
 		pDrawLineElement->addAttribute("svg:x2", (*vertices)[1]["svg:x"]->getStr());
 		pDrawLineElement->addAttribute("svg:y2", (*vertices)[1]["svg:y"]->getStr());
+		if (propList["draw:display"])
+			pDrawLineElement->addAttribute("draw:display", propList["draw:display"]->getStr());
 		mpCurrentStorage->push_back(pDrawLineElement);
 		mpCurrentStorage->push_back(new TagCloseElement(what));
 	}
@@ -1353,6 +1362,9 @@ void OdfGenerator::drawRectangle(const librevenge::RVNGPropertyList &propList)
 		pDrawRectElement->addAttribute("draw:corner-radius", propList["svg:rx"]->getStr());
 	else
 		pDrawRectElement->addAttribute("draw:corner-radius", "0.0000in");
+	if (propList["draw:display"])
+		pDrawRectElement->addAttribute("draw:display", propList["draw:display"]->getStr());
+
 	mpCurrentStorage->push_back(pDrawRectElement);
 	mpCurrentStorage->push_back(new TagCloseElement("draw:rect"));
 }
