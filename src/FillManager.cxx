@@ -188,9 +188,24 @@ librevenge::RVNGString FillManager::getStyleNameForHatch(librevenge::RVNGPropert
 
 	TagOpenElement *openElement = new TagOpenElement("draw:hatch");
 	openElement->addAttribute("draw:name", name);
+	if (style["draw:color"])
+		openElement->addAttribute("draw:color", style["draw:color"]->getStr());
+	if (style["draw:distance"])
+		openElement->addAttribute("draw:distance", style["draw:distance"]->getStr());
+	if (style["draw:style"])
+		openElement->addAttribute("draw:style", style["draw:style"]->getStr());
+	// prepare angle: ODG angle unit is 0.1 degree
+	double rotation = style["draw:rotation"] ? style["draw:rotation"]->getDouble() : 0.0;
+	while (rotation < 0)
+		rotation += 360;
+	while (rotation > 360)
+		rotation -= 360;
+	librevenge::RVNGString sValue;
+	sValue.sprintf("%i", (unsigned)(rotation*10));
+	openElement->addAttribute("draw:rotation", sValue);
 
 	mHatchStyles.push_back(openElement);
-	mHatchStyles.push_back(new TagCloseElement("draw:opacity"));
+	mHatchStyles.push_back(new TagCloseElement("draw:hatch"));
 	return name;
 }
 
@@ -336,6 +351,12 @@ void FillManager::addProperties(librevenge::RVNGPropertyList const &style, libre
 		{
 			element.insert("draw:fill", "hatch");
 			element.insert("draw:fill-hatch-name", hatchName);
+			if (style["draw:fill-color"])
+				element.insert("draw:fill-color", style["draw:fill-color"]->getStr());
+			if (style["draw:opacity"])
+				element.insert("draw:opacity", style["draw:opacity"]->getStr());
+			if (style["draw:fill-hatch-solid"])
+				element.insert("draw:fill-hatch-solid", style["draw:fill-hatch-solid"]->getStr());
 		}
 		else
 		{
