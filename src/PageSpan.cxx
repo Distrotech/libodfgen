@@ -107,6 +107,14 @@ void PageLayoutStyle::write(OdfDocumentHandler *pHandler) const
 		else
 			tempPropList.insert(i.key(), i()->clone());
 	}
+
+	double width = mpPropList["svg:width"] ? mpPropList["svg:width"]->getDouble() : 0.0;
+	double height = mpPropList["svg:height"] ? mpPropList["svg:height"]->getDouble() : 0.0;
+	if (width > height)
+		tempPropList.insert("style:print-orientation", "landscape");
+	else
+		tempPropList.insert("style:print-orientation", "portrait");
+
 	pHandler->startElement("style:page-layout-properties", tempPropList);
 
 	librevenge::RVNGPropertyList footnoteSepPropList;
