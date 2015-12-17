@@ -268,39 +268,61 @@ void SheetCellStyle::writeStyle(OdfDocumentHandler *pHandler, SheetManager const
 	// generalize this sort of thing into the "Style" superclass
 	librevenge::RVNGPropertyList stylePropList;
 	librevenge::RVNGPropertyList::Iter i(mPropList);
-	/* first set padding, so that mPropList can redefine, if
-	   mPropList["fo:padding"] is defined */
-	stylePropList.insert("fo:padding", "0.0382in");
+	bool paddingSet=false;
 	bool hasTextAlign=false;
 	for (i.rewind(); i.next();)
 	{
 		int len = (int) strlen(i.key());
-		if (len > 2 && !strncmp(i.key(), "fo", 2))
+		if (i.child())
+			continue;
+		if (len > 3 && strncmp(i.key(), "fo:", 3)==0)
 		{
 			if (len==13 && !strcmp(i.key(), "fo:text-align"))
 				hasTextAlign=true;
 			else
+			{
+				if (len>=9 && strncmp(i.key(), "fo:padding", 9)==0)
+					paddingSet=true;
 				stylePropList.insert(i.key(), i()->clone());
+			}
 		}
-		else if (len > 22  && !strncmp(i.key(), "style:border-line-width", 23))
+		else if (len>6 && strncmp(i.key(), "style:", 6)==0)
 		{
-			if (!strcmp(i.key(), "style:border-line-width") ||
-			        !strcmp(i.key(), "style:border-line-width-left") ||
-			        !strcmp(i.key(), "style:border-line-width-right") ||
-			        !strcmp(i.key(), "style:border-line-width-top")||
-			        !strcmp(i.key(), "style:border-line-width-bottom"))
+			if (len > 22  && !strncmp(i.key(), "style:border-line-width", 23))
+			{
+				if (!strcmp(i.key(), "style:border-line-width") ||
+				        !strcmp(i.key(), "style:border-line-width-left") ||
+				        !strcmp(i.key(), "style:border-line-width-right") ||
+				        !strcmp(i.key(), "style:border-line-width-top")||
+				        !strcmp(i.key(), "style:border-line-width-bottom"))
+					stylePropList.insert(i.key(), i()->clone());
+			}
+			else if (len == 23 && !strcmp(i.key(), "style:text-align-source"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 18 && !strcmp(i.key(), "style:cell-protect"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 15 && !strcmp(i.key(), "style:direction"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 18 && !strcmp(i.key(), "style:print-content"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 20 && !strcmp(i.key(), "style:repeat-content"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 20 && !strcmp(i.key(), "style:rotation-align"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 20 && !strcmp(i.key(), "style:rotation-angle"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 12 && !strcmp(i.key(), "style:shadow"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 20 && !strcmp(i.key(), "style:vertical-align"))
+				stylePropList.insert(i.key(), i()->clone());
+			else if (len == 18 && !strcmp(i.key(), "style:writing-mode"))
 				stylePropList.insert(i.key(), i()->clone());
 		}
-		else if (len == 23 && !strcmp(i.key(), "style:text-align-source"))
-			stylePropList.insert(i.key(), i()->clone());
-		else if (len == 18 && !strcmp(i.key(), "style:cell-protect"))
-			stylePropList.insert(i.key(), i()->clone());
-		else if (!strcmp(i.key(), "style:vertical-align"))
-			stylePropList.insert(i.key(), i()->clone());
 	}
+	if (!paddingSet)
+		stylePropList.insert("fo:padding", "0.0382in");
 	pHandler->startElement("style:table-cell-properties", stylePropList);
 	pHandler->endElement("style:table-cell-properties");
-
 	if (hasTextAlign)
 	{
 		librevenge::RVNGPropertyList paragPropList;
@@ -480,6 +502,7 @@ librevenge::RVNGString SheetStyle::addCell(const librevenge::RVNGPropertyList &p
 			continue;
 		if (i.child())
 			continue;
+
 		pList.insert(i.key(),i()->clone());
 	}
 	librevenge::RVNGString hashKey = pList.getPropString();

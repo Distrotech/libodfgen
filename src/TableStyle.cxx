@@ -57,7 +57,7 @@ void TableCellStyle::writeStyles(OdfDocumentHandler *pHandler, bool compatibleOd
 	stylePropList.insert("fo:padding", 0.0382);
 	for (i.rewind(); i.next();)
 	{
-		if (!strncmp(i.key(), "fo", 2))
+		if (strncmp(i.key(), "fo:", 3)==0)
 			stylePropList.insert(i.key(), i()->clone());
 		else if (!strncmp(i.key(), "style:border-line-width", 23))
 		{
