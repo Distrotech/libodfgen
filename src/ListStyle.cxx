@@ -94,14 +94,8 @@ void UnorderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) co
 	listLevelStyleOpen.addAttribute("text:style-name", "Bullet_Symbols");
 	if (mPropList["text:bullet-char"] && (mPropList["text:bullet-char"]->getStr().len()))
 	{
-		// The following is needed because the ODF format does not accept bullet chars longer than one character
-		librevenge::RVNGString::Iter i(mPropList["text:bullet-char"]->getStr());
-		i.rewind();
 		librevenge::RVNGString sEscapedString;
-		if (i.next())
-			sEscapedString.appendEscapedXML(i());
-		else
-			sEscapedString.append('.');
+		sEscapedString.appendEscapedXML((mPropList["text:bullet-char"]->getStr()));
 		listLevelStyleOpen.addAttribute("text:bullet-char", sEscapedString);
 
 	}
