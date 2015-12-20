@@ -176,7 +176,7 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetManager 
 			TagCloseElement("number:number").write(pHandler);
 		}
 		else if (wh=="year" || wh=="month" || wh=="day" || wh=="day-of-week" || wh=="quarter" || wh=="week-of-year" ||
-		         wh=="hours" || wh=="minutes" || wh=="seconds" || wh=="am-pm")
+		         wh=="hours" || wh=="minutes" || wh=="seconds" || wh=="am-pm" || wh=="era")
 		{
 			librevenge::RVNGString subWhat;
 			subWhat.sprintf("number:%s", wh.c_str());
@@ -185,6 +185,8 @@ void SheetNumberingStyle::writeStyle(OdfDocumentHandler *pHandler, SheetManager 
 				formatOpen.addAttribute("number:style", prop["number:style"]->getStr());
 			if (prop["number:textual"])
 				formatOpen.addAttribute("number:textual", prop["number:textual"]->getStr());
+			if (wh=="seconds" && prop["number:decimal-places"])
+				formatOpen.addAttribute("number:decimal-places", prop["number:decimal-places"]->getStr());
 			formatOpen.write(pHandler);
 			TagCloseElement(subWhat).write(pHandler);
 		}
