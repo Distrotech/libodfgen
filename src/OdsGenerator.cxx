@@ -963,8 +963,19 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 				}
 				else
 				{
+					// we need the maximum precision here, so we must avoid getStr() when possible
+					librevenge::RVNGString value;
+					if (propList["librevenge:value"]->getUnit()==librevenge::RVNG_GENERIC)
+						value.sprintf("%.8f", propList["librevenge:value"]->getDouble());
+					else if (propList["librevenge:value"]->getUnit()==librevenge::RVNG_PERCENT)
+					{
+						value.sprintf("%.8f", propList["librevenge:value"]->getDouble()/100.);
+						value.append('%');
+					}
+					else
+						value=propList["librevenge:value"]->getStr();
 					pSheetCellOpenElement->addAttribute("office:value-type", valueType.c_str());
-					pSheetCellOpenElement->addAttribute("office:value", propList["librevenge:value"]->getStr().cstr());
+					pSheetCellOpenElement->addAttribute("office:value", value.cstr());
 				}
 			}
 		}
@@ -1474,6 +1485,7 @@ void OdsGenerator::openComment(const librevenge::RVNGPropertyList &propList)
 
 	mpImpl->getState().mbInComment=true;
 	mpImpl->pushListState();
+
 	mpImpl->getCurrentStorage()->push_back(new TagOpenElement("office:annotation"));
 }
 
