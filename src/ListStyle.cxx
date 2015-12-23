@@ -77,6 +77,16 @@ void OrderedListLevelStyle::write(OdfDocumentHandler *pHandler, int iLevel) cons
 	stylePropertiesOpen.write(pHandler);
 
 	pHandler->endElement("style:list-level-properties");
+
+	TagOpenElement textPropertiesOpen("style:text-properties");
+	if (mPropList["fo:font-family"])
+		textPropertiesOpen.addAttribute("fo:font-family", mPropList["fo:font-family"]->getStr());
+	if (mPropList["fo:font-size"])
+		textPropertiesOpen.addAttribute("fo:font-size", mPropList["fo:font-size"]->getStr());
+	textPropertiesOpen.write(pHandler);
+
+	pHandler->endElement("style:text-properties");
+
 	pHandler->endElement("text:list-level-style-number");
 }
 
