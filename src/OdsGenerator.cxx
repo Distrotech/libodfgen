@@ -969,7 +969,7 @@ void OdsGenerator::openSheetCell(const librevenge::RVNGPropertyList &propList)
 						value.sprintf("%.8f", propList["librevenge:value"]->getDouble());
 					else if (propList["librevenge:value"]->getUnit()==librevenge::RVNG_PERCENT)
 					{
-						value.sprintf("%.8f", propList["librevenge:value"]->getDouble()/100.);
+						value.sprintf("%.8f", propList["librevenge:value"]->getDouble()*100.);
 						value.append('%');
 					}
 					else
