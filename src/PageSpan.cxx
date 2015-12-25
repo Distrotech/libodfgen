@@ -138,9 +138,19 @@ void PageLayoutStyle::write(OdfDocumentHandler *pHandler) const
 		footnoteSepPropList.insert("style:color", librevenge::RVNGString("#000000"));
 	}
 	pHandler->startElement("style:footnote-sep", footnoteSepPropList);
-
 	pHandler->endElement("style:footnote-sep");
 	pHandler->endElement("style:page-layout-properties");
+
+	for (int j=0; j<2; ++j) {
+		char const *(wh[])={"librevenge:header", "librevenge:footer"};
+		if (!mpPropList.child(wh[j]) || mpPropList.child(wh[j])->count()!=1)
+			continue;
+		pHandler->startElement(j==0 ? "style:header-style" : "style:footer-style", librevenge::RVNGPropertyList());
+		pHandler->startElement("style:header-footer-properties", (*mpPropList.child(wh[j]))[0]);
+		pHandler->endElement("style:header-footer-properties");
+		pHandler->endElement(j==0 ? "style:header-style" : "style:footer-style");
+	}
+
 	pHandler->endElement("style:page-layout");
 }
 
@@ -390,8 +400,11 @@ librevenge::RVNGString PageSpanManager::findOrAddLayout(const librevenge::RVNGPr
 		        strncmp(i.key(), "librevenge:",11)==0) continue;
 		layoutList.insert(i.key(), i()->clone());
 	}
-	if (propList.child("librevenge:footnote"))
-		layoutList.insert("librevenge:footnote", *propList.child("librevenge:footnote"));
+	for (int j=0; j<3; ++j) {
+		char const *(wh[])={"librevenge:footnote", "librevenge:header", "librevenge:footer"};
+		if (propList.child(wh[j]))
+			layoutList.insert(wh[j], *propList.child(wh[j]));
+	}
 
 	if (!layoutName.empty())
 		layoutList.insert("style:display-name", layoutName);
