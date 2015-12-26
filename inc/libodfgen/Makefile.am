@@ -1,7 +1,10 @@
-EXTRA_DIST = \
-	libodfgen.hxx \
-	libodfgen-api.hxx \
+libodfgendir = $(includedir)/libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@/libodfgen
+
+dist_libodfgen_HEADERS = \
 	OdfDocumentHandler.hxx \
 	OdgGenerator.hxx \
+	OdpGenerator.hxx \
 	OdsGenerator.hxx \
-	OdtGenerator.hxx
+	OdtGenerator.hxx \
+	libodfgen-api.hxx \
+	libodfgen.hxx

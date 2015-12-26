@@ -6,18 +6,6 @@ endif
 
 lib_LTLIBRARIES = libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@.la
 
-libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_includedir = \
-	$(includedir)/libodfgen-@LIBODFGEN_MAJOR_VERSION@.@LIBODFGEN_MINOR_VERSION@/libodfgen
-
-libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_include_HEADERS = \
-	$(top_srcdir)/inc/libodfgen/OdfDocumentHandler.hxx \
-	$(top_srcdir)/inc/libodfgen/OdgGenerator.hxx \
-	$(top_srcdir)/inc/libodfgen/OdpGenerator.hxx \
-	$(top_srcdir)/inc/libodfgen/OdsGenerator.hxx \
-	$(top_srcdir)/inc/libodfgen/OdtGenerator.hxx \
-	$(top_srcdir)/inc/libodfgen/libodfgen.hxx \
-	$(top_srcdir)/inc/libodfgen/libodfgen-api.hxx
-
 AM_CXXFLAGS = -I$(top_srcdir)/inc/ $(REVENGE_CFLAGS) $(DEBUG_CXXFLAGS) -DLIBODFGEN_BUILD
 
 libodfgen_@LIBODFGEN_MAJOR_VERSION@_@LIBODFGEN_MINOR_VERSION@_la_LIBADD = @LIBODFGEN_WIN32_RESOURCE@ $(REVENGE_LIBS)
