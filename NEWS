@@ -1,3 +1,24 @@
+libodfgen 0.1.6
+- All:
+    + Support hatching fills.
+    + Handle visibility and printability of objects.
+    + Compute print orientation from page dimensions.
+    + Allow to specify list label font and font size.
+- Drawing/Presentation:
+    + Handle fill properties in openPage(), allowing to set page
+      background.
+- Spreadsheet:
+    + Correctly emit merged cells.
+    + Allow graphics anchored to a sheet cell.
+    + Handle repeated rows/columns, specified by properties
+      table:number-rows-repeated and table:number-columns-repeated.
+    + Add matrix operators ({, } and |).
+    + Handle more cell attributes.
+    + Increase precision of generated numbers.
+- Text:
+    + Allow to set header/footer style.
+- Other improvements and fixes.
+
 libodfgen 0.1.5
 - graphics:
     + add code for librevenge:replacement-objects
